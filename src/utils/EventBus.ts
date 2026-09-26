@@ -64,6 +64,13 @@ export const Events = {
   ProjectileImpact: 'projectile-impact',
   UnitStruck: 'unit-struck',
   TurretFired: 'turret-fired',
+  UnitPromoted: 'unit-promoted',
+  DoctrineOffered: 'doctrine-offered',
+  ChooseDoctrineRequested: 'choose-doctrine-requested',
+  DoctrineChosen: 'doctrine-chosen',
+  WarCryRequested: 'war-cry-requested',
+  WarCryUsed: 'war-cry-used',
+  WarCryCooldownChanged: 'war-cry-cooldown-changed',
 } as const;
 
 /** The utility effect kinds (see `UtilityEffect` in unitDefinitions). */
@@ -220,6 +227,17 @@ export interface EventPayloads {
   };
   /** A turret fired (feedback only); (`x`, `y`) is its muzzle. */
   [Events.TurretFired]: { side: Side; slotIndex: number; turretId: string; x: number; y: number };
+  /** Veterancy (prototype): a unit ranked up. */
+  [Events.UnitPromoted]: { side: Side; instanceId: number; rank: number; x: number; topY: number };
+  /** Age doctrines (prototype): a side may pick one of these doctrine ids. */
+  [Events.DoctrineOffered]: { side: Side; age: number; options: readonly string[] };
+  [Events.ChooseDoctrineRequested]: { side: Side; doctrineId: string };
+  [Events.DoctrineChosen]: { side: Side; doctrineId: string };
+  /** War Cry (prototype): request, use, and its cooldown (like the special's). */
+  [Events.WarCryRequested]: { side: Side };
+  /** `positions` are the x of every unit it rallied (for the effect). */
+  [Events.WarCryUsed]: { side: Side; durationMs: number; positions: readonly number[] };
+  [Events.WarCryCooldownChanged]: { side: Side; remainingMs: number; totalMs: number };
 }
 
 export type EventName = keyof EventPayloads;

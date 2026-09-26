@@ -84,6 +84,9 @@ export class Unit extends Phaser.GameObjects.Sprite {
    */
   shield = 0;
   readonly modifiers: StatModifier[] = [];
+  /** Veterancy (prototype): kills credited to this unit and its rank (0 = recruit). */
+  kills = 0;
+  rank = 0;
   /** Footprint on the lane: the placeholder's size, whatever art is shown. */
   bodyWidth = 0;
   bodyHeight = 0;
@@ -144,6 +147,8 @@ export class Unit extends Phaser.GameObjects.Sprite {
     this.walkedAt = -Infinity;
     this.shieldLockUntil = 0;
     this.killerSide = null;
+    this.kills = 0;
+    this.rank = 0;
     this.flashUntil = 0;
     this.restoreTint();
     this.unitState = UnitState.Idle;
@@ -320,8 +325,9 @@ export class Unit extends Phaser.GameObjects.Sprite {
     const maxHp = this.getStat('maxHp');
     const hurt = this.hp < maxHp;
     const shielded = this.shield > 0;
-    this.hpBar.setVisible(this.active && (hurt || shielded));
-    if (!hurt && !shielded) return;
+    const ranked = this.rank > 0;
+    this.hpBar.setVisible(this.active && (hurt || shielded || ranked));
+    if (!hurt && !shielded && !ranked) return;
 
     const width = Math.max(MIN_BAR_WIDTH, this.bodyWidth);
     this.hpBar.setPosition(this.x, this.topY - BAR_GAP_ABOVE_HEAD);
@@ -333,6 +339,14 @@ export class Unit extends Phaser.GameObjects.Sprite {
     this.hpBar.fillRect(-width / 2, 0, width, BAR_HEIGHT);
     this.hpBar.fillStyle(ratio > 0.5 ? 0x6fcf6f : ratio > 0.25 ? 0xf2c744 : 0xe0554a, 1);
     this.hpBar.fillRect(-width / 2, 0, width * ratio, BAR_HEIGHT);
+    if (ranked) {
+      // Veteran chevrons (prototype) above the bar, one per rank.
+      for (let i = 0; i < this.rank; i++) {
+        const cx = -((this.rank - 1) * 7) / 2 + i * 7;
+        this.hpBar.fillStyle(0x000000, 0.7).fillTriangle(cx - 4, -5, cx, -10, cx + 4, -5);
+        this.hpBar.fillStyle(0xf2c744, 1).fillTriangle(cx - 3, -5.5, cx, -9, cx + 3, -5.5);
+      }
+    }
     if (shielded) {
       const shieldRatio = Phaser.Math.Clamp(this.shield / maxHp, 0, 1);
       this.hpBar.fillStyle(0x000000, 0.65);

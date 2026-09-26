@@ -26,6 +26,10 @@ import { UnitFactory } from '@entities/UnitFactory';
 import { AgeProgressionSystem } from '@systems/AgeProgressionSystem';
 import { AIController } from '@systems/AIController';
 import { UtilityAI } from '@systems/UtilityAI';
+import { feature } from '@config/features.config';
+import { DoctrineAi, DoctrineSystem } from '@systems/experimental/DoctrineSystem';
+import { VeterancySystem } from '@systems/experimental/VeterancySystem';
+import { WarCryAi, WarCrySystem } from '@systems/experimental/WarCrySystem';
 import { AiIncomeSystem } from '@systems/AiIncomeSystem';
 import { BuildingSystem } from '@systems/BuildingSystem';
 import { CasualtySystem } from '@systems/CasualtySystem';
@@ -127,6 +131,11 @@ export class GameScene extends Phaser.Scene {
   private scrollKeys: Phaser.Input.Keyboard.Key[][] = [];
   private ai: AiBrain | null = null;
   private playerAi: AiBrain | null = null;
+  /**
+   * Prototype systems (features.config), each on only with its flag: built
+   * here, ticked after the core systems, torn down with the match.
+   */
+  private experiments: { update?(nowMs: number): void; destroy(): void }[] = [];
   /** The AI's own income, one per AI-played side (Phase 15). */
   private aiIncome: AiIncomeSystem[] = [];
   /** Dev builds, human player only: records the match to playtest-logs/. */
@@ -193,6 +202,7 @@ export class GameScene extends Phaser.Scene {
       enemy: this.createBuildingViews('enemy'),
     };
     this.setupCamera();
+    this.createExperiments();
     this.logger =
       import.meta.env.DEV && this.playerAiSetting === null
         ? new MatchLogger(this.state, this.units, this.aiSetting, () => this.match.elapsedMs)
@@ -308,6 +318,7 @@ export class GameScene extends Phaser.Scene {
     this.economy.update(dt);
     this.buildingSystem.update(dt);
     for (const income of this.aiIncome) income.update(dt, this.match.elapsedMs);
+    for (const experiment of this.experiments) experiment.update?.(now);
     this.logger?.update(this.match.elapsedMs);
   }
 
@@ -320,6 +331,27 @@ export class GameScene extends Phaser.Scene {
     const weights = genome ?? (profile?.brain === 'utility' ? profile.genome : undefined);
     if (weights) return new UtilityAI(this.state, side, this.units, this.bases, difficulty, weights);
     return new AIController(this.state, side, this.units, this.bases, difficulty);
+  }
+
+  /** The prototype systems that are switched on (see `config/features.config.ts`). */
+  private createExperiments(): void {
+    this.experiments = [];
+    const aiSides: Side[] = [];
+    if (this.aiSetting !== 'off') aiSides.push('enemy');
+    if (this.playerAiSetting) aiSides.push('player');
+    if (feature('veterancy')) this.experiments.push(new VeterancySystem(this.units));
+    if (feature('ageDoctrines')) {
+      this.experiments.push(new DoctrineSystem(this.state, this.units, () => this.match.elapsedMs));
+      for (const side of aiSides) this.experiments.push(new DoctrineAi(side, this.units));
+    }
+    if (feature('warCry')) {
+      const warCry = new WarCrySystem(this.state, this.units, () => this.match.elapsedMs);
+      this.experiments.push(warCry);
+      for (const side of aiSides) {
+        const ai = new WarCryAi(side, this.units, warCry);
+        this.experiments.push({ update: (now) => ai.update(now), destroy: () => undefined });
+      }
+    }
   }
 
   /** Dev only: runs `ms` of simulation at once in fixed steps, without rendering. */
@@ -640,6 +672,8 @@ export class GameScene extends Phaser.Scene {
     this.stats.destroy();
     this.backdrop.destroy();
     this.buildingSystem.destroy();
+    for (const experiment of this.experiments) experiment.destroy();
+    this.experiments = [];
     this.logger?.finish('quit');
     this.logger?.destroy();
     this.logger = null;

@@ -22,6 +22,7 @@ import {
   UiTextColors,
 } from '@ui/kenneyUi';
 import { UiButton } from '@ui/UiButton';
+import { ExperimentsPanel } from '@ui/experimental/ExperimentsPanel';
 import { baseArtKey, BASE_SUPERSAMPLE, ensureBaseArt } from '@utils/BaseArt';
 import { ensureRigArt } from '@utils/RigArt';
 
@@ -64,6 +65,7 @@ export class MenuScene extends Phaser.Scene {
   private cards: Partial<Record<AiDifficultyName, UiButton>> = {};
   private backdrop: Backdrop | null = null;
   private parade: Phaser.GameObjects.Sprite[] = [];
+  private experiments: ExperimentsPanel | null = null;
 
   constructor() {
     super({ key: SCENE_KEYS.menu });
@@ -184,6 +186,11 @@ export class MenuScene extends Phaser.Scene {
       )
       .setOrigin(0.5);
 
+    // Prototype switches (2026-09-26).
+    this.experiments = new ExperimentsPanel(this);
+    const labs = new UiButton(this, GAME_WIDTH - 100, 40, 170, 44, { onPress: () => this.experiments?.toggle(), framed: true });
+    labs.add(this.add.text(0, 0, 'Experiments', { fontFamily: UI_TITLE_FONT, fontSize: '19px', color: UiTextColors.parchment }).setOrigin(0.5));
+
     const keys = this.input.keyboard;
     keys?.on('keydown-LEFT', () => this.step(-1));
     keys?.on('keydown-RIGHT', () => this.step(1));
@@ -266,6 +273,7 @@ export class MenuScene extends Phaser.Scene {
   }
 
   private play(): void {
+    if (this.experiments?.isOpen) return;
     this.scene.start(SCENE_KEYS.game, { ai: this.choice, profile: this.profileId } satisfies GameSceneData);
   }
 }

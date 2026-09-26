@@ -200,6 +200,21 @@ export class ImpactEffects {
           this.ring(x, 70, 0xf2c744, 420);
         }
       }),
+      // Prototypes: veterancy promotions and the War Cry.
+      on(Events.UnitPromoted, ({ x, topY }) => {
+        if (this.muted) return;
+        this.burst('gold', 12, x, topY + 6, 10, 6);
+        this.flash(x, topY + 10, 22, 0xfff0b0, 240);
+      }),
+      on(Events.WarCryUsed, ({ positions }) => {
+        if (this.muted) return;
+        for (const x of positions) {
+          this.burst('fire', 4, x, LANE_Y - 30, 8, 10);
+          this.burst('gold', 3, x, LANE_Y - 40, 8, 8);
+        }
+        const front = positions.length ? positions[positions.length - 1]! : 0;
+        this.ring(front, 90, 0xff8a3a, 420);
+      }),
       on(Events.AgeChanged, ({ side }) => {
         if (side === HUD_SIDE && !this.muted) this.burst('gold', 24, BASE_X[side], LANE_Y - 90, 60, 50);
       }),

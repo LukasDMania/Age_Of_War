@@ -37,7 +37,7 @@ export const FEATURES_INFO: Readonly<Record<FeatureId, FeatureInfo>> = {
   },
   veterancy: {
     label: 'Veterancy',
-    about: 'Units that score kills rank up (stars) and get tougher and stronger.',
+    about: 'Units that score kills rank up (gold chevrons) and get tougher and stronger.',
     default: true,
   },
   ageDoctrines: {
@@ -47,7 +47,7 @@ export const FEATURES_INFO: Readonly<Record<FeatureId, FeatureInfo>> = {
   },
   warCry: {
     label: 'War Cry',
-    about: 'A second, cheap cooldown ability: your army charges with extra speed and damage for a few seconds.',
+    about: 'A second, free cooldown ability (W): your army charges with extra speed and damage for a few seconds.',
     default: true,
   },
   conquest: {

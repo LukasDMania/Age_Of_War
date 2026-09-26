@@ -20,6 +20,9 @@ import {
   UiTextColors,
 } from '@ui/kenneyUi';
 import { FX_SUPERSAMPLE } from '@utils/FxArt';
+import { feature } from '@config/features.config';
+import { DoctrinePopup } from '@ui/experimental/DoctrinePopup';
+import { WarCryButton } from '@ui/experimental/WarCryButton';
 import { TurretPanel } from '@ui/TurretPanel';
 import { UiButton } from '@ui/UiButton';
 import { UnitBuyPanel } from '@ui/UnitBuyPanel';
@@ -123,6 +126,9 @@ export class HUDScene extends Phaser.Scene {
   private specialButton!: SpecialButton;
   private ageUpButton!: AgeUpButton;
   private pauseButton!: UiButton;
+  /** Prototype HUD parts (features.config), null when switched off. */
+  private warCryButton: WarCryButton | null = null;
+  private doctrinePopup: DoctrinePopup | null = null;
   private tabs!: Record<TabKey, UiButton>;
   private activeTab: TabKey = 'units';
   private data0!: HudSceneData;
@@ -180,6 +186,10 @@ export class HUDScene extends Phaser.Scene {
       SIDE_BUTTON_SIZE,
       own.age,
     );
+    this.warCryButton = feature('warCry')
+      ? new WarCryButton(this, HUD_SIDE, PANEL_LEFT + PANEL_WIDTH + SIDE_GAP * 2 + SIDE_BUTTON_SIZE + 48, PANEL_TOP + PANEL_HEIGHT / 2, 96)
+      : null;
+    this.doctrinePopup = feature('ageDoctrines') ? new DoctrinePopup(this, HUD_SIDE) : null;
     this.tabs = {
       units: this.buildTab(0, 'Units', 'units'),
       turrets: this.buildTab(1, 'Turrets', 'turrets'),
@@ -484,6 +494,7 @@ export class HUDScene extends Phaser.Scene {
     this.specialButton.setLocked(locked);
     this.ageUpButton.setLocked(locked);
     this.pauseButton.setEnabled(!locked);
+    this.warCryButton?.setLocked(locked);
   }
 
   private showBackgroundName(name: string): void {
@@ -544,5 +555,9 @@ export class HUDScene extends Phaser.Scene {
     this.unitPanel.destroy();
     this.specialButton.destroy();
     this.ageUpButton.destroy();
+    this.warCryButton?.destroy();
+    this.warCryButton = null;
+    this.doctrinePopup?.destroy();
+    this.doctrinePopup = null;
   }
 }
