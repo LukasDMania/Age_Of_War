@@ -138,7 +138,7 @@ export class HitEffects {
     const sprite = this.corpses.acquire();
     sprite
       .setTexture(key, 0)
-      .setOrigin(0.5, art.footY)
+      .setOrigin(art.dieBox?.originX ?? art.originX ?? 0.5, art.dieBox?.originY ?? art.footY)
       .setScale(art.scale)
       .setFlipX(side === 'enemy')
       .setPosition(x, LANE_Y)

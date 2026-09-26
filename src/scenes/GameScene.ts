@@ -1,5 +1,5 @@
 import Phaser from 'phaser';
-import { getAge, isFinalAge } from '@config/ages.config';
+import { AGE_COUNT, getAge, isFinalAge } from '@config/ages.config';
 import { BACKGROUND_STORAGE_KEY, BACKGROUNDS, type BackgroundDef } from '@config/backgrounds.config';
 import { BUILDING_IDS, BUILDING_LAYOUT, buildingX, type BuildingId } from '@config/buildings.config';
 import { AI_DIFFICULTIES, DEFAULT_AI_DIFFICULTY, type AiDifficultyName } from '@config/ai.config';
@@ -57,6 +57,7 @@ import {
   type DebugSnapshot,
 } from '@utils/debug';
 import { emit, eventBus, Events, on } from '@utils/EventBus';
+import { ensureRigArtForAge, releaseRigArtOutside, rigArtBytes } from '@utils/RigArt';
 
 /** Options for starting (or restarting) a match. */
 export interface GameSceneData {
@@ -71,6 +72,9 @@ export interface GameSceneData {
 
 /** Fixed step used by the dev-only `__aow.step()` fast-forward. */
 const DEBUG_STEP_MS = 1000 / 60;
+
+/** Real ms after an age change before the next age's unit art is drawn ahead of time. */
+const RIG_ART_PREDRAW_DELAY_MS = 2000;
 
 /** Camera scroll speed with the arrow / A-D keys, px per real second. */
 const CAMERA_KEY_SCROLL = 900;
@@ -193,6 +197,7 @@ export class GameScene extends Phaser.Scene {
       // The scenery follows the player's age (placeholder recolor, Phase 8).
       on(Events.AgeChanged, ({ side }) => {
         if (side === 'player') this.paintScenery();
+        this.refreshRigArt();
       }),
       on(Events.RestartRequested, () => this.restartMatch()),
       on(Events.BuildingUpgraded, ({ side, buildingId, level }) => this.buildingViews[side][buildingId].setLevel(level)),
@@ -221,6 +226,7 @@ export class GameScene extends Phaser.Scene {
       this.input.keyboard?.on('keydown-N', () => this.debugAgeUp('player'));
     }
 
+    this.refreshRigArt();
     this.events.once(Phaser.Scenes.Events.SHUTDOWN, () => this.teardown());
     this.scene.launch(SCENE_KEYS.hud, {
       state: this.state,
@@ -336,6 +342,25 @@ export class GameScene extends Phaser.Scene {
     this.ground.fillStyle(def.stripColor ?? ground, 1);
     const margin = BUILDING_LAYOUT.scrollMarginX;
     this.ground.fillRect(-margin, LANE_Y, GAME_WIDTH + 2 * margin, GAME_HEIGHT - LANE_Y);
+  }
+
+  /**
+   * Rig unit sheets are drawn per age on demand (they are large): the ages
+   * both sides are in now, the next age a moment later (so the next age-up
+   * doesn't stall a frame), and ages more than one away from both sides are
+   * released once none of their units are left on the lane.
+   */
+  private refreshRigArt(): void {
+    const ages = [this.state.player.age, this.state.enemy.age];
+    const lo = Math.min(...ages);
+    const hi = Math.max(...ages);
+    for (const age of new Set(ages)) ensureRigArtForAge(this, age);
+    this.time.delayedCall(RIG_ART_PREDRAW_DELAY_MS, () => {
+      if (hi + 1 < AGE_COUNT) ensureRigArtForAge(this, hi + 1);
+      const inUse = new Set([...this.units.activeUnits].map((u) => u.definition.id));
+      for (const queued of [...this.state.player.trainingQueue, ...this.state.enemy.trainingQueue]) inUse.add(queued.unitId);
+      releaseRigArtOutside(this, lo - 1, hi + 1, inUse);
+    });
   }
 
   /** Dev only: tops XP up to the threshold and asks for an age-up. */
@@ -540,6 +565,7 @@ export class GameScene extends Phaser.Scene {
       stats: (side = 'player') => this.stats.for(side),
       upgradeBuilding: (buildingId, side = 'player') => emit(Events.UpgradeBuildingRequested, { side, buildingId }),
       research: (researchId, side = 'player') => emit(Events.ResearchRequested, { side, researchId }),
+      rigArtBytes: () => rigArtBytes(this),
     });
   }
 

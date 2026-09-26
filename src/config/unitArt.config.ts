@@ -32,12 +32,16 @@ export interface UnitArt {
   frameHeight: number;
   /** Where the feet are, as a fraction of the frame height (the sprite's origin). */
   footY: number;
+  /** Where the unit's center line is, as a fraction of the frame width (default 0.5). */
+  originX?: number;
   scale: number;
   walk: UnitAnimationArt;
-  /** Played once each time the unit attacks. */
-  attack: UnitAnimationArt;
+  /** Played once each time the unit attacks (units without an attack have none). */
+  attack?: UnitAnimationArt;
   /** Played once where the unit died (rig art, Phase 16). */
   die?: UnitAnimationArt;
+  /** Frame box of the die strip when it differs from the others (rig art). */
+  dieBox?: { frameWidth: number; frameHeight: number; originX: number; originY: number };
   /** Frame of the walk strip shown while standing (blocked, or between attacks). */
   standFrame: number;
   /** Part of the stand frame used as the buy-button icon, in frame pixels. */
@@ -51,13 +55,16 @@ export interface UnitArt {
   rig?: RigSpec;
 }
 
+/** A box in rig units around the feet: [minX, maxX, minY, maxY] (up is negative). */
+export type RigBox = readonly [number, number, number, number];
+
 /** How a rig unit's sheets are drawn. Sizes are in rig units (see art/rigDraw.ts). */
 export interface RigSpec {
   kind: RigKind;
-  /** Frame box, centered on the unit's x, with the feet `footRig` from the top. */
-  boxW: number;
-  boxH: number;
-  footRig: number;
+  /** Box of the stand, walk and attack frames. */
+  live: RigBox;
+  /** Box of the die frames. */
+  die: RigBox;
   /** Screen px per rig unit. */
   pxPerUnit: number;
 }
@@ -68,50 +75,130 @@ export const RIG_SUPERSAMPLE = Math.min(2, Math.max(1.25, RENDER_SCALE));
 const RIG_WALK_FRAMES = 10;
 const RIG_ATTACK_FRAMES = 10;
 const RIG_DIE_FRAMES = 8;
+/** Extra rig units kept around the measured boxes (outline strokes, rounding). */
+const RIG_BOX_PAD = 2;
+
+/**
+ * Moment of the strike in a rig attack strip, as a share of the strip: the
+ * figures strike at 45% (see `art/rigFigure.ts`). A unit's `windupMs` is
+ * `RIG_STRIKE_AT x frames / attackRate` seconds.
+ */
+export const RIG_STRIKE_AT = 0.45;
+
+/** `windupMs` matching a rig attack played at `attackRate` frames per second. */
+export function rigWindupMs(attackRate: number): number {
+  return Math.round((RIG_STRIKE_AT * RIG_ATTACK_FRAMES * 1000) / attackRate);
+}
 
 /**
  * UnitArt for a rig unit. Walk strip: frame 0 is the standing pose, 1..10
  * the walk loop. Attack strip: 10 frames with the strike at 45%; pick
  * `attackRate` so that moment matches the unit's `windupMs`
- * (0.45 x 10 / rate s). Die strip: 8 frames, played once where it fell.
+ * (`rigWindupMs`). Die strip: 8 frames, played once where it fell. `live`
+ * and `die` are the measured drawn extents (see `/artlab.html?bounds`).
+ * `attackRate` 0 means the unit never attacks (money units): no attack strip.
  */
-function rigArt(kind: RigKind, boxW: number, boxH: number, footRig: number, pxPerUnit: number, attackRate: number): UnitArt {
+function rigArt(kind: RigKind, live: RigBox, die: RigBox, pxPerUnit: number, attackRate: number, iconBox?: RigBox): UnitArt {
   const k = pxPerUnit * RIG_SUPERSAMPLE;
-  const frameWidth = Math.round(boxW * k);
-  const frameHeight = Math.round(boxH * k);
+  const pad = (b: RigBox): RigBox => [b[0] - RIG_BOX_PAD, b[1] + RIG_BOX_PAD, b[2] - RIG_BOX_PAD, b[3] + RIG_BOX_PAD];
+  const L = pad(live);
+  const D = pad(die);
+  const frameWidth = Math.round((L[1] - L[0]) * k);
+  const frameHeight = Math.round((L[3] - L[2]) * k);
+  // Icon: the standing figure without long weapons reaching far out.
+  const I = iconBox ?? [Math.max(L[0], -24), Math.min(L[1], 26), L[2], Math.min(L[3], 2)];
   return {
     frameWidth,
     frameHeight,
-    footY: footRig / boxH,
+    footY: -L[2] / (L[3] - L[2]),
+    originX: -L[0] / (L[1] - L[0]),
     scale: 1 / RIG_SUPERSAMPLE,
     walk: { file: '', frames: RIG_WALK_FRAMES + 1, start: 1, end: RIG_WALK_FRAMES, frameRate: 14, repeat: -1 },
-    attack: { file: '', frames: RIG_ATTACK_FRAMES, frameRate: attackRate, repeat: 0 },
+    ...(attackRate > 0 ? { attack: { file: '', frames: RIG_ATTACK_FRAMES, frameRate: attackRate, repeat: 0 } } : {}),
     die: { file: '', frames: RIG_DIE_FRAMES, frameRate: 12, repeat: 0 },
+    dieBox: {
+      frameWidth: Math.round((D[1] - D[0]) * k),
+      frameHeight: Math.round((D[3] - D[2]) * k),
+      originX: -D[0] / (D[1] - D[0]),
+      originY: -D[2] / (D[3] - D[2]),
+    },
     standFrame: 0,
     icon: {
-      x: Math.round(frameWidth * 0.12),
-      y: 0,
-      width: Math.round(frameWidth * 0.76),
-      height: Math.round(frameHeight * 0.96),
+      x: Math.round((I[0] - L[0]) * k),
+      y: Math.round((I[2] - L[2]) * k),
+      width: Math.round((I[1] - I[0]) * k),
+      height: Math.round((I[3] - I[2]) * k),
     },
-    rig: { kind, boxW, boxH, footRig, pxPerUnit },
+    rig: { kind, live: L, die: D, pxPerUnit },
   };
 }
 
 /**
- * Stone Clubber: a spear-carrying LPC caveman made with the Universal LPC
- * Spritesheet Character Generator (walk and thrust, 64x64 frames). Owner's
- * test of real art, 2026-09-24. Credits: CREDITS.txt in its folder.
+ * Attack strip frame rates of the rig units, chosen so the strip fits in the
+ * unit's attack cooldown. Unit definitions take their `windupMs` from these
+ * (`rigWindupMs`), so damage lands on the strike frame.
+ */
+export const RIG_ATTACK_RATE: Readonly<Record<string, number>> = {
+  'stone-clubber': 16,
+  'stone-slinger': 14,
+  'stone-mammoth-rider': 14,
+  'stone-shaman': 10,
+  'castle-swordsman': 16,
+  'castle-archer': 13,
+  'castle-knight': 14,
+  'castle-catapult-crew': 12,
+  'renaissance-pikeman': 16,
+  'renaissance-musketeer': 12,
+  'renaissance-cuirassier': 14,
+  'renaissance-alchemist': 10,
+  'modern-rifleman': 16,
+  'modern-sniper': 11,
+  'modern-tank': 12,
+  'modern-officer': 10,
+  'future-blade-trooper': 20,
+  'future-laser-gunner': 22,
+  'future-mech': 14,
+  'future-shield-drone': 10,
+};
+
+const rate = (unitId: string): number => RIG_ATTACK_RATE[unitId] ?? 0;
+
+/**
+ * Every unit in the rig style (owner, 2026-09-26: the Stone age first, then
+ * the other ages "as done for the first age"). Boxes are the measured drawn
+ * extents of the stand/walk/attack frames and of the die frames.
  */
 export const UNIT_ART: Readonly<Partial<Record<string, UnitArt>>> = {
-  // Stone age in the rig style (owner, 2026-09-26).
-  // Frames are tall enough for weapons raised overhead and wide enough for
-  // the fall (they used to clip the top of club swings and staffs).
-  'stone-clubber': rigArt('clubber', 104, 82, 76, 1.45, 16),
-  'stone-slinger': rigArt('slinger', 104, 76, 70, 1.4, 14),
-  'stone-mammoth-rider': rigArt('mammoth-rider', 110, 110, 102, 1.15, 14),
-  'stone-trader': rigArt('trader', 104, 60, 54, 1.4, 12),
-  'stone-shaman': rigArt('shaman', 104, 82, 76, 1.4, 10),
+  // Stone.
+  'stone-clubber': rigArt('clubber', [-31, 43, -62, 3], [-52, 17, -55, 6], 1.45, rate('stone-clubber')),
+  'stone-slinger': rigArt('slinger', [-17, 27, -61, 3], [-57, 15, -59, 6], 1.4, rate('stone-slinger')),
+  'stone-mammoth-rider': rigArt('mammoth-rider', [-37, 47, -85, 6], [-57, 40, -83, 13], 1.15, rate('stone-mammoth-rider'), [-32, 40, -85, 6]),
+  'stone-trader': rigArt('trader', [-17, 17, -56, 3], [-57, 15, -55, 6], 1.4, 0),
+  'stone-shaman': rigArt('shaman', [-17, 24, -65, 3], [-60, 17, -64, 6], 1.4, rate('stone-shaman')),
+  // Castle.
+  'castle-swordsman': rigArt('swordsman', [-28, 43, -58, 3], [-52, 16, -56, 6], 1.4, rate('castle-swordsman')),
+  'castle-archer': rigArt('archer', [-17, 35, -56, 3], [-51, 13, -55, 6], 1.4, rate('castle-archer')),
+  'castle-knight': rigArt('knight', [-38, 60, -90, 6], [-55, 41, -92, 9], 1.1, rate('castle-knight'), [-34, 38, -90, 6]),
+  'castle-merchant': rigArt('merchant', [-17, 22, -58, 3], [-56, 21, -57, 6], 1.4, 0),
+  'castle-catapult-crew': rigArt('catapult-crew', [-30, 42, -55, 6], [-60, 56, -54, 10], 1.25, rate('castle-catapult-crew')),
+  // Renaissance.
+  'renaissance-pikeman': rigArt('pikeman', [-23, 55, -68, 3], [-64, 14, -68, 6], 1.4, rate('renaissance-pikeman'), [-20, 22, -68, 3]),
+  'renaissance-musketeer': rigArt('musketeer', [-17, 36, -60, 3], [-56, 20, -58, 6], 1.4, rate('renaissance-musketeer')),
+  'renaissance-cuirassier': rigArt('cuirassier', [-42, 49, -88, 4], [-48, 41, -85, 9], 1.1, rate('renaissance-cuirassier')),
+  'renaissance-banker': rigArt('banker', [-17, 20, -58, 3], [-54, 20, -57, 6], 1.4, 0),
+  'renaissance-alchemist': rigArt('alchemist', [-17, 21, -64, 3], [-59, 18, -61, 6], 1.4, rate('renaissance-alchemist')),
+  // Modern.
+  'modern-rifleman': rigArt('rifleman', [-17, 46, -57, 3], [-52, 20, -56, 6], 1.4, rate('modern-rifleman')),
+  'modern-sniper': rigArt('sniper', [-17, 34, -58, 4], [-53, 20, -56, 6], 1.4, rate('modern-sniper')),
+  'modern-tank': rigArt('tank', [-30, 49, -50, 3], [-30, 37, -54, 3], 1.45, rate('modern-tank'), [-30, 40, -50, 3]),
+  'modern-contractor': rigArt('contractor', [-17, 20, -59, 3], [-55, 20, -57, 6], 1.4, 0),
+  'modern-officer': rigArt('officer', [-17, 26, -58, 3], [-53, 16, -57, 6], 1.4, rate('modern-officer')),
+  // Future.
+  'future-blade-trooper': rigArt('blade-trooper', [-30, 43, -62, 3], [-51, 20, -55, 6], 1.4, rate('future-blade-trooper')),
+  'future-laser-gunner': rigArt('laser-gunner', [-17, 28, -56, 3], [-51, 17, -55, 6], 1.4, rate('future-laser-gunner')),
+  'future-mech': rigArt('mech', [-29, 46, -72, 4], [-26, 35, -78, 4], 1.3, rate('future-mech')),
+  'future-broker-drone': rigArt('broker-drone', [-24, 24, -70, 2], [-24, 33, -67, 13], 1.3, 0),
+  'future-shield-drone': rigArt('shield-drone', [-28, 27, -62, 2], [-24, 25, -53, 13], 1.3, rate('future-shield-drone')),
 };
 
 /**

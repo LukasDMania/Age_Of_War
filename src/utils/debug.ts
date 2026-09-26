@@ -130,6 +130,8 @@ export interface DebugHandle {
   upgradeBuilding(buildingId: BuildingId, side?: Side): void;
   /** Emits `research-requested`. */
   research(researchId: ResearchId, side?: Side): void;
+  /** Bytes of texture memory held by the rig unit sheets right now. */
+  rigArtBytes(): number;
 }
 
 declare global {

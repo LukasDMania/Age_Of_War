@@ -56,7 +56,15 @@ export class UtilitySystem {
   update(nowMs: number): void {
     for (const unit of this.units.activeUnits) {
       const effect = unit.definition.utility;
-      if (!effect || !unit.isAlive || nowMs < unit.utilityReadyAt) continue;
+      if (!effect || !unit.isAlive) continue;
+      if (effect.kind === 'aoe' && unit.utilityReleaseAt > 0) {
+        if (nowMs >= unit.utilityReleaseAt) {
+          unit.utilityReleaseAt = 0;
+          this.throwArea(unit, effect);
+        }
+        continue;
+      }
+      if (nowMs < unit.utilityReadyAt) continue;
       this.use(unit, effect, nowMs);
     }
   }
@@ -98,11 +106,10 @@ export class UtilitySystem {
           return;
         }
         unit.utilityReadyAt = nowMs + effect.intervalMs;
-        const dir = laneDir(unit.side);
-        const x = unit.x + dir * unit.halfWidth;
-        const y = LANE_Y - UNIT_SHOT_HEIGHT;
-        const damage = effect.damage * unit.statMultiplier('damage');
-        this.projectiles.launch(effect.projectileKey, unit.side, x, y, damage, effect.radius).aimAt(x + dir, y, true);
+        unit.playAttack();
+        // Released on the throw frame of the animation (like attack windups).
+        if (effect.windupMs && effect.windupMs > 0) unit.utilityReleaseAt = nowMs + effect.windupMs;
+        else this.throwArea(unit, effect);
         return;
       }
       case 'slow': {
@@ -126,6 +133,15 @@ export class UtilitySystem {
         return;
       }
     }
+  }
+
+  /** The `aoe` effect's level shot with splash. */
+  private throwArea(unit: Unit, effect: Extract<UtilityEffect, { kind: 'aoe' }>): void {
+    const dir = laneDir(unit.side);
+    const x = unit.x + dir * unit.halfWidth;
+    const y = LANE_Y - UNIT_SHOT_HEIGHT;
+    const damage = effect.damage * unit.statMultiplier('damage');
+    this.projectiles.launch(effect.projectileKey, unit.side, x, y, damage, effect.radius).aimAt(x + dir, y, true);
   }
 
   private *alliesWithin(unit: Unit, radius: number): Generator<Unit> {
@@ -154,5 +170,6 @@ export class UtilitySystem {
     if (nowMs < unit.auraPulseAt) return;
     unit.auraPulseAt = nowMs + UTILITY_AURA_PULSE_MS;
     this.pulse(unit, kind, radius);
+    unit.playAttack(); // visual: the alchemist lifts its flask, the officer gives orders
   }
 }

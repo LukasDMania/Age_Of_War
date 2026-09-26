@@ -6,6 +6,7 @@ import { unitArtFor } from '@entities/unitArt';
 import type { UnitAttack, UnitDefinition } from '@entities/unitDefinitions';
 import type { ModifiableStat, Side } from '@state/types';
 import { textureKeyFor } from '@utils/PlaceholderArt';
+import { ensureRigArt } from '@utils/RigArt';
 
 /** Unit state machine: idle -> walking -> attacking -> dead. */
 export enum UnitState {
@@ -69,6 +70,8 @@ export class Unit extends Phaser.GameObjects.Sprite {
   healLockUntil = 0;
   /** Sim time at which a started attack lands (0 = none pending; see `UnitAttack.windupMs`). */
   strikeAt = 0;
+  /** Sim time at which a started area throw (utility `aoe`) is released; 0 = none pending. */
+  utilityReleaseAt = 0;
   /** Scene time the unit last walked, so the walk loop doesn't flicker on 1-frame stops. */
   private walkedAt = -Infinity;
   shieldLockUntil = 0;
@@ -116,8 +119,9 @@ export class Unit extends Phaser.GameObjects.Sprite {
     this.art = unitArtFor(definition.id) ?? null;
     this.anims.stop();
     if (this.art) {
+      ensureRigArt(this.scene, definition.id);
       this.setTexture(unitArtKey(definition.id, 'walk', side), this.art.standFrame);
-      this.setScale(this.art.scale).setOrigin(0.5, this.art.footY);
+      this.setScale(this.art.scale).setOrigin(this.art.originX ?? 0.5, this.art.footY);
       this.baseTint = side === 'enemy' ? (this.art.enemyTint ?? null) : null;
     } else {
       this.setTexture(textureKeyFor(definition.spriteKey, side));
@@ -134,6 +138,7 @@ export class Unit extends Phaser.GameObjects.Sprite {
     this.auraPulseAt = 0;
     this.healLockUntil = 0;
     this.strikeAt = 0;
+    this.utilityReleaseAt = 0;
     this.walkedAt = -Infinity;
     this.shieldLockUntil = 0;
     this.killerSide = null;
@@ -208,7 +213,7 @@ export class Unit extends Phaser.GameObjects.Sprite {
 
   /** Visual only: plays the attack animation, if the unit has art. */
   playAttack(): void {
-    if (this.art) this.play(unitArtKey(this.definition.id, 'attack', this.side));
+    if (this.art?.attack) this.play(unitArtKey(this.definition.id, 'attack', this.side));
   }
 
   /**

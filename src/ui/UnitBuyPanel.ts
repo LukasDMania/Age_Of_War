@@ -141,7 +141,7 @@ export class UnitBuyPanel {
         return;
       }
       const definition = getUnitDefinition(unitId);
-      const iconArt = unitIcon(definition, this.side);
+      const iconArt = unitIcon(this.scene, definition, this.side);
       slot.icon.setTexture(iconArt.key, iconArt.frame).setVisible(true);
       fitImage(slot.icon, SLOT_SIZE - 10, SLOT_SIZE - 10);
     });
@@ -187,7 +187,7 @@ export class UnitBuyPanel {
       fontSize: '12px',
       color: UiTextColors.dim,
     });
-    const iconArt = unitIcon(definition, this.side);
+    const iconArt = unitIcon(this.scene, definition, this.side);
     const icon = scene.add.image(0, -10, iconArt.key, iconArt.frame);
     fitImage(icon, 56, 44);
     const name = scene.add

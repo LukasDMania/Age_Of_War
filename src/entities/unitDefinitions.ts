@@ -44,7 +44,16 @@ export type { UnitRole };
  */
 export type UtilityEffect =
   | { kind: 'heal'; radius: number; amount: number; intervalMs: number }
-  | { kind: 'aoe'; range: number; radius: number; damage: number; intervalMs: number; projectileKey: string }
+  | {
+      kind: 'aoe';
+      range: number;
+      radius: number;
+      damage: number;
+      intervalMs: number;
+      projectileKey: string;
+      /** Time from the start of the throw animation to the release (rig art). */
+      windupMs?: number;
+    }
   | { kind: 'slow'; range: number; mult: number; durationMs: number }
   | { kind: 'buff'; radius: number; damageMult: number }
   | { kind: 'shield'; radius: number; absorb: number; intervalMs: number };
@@ -197,7 +206,7 @@ const CASTLE_UNITS: readonly UnitDefinition[] = [
     speed: 60,
     killGold: 54,
     killXp: 22,
-    attack: { damage: 26, range: 8, cooldownMs: 1000 },
+    attack: { damage: 26, range: 8, cooldownMs: 1000, windupMs: 280 },
   },
   {
     id: 'castle-archer',
@@ -213,7 +222,7 @@ const CASTLE_UNITS: readonly UnitDefinition[] = [
     killGold: 78,
     killXp: 33,
     // Longer reach than the slinger, slower draw.
-    attack: { damage: 21, range: 150, cooldownMs: 1300, projectileKey: 'proj-arrow' },
+    attack: { damage: 21, range: 150, cooldownMs: 1300, projectileKey: 'proj-arrow', windupMs: 345 },
   },
   {
     id: 'castle-knight',
@@ -228,7 +237,7 @@ const CASTLE_UNITS: readonly UnitDefinition[] = [
     speed: 30,
     killGold: 210,
     killXp: 88,
-    attack: { damage: 35, range: 12, cooldownMs: 1600, splashRadius: 20 },
+    attack: { damage: 35, range: 12, cooldownMs: 1600, splashRadius: 20, windupMs: 320 },
   },
   {
     id: 'castle-merchant',
@@ -260,7 +269,7 @@ const CASTLE_UNITS: readonly UnitDefinition[] = [
     killGold: 156,
     killXp: 55,
     // Lobs a stone over the front line into the enemy's front ranks.
-    utility: { kind: 'aoe', range: 170, radius: 60, damage: 55, intervalMs: 2500, projectileKey: 'proj-boulder' },
+    utility: { kind: 'aoe', range: 170, radius: 60, damage: 55, intervalMs: 2500, projectileKey: 'proj-boulder', windupMs: 375 },
   },
 ];
 
@@ -281,7 +290,7 @@ const RENAISSANCE_UNITS: readonly UnitDefinition[] = [
     killGold: 114,
     killXp: 48,
     // A pike reaches a little further than a sword.
-    attack: { damage: 58, range: 16, cooldownMs: 1000 },
+    attack: { damage: 58, range: 16, cooldownMs: 1000, windupMs: 280 },
   },
   {
     id: 'renaissance-musketeer',
@@ -297,7 +306,7 @@ const RENAISSANCE_UNITS: readonly UnitDefinition[] = [
     killGold: 174,
     killXp: 72,
     // Slow reload, heavy ball.
-    attack: { damage: 65, range: 160, cooldownMs: 1800, projectileKey: 'proj-bullet' },
+    attack: { damage: 65, range: 160, cooldownMs: 1800, projectileKey: 'proj-bullet', windupMs: 375 },
   },
   {
     id: 'renaissance-cuirassier',
@@ -313,7 +322,7 @@ const RENAISSANCE_UNITS: readonly UnitDefinition[] = [
     killGold: 462,
     killXp: 192,
     // Armored cavalry: a faster heavy.
-    attack: { damage: 77, range: 12, cooldownMs: 1600, splashRadius: 20 },
+    attack: { damage: 77, range: 12, cooldownMs: 1600, splashRadius: 20, windupMs: 320 },
   },
   {
     id: 'renaissance-banker',
@@ -365,7 +374,7 @@ const MODERN_UNITS: readonly UnitDefinition[] = [
     speed: 60,
     killGold: 252,
     killXp: 105,
-    attack: { damage: 126, range: 10, cooldownMs: 1000 },
+    attack: { damage: 126, range: 10, cooldownMs: 1000, windupMs: 280 },
   },
   {
     id: 'modern-sniper',
@@ -381,7 +390,7 @@ const MODERN_UNITS: readonly UnitDefinition[] = [
     killGold: 378,
     killXp: 158,
     // Longest reach of any unit; 15% less damage per second to pay for it.
-    attack: { damage: 147, range: 220, cooldownMs: 2200, projectileKey: 'proj-bullet' },
+    attack: { damage: 147, range: 220, cooldownMs: 2200, projectileKey: 'proj-bullet', windupMs: 410 },
   },
   {
     id: 'modern-tank',
@@ -397,7 +406,7 @@ const MODERN_UNITS: readonly UnitDefinition[] = [
     killGold: 1008,
     killXp: 420,
     // A heavy that shoots: short-range shells that splash.
-    attack: { damage: 210, range: 110, cooldownMs: 2000, splashRadius: 28, projectileKey: 'proj-shell' },
+    attack: { damage: 210, range: 110, cooldownMs: 2000, splashRadius: 28, projectileKey: 'proj-shell', windupMs: 375 },
   },
   {
     id: 'modern-contractor',
@@ -449,7 +458,7 @@ const FUTURE_UNITS: readonly UnitDefinition[] = [
     killGold: 552,
     killXp: 230,
     // Quick slashes: faster rhythm, same damage per second curve.
-    attack: { damage: 221, range: 8, cooldownMs: 800 },
+    attack: { damage: 221, range: 8, cooldownMs: 800, windupMs: 225 },
   },
   {
     id: 'future-laser-gunner',
@@ -465,7 +474,7 @@ const FUTURE_UNITS: readonly UnitDefinition[] = [
     killGold: 828,
     killXp: 345,
     // Rapid fire.
-    attack: { damage: 104, range: 170, cooldownMs: 600, projectileKey: 'proj-laser' },
+    attack: { damage: 104, range: 170, cooldownMs: 600, projectileKey: 'proj-laser', windupMs: 205 },
   },
   {
     id: 'future-mech',
@@ -481,7 +490,7 @@ const FUTURE_UNITS: readonly UnitDefinition[] = [
     killGold: 2208,
     killXp: 920,
     // Close-range plasma bursts that splash.
-    attack: { damage: 368, range: 50, cooldownMs: 1600, splashRadius: 28, projectileKey: 'proj-plasma' },
+    attack: { damage: 368, range: 50, cooldownMs: 1600, splashRadius: 28, projectileKey: 'proj-plasma', windupMs: 320 },
   },
   {
     id: 'future-broker-drone',
