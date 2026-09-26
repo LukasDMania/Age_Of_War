@@ -1,0 +1,137 @@
+{
+ "difficulty": "hard",
+ "games": 2,
+ "minutes": 15,
+ "score": {
+  "classic": {
+   "classic": 0,
+   "balanced": 4,
+   "warlord": 3,
+   "turtle": 4,
+   "economist": 3,
+   "tactician": 2,
+   "trained": 1,
+   "raider": 1
+  },
+  "balanced": {
+   "classic": 0,
+   "balanced": 0,
+   "warlord": 0,
+   "turtle": 2,
+   "economist": 3,
+   "tactician": 0.5,
+   "trained": 0,
+   "raider": 0
+  },
+  "warlord": {
+   "classic": 1,
+   "balanced": 4,
+   "warlord": 0,
+   "turtle": 3.5,
+   "economist": 3.5,
+   "tactician": 2.5,
+   "trained": 0,
+   "raider": 0
+  },
+  "turtle": {
+   "classic": 0,
+   "balanced": 2,
+   "warlord": 0.5,
+   "turtle": 0,
+   "economist": 2.5,
+   "tactician": 1.5,
+   "trained": 0,
+   "raider": 0
+  },
+  "economist": {
+   "classic": 1,
+   "balanced": 1,
+   "warlord": 0.5,
+   "turtle": 1.5,
+   "economist": 0,
+   "tactician": 0,
+   "trained": 0,
+   "raider": 0
+  },
+  "tactician": {
+   "classic": 2,
+   "balanced": 3.5,
+   "warlord": 1.5,
+   "turtle": 2.5,
+   "economist": 4,
+   "tactician": 0,
+   "trained": 0,
+   "raider": 0
+  },
+  "trained": {
+   "classic": 3,
+   "balanced": 4,
+   "warlord": 4,
+   "turtle": 4,
+   "economist": 4,
+   "tactician": 4,
+   "trained": 0,
+   "raider": 0
+  },
+  "raider": {
+   "classic": 3,
+   "balanced": 4,
+   "warlord": 4,
+   "turtle": 4,
+   "economist": 4,
+   "tactician": 4,
+   "trained": 4,
+   "raider": 0
+  }
+ },
+ "total": {
+  "classic": {
+   "points": 18,
+   "games": 28,
+   "timeouts": 2,
+   "minutes": 189.31284866665686
+  },
+  "balanced": {
+   "points": 5.5,
+   "games": 28,
+   "timeouts": 8,
+   "minutes": 234.13240488881294
+  },
+  "warlord": {
+   "points": 14.5,
+   "games": 28,
+   "timeouts": 6,
+   "minutes": 242.80230711105233
+  },
+  "turtle": {
+   "points": 6.5,
+   "games": 28,
+   "timeouts": 10,
+   "minutes": 287.5188523332307
+  },
+  "economist": {
+   "points": 4,
+   "games": 28,
+   "timeouts": 10,
+   "minutes": 265.5743817776793
+  },
+  "tactician": {
+   "points": 13.5,
+   "games": 28,
+   "timeouts": 8,
+   "minutes": 253.90749772214014
+  },
+  "trained": {
+   "points": 23,
+   "games": 28,
+   "timeouts": 0,
+   "minutes": 122.03668355554983
+  },
+  "raider": {
+   "points": 27,
+   "games": 28,
+   "timeouts": 0,
+   "minutes": 107.40243305554472
+  }
+ }
+}

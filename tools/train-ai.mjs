@@ -337,10 +337,12 @@ if (PUBLISH) {
   const data = fs.existsSync(file) ? JSON.parse(fs.readFileSync(file, 'utf8')) : { profiles: [] };
   const vsClassic = champion.exam.byOpponent.classic;
   const note = `${champion.generations} generations x ${POPULATION} genomes of self-play (${FITNESS} fitness); exam vs classic hard: ${vsClassic?.wins ?? 0}/${vsClassic?.games ?? 0} wins`;
+  const all = Object.values(champion.exam.byOpponent).reduce((t, b) => ({ wins: t.wins + b.wins, games: t.games + b.games }), { wins: 0, games: 0 });
   const entry = {
     id: ID,
     label: LABEL,
-    description: `Evolved by self-play. ${note}.`,
+    // Short: the menu shows it on one line.
+    description: `Evolved by self-play (${champion.generations} generations); won ${all.wins} of ${all.games} exam games.`,
     genome: champion.genome,
     note,
   };

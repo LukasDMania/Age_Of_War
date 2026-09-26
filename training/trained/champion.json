@@ -1,0 +1,77 @@
+{
+ "id": "trained",
+ "label": "Trained",
+ "genome": {
+  "armyDrive": 0.315,
+  "armyTarget": 1.135,
+  "armyFloor": 3.771,
+  "armyUrgency": 2.812,
+  "threatUnits": 1.753,
+  "bias1": 0.373,
+  "bias2": 0.937,
+  "bias3": 1.525,
+  "counter": 0.8,
+  "mix": 1.947,
+  "utilityEvery": 3.675,
+  "mine": 0.452,
+  "library": 1.145,
+  "forge": 1.425,
+  "research": 1.185,
+  "focusMelee": 1.957,
+  "focusRanged": 0.558,
+  "focusHeavy": 1.703,
+  "focusTurret": 0.385,
+  "focusBounty": 0.794,
+  "moneyUnits": 0,
+  "moneySafety": 1,
+  "moneyMax": 1.774,
+  "horizon": 759.916,
+  "turrets": 0.079,
+  "turretSlots": 0.572,
+  "turretUpgrade": 0.101,
+  "turretThreat": 0.728,
+  "modernize": 0.916,
+  "kindRapid": 0.358,
+  "kindHeavy": 0.361,
+  "kindArea": 0.558,
+  "saveThreshold": 1.261,
+  "costAversion": 0.18,
+  "reserve": 2.221,
+  "ageUpDelay": 0,
+  "specialTargets": 2.055,
+  "specialDefensive": 0.476
+ },
+ "exam": {
+  "fitness": 1.45,
+  "byOpponent": {
+   "classic": {
+    "wins": 4,
+    "games": 4
+   },
+   "balanced": {
+    "wins": 4,
+    "games": 4
+   },
+   "warlord": {
+    "wins": 4,
+    "games": 4
+   },
+   "turtle": {
+    "wins": 4,
+    "games": 4
+   },
+   "economist": {
+    "wins": 4,
+    "games": 4
+   },
+   "tactician": {
+    "wins": 4,
+    "games": 4
+   }
+  }
+ },
+ "generations": 20,
+ "population": 20,
+ "fitness": "balanced",
+ "minutes": 15
+}

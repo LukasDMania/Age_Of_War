@@ -1355,6 +1355,13 @@ decisions made, anything the owner needs to confirm.
     a Forge and research; an AI-vs-AI match with every prototype switched
     off (no errors). Not checked: real-time play with a mouse by a person,
     audio (none), mobile.
+  - Training: run 1 (30 generations, old rules) seeded runs 2 and 3 on the
+    final rules (20 generations each), published as the **Trained** and
+    **Raider** profiles; both won every exam game. Round robin on hard
+    (`tools/ai-ladder.mjs`, `training/ladder-hard.json`): Raider 96%,
+    Trained 82%, Classic 64%, Warlord 52%, Tactician 48%, Turtle 23%,
+    Balanced 20%, Economist 14%. Against an idle player the trained AIs
+    field 2-5 fighters in the first minutes (Classic 3-6).
   - Choices to review: every number above (PROPOSED); whether Barracks,
     Shrine, Market, perks, veterancy, doctrines, War Cry and Conquest stay;
     whether the HUD should restyle on age-up; the Classic vs trained AI as

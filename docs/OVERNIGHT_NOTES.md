@@ -81,8 +81,8 @@ Economist (mines, libraries, fast ages) and Tactician (hard counters,
 keeps a healer close). **Classic**, the old AI, is still the default. The
 machine learning part is `tools/train-ai.mjs`: a genetic algorithm that
 plays thousands of headless AI-vs-AI matches and breeds the best genomes
-(README, "Training an AI profile"). Results so far are in "AI training
-results" below.
+(README, "Training an AI profile"). Results are in "AI training results"
+below; the two trained profiles, **Trained** and **Raider**, are in the menu.
 
 **Buildings.** The one-level-per-age limit is gone: every age opens **five
 levels** (25 in all), each cheaper and giving a steady gain, so there's
@@ -122,6 +122,47 @@ permanent unlocks in the **Hall of Glory** (more relic choices, a reroll, a
 starting relic, extra gold, rarer relics). Clearing a run unlocks the next
 **Ascension** level (tougher enemies, more Glory), up to 10.
 
+## AI training results
+
+Three training runs, each a population of 20 genomes evolving by self-play
+in headless Chromium (about 9 000 simulated matches in all):
+
+1. `training/trained-v1`: 30 generations on the rules from before the
+   buildings rework. Kept only as a starting point for the next two.
+2. `training/trained` -> profile **Trained**: 20 generations on the final
+   rules, balanced fitness. Won all 24 of its exam games (4 each against
+   Classic and the five hand-made profiles).
+3. `training/raider` -> profile **Raider**: 20 generations, aggressive
+   fitness (rewards pushing the front and quick wins). Won all 28 exam
+   games, including 4 of 4 against Trained.
+
+Round robin with `tools/ai-ladder.mjs` (every profile against every other,
+both on Hard, 4 games per pairing; `training/ladder-hard.json`):
+
+| Profile | Score | Avg match |
+| --- | --- | --- |
+| Raider | 96% | 3.8 min |
+| Trained | 82% | 4.4 min |
+| Classic | 64% | 6.8 min |
+| Warlord | 52% | 8.7 min |
+| Tactician | 48% | 9.1 min |
+| Turtle | 23% | 10.3 min |
+| Balanced | 20% | 8.4 min |
+| Economist | 14% | 9.5 min |
+
+What this means for playtesting:
+
+- The trained AIs are clearly the strongest. Try them on Normal first.
+- They win by out-building and out-timing the other AIs, not by flooding
+  the early game: against an idle player they field 2-5 fighters in the
+  first minutes (Classic: 3-6), all within the opening caps.
+- The hand-made profiles are weaker than Classic. They're still useful as
+  different styles to play against (Warlord and Tactician are the
+  interesting ones), but they'd need tuning before any of them becomes a
+  default.
+- AI-vs-AI matches are short (4-10 min) compared to your 30-minute target;
+  humans play differently, so your playtests are the real measure.
+
 ## Turning things off or undoing them
 
 - **Prototypes**: the Experiments panel on the title screen (per browser),
@@ -144,6 +185,9 @@ starting relic, extra gold, rarer relics). Clearing a run unlocks the next
 | `0baa88c` | Buildings rework and art; Barracks/Shrine/Market and perks |
 | `9e1e613` | Veterancy, doctrines, War Cry, Experiments panel |
 | `6cc6b79` | Conquest mode |
+| `e4387d1` | Docs; turret splashes no longer thump |
+| `1416844` | Conquest late starts skip the AI opening |
+| `97ed46c` | AI ladder tool; first training run |
 
 ## Decisions I made that you may want to change
 

@@ -411,7 +411,10 @@ default.
   heavies, few buildings), **Turtle** (turrets, upgrades, research, late
   push), **Economist** (mines, libraries, money units, fast ages),
   **Tactician** (hard counters, keeps a healer close), plus trained
-  profiles from `config/aiTrained.json`.
+  profiles from `config/aiTrained.json`: **Trained** (balanced fitness)
+  and **Raider** (rewards pushing the front and quick wins). In a round
+  robin on hard (2026-09-26) Raider scored 96%, Trained 82%, Classic 64%
+  and the hand-made profiles 14-52%.
 - Training (`tools/train-ai.mjs`): a genetic algorithm over genomes by
   self-play in headless Chromium, against the Classic hard AI, the hand
   profiles and a hall of fame of earlier champions (both sides on hard, so
