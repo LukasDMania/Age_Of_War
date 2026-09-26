@@ -2,7 +2,8 @@ import Phaser from 'phaser';
 import { AGE_COUNT, getAge, isFinalAge } from '@config/ages.config';
 import { BACKGROUND_STORAGE_KEY, BACKGROUNDS, type BackgroundDef } from '@config/backgrounds.config';
 import { BUILDING_IDS, BUILDING_LAYOUT, buildingX, type BuildingId } from '@config/buildings.config';
-import { AI_DIFFICULTIES, DEFAULT_AI_DIFFICULTY, type AiDifficultyName } from '@config/ai.config';
+import { AI_DIFFICULTIES, DEFAULT_AI_DIFFICULTY, type AiDifficulty, type AiDifficultyName } from '@config/ai.config';
+import { DEFAULT_AI_PROFILE, findAiProfile, type AiGenome } from '@config/aiGenome.config';
 import {
   BASE_X,
   DEBUG_CHEATS,
@@ -24,6 +25,7 @@ import { ProjectileFactory } from '@entities/ProjectileFactory';
 import { UnitFactory } from '@entities/UnitFactory';
 import { AgeProgressionSystem } from '@systems/AgeProgressionSystem';
 import { AIController } from '@systems/AIController';
+import { UtilityAI } from '@systems/UtilityAI';
 import { AiIncomeSystem } from '@systems/AiIncomeSystem';
 import { BuildingSystem } from '@systems/BuildingSystem';
 import { CasualtySystem } from '@systems/CasualtySystem';
@@ -59,6 +61,7 @@ import {
 } from '@utils/debug';
 import { emit, eventBus, Events, on } from '@utils/EventBus';
 import { ensureRigArtForAge, releaseRigArtOutside, rigArtBytes } from '@utils/RigArt';
+import { HEADLESS_SIM } from '@utils/runtimeFlags';
 
 /** Options for starting (or restarting) a match. */
 export interface GameSceneData {
@@ -69,6 +72,19 @@ export interface GameSceneData {
   ai?: AiDifficultyName | 'off';
   /** Dev and tuning only: an AI also plays the player's side (AI vs AI). */
   playerAi?: AiDifficultyName;
+  /** Enemy AI profile (strategy) by id, see `AI_PROFILES`; default 'classic'. */
+  profile?: string;
+  /** Player-side AI profile for AI vs AI. */
+  playerProfile?: string;
+  /** Training: explicit genomes for the utility brain (override the profiles). */
+  genome?: AiGenome;
+  playerGenome?: AiGenome;
+}
+
+/** Anything that plays a side by emitting requests. */
+interface AiBrain {
+  update(nowMs: number): void;
+  lastDecision?: string;
 }
 
 /** Fixed step used by the dev-only `__aow.step()` fast-forward. */
@@ -109,8 +125,8 @@ export class GameScene extends Phaser.Scene {
   private buildingSystem!: BuildingSystem;
   private buildingViews!: Record<Side, Record<BuildingId, Building>>;
   private scrollKeys: Phaser.Input.Keyboard.Key[][] = [];
-  private ai: AIController | null = null;
-  private playerAi: AIController | null = null;
+  private ai: AiBrain | null = null;
+  private playerAi: AiBrain | null = null;
   /** The AI's own income, one per AI-played side (Phase 15). */
   private aiIncome: AiIncomeSystem[] = [];
   /** Dev builds, human player only: records the match to playtest-logs/. */
@@ -123,6 +139,7 @@ export class GameScene extends Phaser.Scene {
 
   private aiSetting: AiDifficultyName | 'off' = DEFAULT_AI_DIFFICULTY;
   private playerAiSetting: AiDifficultyName | null = null;
+  private sceneData: GameSceneData = {};
   private debugModifierCount = 0;
   private simSpeed = 1;
   private cleanups: (() => void)[] = [];
@@ -133,6 +150,7 @@ export class GameScene extends Phaser.Scene {
 
   /** Runs before `create` on every start and restart: reset per-match fields. */
   init(data: GameSceneData = {}): void {
+    this.sceneData = data;
     this.aiSetting = data.ai ?? DEFAULT_AI_DIFFICULTY;
     this.playerAiSetting = data.playerAi ?? null;
     this.simSpeed = 1;
@@ -182,11 +200,11 @@ export class GameScene extends Phaser.Scene {
     this.ai =
       this.aiSetting === 'off'
         ? null
-        : new AIController(this.state, 'enemy', this.units, this.bases, AI_DIFFICULTIES[this.aiSetting]);
+        : this.makeBrain('enemy', AI_DIFFICULTIES[this.aiSetting], this.sceneData.profile, this.sceneData.genome);
     this.playerAi =
       this.playerAiSetting === null
         ? null
-        : new AIController(this.state, 'player', this.units, this.bases, AI_DIFFICULTIES[this.playerAiSetting]);
+        : this.makeBrain('player', AI_DIFFICULTIES[this.playerAiSetting], this.sceneData.playerProfile, this.sceneData.playerGenome);
 
     this.cleanups.push(
       on(Events.BaseDestroyed, ({ side }) => this.onBaseDestroyed(side)),
@@ -231,9 +249,16 @@ export class GameScene extends Phaser.Scene {
 
     this.refreshRigArt();
     this.events.once(Phaser.Scenes.Events.SHUTDOWN, () => this.teardown());
+    if (HEADLESS_SIM) {
+      // Automated runs: simulate only (no HUD, nothing drawn).
+      this.cameras.main.setVisible(false);
+      this.match.start();
+      return;
+    }
     this.scene.launch(SCENE_KEYS.hud, {
       state: this.state,
       enemyController: this.aiSetting,
+      enemyProfile: this.aiSetting === 'off' ? '' : (findAiProfile(this.sceneData.profile ?? DEFAULT_AI_PROFILE)?.label ?? ''),
       backgroundName: this.background.name,
     } satisfies HudSceneData);
     this.match.start();
@@ -280,6 +305,17 @@ export class GameScene extends Phaser.Scene {
     this.buildingSystem.update(dt);
     for (const income of this.aiIncome) income.update(dt, this.match.elapsedMs);
     this.logger?.update(this.match.elapsedMs);
+  }
+
+  /**
+   * The AI for a side: the classic controller, or the utility brain with a
+   * profile's genome (2026-09-26). An explicit genome (training) wins.
+   */
+  private makeBrain(side: Side, difficulty: AiDifficulty, profileId?: string, genome?: AiGenome): AiBrain {
+    const profile = findAiProfile(profileId ?? DEFAULT_AI_PROFILE);
+    const weights = genome ?? (profile?.brain === 'utility' ? profile.genome : undefined);
+    if (weights) return new UtilityAI(this.state, side, this.units, this.bases, difficulty, weights);
+    return new AIController(this.state, side, this.units, this.bases, difficulty);
   }
 
   /** Dev only: runs `ms` of simulation at once in fixed steps, without rendering. */
@@ -403,9 +439,7 @@ export class GameScene extends Phaser.Scene {
   /** A fresh match with the same opponent. */
   private restartMatch(): void {
     this.logger?.finish('restarted');
-    const data: GameSceneData = { ai: this.aiSetting };
-    if (this.playerAiSetting) data.playerAi = this.playerAiSetting;
-    this.scene.restart(data);
+    this.scene.restart({ ...this.sceneData });
   }
 
   private setSimSpeed(multiplier: number): void {
@@ -523,8 +557,8 @@ export class GameScene extends Phaser.Scene {
         this.effects.muted = true;
         this.impacts.muted = true;
         this.stepSim(ms);
-        this.effects.muted = false;
-        this.impacts.muted = false;
+        this.effects.muted = HEADLESS_SIM;
+        this.impacts.muted = HEADLESS_SIM;
       },
       restart: (data = {}) => this.scene.restart(data),
       projectileCount: () => this.projectiles.activeProjectiles.size,

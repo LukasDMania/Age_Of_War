@@ -30,6 +30,8 @@ export interface HudSceneData {
   state: MatchState;
   /** Who plays the enemy, shown next to its age ('off' when nobody does). */
   enemyController: AiDifficultyName | 'off';
+  /** The enemy AI profile's name ('' for none). */
+  enemyProfile?: string;
   /** Playtest background currently shown (Phase 15). */
   backgroundName: string;
   /**
@@ -379,7 +381,8 @@ export class HUDScene extends Phaser.Scene {
         strokeThickness: 4,
       })
       .setOrigin(0, 0.5);
-    const controller = this.enemyController === 'off' ? 'No AI' : `${capitalize(this.enemyController)} AI`;
+    const profile = this.data0.enemyProfile && this.data0.enemyProfile !== 'Classic' ? ` · ${this.data0.enemyProfile}` : '';
+    const controller = this.enemyController === 'off' ? 'No AI' : `${capitalize(this.enemyController)} AI${profile}`;
     this.add
       .text(left + TOP_PANEL_WIDTH - 16, top + 22, controller, { fontFamily: UI_FONT, fontSize: '14px', color: UiTextColors.dim })
       .setOrigin(1, 0.5);

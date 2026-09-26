@@ -6,6 +6,7 @@ import {
   isAiDifficultyName,
   type AiDifficultyName,
 } from '@config/ai.config';
+import { AI_PROFILES, DEFAULT_AI_PROFILE, findAiProfile } from '@config/aiGenome.config';
 import { BACKGROUNDS } from '@config/backgrounds.config';
 import { BASE_X, GAME_WIDTH, LANE_Y, SCENE_KEYS } from '@config/constants';
 import { unitArtKey } from '@config/unitArt.config';
@@ -24,13 +25,14 @@ import { UiButton } from '@ui/UiButton';
 import { baseArtKey, BASE_SUPERSAMPLE, ensureBaseArt } from '@utils/BaseArt';
 import { ensureRigArt } from '@utils/RigArt';
 
-/** Registry key that remembers the last difficulty picked this session. */
+/** Registry keys that remember the last difficulty and AI profile picked this session. */
 const REGISTRY_DIFFICULTY = 'menu-ai-difficulty';
+const REGISTRY_PROFILE = 'menu-ai-profile';
 
 const CARD_WIDTH = 280;
 const CARD_HEIGHT = 112;
 const CARD_GAP = 18;
-const CARD_Y = 316;
+const CARD_Y = 300;
 
 /** The title screen parade: one unit per age, walking the lane in order. */
 const PARADE: readonly string[] = [
@@ -56,6 +58,9 @@ const PARADE_GAP = 120;
  */
 export class MenuScene extends Phaser.Scene {
   private choice: AiDifficultyName = DEFAULT_AI_DIFFICULTY;
+  private profileId = DEFAULT_AI_PROFILE;
+  private profileText!: Phaser.GameObjects.Text;
+  private profileAbout!: Phaser.GameObjects.Text;
   private cards: Partial<Record<AiDifficultyName, UiButton>> = {};
   private backdrop: Backdrop | null = null;
   private parade: Phaser.GameObjects.Sprite[] = [];
@@ -68,6 +73,8 @@ export class MenuScene extends Phaser.Scene {
     applyUiTheme(0);
     const remembered: unknown = this.registry.get(REGISTRY_DIFFICULTY);
     this.choice = isAiDifficultyName(remembered) ? remembered : DEFAULT_AI_DIFFICULTY;
+    const rememberedProfile: unknown = this.registry.get(REGISTRY_PROFILE);
+    this.profileId = findAiProfile(typeof rememberedProfile === 'string' ? rememberedProfile : null)?.id ?? DEFAULT_AI_PROFILE;
     this.cards = {};
     this.drawScenery();
 
@@ -93,7 +100,7 @@ export class MenuScene extends Phaser.Scene {
       })
       .setOrigin(0.5);
     this.add
-      .text(cx, 234, 'Choose your opponent', {
+      .text(cx, 218, 'Choose your opponent', {
         fontFamily: UI_TITLE_FONT,
         fontSize: '26px',
         color: '#fff6de',
@@ -135,7 +142,22 @@ export class MenuScene extends Phaser.Scene {
       this.cards[name] = card;
     });
 
-    const play = new UiButton(this, cx, 438, 250, 64, { onPress: () => this.play(), tint: UiColors.ready, framed: true });
+    // Enemy AI profile (strategy), 2026-09-26: cycle with the arrows or Q / E.
+    const profileY = 404;
+    const left = new UiButton(this, cx - 250, profileY, 44, 44, { onPress: () => this.cycleProfile(-1), framed: true });
+    left.add(this.add.text(0, 0, '<', { fontFamily: UI_TITLE_FONT, fontSize: '26px', color: UiTextColors.parchment }).setOrigin(0.5));
+    const right = new UiButton(this, cx + 250, profileY, 44, 44, { onPress: () => this.cycleProfile(1), framed: true });
+    right.add(this.add.text(0, 0, '>', { fontFamily: UI_TITLE_FONT, fontSize: '26px', color: UiTextColors.parchment }).setOrigin(0.5));
+    addThemedPanel(this, cx, profileY, 440, 56, { alpha: 0.95 });
+    this.profileText = this.add
+      .text(cx, profileY - 10, '', { fontFamily: UI_TITLE_FONT, fontSize: '22px', color: UiTextColors.gold, stroke: UiTextColors.stroke, strokeThickness: 4 })
+      .setOrigin(0.5);
+    this.profileAbout = this.add
+      .text(cx, profileY + 14, '', { fontFamily: UI_FONT, fontSize: '13px', color: UiTextColors.parchment })
+      .setOrigin(0.5);
+    this.showProfile();
+
+    const play = new UiButton(this, cx, 486, 250, 64, { onPress: () => this.play(), tint: UiColors.ready, framed: true });
     play.add(
       this.add
         .text(0, 0, 'PLAY', {
@@ -156,7 +178,7 @@ export class MenuScene extends Phaser.Scene {
         650,
         [
           'Buy units 1-5  ·  Tab switches panels  ·  Special: S  ·  Age up: A  ·  Pause: P or Esc',
-          'Destroy the enemy base, keep yours standing.  Menu: Left/Right or 1-3, Enter to play',
+          'Destroy the enemy base, keep yours standing.  Menu: 1-3 difficulty, Q/E AI profile, Enter to play',
         ],
         { fontFamily: UI_FONT, fontSize: '15px', color: UiTextColors.parchment, align: 'center', lineSpacing: 8 },
       )
@@ -168,6 +190,8 @@ export class MenuScene extends Phaser.Scene {
     keys?.on('keydown-ONE', () => this.select('easy'));
     keys?.on('keydown-TWO', () => this.select('normal'));
     keys?.on('keydown-THREE', () => this.select('hard'));
+    keys?.on('keydown-Q', () => this.cycleProfile(-1));
+    keys?.on('keydown-E', () => this.cycleProfile(1));
     keys?.on('keydown-ENTER', () => this.play());
     keys?.on('keydown-SPACE', () => this.play());
 
@@ -226,7 +250,22 @@ export class MenuScene extends Phaser.Scene {
     if (next) this.select(next);
   }
 
+  private cycleProfile(direction: number): void {
+    const i = AI_PROFILES.findIndex((p) => p.id === this.profileId);
+    const next = AI_PROFILES[(i + direction + AI_PROFILES.length) % AI_PROFILES.length];
+    if (!next) return;
+    this.profileId = next.id;
+    this.registry.set(REGISTRY_PROFILE, next.id);
+    this.showProfile();
+  }
+
+  private showProfile(): void {
+    const profile = findAiProfile(this.profileId);
+    this.profileText.setText(`Enemy AI: ${profile?.label ?? 'Classic'}`);
+    this.profileAbout.setText(profile?.description ?? '');
+  }
+
   private play(): void {
-    this.scene.start(SCENE_KEYS.game, { ai: this.choice } satisfies GameSceneData);
+    this.scene.start(SCENE_KEYS.game, { ai: this.choice, profile: this.profileId } satisfies GameSceneData);
   }
 }

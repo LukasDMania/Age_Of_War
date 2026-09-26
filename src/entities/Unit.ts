@@ -7,6 +7,7 @@ import type { UnitAttack, UnitDefinition } from '@entities/unitDefinitions';
 import type { ModifiableStat, Side } from '@state/types';
 import { textureKeyFor } from '@utils/PlaceholderArt';
 import { ensureRigArt } from '@utils/RigArt';
+import { HEADLESS_SIM } from '@utils/runtimeFlags';
 
 /** Unit state machine: idle -> walking -> attacking -> dead. */
 export enum UnitState {
@@ -116,7 +117,8 @@ export class Unit extends Phaser.GameObjects.Sprite {
     const placeholder = this.scene.textures.getFrame(textureKeyFor(definition.spriteKey, side));
     this.bodyWidth = placeholder.width;
     this.bodyHeight = placeholder.height;
-    this.art = unitArtFor(definition.id) ?? null;
+    // Headless runs (AI training) draw nothing: skip the art sheets.
+    this.art = HEADLESS_SIM ? null : (unitArtFor(definition.id) ?? null);
     this.anims.stop();
     if (this.art) {
       ensureRigArt(this.scene, definition.id);

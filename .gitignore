@@ -5,3 +5,7 @@ dist/
 .vscode/
 tsconfig.tsbuildinfo
 vite.config.ts.timestamp-*
+
+# AI training (tools/train-ai.mjs): build output and resumable state
+training/build/
+training/*/state.json

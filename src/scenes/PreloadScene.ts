@@ -40,7 +40,9 @@ export class PreloadScene extends Phaser.Scene {
     // that enemy (handy for testing); otherwise the title menu comes first.
     const ai = params.get('ai');
     if (ai === 'off' || isAiDifficultyName(ai)) {
-      this.scene.start(SCENE_KEYS.game, { ai } satisfies GameSceneData);
+      // `&profile=warlord` (etc.) picks the enemy AI's strategy too.
+      const profile = params.get('profile') ?? undefined;
+      this.scene.start(SCENE_KEYS.game, (profile ? { ai, profile } : { ai }) satisfies GameSceneData);
       return;
     }
     this.scene.start(SCENE_KEYS.menu);

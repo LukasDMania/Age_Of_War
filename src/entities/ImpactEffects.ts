@@ -17,6 +17,7 @@ import { laneDir, type Side } from '@state/types';
 import { Events, on, type EventPayloads, type UtilityKind } from '@utils/EventBus';
 import { FX_SUPERSAMPLE } from '@utils/FxArt';
 import { ObjectPool } from '@utils/ObjectPool';
+import { HEADLESS_SIM } from '@utils/runtimeFlags';
 
 type Emitter = Phaser.GameObjects.Particles.ParticleEmitter;
 type EmitterConfig = Phaser.Types.GameObjects.Particles.ParticleEmitterConfig;
@@ -49,7 +50,7 @@ const PURPLE = [0xd9b8ff, 0xb070ff, 0xffffff];
  */
 export class ImpactEffects {
   /** Set while the simulation runs in bulk without rendering. */
-  muted = false;
+  muted = HEADLESS_SIM;
   readonly thump = new CameraThump();
   private readonly scene: Phaser.Scene;
   private readonly cleanups: (() => void)[];

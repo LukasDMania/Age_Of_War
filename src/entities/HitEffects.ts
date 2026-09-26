@@ -4,6 +4,7 @@ import type { Side } from '@state/types';
 import { UI_FONT } from '@ui/kenneyUi';
 import { Events, on, type EventPayloads, type UtilityKind } from '@utils/EventBus';
 import { ObjectPool } from '@utils/ObjectPool';
+import { HEADLESS_SIM } from '@utils/runtimeFlags';
 import { unitArtKey } from '@config/unitArt.config';
 import { unitArtFor } from '@entities/unitArt';
 
@@ -60,7 +61,7 @@ export class HitEffects {
   private readonly corpses: ObjectPool<Phaser.GameObjects.Sprite>;
   private readonly cleanups: (() => void)[];
   /** Set while the simulation runs in bulk without rendering (dev tooling). */
-  muted = false;
+  muted = HEADLESS_SIM;
 
   constructor(scene: Phaser.Scene) {
     this.scene = scene;

@@ -11,6 +11,7 @@ import {
 } from '@config/unitArt.config';
 import { findUnitDefinition, UNIT_DEFINITIONS } from '@entities/unitDefinitions';
 import { SIDES, type Side } from '@state/types';
+import { HEADLESS_SIM } from '@utils/runtimeFlags';
 
 /** Team colors on rig art (belts, headbands, saddles), matching the placeholders. */
 export const TEAM_COLORS: Record<Side, string> = { player: '#3d7fd9', enemy: '#d9483d' };
@@ -41,7 +42,7 @@ export function ensureRigArtForAge(scene: Phaser.Scene, age: number): void {
 /** Draws and registers a rig unit's sheets (both sides) if they don't exist yet. */
 export function ensureRigArt(scene: Phaser.Scene, unitId: string): void {
   const art = UNIT_ART[unitId];
-  if (!art?.rig) return;
+  if (!art?.rig || HEADLESS_SIM) return;
   for (const side of SIDES) {
     for (const anim of ANIMS) {
       if (!art[anim]) continue;
