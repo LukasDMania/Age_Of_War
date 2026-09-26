@@ -49,7 +49,7 @@ kinds.forEach((kind, row) => {
     }
   }
 });
-(window as unknown as { __labReady: boolean }).__labReady = true;
+if (!params.has('turrets')) (window as unknown as { __labReady: boolean }).__labReady = true;
 
 /** `?bounds`: the drawn extent of each kind over all frames, in rig units. */
 if (params.has('bounds')) {
@@ -91,4 +91,51 @@ if (params.has('bounds')) {
   };
   for (const kind of RIG_KINDS) result[kind] = { live: measure(kind, ['stand', 'walk', 'attack']), die: measure(kind, ['die']) };
   (window as unknown as { __bounds: unknown }).__bounds = result;
+}
+
+/** `?turrets`: every turret at levels 0-3 (mount + head at rest and aimed). */
+if (params.has('turrets')) {
+  void import('@/art/turretDraw').then(({ drawTurretMount, drawTurretHead, drawTurretFlash, TURRET_MOTION }) => {
+    const ids = Object.keys(TURRET_MOTION) as (keyof typeof TURRET_MOTION)[];
+    const ts = Number(params.get('scale') ?? 3);
+    const cw = 70 * ts;
+    const ch = 62 * ts;
+    canvas.width = cw * 8 + 10;
+    canvas.height = ch * ids.length + 10;
+    const g = canvas.getContext('2d')!;
+    ids.forEach((id, row) => {
+      const m = TURRET_MOTION[id];
+      for (let col = 0; col < 8; col++) {
+        const lv = col % 4;
+        const fired = col >= 4;
+        const x = 5 + col * cw;
+        const y = 5 + row * ch;
+        g.fillStyle = (row + col) % 2 ? '#3a4150' : '#353b48';
+        g.fillRect(x, y, cw, ch);
+        g.save();
+        g.translate(x + cw * 0.42, y + ch - 10 * ts);
+        g.scale(ts, ts);
+        g.fillStyle = '#3a3027';
+        g.fillRect(-23, 0, 46, 6);
+        drawTurretMount(g, id, team, lv);
+        g.save();
+        g.translate(m.pivot[0], m.pivot[1]);
+        const angle = m.aim !== 'track' ? (fired ? (m.release ?? 0) : m.rest) : fired ? -0.35 : m.rest;
+        g.rotate(-angle);
+        if (fired && m.aim === 'track') g.translate(-m.recoil, 0);
+        drawTurretHead(g, id, team, lv);
+        if (fired && m.flash !== 'none') {
+          g.translate(m.barrel, 0);
+          drawTurretFlash(g, m.flash);
+        }
+        g.restore();
+        g.restore();
+        if (col === 0) {
+          g.fillStyle = '#9aa';
+          g.fillText(id, x + 3, y + 11);
+        }
+      }
+    });
+    (window as unknown as { __labReady: boolean }).__labReady = true;
+  });
 }

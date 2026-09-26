@@ -97,9 +97,11 @@ export class TurretSystem {
   update(nowMs: number): void {
     for (const side of SIDES) {
       for (const turret of this.turrets[side]) {
-        if (!turret || nowMs < turret.fireReadyAt) continue;
+        if (!turret) continue;
         const target = this.frontMostEnemyInRange(turret);
-        if (!target) continue;
+        // Visual: the head follows its target (or goes back to rest).
+        turret.track(target ? target.x : null, target?.centerY);
+        if (!target || nowMs < turret.fireReadyAt) continue;
         turret.fireReadyAt = nowMs + Math.max(1, turret.getStat('cooldown'));
         this.fire(turret, target);
       }
@@ -245,6 +247,7 @@ export class TurretSystem {
     const definition = turret.definition;
     const damage = turret.getStat('damage');
     const splash = definition.splashRadius ?? 0;
+    turret.playFire();
     if (definition.projectileKey) {
       // Straight at the target's middle; it hits the first enemy on that line
       // (usually the target) or the ground.
