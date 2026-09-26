@@ -49,7 +49,7 @@ kinds.forEach((kind, row) => {
     }
   }
 });
-if (!params.has('turrets')) (window as unknown as { __labReady: boolean }).__labReady = true;
+if (!params.has('turrets') && !params.has('buildings')) (window as unknown as { __labReady: boolean }).__labReady = true;
 
 /** `?bounds`: the drawn extent of each kind over all frames, in rig units. */
 if (params.has('bounds')) {
@@ -135,6 +135,36 @@ if (params.has('turrets')) {
           g.fillText(id, x + 3, y + 11);
         }
       }
+    });
+    (window as unknown as { __labReady: boolean }).__labReady = true;
+  });
+}
+
+/** `?buildings`: every building at levels 1, 3, 5 | 6, 10 | 11, 15 | 16, 20 | 21, 25. */
+if (params.has('buildings')) {
+  void import('@/art/buildingDraw').then(({ drawBuildingArt }) => {
+    const ids = ['mine', 'library', 'forge', 'barracks', 'shrine', 'market'] as const;
+    const levels = [1, 3, 5, 6, 10, 11, 15, 16, 20, 21, 25];
+    const bs = Number(params.get('scale') ?? 1.2);
+    const cw = 140 * bs;
+    const ch = 124 * bs;
+    canvas.width = cw * levels.length + 10;
+    canvas.height = ch * ids.length + 10;
+    const g = canvas.getContext('2d')!;
+    ids.forEach((id, row) => {
+      levels.forEach((level, col) => {
+        const x = 5 + col * cw;
+        const y = 5 + row * ch;
+        g.fillStyle = (row + col) % 2 ? '#8fb8d8' : '#9ac4e0';
+        g.fillRect(x, y, cw, ch);
+        g.save();
+        g.translate(x + cw / 2, y + ch - 6 * bs);
+        g.scale(bs, bs);
+        drawBuildingArt(g, id, level, team);
+        g.restore();
+        g.fillStyle = '#123';
+        g.fillText(`${id} L${level}`, x + 3, y + 11);
+      });
     });
     (window as unknown as { __labReady: boolean }).__labReady = true;
   });

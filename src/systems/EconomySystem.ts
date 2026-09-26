@@ -1,4 +1,5 @@
 import { researchMult } from '@config/buildings.config';
+import { buildingEffects } from '@systems/BuildingSystem';
 import { ECONOMY_KILL_BOUNTY_MULT, ECONOMY_PENALTY_FLOOR, KILL_GOLD_MULT, KILL_XP_MULT } from '@config/constants';
 import type { UnitFactory } from '@entities/UnitFactory';
 import { getUnitDefinition } from '@entities/unitDefinitions';
@@ -63,7 +64,9 @@ export class EconomySystem {
   /** `deltaMs` is simulation time; call only while the match is playing. */
   update(deltaMs: number): void {
     for (const side of SIDES) {
-      if (this.unitIncome[side] > 0) this.pay(side, this.unitCarry, this.unitIncome[side], deltaMs, 'economy-unit');
+      // Market perk (Caravans) raises money-unit income.
+      const income = this.unitIncome[side] * buildingEffects(this.state[side]).moneyIncome;
+      if (income > 0) this.pay(side, this.unitCarry, income, deltaMs, 'economy-unit');
     }
   }
 
@@ -89,7 +92,8 @@ export class EconomySystem {
     const definition = getUnitDefinition(unitId);
     const bounty = definition.income ? ECONOMY_KILL_BOUNTY_MULT : 1;
     const plunder = researchMult('bounty', this.state[killerSide].research.bounty);
-    addGold(this.state, killerSide, definition.killGold * bounty * plunder * KILL_GOLD_MULT, 'kill');
+    const perks = buildingEffects(this.state[killerSide]).killGold;
+    addGold(this.state, killerSide, definition.killGold * bounty * plunder * perks * KILL_GOLD_MULT, 'kill');
     addXp(this.state, killerSide, definition.killXp * KILL_XP_MULT);
     if (definition.income) this.recompute(side);
   }

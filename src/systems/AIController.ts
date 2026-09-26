@@ -1,4 +1,5 @@
 import {
+  aiBuildingCap,
   AI_RICH_GOLD_MULT,
   AI_THREAT_DISTANCE,
   AI_UNIT_MIX,
@@ -7,9 +8,10 @@ import {
 } from '@config/ai.config';
 import { getAge } from '@config/ages.config';
 import {
+  activeBuildingIds,
   buildingUpgradeCost,
+  perksPending,
   RESEARCH,
-  researchCost,
   type BuildingId,
   type ResearchId,
 } from '@config/buildings.config';
@@ -25,7 +27,7 @@ import type { UnitFactory } from '@entities/UnitFactory';
 import { getUnitDefinition } from '@entities/unitDefinitions';
 import type { MatchState, SideState } from '@state/GameState';
 import type { Side } from '@state/types';
-import { buildingRejection, researchRejection } from '@systems/BuildingSystem';
+import { buildingRejection, researchPrice, researchRejection } from '@systems/BuildingSystem';
 import { emit, Events } from '@utils/EventBus';
 
 /** What the AI sees of the lane when it thinks. */
@@ -45,8 +47,8 @@ interface LaneView {
 /** Turret kinds in the order the AI fills its slots. */
 const TURRET_ORDER: readonly TurretKind[] = ['rapid', 'area', 'heavy'];
 
-/** Buildings in the order the AI prefers them when levels tie (Phase 14). */
-const BUILDING_ORDER: readonly BuildingId[] = ['mine', 'forge', 'library'];
+/** Buildings in the order the AI prefers them when levels tie (Phase 14; prototypes last). */
+const BUILDING_ORDER: readonly BuildingId[] = ['mine', 'forge', 'library', 'barracks', 'shrine', 'market'];
 
 /**
  * The enemy AI (Phase 12). It plays one side by the same rules as the
@@ -125,6 +127,7 @@ export class AIController {
       return;
     }
     if (this.tryModernizeTurrets()) return;
+    this.tryPerks();
     if (this.tryBuilding(view)) return;
     if (this.tryResearch(view)) return;
     if (this.tryEconomyUnit(view)) return;
@@ -335,8 +338,12 @@ export class AIController {
     if (view.myCombat < 2) return false;
     const me = this.me;
     let pick: BuildingId | null = null;
+    const cap = aiBuildingCap(this.difficulty, me.age);
+    const active = activeBuildingIds();
     for (const id of BUILDING_ORDER) {
-      if (me.buildings[id] >= this.difficulty.buildingLevelCap) continue;
+      // The prototype buildings (Barracks, Shrine, Market) get at most two levels per age.
+      const idCap = id === 'mine' || id === 'library' || id === 'forge' ? cap : Math.min(cap, me.age * 5 + 2);
+      if (!active.includes(id) || me.buildings[id] >= idCap) continue;
       const rejection = buildingRejection(me, id);
       if (rejection === 'max-level' || rejection === 'age-locked') continue;
       if (pick === null || me.buildings[id] < me.buildings[pick]) pick = id;
@@ -349,6 +356,15 @@ export class AIController {
     return true;
   }
 
+  /** Building perks (prototype): takes the first perk of each pending pair. */
+  private tryPerks(): void {
+    for (const id of activeBuildingIds()) {
+      if (perksPending(this.me.buildings[id], this.me.buildingPerks[id].length) > 0) {
+        emit(Events.ChoosePerkRequested, { side: this.side, buildingId: id, choice: 'a' });
+      }
+    }
+  }
+
   /** Research (Phase 14): the cheapest open track, with gold to spare. */
   private tryResearch(view: LaneView): boolean {
     if (view.myCombat < 3) return false;
@@ -359,7 +375,7 @@ export class AIController {
       if (me.research[def.id] >= this.difficulty.researchTierCap) continue;
       const rejection = researchRejection(me, def.id);
       if (rejection === 'max-tier' || rejection === 'forge-level') continue;
-      const cost = researchCost(def.id, me.research[def.id]) ?? Infinity;
+      const cost = researchPrice(me, def.id) ?? Infinity;
       if (cost < cheapest) {
         cheapest = cost;
         pick = def.id;

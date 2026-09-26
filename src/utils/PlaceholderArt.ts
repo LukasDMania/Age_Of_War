@@ -15,7 +15,6 @@
  * A small dot in the age's accent color (`AgeConfig.visuals.accent`) tells
  * the ages apart, and each age has its own base drawing (Phase 8).
  */
-import { BUILDING_IDS, BUILDING_LAYOUT, BUILDINGS, type BuildingId } from '@config/buildings.config';
 import Phaser from 'phaser';
 import { AGES } from '@config/ages.config';
 import {
@@ -109,60 +108,6 @@ const DEFAULT_PROJECTILE_STYLE: ProjectileStyle = {
   color: 0xffffff,
   shape: 'circle',
 };
-
-/* ---- Buildings (Phase 14) --------------------------------------------- */
-
-function drawBuilding(g: Phaser.GameObjects.Graphics, id: BuildingId, palette: SidePalette): void {
-  const { w, h } = BUILDING_LAYOUT.size;
-  const ground = h - 4;
-  switch (id) {
-    case 'mine': {
-      g.fillStyle(0x6b5a48, 1);
-      g.fillTriangle(4, ground, w / 2 - 6, 18, w - 4, ground);
-      g.fillStyle(0x857260, 1);
-      g.fillTriangle(30, ground, w / 2 + 14, 34, w - 20, ground);
-      g.fillStyle(0x1e1812, 1);
-      g.fillRect(w / 2 - 16, ground - 38, 32, 38);
-      g.fillCircle(w / 2, ground - 38, 16);
-      g.fillStyle(0x7a4a24, 1);
-      g.fillRect(w / 2 - 22, ground - 44, 7, 44);
-      g.fillRect(w / 2 + 15, ground - 44, 7, 44);
-      g.fillRect(w / 2 - 24, ground - 50, 48, 8);
-      g.fillStyle(COIN_COLOR, 1);
-      for (const [x, y] of [[22, ground - 12], [30, ground - 20], [96, ground - 16], [104, ground - 26]] as const) g.fillCircle(x, y, 4);
-      break;
-    }
-    case 'library': {
-      g.fillStyle(0xd8cfbf, 1);
-      g.fillRect(14, 44, w - 28, ground - 44);
-      g.fillStyle(palette.main, 1);
-      g.fillTriangle(6, 46, w / 2, 10, w - 6, 46);
-      g.fillStyle(0xb8ad9a, 1);
-      for (let i = 0; i < 4; i++) g.fillRect(24 + i * 24, 52, 8, ground - 58);
-      g.fillStyle(0x3a2a1a, 1);
-      g.fillRect(w / 2 - 10, ground - 30, 20, 30);
-      g.fillStyle(palette.dark, 1);
-      g.fillRect(8, ground - 6, w - 16, 6);
-      break;
-    }
-    case 'forge': {
-      g.fillStyle(0x5a5550, 1);
-      g.fillRect(84, 16, 18, 40);
-      g.fillStyle(0x7d6a58, 1);
-      g.fillRect(12, 48, w - 24, ground - 48);
-      g.fillStyle(palette.main, 1);
-      g.fillTriangle(4, 50, w / 2, 24, w - 4, 50);
-      g.fillStyle(0x2a1a10, 1);
-      g.fillRect(24, ground - 36, 36, 36);
-      g.fillStyle(FIRE_COLOR, 1);
-      g.fillRect(28, ground - 18, 28, 18);
-      g.fillStyle(METAL_COLOR, 1);
-      g.fillRect(74, ground - 22, 34, 8);
-      g.fillRect(84, ground - 14, 14, 14);
-      break;
-    }
-  }
-}
 
 /* ---- What exists ------------------------------------------------------ */
 
@@ -470,12 +415,6 @@ export function generatePlaceholderTextures(scene: Phaser.Scene): void {
     for (const age of AGES) {
       build(textureKeyFor(baseSpriteKey(age.index), side), BASE_SIZE.w, BASE_SIZE.h, () =>
         drawBase(g, palette, age.index),
-      );
-    }
-
-    for (const id of BUILDING_IDS) {
-      build(textureKeyFor(BUILDINGS[id].spriteKey, side), BUILDING_LAYOUT.size.w, BUILDING_LAYOUT.size.h, () =>
-        drawBuilding(g, id, palette),
       );
     }
   }

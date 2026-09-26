@@ -1,5 +1,6 @@
 /**
- * Buildings and Forge research (Phase 14, owner 2026-09-26).
+ * Buildings and Forge research (Phase 14, owner 2026-09-26; levels reworked
+ * 2026-09-26, see below).
  *
  * LOCKED by the owner: a Mine, a Library and a Forge stand in a row behind
  * each base; they never spawn troops, can't be attacked, can't be sold, keep
@@ -7,64 +8,207 @@
  * level decides which research tier can be bought. Passive income is gone;
  * the Mine replaces it.
  *
+ * Levels (2026-09-26, owner: "i don't like how its just 1 level then u
+ * cant interact with them until you go to the next age"): five levels per
+ * age, 25 in all. Each age opens five cheaper steps instead of one big one;
+ * step prices within an age are `stepCosts`, times the age factor of the
+ * tier. Output per level is small and steady (times the side's age factor,
+ * as before). The look of a building changes every five levels (a stage per
+ * age tier). Research tier N needs Forge level 5(N-1)+1 (1, 6, 11, 16, 21),
+ * so research still opens one tier per age; the Forge's in-between levels
+ * each give +1% damage to combat units.
+ *
+ * Prototype (feature `extraBuildings`): Barracks, Shrine and Market. Prototype
+ * (feature `buildingPerks`): at every fifth level, pick one of two perks.
+ *
  * All numbers below are PROPOSED first guesses, to be tuned in playtests.
  */
+import { AGES } from '@config/ages.config';
+import { feature } from '@config/features.config';
 import type { Side } from '@state/types';
 
-export type BuildingId = 'mine' | 'library' | 'forge';
+export type BuildingId = 'mine' | 'library' | 'forge' | 'barracks' | 'shrine' | 'market';
 
+/** What a building's levels do, per level (see `buildingEffects`). */
 export interface BuildingDefinition {
   id: BuildingId;
   name: string;
   /** One line for the HUD. */
   blurb: string;
-  /** Gold cost to reach level 1..5 (index 0 builds it). */
-  costs: readonly number[];
-  /** Mine: gold/s per level (index 0 = level 1), times the side's age factor. */
-  goldPerSec?: readonly number[];
-  /** Library: XP/s per level, times the side's age factor. */
-  xpPerSec?: readonly number[];
+  /** Price of each of the five steps of a tier, Stone age money; later tiers x the tier's age factor. */
+  stepCosts: readonly number[];
   spriteKey: string;
+  /** Prototype buildings (feature `extraBuildings`). */
+  extra?: boolean;
 }
 
-export const BUILDING_IDS: readonly BuildingId[] = ['mine', 'library', 'forge'];
+/** All buildings, in row order. Use `activeBuildingIds()` for the ones in play. */
+export const BUILDING_IDS: readonly BuildingId[] = ['mine', 'library', 'forge', 'barracks', 'shrine', 'market'];
 
 export const BUILDINGS: Readonly<Record<BuildingId, BuildingDefinition>> = {
   mine: {
     id: 'mine',
     name: 'Mine',
     blurb: 'Makes gold',
-    costs: [60, 220, 800, 2200, 5500],
-    goldPerSec: [1, 1.5, 2, 2.5, 3],
+    stepCosts: [40, 55, 70, 90, 110],
     spriteKey: 'building-mine',
   },
   library: {
     id: 'library',
     name: 'Library',
     blurb: 'Makes XP',
-    costs: [80, 260, 900, 2400, 6000],
-    xpPerSec: [0.5, 0.8, 1.1, 1.4, 1.8],
+    stepCosts: [50, 65, 80, 100, 125],
     spriteKey: 'building-library',
   },
   forge: {
     id: 'forge',
     name: 'Forge',
-    blurb: 'Unlocks research tiers',
-    costs: [100, 300, 1000, 2600, 6000],
+    blurb: 'Research tiers, unit damage',
+    stepCosts: [60, 75, 95, 120, 150],
     spriteKey: 'building-forge',
+  },
+  barracks: {
+    id: 'barracks',
+    name: 'Barracks',
+    blurb: 'Faster training, tougher recruits',
+    stepCosts: [60, 75, 95, 120, 150],
+    spriteKey: 'building-barracks',
+    extra: true,
+  },
+  shrine: {
+    id: 'shrine',
+    name: 'Shrine',
+    blurb: 'Stronger, faster special',
+    stepCosts: [70, 90, 110, 140, 170],
+    spriteKey: 'building-shrine',
+    extra: true,
+  },
+  market: {
+    id: 'market',
+    name: 'Market',
+    blurb: 'Sells surplus XP for gold',
+    stepCosts: [60, 80, 100, 125, 150],
+    spriteKey: 'building-market',
+    extra: true,
   },
 };
 
-export const MAX_BUILDING_LEVEL = 5;
+/** The buildings in play this match (the prototype ones only with their feature on). */
+export function activeBuildingIds(): readonly BuildingId[] {
+  return feature('extraBuildings') ? BUILDING_IDS : BUILDING_IDS.filter((id) => !BUILDINGS[id].extra);
+}
 
-/** Highest building level a side may reach in an age (0-based age index). */
+export const LEVELS_PER_AGE = 5;
+export const MAX_BUILDING_LEVEL = LEVELS_PER_AGE * AGES.length;
+
+/** Highest building level a side may reach in an age (0-based age index): 5, 10, ... 25. */
 export function maxBuildingLevel(age: number): number {
-  return Math.min(MAX_BUILDING_LEVEL, age + 1);
+  return Math.min(MAX_BUILDING_LEVEL, LEVELS_PER_AGE * (age + 1));
+}
+
+/** Look stage of a building at a level: 0 (Stone style) .. 4 (Future); -1 when not built. */
+export function buildingStage(level: number): number {
+  return level <= 0 ? -1 : Math.min(AGES.length - 1, Math.floor((level - 1) / LEVELS_PER_AGE));
 }
 
 /** Cost to go from `level` to `level + 1`, or null at max level. */
 export function buildingUpgradeCost(id: BuildingId, level: number): number | null {
-  return BUILDINGS[id].costs[level] ?? null;
+  if (level >= MAX_BUILDING_LEVEL) return null;
+  const tier = Math.floor(level / LEVELS_PER_AGE);
+  const step = level % LEVELS_PER_AGE;
+  const base = BUILDINGS[id].stepCosts[step] ?? 0;
+  return Math.round((base * (AGES[tier]?.scale ?? 1)) / 5) * 5;
+}
+
+/** Output per level before the age factor. */
+export const BUILDING_OUTPUT = {
+  /** Mine gold/s at level L: first + perLevel x (L - 1). */
+  mine: { first: 0.4, perLevel: 0.2 },
+  /** Library XP/s. */
+  library: { first: 0.25, perLevel: 0.1 },
+  /** Forge: damage of combat units per level. */
+  forgeDamagePerLevel: 0.01,
+  /** Barracks: training time per level (never below `barracksMinTime`), unit max HP per level. */
+  barracksTimePerLevel: 0.02,
+  barracksMinTime: 0.5,
+  barracksHpPerLevel: 0.01,
+  /** Shrine: special cooldown and special damage per level. */
+  shrineCooldownPerLevel: 0.015,
+  shrineDamagePerLevel: 0.03,
+  /** Market: surplus XP it sells per second (first + perLevel x (L - 1), x age factor), gold per XP. */
+  market: { first: 0.4, perLevel: 0.2, goldPerXp: 1.5 },
+} as const;
+
+/** Research tier `tier` (1..5) needs this Forge level. */
+export function forgeLevelForTier(tier: number): number {
+  return (tier - 1) * LEVELS_PER_AGE + 1;
+}
+
+/* ---- Perks (prototype, feature `buildingPerks`) -------------------------- */
+
+export type PerkChoice = 'a' | 'b';
+
+/** Multipliers a perk touches (see `buildingEffects`). */
+export type PerkStat =
+  | 'mineGold'
+  | 'libraryXp'
+  | 'killGold'
+  | 'specialCooldown'
+  | 'specialDamage'
+  | 'researchCost'
+  | 'unitHp'
+  | 'unitDamage'
+  | 'trainTime'
+  | 'marketRate'
+  | 'moneyIncome';
+
+export interface BuildingPerk {
+  name: string;
+  about: string;
+  stat: PerkStat;
+  /** Multiplier per pick (picks of the same perk stack). */
+  mult: number;
+}
+
+/**
+ * Two perk paths per building; every fifth level (5, 10, ... 25) the owner
+ * picks one of the two, and picks stack. PROPOSED.
+ */
+export const BUILDING_PERKS: Readonly<Record<BuildingId, Record<PerkChoice, BuildingPerk>>> = {
+  mine: {
+    a: { name: 'Deep veins', about: 'Mine +15% gold', stat: 'mineGold', mult: 1.15 },
+    b: { name: 'Prospectors', about: '+8% gold from kills', stat: 'killGold', mult: 1.08 },
+  },
+  library: {
+    a: { name: 'Scholars', about: 'Library +15% XP', stat: 'libraryXp', mult: 1.15 },
+    b: { name: 'Strategists', about: 'Special recharges 6% faster', stat: 'specialCooldown', mult: 0.94 },
+  },
+  forge: {
+    a: { name: 'Master smiths', about: 'Research 10% cheaper', stat: 'researchCost', mult: 0.9 },
+    b: { name: 'Tempered steel', about: 'Units +4% max HP', stat: 'unitHp', mult: 1.04 },
+  },
+  barracks: {
+    a: { name: 'Drill sergeants', about: 'Training 6% faster', stat: 'trainTime', mult: 0.94 },
+    b: { name: 'Hardened recruits', about: 'Units +4% damage', stat: 'unitDamage', mult: 1.04 },
+  },
+  shrine: {
+    a: { name: 'Devotion', about: 'Special +10% damage', stat: 'specialDamage', mult: 1.1 },
+    b: { name: 'Omens', about: 'Special recharges 6% faster', stat: 'specialCooldown', mult: 0.94 },
+  },
+  market: {
+    a: { name: 'Merchant guild', about: 'Market trades 20% more', stat: 'marketRate', mult: 1.2 },
+    b: { name: 'Caravans', about: 'Money units +10% income', stat: 'moneyIncome', mult: 1.1 },
+  },
+};
+
+/** Perks earned but not yet picked for a building (0 when perks are off). */
+export function perksPending(level: number, picked: number): number {
+  if (!feature('buildingPerks')) return 0;
+  return Math.max(0, Math.floor(level / LEVELS_PER_AGE) - picked);
+}
+
+export function emptyPerks(): Record<BuildingId, PerkChoice[]> {
+  return { mine: [], library: [], forge: [], barracks: [], shrine: [], market: [] };
 }
 
 /* ---- Research ----------------------------------------------------------- */
@@ -149,7 +293,7 @@ export function emptyResearch(): Record<ResearchId, number> {
 }
 
 export function emptyBuildings(): Record<BuildingId, number> {
-  return { mine: 0, library: 0, forge: 0 };
+  return { mine: 0, library: 0, forge: 0, barracks: 0, shrine: 0, market: 0 };
 }
 
 /**
@@ -160,17 +304,23 @@ export const BUILDING_LAYOUT = {
   /** Distance from the base center to the first building's center. */
   firstOffsetX: 210,
   spacingX: 170,
-  /** How far the camera may scroll past each screen edge. */
+  /** How far the camera may scroll past each screen edge (grows with the row, see `scrollMargin`). */
   scrollMarginX: 560,
   size: { w: 130, h: 110 },
 } as const;
 
+/** How far the camera may scroll past each screen edge for the buildings in play. */
+export function scrollMargin(): number {
+  const count = activeBuildingIds().length;
+  return Math.max(BUILDING_LAYOUT.scrollMarginX, BUILDING_LAYOUT.firstOffsetX + (count - 1) * BUILDING_LAYOUT.spacingX + 60);
+}
+
 /**
- * X of a building. The row reads left to right in `BUILDING_IDS` order on
- * both sides (Mine, Library, Forge), matching the HUD cards.
+ * X of a building. The row reads left to right in `activeBuildingIds()`
+ * order on both sides (Mine, Library, Forge, ...), matching the HUD cards.
  */
 export function buildingX(side: Side, baseX: number, index: number): number {
-  const count = BUILDING_IDS.length;
+  const count = activeBuildingIds().length;
   if (side === 'player') {
     return baseX - BUILDING_LAYOUT.firstOffsetX - (count - 1 - index) * BUILDING_LAYOUT.spacingX;
   }

@@ -10,6 +10,7 @@ import {
   type TrailStyle,
 } from '@config/effects.config';
 import { BASE_X, LANE_Y } from '@config/constants';
+import { activeBuildingIds, buildingStage, buildingX } from '@config/buildings.config';
 import type { FxTextureId } from '@/art/fxDraw';
 import { CameraThump } from '@entities/CameraThump';
 import type { Projectile } from '@entities/Projectile';
@@ -46,7 +47,7 @@ const PURPLE = [0xd9b8ff, 0xb070ff, 0xffffff];
  *
  * Listens for: `projectile-impact`, `unit-struck`, `turret-fired`,
  * `unit-died`, `utility-pulse`, `base-damaged`, `base-destroyed`,
- * `age-changed`.
+ * `age-changed`, `building-upgraded`.
  */
 export class ImpactEffects {
   /** Set while the simulation runs in bulk without rendering. */
@@ -185,6 +186,20 @@ export class ImpactEffects {
       on(Events.UtilityPulse, ({ kind, x, radius }) => this.onPulse(kind, x, radius)),
       on(Events.BaseDamaged, ({ side }) => this.onBaseHit(side)),
       on(Events.BaseDestroyed, ({ side }) => this.onBaseDestroyed(side)),
+      on(Events.BuildingUpgraded, ({ side, buildingId, level }) => {
+        if (this.muted) return;
+        const index = activeBuildingIds().indexOf(buildingId);
+        if (index < 0) return;
+        const x = buildingX(side, BASE_X[side], index);
+        const newStage = level === 1 || buildingStage(level) !== buildingStage(level - 1);
+        // Every level: a puff and a few sparkles; a new stage: a proper celebration.
+        this.burst('dust', newStage ? 10 : 4, x, LANE_Y - 4, 50, 0);
+        this.burst('gold', newStage ? 26 : 8, x, LANE_Y - 60, 50, 30);
+        if (newStage) {
+          this.flash(x, LANE_Y - 55, 70, 0xfff0b0, 320);
+          this.ring(x, 70, 0xf2c744, 420);
+        }
+      }),
       on(Events.AgeChanged, ({ side }) => {
         if (side === HUD_SIDE && !this.muted) this.burst('gold', 24, BASE_X[side], LANE_Y - 90, 60, 50);
       }),

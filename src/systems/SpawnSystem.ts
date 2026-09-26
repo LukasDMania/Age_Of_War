@@ -1,4 +1,5 @@
 import { getAge } from '@config/ages.config';
+import { buildingEffects } from '@systems/BuildingSystem';
 import { UNIT_QUEUE_LIMIT } from '@config/constants';
 import type { UnitFactory } from '@entities/UnitFactory';
 import { findUnitDefinition } from '@entities/unitDefinitions';
@@ -86,7 +87,9 @@ export class SpawnSystem {
     if (this.rejectionFor(side, unitId) !== null) return;
     const definition = findUnitDefinition(unitId);
     if (!definition || !trySpendGold(this.state, side, definition.cost, 'purchase')) return;
-    this.state[side].trainingQueue.push({ unitId, remainingMs: definition.trainTimeMs });
+    // Barracks levels and perks train faster (2026-09-26).
+    const trainMs = definition.trainTimeMs * buildingEffects(this.state[side]).trainTime;
+    this.state[side].trainingQueue.push({ unitId, remainingMs: trainMs });
     this.emitQueue(side);
   }
 

@@ -7,8 +7,10 @@ import {
 } from '@config/constants';
 import {
   emptyBuildings,
+  emptyPerks,
   emptyResearch,
   type BuildingId,
+  type PerkChoice,
   type ResearchId,
 } from '@config/buildings.config';
 import type { MatchPhase, QueuedUnit, SideModifier } from '@state/types';
@@ -48,6 +50,8 @@ export interface SideState {
   buildings: Record<BuildingId, number>;
   /** Forge research tiers bought per track (Phase 14, owned by BuildingSystem). */
   research: Record<ResearchId, number>;
+  /** Perks picked per building, in order (prototype, owned by BuildingSystem). */
+  buildingPerks: Record<BuildingId, PerkChoice[]>;
 }
 
 export interface MatchState {
@@ -69,6 +73,7 @@ export function createSideState(): SideState {
     modifiers: [],
     buildings: emptyBuildings(),
     research: emptyResearch(),
+    buildingPerks: emptyPerks(),
   };
 }
 

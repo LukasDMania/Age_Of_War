@@ -11,7 +11,7 @@
  * there, an entry in `Events`, and an entry in `EventPayloads`.
  */
 import Phaser from 'phaser';
-import type { BuildingId, ResearchId } from '@config/buildings.config';
+import type { BuildingId, PerkChoice, ResearchId } from '@config/buildings.config';
 import type { MatchPhase, ModifiableStat, QueuedUnit, Side } from '@state/types';
 
 export const Events = {
@@ -29,6 +29,7 @@ export const Events = {
   QuitToMenuRequested: 'quit-to-menu-requested',
   UpgradeBuildingRequested: 'upgrade-building-requested',
   ResearchRequested: 'research-requested',
+  ChoosePerkRequested: 'choose-perk-requested',
   GameSpeedRequested: 'game-speed-requested',
   CameraFocusRequested: 'camera-focus-requested',
   BackgroundCycleRequested: 'background-cycle-requested',
@@ -57,6 +58,7 @@ export const Events = {
   MatchStateChanged: 'match-state-changed',
   BuildingUpgraded: 'building-upgraded',
   ResearchCompleted: 'research-completed',
+  BuildingPerkChosen: 'building-perk-chosen',
   GameSpeedChanged: 'game-speed-changed',
   BackgroundChanged: 'background-changed',
   ProjectileImpact: 'projectile-impact',
@@ -71,6 +73,8 @@ export type UtilityKind = 'heal' | 'aoe' | 'slow' | 'buff' | 'shield';
 export type GoldSource =
   | 'kill'
   | 'mine'
+  /** Market building: surplus XP sold for gold (prototype). */
+  | 'market'
   | 'ai-income'
   | 'economy-unit'
   | 'purchase'
@@ -99,6 +103,8 @@ export interface EventPayloads {
   /** Build (level 0 -> 1) or upgrade a building by one level. */
   [Events.UpgradeBuildingRequested]: { side: Side; buildingId: BuildingId };
   [Events.ResearchRequested]: { side: Side; researchId: ResearchId };
+  /** Pick one of a building's two perks for a pending milestone (prototype). */
+  [Events.ChoosePerkRequested]: { side: Side; buildingId: BuildingId; choice: PerkChoice };
   /** Playtest speed: 1, 2, 3, 4 or 8. */
   [Events.GameSpeedRequested]: { multiplier: number };
   [Events.CameraFocusRequested]: { target: 'lane' | 'buildings' };
@@ -183,6 +189,8 @@ export interface EventPayloads {
   [Events.MatchStateChanged]: { from: MatchPhase; to: MatchPhase };
   [Events.BuildingUpgraded]: { side: Side; buildingId: BuildingId; level: number };
   [Events.ResearchCompleted]: { side: Side; researchId: ResearchId; tier: number };
+  /** A building perk was picked; `picks` is how many that building has now. */
+  [Events.BuildingPerkChosen]: { side: Side; buildingId: BuildingId; choice: PerkChoice; picks: number };
   [Events.GameSpeedChanged]: { multiplier: number };
   [Events.BackgroundChanged]: { id: string; name: string };
   /**

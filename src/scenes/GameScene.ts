@@ -1,7 +1,7 @@
 import Phaser from 'phaser';
 import { AGE_COUNT, getAge, isFinalAge } from '@config/ages.config';
 import { BACKGROUND_STORAGE_KEY, BACKGROUNDS, type BackgroundDef } from '@config/backgrounds.config';
-import { BUILDING_IDS, BUILDING_LAYOUT, buildingX, type BuildingId } from '@config/buildings.config';
+import { activeBuildingIds, buildingX, perksPending, scrollMargin, type BuildingId } from '@config/buildings.config';
 import { AI_DIFFICULTIES, DEFAULT_AI_DIFFICULTY, type AiDifficulty, type AiDifficultyName } from '@config/ai.config';
 import { DEFAULT_AI_PROFILE, findAiProfile, type AiGenome } from '@config/aiGenome.config';
 import {
@@ -123,7 +123,7 @@ export class GameScene extends Phaser.Scene {
   private utility!: UtilitySystem;
   private stats!: StatsSystem;
   private buildingSystem!: BuildingSystem;
-  private buildingViews!: Record<Side, Record<BuildingId, Building>>;
+  private buildingViews!: Record<Side, Partial<Record<BuildingId, Building>>>;
   private scrollKeys: Phaser.Input.Keyboard.Key[][] = [];
   private ai: AiBrain | null = null;
   private playerAi: AiBrain | null = null;
@@ -221,7 +221,11 @@ export class GameScene extends Phaser.Scene {
         this.refreshRigArt();
       }),
       on(Events.RestartRequested, () => this.restartMatch()),
-      on(Events.BuildingUpgraded, ({ side, buildingId, level }) => this.buildingViews[side][buildingId].setLevel(level)),
+      on(Events.BuildingUpgraded, ({ side, buildingId, level }) => {
+        this.buildingViews[side][buildingId]?.setLevel(level);
+        this.showPerkBadges();
+      }),
+      on(Events.BuildingPerkChosen, () => this.showPerkBadges()),
       on(Events.GameSpeedRequested, ({ multiplier }) => this.setSimSpeed(multiplier)),
       on(Events.CameraFocusRequested, ({ target }) => this.panCamera(target)),
       on(Events.BackgroundCycleRequested, () => this.cycleBackground()),
@@ -333,7 +337,7 @@ export class GameScene extends Phaser.Scene {
     this.ground = this.add.graphics();
     this.laneLine = this.add.graphics();
     this.laneLine.lineStyle(4, LANE_COLOR, 1);
-    const margin = BUILDING_LAYOUT.scrollMarginX;
+    const margin = scrollMargin();
     this.laneLine.lineBetween(-margin, LANE_Y, GAME_WIDTH + margin, LANE_Y);
     this.backgroundIndex = this.loadBackgroundChoice();
     this.applyBackground();
@@ -383,7 +387,7 @@ export class GameScene extends Phaser.Scene {
     this.laneLine.setVisible(def.ground === 'strip');
     if (def.ground !== 'strip') return;
     this.ground.fillStyle(def.stripColor ?? ground, 1);
-    const margin = BUILDING_LAYOUT.scrollMarginX;
+    const margin = scrollMargin();
     // A little past the bottom edge: the camera thump lifts the view a few px.
     this.ground.fillRect(-margin, LANE_Y, GAME_WIDTH + 2 * margin, GAME_HEIGHT - LANE_Y + 24);
   }
@@ -447,9 +451,17 @@ export class GameScene extends Phaser.Scene {
     emit(Events.GameSpeedChanged, { multiplier: this.simSpeed });
   }
 
-  private createBuildingViews(side: Side): Record<BuildingId, Building> {
-    const views = {} as Record<BuildingId, Building>;
-    BUILDING_IDS.forEach((id, index) => {
+  /** The player's buildings show a "PERK!" badge while a perk waits to be picked. */
+  private showPerkBadges(): void {
+    const me = this.state.player;
+    for (const id of activeBuildingIds()) {
+      this.buildingViews.player[id]?.setPerkPending(perksPending(me.buildings[id], me.buildingPerks[id].length) > 0);
+    }
+  }
+
+  private createBuildingViews(side: Side): Partial<Record<BuildingId, Building>> {
+    const views: Partial<Record<BuildingId, Building>> = {};
+    activeBuildingIds().forEach((id, index) => {
       const view = new Building(this, side, id, buildingX(side, BASE_X[side], index));
       view.setLevel(this.state[side].buildings[id]);
       views[id] = view;
@@ -488,7 +500,7 @@ export class GameScene extends Phaser.Scene {
   /** Keeps the view inside the world: buildings on the left, enemy buildings on the right. */
   private clampCamera(): void {
     const camera = this.cameras.main;
-    const margin = BUILDING_LAYOUT.scrollMarginX;
+    const margin = scrollMargin();
     camera.scrollX = Phaser.Math.Clamp(camera.scrollX, -margin, margin);
   }
 
@@ -503,7 +515,7 @@ export class GameScene extends Phaser.Scene {
     this.tweens.killTweensOf(camera);
     this.tweens.add({
       targets: camera,
-      scrollX: target === 'buildings' ? -BUILDING_LAYOUT.scrollMarginX : 0,
+      scrollX: target === 'buildings' ? -scrollMargin() : 0,
       duration: CAMERA_PAN_MS,
       ease: 'Sine.easeInOut',
     });

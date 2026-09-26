@@ -1,4 +1,5 @@
 import {
+  aiBuildingCap,
   AI_RICH_GOLD_MULT,
   AI_THREAT_DISTANCE,
   openingArmyCap,
@@ -7,12 +8,13 @@ import {
 import type { AiGenome } from '@config/aiGenome.config';
 import { getAge } from '@config/ages.config';
 import {
-  BUILDINGS,
+  activeBuildingIds,
   buildingUpgradeCost,
   getResearch,
+  perksPending,
   RESEARCH,
-  researchCost,
   type BuildingId,
+  type PerkChoice,
   type ResearchDefinition,
   type ResearchId,
 } from '@config/buildings.config';
@@ -28,7 +30,16 @@ import type { UnitFactory } from '@entities/UnitFactory';
 import { getUnitDefinition } from '@entities/unitDefinitions';
 import type { MatchState, SideState } from '@state/GameState';
 import type { Side } from '@state/types';
-import { buildingRejection, libraryXpPerSec, mineGoldPerSec, researchRejection } from '@systems/BuildingSystem';
+import {
+  buildingRejection,
+  libraryXpAt,
+  libraryXpPerSec,
+  mineGoldAt,
+  mineGoldPerSec,
+  researchPrice,
+  researchRejection,
+  surplusXp,
+} from '@systems/BuildingSystem';
 import { emit, Events } from '@utils/EventBus';
 
 type Slot = 1 | 2 | 3 | 4 | 5;
@@ -60,7 +71,6 @@ interface Option {
 }
 
 const TURRET_KINDS: readonly TurretKind[] = ['rapid', 'heavy', 'area'];
-const BUILDING_IDS: readonly BuildingId[] = ['mine', 'library', 'forge'];
 
 /**
  * The "utility AI" (2026-09-26): an enemy brain whose strategy is a genome
@@ -132,6 +142,7 @@ export class UtilityAI {
     this.tryAgeUp(now);
     const view = this.observe(now);
     this.trySpecial(view);
+    this.tryPerks();
     if (this.emergency(view)) return;
     const options = this.options(view);
     if (options.length === 0) {
@@ -295,7 +306,7 @@ export class UtilityAI {
     }
 
     // Buildings.
-    for (const id of BUILDING_IDS) {
+    for (const id of activeBuildingIds()) {
       const wish = this.buildingWish(id, v);
       const cost = buildingUpgradeCost(id, this.me.buildings[id]);
       if (wish !== null && cost !== null) {
@@ -387,16 +398,14 @@ export class UtilityAI {
     const g = this.g;
     const me = this.me;
     const level = me.buildings[id];
-    if (level >= this.difficulty.buildingLevelCap) return null;
+    if (level >= aiBuildingCap(this.difficulty, me.age)) return null;
     const rejection = buildingRejection(me, id);
     if (rejection === 'max-level' || rejection === 'age-locked') return null;
     const cost = buildingUpgradeCost(id, level);
     if (cost === null) return null;
-    const scale = getAge(me.age).scale;
     switch (id) {
       case 'mine': {
-        const next = (BUILDINGS.mine.goldPerSec?.[level] ?? 0) * scale;
-        const gain = next - mineGoldPerSec(me);
+        const gain = mineGoldAt(me, level + 1) - mineGoldPerSec(me);
         if (gain <= 0) return null;
         // The first Mine is the way out of an empty purse: no army needed.
         const payback = cost / gain;
@@ -405,8 +414,7 @@ export class UtilityAI {
       case 'library': {
         const toNext = getAge(me.age).xpToNext;
         if (toNext === null) return null;
-        const next = (BUILDINGS.library.xpPerSec?.[level] ?? 0) * scale;
-        const gain = next - libraryXpPerSec(me);
+        const gain = libraryXpAt(me, level + 1) - libraryXpPerSec(me);
         if (gain <= 0) return null;
         return g.library * Math.min(3, (gain * g.horizon) / toNext) * (v.myCombat >= 2 ? 1 : 0.3);
       }
@@ -415,6 +423,31 @@ export class UtilityAI {
         let blocked = 0;
         for (const def of RESEARCH) if (me.research[def.id] >= level && me.research[def.id] < this.difficulty.researchTierCap) blocked++;
         return g.forge * (0.3 + blocked / RESEARCH.length) * (v.myCombat >= 2 ? 1 : 0.3);
+      }
+      // Prototype buildings: rough wishes from the genes it has.
+      case 'barracks':
+        return g.armyDrive * 0.45 * (v.myCombat >= 3 ? 1 : 0.3);
+      case 'shrine':
+        return (g.specialTargets <= 3 ? 0.6 : 0.35) * (v.myCombat >= 2 ? 1 : 0.3);
+      case 'market':
+        return g.library * (surplusXp(me) > 0 ? 0.9 : 0.15);
+    }
+  }
+
+  /** Building perks (prototype): picks by its genes' leanings. */
+  private tryPerks(): void {
+    const g = this.g;
+    const lean: Record<BuildingId, PerkChoice> = {
+      mine: g.mine >= g.focusBounty ? 'a' : 'b',
+      library: g.library >= 1 ? 'a' : 'b',
+      forge: g.research >= 0.9 ? 'a' : 'b',
+      barracks: g.armyDrive >= 1.5 ? 'b' : 'a',
+      shrine: g.specialTargets <= 3 ? 'a' : 'b',
+      market: g.moneyUnits >= 1 ? 'b' : 'a',
+    };
+    for (const id of activeBuildingIds()) {
+      if (perksPending(this.me.buildings[id], this.me.buildingPerks[id].length) > 0) {
+        emit(Events.ChoosePerkRequested, { side: this.side, buildingId: id, choice: lean[id] });
       }
     }
   }
@@ -430,7 +463,7 @@ export class UtilityAI {
       if (me.research[def.id] >= this.difficulty.researchTierCap) continue;
       const rejection = researchRejection(me, def.id);
       if (rejection === 'max-tier' || rejection === 'forge-level') continue;
-      const cost = researchCost(def.id, me.research[def.id]);
+      const cost = researchPrice(me, def.id);
       if (cost === null) continue;
       const wish = g.research * this.researchFocus(def) * this.researchRelevance(def, v, myFighterValue, turretCount) * 4;
       if (!best || wish > best.wish) best = { id: def.id, wish, cost };

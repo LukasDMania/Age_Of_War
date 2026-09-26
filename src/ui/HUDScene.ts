@@ -306,6 +306,12 @@ export class HUDScene extends Phaser.Scene {
       on(Events.ResearchCompleted, ({ side }) => {
         if (side === HUD_SIDE) this.researchPanel.rebuild();
       }),
+      on(Events.BuildingPerkChosen, ({ side }) => {
+        if (side !== HUD_SIDE) return;
+        this.buildingPanel.rebuild();
+        this.researchPanel.rebuild();
+        this.refreshIncome();
+      }),
       on(Events.BackgroundChanged, ({ name }) => {
         this.backgroundName = name;
         this.showBackgroundName(name);

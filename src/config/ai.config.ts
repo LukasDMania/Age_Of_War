@@ -38,7 +38,10 @@ export interface AiDifficulty {
   specialMinTargets: number;
   /** Only fires the special while player units are near its base. */
   specialOnlyWhenThreatened: boolean;
-  /** Highest level it takes its buildings to (Phase 14; also capped by age). */
+  /**
+   * Building levels it buys per age tier (Phase 14; since 2026-09-26 there
+   * are five levels per age, so this is 0-5 of each age's five).
+   */
   buildingLevelCap: number;
   /** Highest Forge research tier it buys (Phase 14); 0 = no research. */
   researchTierCap: number;
@@ -231,6 +234,11 @@ export const AI_RICH_GOLD_MULT = 4;
 
 /** Player units within this distance of the AI's base count as a threat. */
 export const AI_THREAT_DISTANCE = 420;
+
+/** Highest building level an AI of this difficulty takes a building to in an age. */
+export function aiBuildingCap(difficulty: AiDifficulty, age: number): number {
+  return age * 5 + difficulty.buildingLevelCap;
+}
 
 export function isAiDifficultyName(value: unknown): value is AiDifficultyName {
   return value === 'easy' || value === 'normal' || value === 'hard';

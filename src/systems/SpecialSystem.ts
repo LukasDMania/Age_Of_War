@@ -1,4 +1,5 @@
 import Phaser from 'phaser';
+import { buildingEffects } from '@systems/BuildingSystem';
 import { getAge, type SpecialConfig } from '@config/ages.config';
 import { getProjectileFlight } from '@config/projectiles.config';
 import { GAME_WIDTH, LANE_Y, SPAWN_X } from '@config/constants';
@@ -100,13 +101,16 @@ export class SpecialSystem {
     const sideState = this.state[side];
     const special = getAge(sideState.age).special;
     const now = this.clock();
-    sideState.specialReadyAt = now + special.cooldownMs;
+    // Shrine levels and perks: faster recharge, stronger strikes (2026-09-26).
+    const fx = buildingEffects(sideState);
+    const cooldownMs = special.cooldownMs * fx.specialCooldown;
+    sideState.specialReadyAt = now + cooldownMs;
     const gap = special.strikes > 1 ? special.durationMs / (special.strikes - 1) : 0;
     for (let i = 0; i < special.strikes; i++) {
       this.pending.push({ side, atMs: now + i * gap, special });
     }
     emit(Events.SpecialFired, { side, age: sideState.age });
-    this.emitCooldown(side, special.cooldownMs);
+    this.emitCooldown(side, cooldownMs);
   }
 
   private launchStrike(side: Side, special: SpecialConfig): void {
@@ -128,7 +132,7 @@ export class SpecialSystem {
     }
     const startX = landX - dir * STRIKE_DRIFT_X;
     this.projectiles
-      .launch(special.projectileKey, side, startX, STRIKE_START_Y, special.damage, special.radius)
+      .launch(special.projectileKey, side, startX, STRIKE_START_Y, special.damage * buildingEffects(this.state[side]).specialDamage, special.radius)
       .aimAt(landX, STRIKE_LAND_Y);
   }
 
@@ -144,7 +148,7 @@ export class SpecialSystem {
 
   private emitCooldown(side: Side, remainingMs: number): void {
     this.lastRemaining[side] = remainingMs;
-    const totalMs = getAge(this.state[side].age).special.cooldownMs;
+    const totalMs = getAge(this.state[side].age).special.cooldownMs * buildingEffects(this.state[side]).specialCooldown;
     emit(Events.SpecialCooldownChanged, { side, remainingMs, totalMs });
   }
 }

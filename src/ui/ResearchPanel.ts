@@ -2,14 +2,14 @@ import Phaser from 'phaser';
 import {
   MAX_RESEARCH_TIER,
   RESEARCH,
-  researchCost,
+  forgeLevelForTier,
   researchMult,
   type ResearchDefinition,
   type ResearchId,
 } from '@config/buildings.config';
 import type { SideState } from '@state/GameState';
 import type { Side } from '@state/types';
-import { researchRejection } from '@systems/BuildingSystem';
+import { researchPrice, researchRejection } from '@systems/BuildingSystem';
 import { UI_FONT, UiColors, UiTextColors } from '@ui/kenneyUi';
 import { UiButton } from '@ui/UiButton';
 import { UnitBuyPanel } from '@ui/UnitBuyPanel';
@@ -89,7 +89,9 @@ export class ResearchPanel {
 
   private defaultInfo(): string {
     const forge = this.sideState.buildings.forge;
-    return forge === 0 ? 'Build a Forge to unlock research' : `Forge level ${forge}:\ntiers 1-${forge} open`;
+    if (forge === 0) return 'Build a Forge to unlock research';
+    const open = Math.min(MAX_RESEARCH_TIER, Math.floor((forge - 1) / 5) + 1);
+    return `Forge level ${forge}:\ntiers 1-${open} open`;
   }
 
   private cellOrigin(index: number): { x: number; y: number } {
@@ -104,7 +106,7 @@ export class ResearchPanel {
   private buildCell(def: ResearchDefinition, index: number): void {
     const { x, y } = this.cellOrigin(index);
     const tier = this.sideState.research[def.id];
-    const cost = researchCost(def.id, tier);
+    const cost = researchPrice(this.sideState, def.id);
     const rejection = researchRejection(this.sideState, def.id);
     const button = new UiButton(this.scene, x + CELL_WIDTH / 2, y + CELL_HEIGHT / 2, CELL_WIDTH, CELL_HEIGHT, {
       onPress: () => emit(Events.ResearchRequested, { side: this.side, researchId: def.id }),
@@ -124,7 +126,7 @@ export class ResearchPanel {
     let bottom: Phaser.GameObjects.GameObject;
     if (cost === null) bottom = this.scene.add.text(left, 8, `Max ${bonusText(def, tier)}`, textStyle(11, UiTextColors.dim)).setOrigin(0, 0.5);
     else if (rejection === 'forge-level')
-      bottom = this.scene.add.text(left, 8, `Forge ${tier + 1} · ${cost}`, textStyle(11, UiTextColors.dim)).setOrigin(0, 0.5);
+      bottom = this.scene.add.text(left, 8, `Forge ${forgeLevelForTier(tier + 1)} · ${cost}`, textStyle(11, UiTextColors.dim)).setOrigin(0, 0.5);
     else bottom = this.priceRow(left, 8, cost, tier > 0 ? bonusText(def, tier) : '');
     button.add(
       this.scene.add.text(left, -10, def.short, textStyle(12, UiTextColors.parchment)).setOrigin(0, 0.5),
