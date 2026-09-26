@@ -143,6 +143,10 @@ options: `--fitness aggressive` (rewards pushing the front and quick wins more),
 (start from the champions of earlier runs), `--minutes` (match time limit),
 `--no-build`.
 
+`node tools/ai-ladder.mjs` plays every profile against every other (both
+sides on hard by default; `--difficulty`, `--games`, `--profiles
+classic,warlord`) and prints who beats whom.
+
 ## What makes it different from the original
 
 - **Five units per age** instead of three. Slots 1-3 are combat units, slot 4

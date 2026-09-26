@@ -8,4 +8,5 @@ vite.config.ts.timestamp-*
 
 # AI training (tools/train-ai.mjs): build output and resumable state
 training/build/
+training/build-ladder/
 training/*/state.json
