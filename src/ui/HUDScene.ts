@@ -107,6 +107,8 @@ export class HUDScene extends Phaser.Scene {
   private cleanups: (() => void)[] = [];
   private ageText!: Phaser.GameObjects.Text;
   private enemyAgeText!: Phaser.GameObjects.Text;
+  /** Who plays the enemy (difficulty, profile), right of the enemy's age. */
+  private enemyControllerText!: Phaser.GameObjects.Text;
   private enemyController: AiDifficultyName | 'off' = 'off';
   private goldText!: Phaser.GameObjects.Text;
   private incomeText!: Phaser.GameObjects.Text;
@@ -399,7 +401,7 @@ export class HUDScene extends Phaser.Scene {
       .setOrigin(0, 0.5);
     const profile = this.data0.enemyProfile && this.data0.enemyProfile !== 'Classic' ? ` · ${this.data0.enemyProfile}` : '';
     const controller = this.enemyController === 'off' ? 'No AI' : `${capitalize(this.enemyController)} AI${profile}`;
-    this.add
+    this.enemyControllerText = this.add
       .text(left + TOP_PANEL_WIDTH - 16, top + 22, controller, { fontFamily: UI_FONT, fontSize: '14px', color: UiTextColors.dim })
       .setOrigin(1, 0.5);
     this.label(left + 16, top + 52, 'Base');
@@ -511,6 +513,11 @@ export class HUDScene extends Phaser.Scene {
 
   private showEnemyAge(age: number): void {
     this.enemyAgeText.setText(`Enemy · ${getAge(age).name} Age`);
+    // Long labels (Renaissance, Conquest battles) shrink to fit beside the age.
+    const room = TOP_PANEL_WIDTH - 32 - 12 - this.enemyAgeText.width;
+    const label = this.enemyControllerText;
+    label.setScale(1);
+    if (label.width > room) label.setScale(Math.max(0.55, room / label.width));
   }
 
   private showGold(gold: number): void {

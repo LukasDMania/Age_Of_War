@@ -27,6 +27,8 @@ export const Events = {
   ResumeRequested: 'resume-requested',
   RestartRequested: 'restart-requested',
   QuitToMenuRequested: 'quit-to-menu-requested',
+  /** Conquest prototype: leave a battle (retreating if it isn't over) for the campaign screen. */
+  ConquestContinueRequested: 'conquest-continue-requested',
   UpgradeBuildingRequested: 'upgrade-building-requested',
   ResearchRequested: 'research-requested',
   ChoosePerkRequested: 'choose-perk-requested',
@@ -86,6 +88,8 @@ export type GoldSource =
   | 'economy-unit'
   | 'purchase'
   | 'refund'
+  /** Conquest prototype: a battle's starting grants (paid straight back into the requested purchase). */
+  | 'conquest'
   | 'cheat';
 
 /** One unit waiting in (or being trained by) a side's training queue. */
@@ -106,6 +110,7 @@ export interface EventPayloads {
   [Events.ResumeRequested]: Record<string, never>;
   [Events.RestartRequested]: Record<string, never>;
   [Events.QuitToMenuRequested]: Record<string, never>;
+  [Events.ConquestContinueRequested]: Record<string, never>;
   [Events.SpecialRequested]: { side: Side };
   /** Build (level 0 -> 1) or upgrade a building by one level. */
   [Events.UpgradeBuildingRequested]: { side: Side; buildingId: BuildingId };

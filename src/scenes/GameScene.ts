@@ -30,6 +30,9 @@ import { feature } from '@config/features.config';
 import { DoctrineAi, DoctrineSystem } from '@systems/experimental/DoctrineSystem';
 import { VeterancySystem } from '@systems/experimental/VeterancySystem';
 import { WarCryAi, WarCrySystem } from '@systems/experimental/WarCrySystem';
+import { ConquestSystem, conquestAiIncomeMult } from '@systems/experimental/ConquestSystem';
+import type { ConquestEffect } from '@config/conquest.config';
+import { finishBattle } from '@state/conquestState';
 import { AiIncomeSystem } from '@systems/AiIncomeSystem';
 import { BuildingSystem } from '@systems/BuildingSystem';
 import { CasualtySystem } from '@systems/CasualtySystem';
@@ -83,6 +86,11 @@ export interface GameSceneData {
   /** Training: explicit genomes for the utility brain (override the profiles). */
   genome?: AiGenome;
   playerGenome?: AiGenome;
+  /**
+   * Conquest prototype: this match is a campaign battle with these effects
+   * (see ConquestSystem); the result goes back to the campaign.
+   */
+  conquest?: { effects: ConquestEffect[]; label: string };
 }
 
 /** Anything that plays a side by emitting requests. */
@@ -195,7 +203,10 @@ export class GameScene extends Phaser.Scene {
     this.stats = new StatsSystem();
     this.buildingSystem = new BuildingSystem(this.state, this.units);
     this.aiIncome = [];
-    if (this.aiSetting !== 'off') this.aiIncome.push(new AiIncomeSystem(this.state, 'enemy', AI_DIFFICULTIES[this.aiSetting]));
+    if (this.aiSetting !== 'off') {
+      const bonus = conquestAiIncomeMult(this.sceneData.conquest?.effects ?? []);
+      this.aiIncome.push(new AiIncomeSystem(this.state, 'enemy', AI_DIFFICULTIES[this.aiSetting], bonus));
+    }
     if (this.playerAiSetting) this.aiIncome.push(new AiIncomeSystem(this.state, 'player', AI_DIFFICULTIES[this.playerAiSetting]));
     this.buildingViews = {
       player: this.createBuildingViews('player'),
@@ -219,7 +230,9 @@ export class GameScene extends Phaser.Scene {
     this.cleanups.push(
       on(Events.BaseDestroyed, ({ side }) => this.onBaseDestroyed(side)),
       on(Events.MatchStateChanged, ({ from, to }) => {
-        if (to === 'paused') this.scene.launch(SCENE_KEYS.overlay, { kind: 'paused' } satisfies OverlaySceneData);
+        if (to === 'paused') {
+          this.scene.launch(SCENE_KEYS.overlay, { kind: 'paused', conquest: this.isConquest } satisfies OverlaySceneData);
+        }
         else if (from === 'paused') this.scene.stop(SCENE_KEYS.overlay);
         // Unit animations (walk cycles) freeze with the match.
         if (to === 'playing') this.anims.resumeAll();
@@ -242,6 +255,13 @@ export class GameScene extends Phaser.Scene {
       on(Events.QuitToMenuRequested, () => {
         this.logger?.finish('quit');
         this.scene.start(SCENE_KEYS.menu);
+      }),
+      on(Events.ConquestContinueRequested, () => {
+        if (!this.isConquest) return;
+        // Leaving before the end is a retreat: the battle counts as lost.
+        if (this.match.phase !== 'gameover') finishBattle(false);
+        this.logger?.finish('quit');
+        this.scene.start(SCENE_KEYS.conquest);
       }),
     );
     this.input.keyboard?.on('keydown-B', () => this.cycleBackground());
@@ -272,7 +292,9 @@ export class GameScene extends Phaser.Scene {
     this.scene.launch(SCENE_KEYS.hud, {
       state: this.state,
       enemyController: this.aiSetting,
-      enemyProfile: this.aiSetting === 'off' ? '' : (findAiProfile(this.sceneData.profile ?? DEFAULT_AI_PROFILE)?.label ?? ''),
+      enemyProfile:
+        this.sceneData.conquest?.label ??
+        (this.aiSetting === 'off' ? '' : (findAiProfile(this.sceneData.profile ?? DEFAULT_AI_PROFILE)?.label ?? '')),
       backgroundName: this.background.name,
     } satisfies HudSceneData);
     this.match.start();
@@ -340,6 +362,7 @@ export class GameScene extends Phaser.Scene {
     if (this.aiSetting !== 'off') aiSides.push('enemy');
     if (this.playerAiSetting) aiSides.push('player');
     if (feature('veterancy')) this.experiments.push(new VeterancySystem(this.units));
+    if (this.sceneData.conquest) this.experiments.push(new ConquestSystem(this.state, this.units, this.sceneData.conquest.effects));
     if (feature('ageDoctrines')) {
       this.experiments.push(new DoctrineSystem(this.state, this.units, () => this.match.elapsedMs));
       for (const side of aiSides) this.experiments.push(new DoctrineAi(side, this.units));
@@ -458,6 +481,7 @@ export class GameScene extends Phaser.Scene {
   /** The base crumbles at once; the game-over panel follows a moment later. */
   private onBaseDestroyed(side: Side): void {
     this.logger?.finish(side === 'enemy' ? 'won' : 'lost');
+    if (this.isConquest) finishBattle(side === 'enemy');
     this.bases[side].setTint(0x4a4a4a);
     this.time.delayedCall(GAME_OVER_DELAY_MS, () => {
       const summary = {
@@ -468,12 +492,18 @@ export class GameScene extends Phaser.Scene {
         enemyController: this.aiSetting,
         player: this.stats.for('player'),
       };
-      this.scene.launch(SCENE_KEYS.overlay, { kind: 'gameover', summary } satisfies OverlaySceneData);
+      this.scene.launch(SCENE_KEYS.overlay, { kind: 'gameover', summary, conquest: this.isConquest } satisfies OverlaySceneData);
     });
+  }
+
+  /** A Conquest campaign battle (prototype): no restarts, the result counts. */
+  private get isConquest(): boolean {
+    return this.sceneData.conquest !== undefined;
   }
 
   /** A fresh match with the same opponent. */
   private restartMatch(): void {
+    if (this.isConquest) return;
     this.logger?.finish('restarted');
     this.scene.restart({ ...this.sceneData });
   }

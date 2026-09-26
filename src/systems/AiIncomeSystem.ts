@@ -19,13 +19,16 @@ export class AiIncomeSystem {
   private readonly state: MatchState;
   private readonly side: Side;
   private readonly difficulty: AiDifficulty;
+  /** Extra multiplier (Conquest mutators and ascension; 1 otherwise). */
+  private readonly bonusMult: number;
   private goldCarry = 0;
   private xpCarry = 0;
 
-  constructor(state: MatchState, side: Side, difficulty: AiDifficulty) {
+  constructor(state: MatchState, side: Side, difficulty: AiDifficulty, bonusMult = 1) {
     this.state = state;
     this.side = side;
     this.difficulty = difficulty;
+    this.bonusMult = bonusMult;
   }
 
   /** Current gold/s, for the debug handle and logs. */
@@ -55,6 +58,7 @@ export class AiIncomeSystem {
       getAge(this.state[this.side].age).scale *
       (1 + ramp) *
       this.difficulty.incomeMult *
+      this.bonusMult *
       openingIncomeMult(this.difficulty.opening, nowMs)
     );
   }

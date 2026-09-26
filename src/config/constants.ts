@@ -180,6 +180,8 @@ export const SCENE_KEYS = {
   hud: 'HUDScene',
   /** Pause and game-over panel, on top of the HUD (Phase 13). */
   overlay: 'OverlayScene',
+  /** Conquest campaign screen (prototype, feature `conquest`). */
+  conquest: 'ConquestScene',
   /** Dev-only texture viewer, reachable with `?gallery` in the URL. */
   gallery: 'TextureGalleryScene',
 } as const;

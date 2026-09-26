@@ -23,6 +23,7 @@ import {
 } from '@ui/kenneyUi';
 import { UiButton } from '@ui/UiButton';
 import { ExperimentsPanel } from '@ui/experimental/ExperimentsPanel';
+import { feature } from '@config/features.config';
 import { baseArtKey, BASE_SUPERSAMPLE, ensureBaseArt } from '@utils/BaseArt';
 import { ensureRigArt } from '@utils/RigArt';
 
@@ -180,7 +181,7 @@ export class MenuScene extends Phaser.Scene {
         650,
         [
           'Buy units 1-5  ·  Tab switches panels  ·  Special: S  ·  Age up: A  ·  Pause: P or Esc',
-          'Destroy the enemy base, keep yours standing.  Menu: 1-3 difficulty, Q/E AI profile, Enter to play',
+          `Destroy the enemy base, keep yours standing.  Menu: 1-3 difficulty, Q/E AI profile, Enter to play${feature('conquest') ? ', C Conquest' : ''}`,
         ],
         { fontFamily: UI_FONT, fontSize: '15px', color: UiTextColors.parchment, align: 'center', lineSpacing: 8 },
       )
@@ -190,6 +191,17 @@ export class MenuScene extends Phaser.Scene {
     this.experiments = new ExperimentsPanel(this);
     const labs = new UiButton(this, GAME_WIDTH - 100, 40, 170, 44, { onPress: () => this.experiments?.toggle(), framed: true });
     labs.add(this.add.text(0, 0, 'Experiments', { fontFamily: UI_TITLE_FONT, fontSize: '19px', color: UiTextColors.parchment }).setOrigin(0.5));
+    // Conquest campaign (prototype, feature `conquest`).
+    if (feature('conquest')) {
+      const conquest = new UiButton(this, cx + 300, 486, 200, 56, { onPress: () => this.openConquest(), tint: UiColors.panelDark, framed: true });
+      conquest.add(
+        this.add
+          .text(0, -6, 'CONQUEST', { fontFamily: UI_TITLE_FONT, fontSize: '26px', color: UiTextColors.gold, stroke: UiTextColors.stroke, strokeThickness: 5 })
+          .setOrigin(0.5),
+        this.add.text(0, 17, 'roguelite campaign', { fontFamily: UI_FONT, fontSize: '12px', fontStyle: '600', color: UiTextColors.parchment }).setOrigin(0.5),
+      );
+      this.input.keyboard?.on('keydown-C', () => this.openConquest());
+    }
 
     const keys = this.input.keyboard;
     keys?.on('keydown-LEFT', () => this.step(-1));
@@ -270,6 +282,11 @@ export class MenuScene extends Phaser.Scene {
     const profile = findAiProfile(this.profileId);
     this.profileText.setText(`Enemy AI: ${profile?.label ?? 'Classic'}`);
     this.profileAbout.setText(profile?.description ?? '');
+  }
+
+  private openConquest(): void {
+    if (this.experiments?.isOpen) return;
+    this.scene.start(SCENE_KEYS.conquest);
   }
 
   private play(): void {

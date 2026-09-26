@@ -8,6 +8,7 @@ import { BootScene } from '@/scenes/BootScene';
 import { PreloadScene } from '@/scenes/PreloadScene';
 import { GameScene } from '@/scenes/GameScene';
 import { MenuScene } from '@/scenes/MenuScene';
+import { ConquestScene } from '@/scenes/ConquestScene';
 import { TextureGalleryScene } from '@/scenes/TextureGalleryScene';
 import { HUDScene } from '@ui/HUDScene';
 import { OverlayScene } from '@ui/OverlayScene';
@@ -31,7 +32,7 @@ const config: Phaser.Types.Core.GameConfig = {
   },
   // Later scenes render on top: the HUD over the game, the pause/game-over
   // overlay over the HUD.
-  scene: [BootScene, PreloadScene, MenuScene, GameScene, HUDScene, OverlayScene, TextureGalleryScene],
+  scene: [BootScene, PreloadScene, MenuScene, ConquestScene, GameScene, HUDScene, OverlayScene, TextureGalleryScene],
 };
 
 const game = new Phaser.Game(config);

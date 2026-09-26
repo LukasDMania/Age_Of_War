@@ -17,7 +17,10 @@ export interface MatchSummary {
   player: SideStats;
 }
 
-export type OverlaySceneData = { kind: 'paused' } | { kind: 'gameover'; summary: MatchSummary };
+/** `conquest`: a Conquest campaign battle (prototype), which can't be restarted. */
+export type OverlaySceneData =
+  | { kind: 'paused'; conquest?: boolean }
+  | { kind: 'gameover'; summary: MatchSummary; conquest?: boolean };
 
 const PANEL_WIDTH = 520;
 const BUTTON_WIDTH = 150;
@@ -26,7 +29,9 @@ const BUTTON_HEIGHT = 46;
 /**
  * The pause and game-over panel (Phase 13), launched by GameScene on top of
  * the HUD. It dims the match, blocks clicks to the HUD below, and only sends
- * requests: `resume-requested`, `restart-requested`, `quit-to-menu-requested`.
+ * requests: `resume-requested`, `restart-requested`, `quit-to-menu-requested`,
+ * and in a Conquest battle (prototype) `conquest-continue-requested` instead
+ * of restarting or quitting.
  *
  * Keys: R restarts, M goes to the menu, Enter resumes (paused) or plays again
  * (game over). P and Esc are handled by GameScene.
@@ -51,7 +56,12 @@ export class OverlayScene extends Phaser.Scene {
       .setInteractive();
 
     const panel = this.add.container(GAME_WIDTH / 2, GAME_HEIGHT / 2 - 40);
-    const lines = data.kind === 'gameover' ? summaryLines(data.summary) : ['The match is on hold.', 'P or Esc to resume.'];
+    const lines =
+      data.kind === 'gameover'
+        ? summaryLines(data.summary)
+        : data.conquest
+          ? ['The battle is on hold.', 'Retreating ends your campaign.']
+          : ['The match is on hold.', 'P or Esc to resume.'];
     const height = 150 + lines.length * 26 + BUTTON_HEIGHT;
     panel.add(addThemedPanel(this, 0, 0, PANEL_WIDTH, height, { alpha: 0.97 }));
 
@@ -78,8 +88,15 @@ export class OverlayScene extends Phaser.Scene {
       );
     });
 
-    const buttons: { label: string; onPress: () => void }[] =
-      data.kind === 'paused'
+    const toCampaign = (): void => emit(Events.ConquestContinueRequested, {});
+    const buttons: { label: string; onPress: () => void }[] = data.conquest
+      ? data.kind === 'paused'
+        ? [
+            { label: 'Resume', onPress: () => emit(Events.ResumeRequested, {}) },
+            { label: 'Retreat', onPress: toCampaign },
+          ]
+        : [{ label: 'Continue', onPress: toCampaign }]
+      : data.kind === 'paused'
         ? [
             { label: 'Resume', onPress: () => emit(Events.ResumeRequested, {}) },
             { label: 'Restart', onPress: () => emit(Events.RestartRequested, {}) },
@@ -103,11 +120,15 @@ export class OverlayScene extends Phaser.Scene {
       panel.add(button.container);
     });
 
-    this.input.keyboard?.on('keydown-R', () => emit(Events.RestartRequested, {}));
-    this.input.keyboard?.on('keydown-M', () => emit(Events.QuitToMenuRequested, {}));
-    this.input.keyboard?.on('keydown-ENTER', () =>
-      emit(data.kind === 'paused' ? Events.ResumeRequested : Events.RestartRequested, {}),
-    );
+    if (data.conquest) {
+      this.input.keyboard?.on('keydown-ENTER', () => (data.kind === 'paused' ? emit(Events.ResumeRequested, {}) : toCampaign()));
+    } else {
+      this.input.keyboard?.on('keydown-R', () => emit(Events.RestartRequested, {}));
+      this.input.keyboard?.on('keydown-M', () => emit(Events.QuitToMenuRequested, {}));
+      this.input.keyboard?.on('keydown-ENTER', () =>
+        emit(data.kind === 'paused' ? Events.ResumeRequested : Events.RestartRequested, {}),
+      );
+    }
 
     panel.setAlpha(0).setScale(0.92);
     this.tweens.add({ targets: panel, alpha: 1, scale: 1, duration: 180, ease: 'Quad.easeOut' });
