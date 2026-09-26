@@ -1,0 +1,156 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Stone age sprite demo</title>
+<style>
+body{margin:0;background:#1b1d22;color:#e8e6e1;font-family:system-ui,sans-serif;padding:16px}
+h1{font-size:18px;margin:0 0 4px}p{margin:4px 0 12px;color:#a9a7a1;font-size:13px;max-width:760px}
+canvas{background:#2a2d34;border-radius:8px;display:block;margin-bottom:10px;max-width:100%}
+button{background:#353943;color:#e8e6e1;border:1px solid #4a4f5a;border-radius:6px;padding:6px 12px;margin:0 6px 6px 0;cursor:pointer}
+button.on{background:#c8873a;border-color:#c8873a;color:#1b1d22}
+</style></head><body>
+<h1>Code-drawn stone age units (no image files)</h1>
+<p>All three share one drawing kit: the slinger is the clubman's body with a different outfit and weapon, and the catapult reuses that body as its crew.</p>
+<div id="types"></div>
+<canvas id="big" width="360" height="300"></canvas>
+<div id="states"></div>
+<div><button id="team">Team: player (blue)</button><button id="pix">Style: smooth</button></div>
+<canvas id="field" width="760" height="170"></canvas>
+<script>
+const OUT='#1a120c',C={skin:'#d9a066',skinB:'#b27d4c',hair:'#3a2210',wood:'#7a4a24',woodB:'#5c3719',stone:'#8d8a85',stoneB:'#6d6a66'};
+const TEAM={player:'#3d7bd9',enemy:'#d94a3d'};
+const KIT={club:{fur:'#8b5a2b',weapon:'club'},sling:{fur:'#b08452',weapon:'sling',band:1},crew:{fur:'#6f5238',weapon:'none'}};
+const INFO={club:{per:.9,rel:.54,range:55,v:45,need:4},sling:{per:1.2,rel:.72,range:210,v:45,need:4},catapult:{per:2,rel:.2,range:320,v:25,need:2}};
+const ease=x=>x<.5?2*x*x:1-Math.pow(-2*x+2,2)/2, lerp=(a,b,k)=>a+(b-a)*k;
+const pt=(p,a,l)=>[p[0]+Math.sin(a)*l,p[1]+Math.cos(a)*l];
+function poly(c,ps,w,col){c.lineCap=c.lineJoin='round';c.beginPath();c.moveTo(...ps[0]);ps.slice(1).forEach(p=>c.lineTo(...p));
+  c.lineWidth=w+3;c.strokeStyle=OUT;c.stroke();c.lineWidth=w;c.strokeStyle=col;c.stroke();}
+function dot(c,p,r,col){c.beginPath();c.arc(p[0],p[1],r,0,7);c.fillStyle=col;c.fill();c.lineWidth=1.5;c.strokeStyle=OUT;c.stroke();}
+function leg(c,hip,a,bend,col){const k=pt(hip,a,10),an=pt(k,a-bend,10);poly(c,[hip,k,an,[an[0]+4,an[1]]],4.5,col);}
+function arm(c,sh,a,bend,col){const e=pt(sh,a,8),fa=a+bend,h=pt(e,fa,8);poly(c,[sh,e,h],4,col);return{h,fa};}
+
+function legsWalk(t){const p=t*Math.PI*2/.7,s=Math.sin(p),co=Math.cos(p);
+  return{s,bob:-Math.abs(co)*1.4,fl:s*.55,fb:.15+.7*Math.max(0,co),bl:-s*.55,bb:.15+.7*Math.max(0,-co)};}
+const STANCE={bob:0,fl:.4,fb:.25,bl:-.35,bb:.1};
+function pose(type,st,t){
+  const idleB=Math.sin(t*2.5);
+  if(type==='crew'){const L=st==='walk'?legsWalk(t):{bob:idleB*.6,fl:.3,fb:.2,bl:-.3,bb:.1};
+    return Object.assign({},L,{lean:.25,fa:1.35,fe:.25,ba:1.2,be:.35});}
+  const hold=type==='club'?{fa:.35,fe:.9,club:1.9}:{fa:.2,fe:.5,sling:.05,rock:1};
+  if(st==='walk'){const L=legsWalk(t);return Object.assign({},L,hold,{lean:.08,fa:hold.fa-L.s*.25,ba:L.s*.5,be:.5});}
+  if(st!=='attack')return Object.assign({bob:idleB*.6,lean:.03,fl:.15,fb:.1,bl:-.15,bb:.1,ba:-.1,be:.3},hold,{fa:hold.fa+idleB*.05});
+  const I=INFO[type],u=(t%I.per)/I.per;let P;
+  if(type==='club'){
+    const R={fa:.35,fe:.9,club:1.9,lean:.05},W={fa:3.5,fe:1.2,club:.6,lean:-.15},S={fa:1,fe:.1,club:.35,lean:.25};
+    let A,B,k;if(u<.5){A=R;B=W;k=ease(u/.5)}else if(u<.62){A=W;B=S;k=(u-.5)/.12}else if(u<.75){A=B=S;k=0}else{A=S;B=R;k=ease((u-.75)/.25)}
+    P={};for(const q in R)P[q]=lerp(A[q],B[q],k);P.fx=u>.6&&u<.75?1-(u-.6)/.15:0;
+  }else{ // sling: whirl overhead, snap forward, release at u=.6
+    if(u<.55)P={fa:lerp(.2,2.3,ease(Math.min(1,u/.15))),fe:.6,sling:u*45,rock:1,lean:-.05};
+    else if(u<.65){const k=(u-.55)/.1;P={fa:lerp(2.3,1.1,k),fe:lerp(.6,.1,k),lean:.15,rock:u<.6};P.sling=P.fa+P.fe+1.2;}
+    else{const k=ease((u-.65)/.35);P={fa:lerp(1.1,.2,k),fe:lerp(.1,.5,k),lean:lerp(.15,.03,k),rock:u>.9};P.sling=lerp(P.fa+P.fe+1.2,.05,k);}
+  }
+  return Object.assign({},STANCE,P,{ba:-.2-P.lean,be:.4});
+}
+
+function human(c,type,team,P){
+  const K=KIT[type],hip=[0,-21+P.bob],body=f=>{c.save();c.translate(...hip);c.rotate(P.lean);f();c.restore();};
+  body(()=>{const {h}=arm(c,[0,-16],P.ba,P.be,C.skinB);dot(c,h,2.2,C.skinB);});
+  leg(c,hip,P.bl,P.bb,C.skinB);leg(c,hip,P.fl,P.fb,C.skin);
+  body(()=>{
+    c.lineWidth=1.5;c.strokeStyle=OUT;
+    c.beginPath();c.roundRect(-6,-19,12,16,4);c.fillStyle=C.skin;c.fill();c.stroke();
+    c.beginPath();c.moveTo(-7,-18);c.lineTo(-3,-19.5);c.lineTo(7,-10);c.lineTo(7.5,2);
+    for(let i=0;i<=5;i++)c.lineTo(7.5-i*3,i%2?4.5:2);c.closePath();c.fillStyle=K.fur;c.fill();c.stroke();
+    c.fillStyle=TEAM[team];c.fillRect(-7.5,-5,15,2.4);c.strokeRect(-7.5,-5,15,2.4);
+    if(K.weapon==='sling'){dot(c,[-5,-2],2.6,'#6b4a2a');}                 // rock pouch
+    dot(c,[2,-24],6.5,C.skin);
+    c.beginPath();c.arc(1.2,-25.5,7,Math.PI*.8,Math.PI*2.05);c.closePath();c.fillStyle=C.hair;c.fill();
+    c.beginPath();c.moveTo(-5.5,-23);c.lineTo(-9,-21);c.lineTo(-6,-27);c.lineTo(-9,-28);c.lineTo(-3,-31);c.lineTo(-3,-33.5);c.lineTo(2,-32);c.fill();
+    if(K.band){c.fillStyle=TEAM[team];c.fillRect(-4.5,-29,12,2.2);c.strokeRect(-4.5,-29,12,2.2); // headband + feather
+      c.beginPath();c.ellipse(-6,-33,1.6,4.5,-.5,0,7);c.fillStyle='#e8e0cc';c.fill();c.stroke();}
+    c.fillStyle=OUT;c.fillRect(4,-27,5,1.6);c.fillRect(5.5,-24.5,1.6,1.6);
+    dot(c,[8.5,-22.5],1.3,C.skin);
+    const {h,fa}=arm(c,[1,-16],P.fa,P.fe,C.skin);
+    if(K.weapon==='club'){const ca=fa+P.club;
+      poly(c,[pt(h,ca,-3),pt(h,ca,7)],3,C.wood);poly(c,[pt(h,ca,7),pt(h,ca,16)],7,C.wood);dot(c,pt(h,ca,12),1,C.woodB);
+      if(P.fx){const tip=pt(h,ca,18);star(c,tip,P.fx);}}
+    if(K.weapon==='sling'){const e=pt(h,P.sling-P.lean,9);c.lineWidth=1.2;c.strokeStyle='#4a3020';
+      c.beginPath();c.moveTo(...h);c.lineTo(...e);c.stroke();dot(c,e,1.8,'#6b4a2a');if(P.rock)dot(c,e,1.5,C.stone);}
+    dot(c,h,2.3,C.skin);
+  });
+}
+function star(c,p,a){c.strokeStyle=`rgba(255,230,150,${a})`;c.lineWidth=1.5;
+  for(let i=0;i<6;i++){const ang=i*1.05,r=4+(1-a)*6;c.beginPath();c.moveTo(...pt(p,ang,r*.4));c.lineTo(...pt(p,ang,r));c.stroke();}}
+
+function catapult(c,team,st,t){
+  let A=-1.25,rock=1;
+  if(st==='attack'){const u=(t%2)/2;
+    if(u<.15)A=lerp(-1.25,2.5,Math.pow(u/.15,2));else if(u<.3)A=2.5;else A=lerp(2.5,-1.25,ease((u-.3)/.7));rock=u<.1||u>.85;}
+  const w=st==='walk'?t*3:0;
+  c.save();c.translate(-34,0);human(c,'crew',team,pose('crew',st,t));c.restore();
+  poly(c,[[18,-10],[18,-34]],1.5,C.woodB);c.beginPath();c.moveTo(18,-34);c.lineTo(8,-31);c.lineTo(18,-28);c.closePath();
+  c.fillStyle=TEAM[team];c.fill();c.lineWidth=1.5;c.strokeStyle=OUT;c.stroke();                 // team pennant
+  poly(c,[[-22,-10],[22,-10]],5,C.wood);poly(c,[[-2,-10],[4,-28],[10,-10]],3,C.wood);
+  const piv=[4,-26],tip=pt(piv,A,26),back=pt(piv,A,-9);
+  poly(c,[back,tip],3.5,C.wood);dot(c,back,4,C.stoneB);dot(c,tip,3.8,C.woodB);if(rock)dot(c,pt(tip,A+1.57,-1),3.4,C.stone);
+  dot(c,piv,1.6,C.woodB);
+  for(const x of[-14,14]){dot(c,[x,-6],6.5,C.stone);poly(c,[[x,-6],pt([x,-6],w,4.5)],1,C.stoneB);}
+}
+
+function drawUnit(c,x,y,s,dir,team,type,st,t){
+  c.save();c.translate(x,y);c.scale(s*dir,s);
+  let fall=0;
+  if(st==='die'){const tt=t%3;fall=ease(Math.min(1,tt/.7));c.globalAlpha=tt>1.8?Math.max(0,1-(tt-1.8)/.6):1;st='idle';t=0;}
+  const wide=type==='catapult';
+  c.fillStyle='rgba(0,0,0,.25)';c.beginPath();c.ellipse(wide?-6:0,0,wide?32:12,2.5,0,0,7);c.fill();
+  if(fall){c.translate(-fall*6,0);c.rotate(-fall*(wide?.35:1.45));}
+  if(wide)catapult(c,team,st,t);else human(c,type,team,pose(type,st,t));
+  c.restore();
+}
+
+let type='club',state='attack',team='player',pixel=false;
+const mk=(el,list,get,set)=>{list.forEach(v=>{const b=document.createElement('button');b.textContent=v;b.dataset.v=v;b.onclick=()=>{set(v);sync()};el.appendChild(b)});};
+const TB=document.getElementById('types'),SB=document.getElementById('states');
+const TYPES={Clubman:'club',Slinger:'sling',Catapult:'catapult'};
+mk(TB,Object.keys(TYPES),0,v=>{type=TYPES[v];reset()});
+mk(SB,['idle','walk','attack','die'],0,v=>{state=v;t0=performance.now()});
+function sync(){[...TB.children].forEach(b=>b.classList.toggle('on',TYPES[b.dataset.v]===type));[...SB.children].forEach(b=>b.classList.toggle('on',b.dataset.v===state));}
+document.getElementById('team').onclick=e=>{team=team==='player'?'enemy':'player';e.target.textContent=`Team: ${team} (${team==='player'?'blue':'red'})`};
+document.getElementById('pix').onclick=e=>{pixel=!pixel;e.target.textContent='Style: '+(pixel?'pixel art':'smooth')};
+
+const off=document.createElement('canvas');
+function render(cv,f,fn){const c=cv.getContext('2d');c.clearRect(0,0,cv.width,cv.height);
+  if(!pixel){fn(c,1);return}off.width=cv.width/f;off.height=cv.height/f;const o=off.getContext('2d');fn(o,1/f);
+  c.imageSmoothingEnabled=false;c.drawImage(off,0,0,cv.width,cv.height);}
+
+// field: selected unit (blue) vs enemy clubman (red)
+const GY=140,S=1.8;let F;
+function reset(){F={x1:type==='catapult'?110:60,x2:720,pa:0,ea:0,shots:0,hits:0,dead:0,deadT:0,rocks:[],fx:[]};}
+reset();sync();
+function fire(){const I=INFO[type];
+  if(type==='club'){hit(F.x2-12,GY-30);return}
+  if(type==='sling')F.rocks.push({x:F.x1+8*S,y:GY-44*S,vx:330,vy:-40,g:120,r:1.6});
+  else{const sx=F.x1+23*S,sy=GY-43*S,T=1.1,tx=F.x2+45*T*-1;F.rocks.push({x:sx,y:sy,vx:(tx-sx)/T,vy:((GY-15-sy)-.5*420*T*T)/T,g:420,r:3.4});}
+  void I;}
+function hit(x,y){F.hits++;F.fx.push({x,y,t:0});if(F.hits>=INFO[type].need){F.dead=1;F.deadT=0;F.rocks=[];}}
+
+let t0=performance.now(),last=t0;
+function frame(now){
+  const t=(now-t0)/1000,dt=Math.min(.05,(now-last)/1000),g=now/1000;last=now;
+  render(big,4,(c,k)=>drawUnit(c,(type==='catapult'?205:180)*k,272*k,(type==='catapult'?3.3:4)*k,1,team,type,state,t));
+  const I=INFO[type],d=F.x2-F.x1;let ps,es,pt_,et;
+  if(!F.dead){
+    if(d>I.range){F.x1+=I.v*dt;ps='walk';pt_=g}else{ps='attack';F.pa+=dt;pt_=F.pa;if(F.pa>=I.rel+F.shots*I.per){F.shots++;fire()}}
+    if(d>55){F.x2-=45*dt;es='walk';et=g}else{es='attack';F.ea+=dt;et=F.ea+.4}
+  }else{F.deadT+=dt;ps='idle';pt_=g;es='die';et=F.deadT;if(F.deadT>2.6)reset();}
+  F.rocks=F.rocks.filter(r=>{r.vy+=r.g*dt;r.x+=r.vx*dt;r.y+=r.vy*dt;
+    if(r.x>=F.x2-10&&r.y>GY-60){hit(r.x,r.y);return false}return r.x<800&&r.y<GY;});
+  F.fx=F.fx.filter(f=>(f.t+=dt)<.25);
+  render(field,2,(c,k)=>{c.fillStyle='#3d4a2f';c.fillRect(0,GY*k,760*k,30*k);
+    drawUnit(c,F.x1*k,(GY+2)*k,S*k,1,'player',type,ps,pt_);
+    drawUnit(c,F.x2*k,(GY+2)*k,S*k,-1,'enemy','club',es,et);
+    F.rocks.forEach(r=>dot(c,[r.x*k,r.y*k],r.r*S*k,C.stone));
+    F.fx.forEach(f=>{c.save();c.translate(f.x*k,f.y*k);c.scale(S*k,S*k);star(c,[0,0],1-f.t/.25);c.restore();});});
+  requestAnimationFrame(frame);
+}
+requestAnimationFrame(frame);
+</script></body></html>

@@ -1,0 +1,7 @@
+node_modules/
+dist/
+.DS_Store
+*.log
+.vscode/
+tsconfig.tsbuildinfo
+vite.config.ts.timestamp-*

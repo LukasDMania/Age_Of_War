@@ -1,0 +1,42 @@
+{
+  "compilerOptions": {
+    /* Bundler-mode settings for Vite */
+    "target": "ES2020",
+    "useDefineForClassFields": true,
+    "module": "ESNext",
+    "lib": ["ES2020", "DOM", "DOM.Iterable"],
+    "moduleResolution": "bundler",
+    "resolveJsonModule": true,
+    "isolatedModules": true,
+    "moduleDetection": "force",
+    "noEmit": true,
+
+    /* Strictness — worth keeping strict for a data-heavy project
+       like this (unit stats, age configs, event payloads) since
+       it catches typos in config tables before runtime */
+    "strict": true,
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    "noFallthroughCasesInSwitch": true,
+    "noUncheckedSideEffectImports": true,
+    "forceConsistentCasingInFileNames": true,
+
+    /* Phaser 3.90 typings reference ActiveXObject, which no TS lib
+       declares. Skipping .d.ts checking is the standard workaround. */
+    "skipLibCheck": true,
+
+    /* Path aliases — avoids "../../../config/ages.config" spaghetti
+       once entities/systems/ui are all cross-referencing each other */
+    "baseUrl": ".",
+    "paths": {
+      "@/*": ["src/*"],
+      "@config/*": ["src/config/*"],
+      "@entities/*": ["src/entities/*"],
+      "@systems/*": ["src/systems/*"],
+      "@ui/*": ["src/ui/*"],
+      "@state/*": ["src/state/*"],
+      "@utils/*": ["src/utils/*"]
+    }
+  },
+  "include": ["src"]
+}
