@@ -147,7 +147,8 @@ export const MAX_TURRET_SLOTS = 5;
  * PROPOSED. Gold to unlock each slot, by slot index. Slot 0 starts unlocked;
  * slots must be unlocked in order, each costing more than the last.
  */
-export const TURRET_SLOT_UNLOCK_COSTS: readonly number[] = [0, 100, 200, 350, 550];
+// Owner, 2026-09-26: all five slots were too easy to get; was [0, 100, 200, 350, 550].
+export const TURRET_SLOT_UNLOCK_COSTS: readonly number[] = [0, 250, 900, 2500, 6000];
 
 /** PROPOSED. Share of a turret's purchase price refunded when it is sold. */
 export const TURRET_SELL_REFUND = 0.5;
@@ -208,7 +209,8 @@ export const SCREEN_SHAKE: {
   bigSplashRadius: number;
 } = {
   baseHit: { intensity: 0.0025, durationMs: 90, cooldownMs: 700 },
-  bigSplash: { intensity: 0.004, durationMs: 120, cooldownMs: 250 },
+  // Off (owner, 2026-09-26: mortar splashes shook the screen constantly).
+  bigSplash: { intensity: 0, durationMs: 0, cooldownMs: 250 },
   baseDestroyed: { intensity: 0.012, durationMs: 700, cooldownMs: 0 },
   bigSplashRadius: 50,
 };
@@ -221,3 +223,23 @@ export const AGE_BANNER_MS = 2400;
 
 /** Playtest game speeds (Phase 14): the HUD button and the F key cycle through these. */
 export const GAME_SPEEDS: readonly number[] = [1, 2, 3, 4, 8];
+
+/**
+ * Every unit walks at this speed (owner, 2026-09-26: "movement speed should
+ * be equal between all for now", so gaps between units stay as they are and
+ * lines only form when the front stops). Replaces each unit's own `speed`;
+ * slows and the money-unit penalty still apply on top. PROPOSED value.
+ */
+export const UNIT_WALK_SPEED = 45;
+
+/**
+ * Most own units that may stand stacked on the spawn point (owner,
+ * 2026-09-26: under pressure at your gate you can stack a few units instead
+ * of waiting for the one in front to die). Enemy units at the gate still
+ * block spawning.
+ */
+export const SPAWN_STACK_MAX = 4;
+
+/** All turret damage x this (owner, 2026-09-26: turrets still too strong). PROPOSED. */
+export const TURRET_DAMAGE_MULT = 0.7;
+

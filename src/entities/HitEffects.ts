@@ -4,6 +4,8 @@ import type { Side } from '@state/types';
 import { UI_FONT } from '@ui/kenneyUi';
 import { Events, on, type EventPayloads, type UtilityKind } from '@utils/EventBus';
 import { ObjectPool } from '@utils/ObjectPool';
+import { unitArtKey } from '@config/unitArt.config';
+import { unitArtFor } from '@entities/unitArt';
 
 const NUMBER_RISE_PX = 26;
 const NUMBER_DURATION_MS = 650;
@@ -54,6 +56,8 @@ export class HitEffects {
   private readonly numbers: ObjectPool<Phaser.GameObjects.Text>;
   private readonly puffs: ObjectPool<Phaser.GameObjects.Arc>;
   private readonly rings: ObjectPool<Phaser.GameObjects.Arc>;
+  /** Falling bodies of units with a die animation (Phase 16). */
+  private readonly corpses: ObjectPool<Phaser.GameObjects.Sprite>;
   private readonly cleanups: (() => void)[];
   /** Real time (scene clock) before which each kind of shake is held back. */
   private readonly shakeReadyAt = new Map<ShakeConfig, number>();
@@ -89,9 +93,18 @@ export class HitEffects {
       prewarm: 8,
     });
 
+    this.corpses = new ObjectPool({
+      create: () => scene.add.sprite(0, 0, '__DEFAULT').setDepth(0.95),
+      onRelease: (sprite) => sprite.stop().setActive(false).setVisible(false),
+      onDestroy: (sprite) => sprite.destroy(),
+      prewarm: 6,
+    });
+
     this.cleanups = [
       on(Events.UnitDamaged, (payload) => this.showNumber(payload)),
-      on(Events.UnitDied, ({ side, x }) => this.showPuff(side, x)),
+      on(Events.UnitDied, ({ side, unitId, x }) => {
+        if (!this.showCorpse(side, unitId, x)) this.showPuff(side, x);
+      }),
       on(Events.AreaHit, ({ x, radius }) => {
         this.showRing(x, radius);
         if (radius >= SCREEN_SHAKE.bigSplashRadius) this.shake(SCREEN_SHAKE.bigSplash);
@@ -113,6 +126,28 @@ export class HitEffects {
     this.numbers.destroy();
     this.puffs.destroy();
     this.rings.destroy();
+    this.corpses.destroy();
+  }
+
+  /** Plays the unit's die animation where it fell; false if it has none. */
+  private showCorpse(side: Side, unitId: string, x: number): boolean {
+    const art = unitArtFor(unitId);
+    if (!art?.die) return false;
+    const key = unitArtKey(unitId, 'die', side);
+    if (!this.scene.anims.exists(key)) return false;
+    const sprite = this.corpses.acquire();
+    sprite
+      .setTexture(key, 0)
+      .setOrigin(0.5, art.footY)
+      .setScale(art.scale)
+      .setFlipX(side === 'enemy')
+      .setPosition(x, LANE_Y)
+      .setAlpha(1)
+      .setActive(true)
+      .setVisible(true);
+    sprite.play(key);
+    sprite.once(Phaser.Animations.Events.ANIMATION_COMPLETE, () => this.corpses.release(sprite));
+    return true;
   }
 
   private shake(config: ShakeConfig): void {

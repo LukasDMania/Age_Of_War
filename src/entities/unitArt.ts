@@ -11,14 +11,16 @@ import type { UnitDefinition } from '@entities/unitDefinitions';
 import { SIDES, type Side } from '@state/types';
 import { textureKeyFor } from '@utils/PlaceholderArt';
 
-const ANIMS: readonly UnitArtAnim[] = ['walk', 'attack'];
+const ANIMS: readonly UnitArtAnim[] = ['walk', 'attack', 'die'];
 
 /** Queues every unit sheet. Call from a scene's `preload()`. */
 export function loadUnitArt(scene: Phaser.Scene): void {
   for (const [unitId, art] of Object.entries(UNIT_ART)) {
     if (!art || art.rig) continue; // rig sheets are drawn, not loaded
     for (const anim of ANIMS) {
-      scene.load.spritesheet(unitArtKey(unitId, anim), unitArtUrl(unitId, art[anim].file), {
+      const spec = art[anim];
+      if (!spec) continue;
+      scene.load.spritesheet(unitArtKey(unitId, anim), unitArtUrl(unitId, spec.file), {
         frameWidth: art.frameWidth,
         frameHeight: art.frameHeight,
       });
@@ -37,12 +39,13 @@ export function registerUnitArt(scene: Phaser.Scene): void {
     const sides: readonly (Side | undefined)[] = art.rig ? SIDES : [undefined];
     for (const side of sides) {
       for (const anim of ANIMS) {
+        const spec = art[anim];
+        if (!spec) continue;
         const key = unitArtKey(unitId, anim, side);
         const texture = scene.textures.get(key);
         // Pixel art stays crisp with nearest filtering; rig art is smooth.
         if (!art.rig) texture.setFilter(Phaser.Textures.FilterMode.NEAREST);
         if (!scene.anims.exists(key)) {
-          const spec = art[anim];
           scene.anims.create({
             key,
             frames: scene.anims.generateFrameNumbers(key, { start: spec.start ?? 0, end: spec.end ?? spec.frames - 1 }),

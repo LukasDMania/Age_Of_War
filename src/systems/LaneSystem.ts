@@ -1,4 +1,4 @@
-import { SPAWN_X, UNIT_SPACING_PX } from '@config/constants';
+import { SPAWN_STACK_MAX, SPAWN_X, UNIT_SPACING_PX } from '@config/constants';
 import type { Base } from '@entities/Base';
 import { UnitState, type Unit } from '@entities/Unit';
 import type { UnitFactory } from '@entities/UnitFactory';
@@ -54,16 +54,20 @@ export class LaneSystem {
 
   /**
    * True when a unit of the given sprite width can appear at `side`'s spawn
-   * point without overlapping any living unit.
+   * point: no enemy there, and fewer than `SPAWN_STACK_MAX` own units
+   * overlapping it (a small stack is allowed when pinned at the gate).
    */
   isSpawnPointClear(side: Side, spriteWidth: number): boolean {
     const half = spriteWidth / 2;
+    let own = 0;
     for (const other of this.units.activeUnits) {
       if (!other.isAlive) continue;
       const gap = Math.abs(other.x - SPAWN_X[side]) - half - other.halfWidth;
-      if (gap < UNIT_SPACING_PX) return false;
+      if (gap >= UNIT_SPACING_PX) continue;
+      if (other.side !== side) return false;
+      own++;
     }
-    return true;
+    return own < SPAWN_STACK_MAX;
   }
 
   /**
@@ -94,7 +98,10 @@ export class LaneSystem {
 
     for (const other of this.units.activeUnits) {
       if (other === unit || !other.isAlive) continue;
-      const ahead = (other.x - unit.x) * dir;
+      let ahead = (other.x - unit.x) * dir;
+      // Stacked at the same spot (spawn stacking): the older unit counts as
+      // in front, so the stack peels off one by one instead of moving as one.
+      if (ahead === 0 && other.side === unit.side && other.instanceId < unit.instanceId) ahead = 0.001;
       if (ahead <= 0) continue;
       room = Math.min(room, ahead - unit.halfWidth - other.halfWidth - UNIT_SPACING_PX);
     }

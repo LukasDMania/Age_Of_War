@@ -161,12 +161,13 @@ export class AIController {
   }
 
   /** Gold kept back for fighters before spending on turrets or money units. */
-  /** Gold kept back from turrets, buildings and research: 2 cheap fighters, or the unit it is saving for. */
+  /**
+   * Gold kept back before turrets, buildings and research: 2 cheap fighters.
+   * (Briefly it also held back the unit it was saving for; in play-tests the
+   * hard AI then never built a single turret.)
+   */
   private get reserve(): number {
-    const unitIds = getAge(this.me.age).unitIds;
-    const cheap = getUnitDefinition(unitIds[0]).cost * 2;
-    const planned = this.plannedSlot === null ? 0 : getUnitDefinition(unitIds[this.plannedSlot - 1]).cost;
-    return Math.max(cheap, planned);
+    return getUnitDefinition(getAge(this.me.age).unitIds[0]).cost * 2;
   }
 
   /* ---- Decisions --------------------------------------------------------- */

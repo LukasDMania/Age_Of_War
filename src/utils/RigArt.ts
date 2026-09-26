@@ -19,6 +19,7 @@ export function generateRigArt(scene: Phaser.Scene): void {
     for (const side of SIDES) {
       addSheet(scene, unitId, art, 'walk', side);
       addSheet(scene, unitId, art, 'attack', side);
+      addSheet(scene, unitId, art, 'die', side);
     }
   }
 }
@@ -27,7 +28,9 @@ function addSheet(scene: Phaser.Scene, unitId: string, art: UnitArt, anim: UnitA
   const rig = art.rig;
   const key = unitArtKey(unitId, anim, side);
   if (!rig || scene.textures.exists(key)) return;
-  const frames = art[anim].frames;
+  const spec = art[anim];
+  if (!spec) return;
+  const frames = spec.frames;
   const canvas = document.createElement('canvas');
   canvas.width = art.frameWidth * frames;
   canvas.height = art.frameHeight;

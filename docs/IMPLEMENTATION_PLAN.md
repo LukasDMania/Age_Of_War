@@ -1226,4 +1226,34 @@ decisions made, anything the owner needs to confirm.
     stay the placeholders' sizes. The LPC clubber sheet is kept as
     `LPC_CLUBBER_ART` but unused. Checked in screenshots on the forest
     background, no console errors; typecheck and build pass.
+- 2026-09-26: Playtest round 4 (owner feedback; latest log: 12-min win vs
+  hard where 5 mostly unupgraded turrets held the gate while the player
+  banked gold, and the hard AI never built a turret).
+  - Screen shake from big splashes turned off (mortar fire shook the screen
+    constantly); base-hit and base-destroyed shakes stay.
+  - Rig frames enlarged (weapons raised overhead were clipped at the top;
+    falling bodies at the side); supersampling capped at 2x for memory.
+  - Walk animation held for 220 ms through momentary stops (followers
+    stopping/starting every few frames flickered between stand and walk).
+    Walk loop now 10 frames at 14 fps.
+  - Attacks land on the strike frame: new `UnitAttack.windupMs` (Stone:
+    clubber 280, slinger 330, mammoth 330 ms; other ages 0 until they get
+    rig art). CombatSystem starts the swing, keeps the unit in place, and
+    hits whatever is in reach at the strike (`Unit.strikeAt`). Attack
+    animations wind up and strike at 45% with frame rates matched to the
+    windup. Checked: 283 ms from swing start to damage for the clubber.
+  - Die animation for rig units (fall backwards and fade; mammoth tips
+    over), played by `HitEffects` from a sprite pool where the unit died;
+    units without one keep the puff.
+  - Equal walking speed for every unit (`UNIT_WALK_SPEED` 45; unit
+    `speed` values unused for now). Checked: a 180 px gap between a
+    mammoth and a clubber stays 180 px.
+  - Spawn stacking: up to `SPAWN_STACK_MAX` = 4 own units may overlap the
+    spawn point (enemies there still block); stacked units peel off in
+    spawn order. Checked with an unkillable enemy at the gate: 4 clubbers
+    out, the 5th waits in the queue.
+  - Turrets: all damage x0.7 (`TURRET_DAMAGE_MULT`); slot unlocks
+    250 / 900 / 2500 / 6000 (were 100 / 200 / 350 / 550).
+  - AI reserve back to 2 cheap fighters (holding back the planned unit's
+    price stopped the hard AI from ever building turrets).
 

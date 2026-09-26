@@ -47,6 +47,16 @@ export class CombatSystem {
         continue;
       }
 
+      // Mid-swing: stand still until the strike frame, then hit whatever is
+      // in reach at that moment (the first target may already be gone).
+      if (unit.strikeAt > 0) {
+        unit.unitState = UnitState.Attacking;
+        if (nowMs < unit.strikeAt) continue;
+        unit.strikeAt = 0;
+        this.resolve(unit, attack);
+        continue;
+      }
+
       const range = unit.getStat('range');
       const targetUnit = this.nearestEnemyInReach(unit, range);
       const targetBase = targetUnit ? null : this.enemyBaseInReach(unit, range);
@@ -59,11 +69,25 @@ export class CombatSystem {
       if (nowMs < unit.attackReadyAt) continue;
       unit.attackReadyAt = nowMs + Math.max(1, unit.getStat('attackCooldown'));
       unit.playAttack();
-
-      const damage = unit.getStat('damage');
-      if (attack.projectileKey) this.shoot(unit, attack, attack.projectileKey, damage);
-      else this.strike(unit, attack, damage, targetUnit, targetBase);
+      if (attack.windupMs && attack.windupMs > 0) {
+        unit.strikeAt = nowMs + attack.windupMs;
+        continue;
+      }
+      this.resolve(unit, attack, targetUnit, targetBase);
     }
+  }
+
+  /** The hit (melee) or the release (ranged) of an attack. */
+  private resolve(unit: Unit, attack: UnitAttack, targetUnit?: Unit | null, targetBase?: Base | null): void {
+    const damage = unit.getStat('damage');
+    if (attack.projectileKey) {
+      this.shoot(unit, attack, attack.projectileKey, damage);
+      return;
+    }
+    const range = unit.getStat('range');
+    const target = targetUnit === undefined ? this.nearestEnemyInReach(unit, range) : targetUnit;
+    const base = target ? null : targetBase === undefined ? this.enemyBaseInReach(unit, range) : targetBase;
+    this.strike(unit, attack, damage, target, base);
   }
 
   /** Melee: damage lands immediately. */

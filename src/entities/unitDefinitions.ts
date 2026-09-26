@@ -56,6 +56,12 @@ export interface UnitAttack {
   splashRadius?: number;
   /** Absent means melee. */
   projectileKey?: string;
+  /**
+   * Time from the start of the attack animation to the hit (melee) or the
+   * release (ranged), so damage lands on the strike frame (owner,
+   * 2026-09-26). 0 or absent: at once.
+   */
+  windupMs?: number;
 }
 
 export interface UnitDefinition {
@@ -99,7 +105,7 @@ const STONE_UNITS: readonly UnitDefinition[] = [
     speed: 60,
     killGold: 25,
     killXp: 10,
-    attack: { damage: 12, range: 8, cooldownMs: 1000 },
+    attack: { damage: 12, range: 8, cooldownMs: 1000, windupMs: 280 },
   },
   {
     id: 'stone-slinger',
@@ -119,6 +125,7 @@ const STONE_UNITS: readonly UnitDefinition[] = [
       range: 130,
       cooldownMs: 1200,
       projectileKey: 'proj-stone',
+      windupMs: 330,
     },
   },
   {
@@ -136,7 +143,7 @@ const STONE_UNITS: readonly UnitDefinition[] = [
     killXp: 40,
     // Tramples: each hit also lands on enemies within 24 px of the target
     // (about the next unit in line), which is what beats cheap melee swarms.
-    attack: { damage: 16, range: 12, cooldownMs: 1600, splashRadius: 24 },
+    attack: { damage: 16, range: 12, cooldownMs: 1600, splashRadius: 24, windupMs: 330 },
   },
   {
     // Economy: expensive, no attack, earns gold while alive (Phase 9).

@@ -1,5 +1,5 @@
 import Phaser from 'phaser';
-import { BASE_X, TURRET_SLOT_LAYOUT } from '@config/constants';
+import { BASE_X, TURRET_DAMAGE_MULT, TURRET_SLOT_LAYOUT } from '@config/constants';
 import { getTurretDefinition, type TurretDefinition } from '@entities/turretDefinitions';
 import { researchMult } from '@config/buildings.config';
 import type { SideState, TurretState } from '@state/GameState';
@@ -78,7 +78,8 @@ export class Turret extends Phaser.GameObjects.Image {
       case 'damage':
         return (
           upgrades.reduce((value, u) => value * u.damageMult, this.definition.damage) *
-          researchMult('turretDamage', this.sideState.research.turretDamage)
+          researchMult('turretDamage', this.sideState.research.turretDamage) *
+          TURRET_DAMAGE_MULT
         );
       case 'cooldown':
         return upgrades.reduce((value, u) => value * u.cooldownMult, this.definition.cooldownMs);

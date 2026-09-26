@@ -25,7 +25,7 @@ const C = {
 };
 
 export type RigKind = 'clubber' | 'slinger' | 'mammoth-rider' | 'trader' | 'shaman';
-export type RigAnim = 'stand' | 'walk' | 'attack';
+export type RigAnim = 'stand' | 'walk' | 'attack' | 'die';
 
 const ease = (x: number): number => (x < 0.5 ? 2 * x * x : 1 - Math.pow(-2 * x + 2, 2) / 2);
 const lerp = (a: number, b: number, k: number): number => a + (b - a) * k;
@@ -128,8 +128,9 @@ function basePose(anim: RigAnim, u: number): Pose {
 }
 
 /**
- * Attack timelines. Damage lands when the attack starts (see CombatSystem),
- * so every attack strikes in its first frames and recovers afterwards.
+ * Attack timelines: wind up, strike at about 45% of the animation (the
+ * unit's `windupMs` is set to that moment, so damage lands on the strike
+ * frame), hold briefly, recover.
  */
 function attackPose(weapon: Weapon, u: number): Pose {
   const P = basePose('stand', 0);
@@ -139,30 +140,39 @@ function attackPose(weapon: Weapon, u: number): Pose {
     const W = { fa: 3.5, fe: 1.2, tool: 0.6, lean: -0.15 };
     const S = { fa: 1, fe: 0.1, tool: 0.35, lean: 0.25 };
     let A = R, B = W, k = 0;
-    if (u < 0.14) { A = R; B = W; k = ease(u / 0.14); }
-    else if (u < 0.28) { A = W; B = S; k = (u - 0.14) / 0.14; }
-    else if (u < 0.45) { A = S; B = S; k = 0; }
-    else { A = S; B = R; k = ease((u - 0.45) / 0.55); }
+    if (u < 0.3) { A = R; B = W; k = ease(u / 0.3); }
+    else if (u < 0.45) { A = W; B = S; k = (u - 0.3) / 0.15; }
+    else if (u < 0.6) { A = S; B = S; k = 0; }
+    else { A = S; B = R; k = ease((u - 0.6) / 0.4); }
     P.fa = lerp(A.fa, B.fa, k); P.fe = lerp(A.fe, B.fe, k); P.tool = lerp(A.tool, B.tool, k); P.lean = lerp(A.lean, B.lean, k);
-    P.fx = u > 0.26 && u < 0.45 ? 1 - (u - 0.26) / 0.19 : 0;
+    P.fx = u >= 0.45 && u < 0.62 ? 1 - (u - 0.45) / 0.17 : 0;
   } else if (weapon === 'sling') {
-    // Throw first (the stone is already flying), then whirl the next one up.
-    if (u < 0.2) {
-      const k = u / 0.2;
-      P.fa = lerp(2.3, 1.1, k); P.fe = lerp(0.6, 0.1, k); P.lean = 0.15; P.rock = false;
+    // Whirl overhead, release at 45% (the stone leaves then), recover.
+    if (u < 0.35) {
+      const k = u / 0.35;
+      P.fa = lerp(0.2, 2.3, ease(clamp01(k * 2.5))); P.fe = 0.6; P.lean = -0.05;
+      P.sling = k * 22; P.rock = true;
+    } else if (u < 0.45) {
+      const k = (u - 0.35) / 0.1;
+      P.fa = lerp(2.3, 1.1, k); P.fe = lerp(0.6, 0.1, k); P.lean = 0.15; P.rock = true;
       P.sling = P.fa + P.fe + 1.2;
-    } else if (u < 0.75) {
-      const k = (u - 0.2) / 0.55;
-      P.fa = lerp(1.1, 2.3, ease(clamp01(k * 2))); P.fe = 0.6; P.lean = lerp(0.15, -0.05, k);
-      P.rock = k > 0.3; P.sling = k * 30;
+    } else if (u < 0.6) {
+      P.fa = 1.1; P.fe = 0.1; P.lean = 0.15; P.rock = false; P.sling = P.fa + P.fe + 1.2;
     } else {
-      const k = ease((u - 0.75) / 0.25);
-      P.fa = lerp(2.3, 0.2, k); P.fe = lerp(0.6, 0.5, k); P.lean = 0.03; P.sling = lerp(0.05, 0.05, k);
+      const k = ease((u - 0.6) / 0.4);
+      P.fa = lerp(1.1, 0.2, k); P.fe = lerp(0.1, 0.5, k); P.lean = lerp(0.15, 0.03, k);
+      P.sling = lerp(2.4, 0.05, k); P.rock = u > 0.85;
     }
   } else if (weapon === 'spear') {
-    const k = u < 0.18 ? ease(u / 0.18) : u < 0.35 ? 1 : 1 - ease((u - 0.35) / 0.65);
-    P.fa = lerp(0.9, 1.45, k); P.fe = lerp(0.9, 0.05, k); P.tool = lerp(0.7, 0.05, k); P.lean = lerp(0.05, 0.25, k);
-    P.fx = u > 0.15 && u < 0.35 ? 1 - (u - 0.15) / 0.2 : 0;
+    // Draw back, thrust at 45%, recover.
+    if (u < 0.3) {
+      const k = ease(u / 0.3);
+      P.fa = lerp(0.9, 0.55, k); P.fe = lerp(0.9, 1.35, k); P.tool = lerp(0.7, 0.3, k); P.lean = lerp(0.05, -0.1, k);
+    } else {
+      const k = u < 0.45 ? (u - 0.3) / 0.15 : u < 0.6 ? 1 : 1 - ease((u - 0.6) / 0.4);
+      P.fa = lerp(0.9, 1.45, k); P.fe = lerp(0.9, 0.05, k); P.tool = lerp(0.7, 0.05, k); P.lean = lerp(0.05, 0.25, k);
+    }
+    P.fx = u >= 0.45 && u < 0.62 ? 1 - (u - 0.45) / 0.17 : 0;
   } else if (weapon === 'staff') {
     const k = u < 0.25 ? ease(u / 0.25) : u < 0.6 ? 1 : 1 - ease((u - 0.6) / 0.4);
     P.fa = lerp(0.35, 2.8, k); P.fe = lerp(0.9, 0.2, k); P.tool = lerp(1.9, 0.2, k); P.lean = lerp(0.03, -0.08, k);
@@ -356,8 +366,16 @@ function drawMammoth(c: Ctx, team: string, anim: RigAnim, u: number): void {
   let rear = 0;
   let dust = 0;
   if (anim === 'attack') {
-    rear = u < 0.12 ? -0.22 * ease(u / 0.12) : u < 0.24 ? -0.22 * (1 - (u - 0.12) / 0.12) : 0;
-    dust = u > 0.2 && u < 0.5 ? 1 - (u - 0.2) / 0.3 : 0;
+    // Rear up, stomp down at 45% (the hit), dust.
+    rear = u < 0.3 ? -0.22 * ease(u / 0.3) : u < 0.45 ? -0.22 * (1 - (u - 0.3) / 0.15) : 0;
+    dust = u >= 0.45 && u < 0.8 ? 1 - (u - 0.45) / 0.35 : 0;
+  }
+  if (anim === 'die') {
+    // Topples over backwards, the rider drops, both fade.
+    const fall = ease(clamp01(u / 0.6));
+    rear = -0.55 * fall;
+    c.translate(0, fall * 6);
+    c.globalAlpha = u > 0.55 ? Math.max(0, 1 - (u - 0.55) / 0.45) : 1;
   }
   const bob = walking ? -Math.abs(Math.cos(p)) * 1.2 : 0;
   c.save();
@@ -462,10 +480,20 @@ function drawMammoth(c: Ctx, team: string, anim: RigAnim, u: number): void {
 export function drawRig(c: Ctx, kind: RigKind, team: string, anim: RigAnim, u: number): void {
   if (kind === 'mammoth-rider') {
     drawMammoth(c, team, anim, u);
+    c.globalAlpha = 1;
     return;
   }
   const kit = KITS[kind];
-  const pose = anim === 'attack' ? attackPose(kit.weapon, u) : basePose(anim, u);
+  const pose = anim === 'attack' ? attackPose(kit.weapon, u) : basePose(anim === 'die' ? 'stand' : anim, u);
+  if (anim === 'die') {
+    // Falls over backwards and fades out.
+    const fall = ease(clamp01(u / 0.55));
+    c.translate(fall * 3, 0); // keep the fallen body inside the frame
+    c.rotate(-fall * 1.45);
+    c.globalAlpha = u > 0.55 ? Math.max(0, 1 - (u - 0.55) / 0.45) : 1;
+    pose.fa = lerp(pose.fa, 2.4, fall);
+    pose.ba = lerp(pose.ba, 2.0, fall);
+  }
   if (kind === 'trader') {
     pose.fa = 0.5;
     pose.fe = 0.4;
@@ -477,4 +505,5 @@ export function drawRig(c: Ctx, kind: RigKind, team: string, anim: RigAnim, u: n
   c.ellipse(0, 0, 12, 2.5, 0, 0, Math.PI * 2);
   c.fill();
   drawHuman(c, kit, team, pose);
+  c.globalAlpha = 1;
 }

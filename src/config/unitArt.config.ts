@@ -36,6 +36,8 @@ export interface UnitArt {
   walk: UnitAnimationArt;
   /** Played once each time the unit attacks. */
   attack: UnitAnimationArt;
+  /** Played once where the unit died (rig art, Phase 16). */
+  die?: UnitAnimationArt;
   /** Frame of the walk strip shown while standing (blocked, or between attacks). */
   standFrame: number;
   /** Part of the stand frame used as the buy-button icon, in frame pixels. */
@@ -61,15 +63,17 @@ export interface RigSpec {
 }
 
 /** Rig sheets are drawn this many times sharper than shown (matches the screen). */
-export const RIG_SUPERSAMPLE = Math.min(3, Math.max(1.5, RENDER_SCALE));
+export const RIG_SUPERSAMPLE = Math.min(2, Math.max(1.25, RENDER_SCALE));
 
-const RIG_WALK_FRAMES = 8;
-const RIG_ATTACK_FRAMES = 8;
+const RIG_WALK_FRAMES = 10;
+const RIG_ATTACK_FRAMES = 10;
+const RIG_DIE_FRAMES = 8;
 
 /**
- * UnitArt for a rig unit. Walk strip: frame 0 is the standing pose, 1..8
- * the walk loop. Attack strip: 8 frames, strike first (damage lands when
- * the attack starts).
+ * UnitArt for a rig unit. Walk strip: frame 0 is the standing pose, 1..10
+ * the walk loop. Attack strip: 10 frames with the strike at 45%; pick
+ * `attackRate` so that moment matches the unit's `windupMs`
+ * (0.45 x 10 / rate s). Die strip: 8 frames, played once where it fell.
  */
 function rigArt(kind: RigKind, boxW: number, boxH: number, footRig: number, pxPerUnit: number, attackRate: number): UnitArt {
   const k = pxPerUnit * RIG_SUPERSAMPLE;
@@ -80,8 +84,9 @@ function rigArt(kind: RigKind, boxW: number, boxH: number, footRig: number, pxPe
     frameHeight,
     footY: footRig / boxH,
     scale: 1 / RIG_SUPERSAMPLE,
-    walk: { file: '', frames: RIG_WALK_FRAMES + 1, start: 1, end: RIG_WALK_FRAMES, frameRate: 12, repeat: -1 },
+    walk: { file: '', frames: RIG_WALK_FRAMES + 1, start: 1, end: RIG_WALK_FRAMES, frameRate: 14, repeat: -1 },
     attack: { file: '', frames: RIG_ATTACK_FRAMES, frameRate: attackRate, repeat: 0 },
+    die: { file: '', frames: RIG_DIE_FRAMES, frameRate: 12, repeat: 0 },
     standFrame: 0,
     icon: {
       x: Math.round(frameWidth * 0.12),
@@ -100,11 +105,13 @@ function rigArt(kind: RigKind, boxW: number, boxH: number, footRig: number, pxPe
  */
 export const UNIT_ART: Readonly<Partial<Record<string, UnitArt>>> = {
   // Stone age in the rig style (owner, 2026-09-26).
-  'stone-clubber': rigArt('clubber', 68, 58, 52, 1.45, 14),
-  'stone-slinger': rigArt('slinger', 68, 62, 54, 1.4, 12),
-  'stone-mammoth-rider': rigArt('mammoth-rider', 96, 86, 80, 1.15, 12),
-  'stone-trader': rigArt('trader', 60, 56, 50, 1.4, 12),
-  'stone-shaman': rigArt('shaman', 60, 66, 58, 1.4, 10),
+  // Frames are tall enough for weapons raised overhead and wide enough for
+  // the fall (they used to clip the top of club swings and staffs).
+  'stone-clubber': rigArt('clubber', 104, 82, 76, 1.45, 16),
+  'stone-slinger': rigArt('slinger', 104, 76, 70, 1.4, 14),
+  'stone-mammoth-rider': rigArt('mammoth-rider', 110, 110, 102, 1.15, 14),
+  'stone-trader': rigArt('trader', 104, 60, 54, 1.4, 12),
+  'stone-shaman': rigArt('shaman', 104, 82, 76, 1.4, 10),
 };
 
 /**
@@ -123,7 +130,7 @@ export const LPC_CLUBBER_ART: UnitArt = {
   enemyTint: 0xffa8a0,
 };
 
-export type UnitArtAnim = 'walk' | 'attack';
+export type UnitArtAnim = 'walk' | 'attack' | 'die';
 
 /** Texture key of a unit's sheet; also the key of its animation. */
 /** Texture/animation key of a unit's sheet; rig units have one per side. */

@@ -1,3 +1,4 @@
+import { UNIT_WALK_SPEED } from '@config/constants';
 import Phaser from 'phaser';
 import { LANE_Y } from '@config/constants';
 import { unitArtKey, type UnitArt } from '@config/unitArt.config';
@@ -33,6 +34,8 @@ const BAR_GAP_ABOVE_HEAD = 8;
 const MIN_BAR_WIDTH = 24;
 /** How long a unit flashes white after taking damage (real time, visual only). */
 const HIT_FLASH_MS = 70;
+/** Real ms the walk animation keeps playing after the unit stops moving. */
+const WALK_ANIM_HOLD_MS = 220;
 
 /**
  * The one unit class. What a unit does comes from its `UnitDefinition`; this
@@ -64,6 +67,10 @@ export class Unit extends Phaser.GameObjects.Sprite {
    * utility unit (Phase 15: effects from several utility units don't stack).
    */
   healLockUntil = 0;
+  /** Sim time at which a started attack lands (0 = none pending; see `UnitAttack.windupMs`). */
+  strikeAt = 0;
+  /** Scene time the unit last walked, so the walk loop doesn't flicker on 1-frame stops. */
+  private walkedAt = -Infinity;
   shieldLockUntil = 0;
   /** Side credited with the kill once HP reaches 0 (set by `markDead`). */
   killerSide: Side | null = null;
@@ -126,6 +133,8 @@ export class Unit extends Phaser.GameObjects.Sprite {
     this.utilityReadyAt = 0;
     this.auraPulseAt = 0;
     this.healLockUntil = 0;
+    this.strikeAt = 0;
+    this.walkedAt = -Infinity;
     this.shieldLockUntil = 0;
     this.killerSide = null;
     this.flashUntil = 0;
@@ -257,7 +266,12 @@ export class Unit extends Phaser.GameObjects.Sprite {
     if (!art) return;
     const attackKey = unitArtKey(this.definition.id, 'attack', this.side);
     if (this.anims.isPlaying && this.anims.currentAnim?.key === attackKey) return;
-    if (this.unitState === UnitState.Walking) {
+    const now = this.scene.time.now;
+    if (this.unitState === UnitState.Walking) this.walkedAt = now;
+    // Keep the walk loop through brief stops (a unit following another at
+    // the same speed stops and starts every few frames), instead of
+    // snapping to the standing frame and back: that looked jittery.
+    if (now - this.walkedAt < WALK_ANIM_HOLD_MS) {
       this.play(unitArtKey(this.definition.id, 'walk', this.side), true);
     } else if (this.anims.isPlaying || this.texture.key !== unitArtKey(this.definition.id, 'walk', this.side)) {
       this.anims.stop();
@@ -270,7 +284,8 @@ export class Unit extends Phaser.GameObjects.Sprite {
       case 'damage':
         return this.definition.attack?.damage ?? 0;
       case 'speed':
-        return this.definition.speed;
+        // One walking speed for everyone (owner, 2026-09-26); `definition.speed` is unused for now.
+        return UNIT_WALK_SPEED;
       case 'attackCooldown':
         return this.definition.attack?.cooldownMs ?? 0;
       case 'maxHp':
