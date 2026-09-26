@@ -66,9 +66,11 @@ export class Backdrop {
     }
   }
 
-  destroy(): void {
+  /** Removes the sprites; with `unload`, also frees the shown background's textures. */
+  destroy(unload = false): void {
     this.loadToken++;
     this.clear();
+    if (unload && this.def) this.unload(this.def);
   }
 
   private clear(): void {

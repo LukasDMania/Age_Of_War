@@ -33,6 +33,7 @@ export class SpecialButton {
     this.button = new UiButton(scene, x, y, size, size, {
       onPress: () => emit(Events.SpecialRequested, { side: this.side }),
       hoverTint: UiColors.ready,
+      framed: true,
     });
     const title = scene.add
       .text(-half + 8, -half + 6, 'Special', { fontFamily: UI_FONT, fontSize: '12px', color: UiTextColors.dim });

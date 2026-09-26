@@ -11,7 +11,15 @@ import { BuildingPanel } from '@ui/BuildingPanel';
 import { ResearchPanel } from '@ui/ResearchPanel';
 import { HudBar } from '@ui/HudBar';
 import { SpecialButton } from '@ui/SpecialButton';
-import { addPanel, UI_FONT, UiColors, UiTextColors, UiTextures } from '@ui/kenneyUi';
+import {
+  addThemedPanel,
+  applyUiTheme,
+  UI_FONT,
+  UI_TITLE_FONT,
+  UiColors,
+  UiTextColors,
+} from '@ui/kenneyUi';
+import { FX_SUPERSAMPLE } from '@utils/FxArt';
 import { TurretPanel } from '@ui/TurretPanel';
 import { UiButton } from '@ui/UiButton';
 import { UnitBuyPanel } from '@ui/UnitBuyPanel';
@@ -24,6 +32,21 @@ export interface HudSceneData {
   enemyController: AiDifficultyName | 'off';
   /** Playtest background currently shown (Phase 15). */
   backgroundName: string;
+  /**
+   * Set when the HUD rebuilds itself in the new age's look after the player
+   * ages up (2026-09-26): what it can't read back from the match state.
+   */
+  restore?: HudRestore;
+}
+
+/** HUD view state carried over a re-skin. */
+export interface HudRestore {
+  tab: TabKey;
+  speed: number;
+  economy: { units: number; incomePerSec: number; damageMult: number; speedMult: number };
+  special: { remainingMs: number; totalMs: number };
+  /** Show the age-up banner for this age once rebuilt. */
+  announceAge: number;
 }
 
 function capitalize(text: string): string {
@@ -51,7 +74,7 @@ const PANEL_TOP = GAME_HEIGHT - BOTTOM_MARGIN - PANEL_HEIGHT;
 const TAB_WIDTH = 100;
 const TAB_HEIGHT = 26;
 
-type TabKey = 'units' | 'turrets' | 'buildings' | 'research';
+export type TabKey = 'units' | 'turrets' | 'buildings' | 'research';
 const TAB_ORDER: readonly TabKey[] = ['units', 'turrets', 'buildings', 'research'];
 
 /**
@@ -100,21 +123,27 @@ export class HUDScene extends Phaser.Scene {
   private pauseButton!: UiButton;
   private tabs!: Record<TabKey, UiButton>;
   private activeTab: TabKey = 'units';
+  private data0!: HudSceneData;
+  private lastSpecial = { remainingMs: 0, totalMs: 1 };
 
   constructor() {
     super({ key: SCENE_KEYS.hud });
   }
 
   init(data: HudSceneData): void {
+    this.data0 = data;
     this.state = data.state;
     this.enemyController = data.enemyController;
     this.backgroundName = data.backgroundName;
     this.cleanups = [];
-    this.activeTab = 'units';
+    this.activeTab = data.restore?.tab ?? 'units';
+    this.lastSpecial = data.restore?.special ?? { remainingMs: 0, totalMs: 1 };
   }
 
   create(): void {
     const own = this.state[HUD_SIDE];
+    // The HUD wears the player's age (palette, pattern, trim).
+    applyUiTheme(own.age);
     this.baseBars = { player: this.buildTopLeft(), enemy: this.buildTopRight() };
     this.ageUpButton = new AgeUpButton(
       this,
@@ -127,7 +156,7 @@ export class HUDScene extends Phaser.Scene {
       own.xp,
     );
 
-    addPanel(this, UiTextures.panelGlass, PANEL_LEFT + PANEL_WIDTH / 2, PANEL_TOP + PANEL_HEIGHT / 2, PANEL_WIDTH, PANEL_HEIGHT);
+    addThemedPanel(this, PANEL_LEFT + PANEL_WIDTH / 2, PANEL_TOP + PANEL_HEIGHT / 2, PANEL_WIDTH, PANEL_HEIGHT, { alpha: 0.96 });
     this.unitPanel = new UnitBuyPanel(this, HUD_SIDE, PANEL_LEFT, PANEL_TOP, {
       gold: own.gold,
       age: own.age,
@@ -155,7 +184,7 @@ export class HUDScene extends Phaser.Scene {
       buildings: this.buildTab(2, 'Buildings', 'buildings'),
       research: this.buildTab(3, 'Research', 'research'),
     };
-    this.showTab('units');
+    this.showTab(this.activeTab, false);
     this.pauseButton = new UiButton(this, GAME_WIDTH / 2, 34, 44, 40, {
       onPress: () => emit(Events.PauseRequested, {}),
       tint: UiColors.panelDark,
@@ -173,7 +202,7 @@ export class HUDScene extends Phaser.Scene {
       tint: UiColors.panelDark,
     });
     this.speedText = this.add
-      .text(0, 0, '1x', { fontFamily: UI_FONT, fontSize: '16px', color: UiTextColors.parchment })
+      .text(0, 0, '1x', { fontFamily: UI_TITLE_FONT, fontSize: '18px', color: UiTextColors.parchment })
       .setOrigin(0.5);
     this.speedButton.add(this.speedText);
     // Playtest: cycle the background options (also the B key).
@@ -191,6 +220,17 @@ export class HUDScene extends Phaser.Scene {
       this.showTab(TAB_ORDER[(TAB_ORDER.indexOf(this.activeTab) + 1) % TAB_ORDER.length] ?? 'units'),
     );
     this.setLocked(this.state.phase !== 'playing');
+
+    // Carried over a re-skin: speed, money-unit economy, special cooldown.
+    const restore = this.data0.restore;
+    if (restore) {
+      this.speed = restore.speed;
+      this.speedText.setText(`${restore.speed}x`).setColor(restore.speed === 1 ? UiTextColors.parchment : UiTextColors.gold);
+      this.lastEconomy = { ...restore.economy };
+      this.refreshIncome();
+      this.announceAge(restore.announceAge);
+    }
+    this.specialButton.setCooldown(this.lastSpecial.remainingMs, this.lastSpecial.totalMs);
 
     // One-time read of the starting values; events keep them current.
     this.showAge(own.age);
@@ -219,19 +259,24 @@ export class HUDScene extends Phaser.Scene {
           this.announceEnemyAge(age);
           return;
         }
-        this.announceAge(age);
-        this.showAge(age);
-        this.unitPanel.setAge(age);
-        this.turretPanel.setAge(age);
-        this.specialButton.setAge(age);
-        this.buildingPanel.rebuild();
-        this.refreshIncome();
-        this.ageUpButton.setAge(age);
-        // Re-read once: the XP bar's maximum is now the new age's threshold.
-        this.showXp(this.state[side].xp, xpToNextAge(this.state, side));
+        // Rebuild in the new age's look (it reads everything else back
+        // from the match state), then show the age-up banner.
+        this.scene.restart({
+          ...this.data0,
+          backgroundName: this.backgroundName,
+          restore: {
+            tab: this.activeTab,
+            speed: this.speed,
+            economy: { ...this.lastEconomy },
+            special: { ...this.lastSpecial },
+            announceAge: age,
+          },
+        } satisfies HudSceneData);
       }),
       on(Events.SpecialCooldownChanged, ({ side, remainingMs, totalMs }) => {
-        if (side === HUD_SIDE) this.specialButton.setCooldown(remainingMs, totalMs);
+        if (side !== HUD_SIDE) return;
+        this.lastSpecial = { remainingMs, totalMs };
+        this.specialButton.setCooldown(remainingMs, totalMs);
       }),
       on(Events.SlotUnlocked, ({ side, slotIndex }) => {
         if (side === HUD_SIDE) this.turretPanel.setUnlockedSlots(slotIndex + 1);
@@ -259,7 +304,10 @@ export class HUDScene extends Phaser.Scene {
       on(Events.ResearchCompleted, ({ side }) => {
         if (side === HUD_SIDE) this.researchPanel.rebuild();
       }),
-      on(Events.BackgroundChanged, ({ name }) => this.showBackgroundName(name)),
+      on(Events.BackgroundChanged, ({ name }) => {
+        this.backgroundName = name;
+        this.showBackgroundName(name);
+      }),
       on(Events.GameSpeedChanged, ({ multiplier }) => {
         this.speed = multiplier;
         this.speedText.setText(`${multiplier}x`).setColor(multiplier === 1 ? UiTextColors.parchment : UiTextColors.gold);
@@ -274,14 +322,26 @@ export class HUDScene extends Phaser.Scene {
     const height = TOP_LEFT_HEIGHT;
     const left = MARGIN;
     const top = 12;
-    addPanel(this, UiTextures.panel, left + TOP_PANEL_WIDTH / 2, top + height / 2, TOP_PANEL_WIDTH, height);
+    addThemedPanel(this, left + TOP_PANEL_WIDTH / 2, top + height / 2, TOP_PANEL_WIDTH, height);
 
     this.ageText = this.add
-      .text(left + 16, top + 22, '', { fontFamily: UI_FONT, fontSize: '18px', color: UiTextColors.parchment })
+      .text(left + 16, top + 22, '', {
+        fontFamily: UI_TITLE_FONT,
+        fontSize: '22px',
+        color: UiTextColors.title,
+        stroke: UiTextColors.stroke,
+        strokeThickness: 4,
+      })
       .setOrigin(0, 0.5);
-    this.add.circle(left + TOP_PANEL_WIDTH - 96, top + 22, 8, UiColors.gold);
+    this.add.image(left + TOP_PANEL_WIDTH - 98, top + 22, 'fx-coin').setScale(1.7 / FX_SUPERSAMPLE);
     this.goldText = this.add
-      .text(left + TOP_PANEL_WIDTH - 82, top + 22, '', { fontFamily: UI_FONT, fontSize: '20px', color: UiTextColors.gold })
+      .text(left + TOP_PANEL_WIDTH - 84, top + 22, '', {
+        fontFamily: UI_TITLE_FONT,
+        fontSize: '24px',
+        color: UiTextColors.gold,
+        stroke: UiTextColors.stroke,
+        strokeThickness: 4,
+      })
       .setOrigin(0, 0.5);
 
     const barLeft = left + BAR_LEFT_OFFSET;
@@ -309,9 +369,15 @@ export class HUDScene extends Phaser.Scene {
     const height = 74;
     const left = GAME_WIDTH - MARGIN - TOP_PANEL_WIDTH;
     const top = 12;
-    addPanel(this, UiTextures.panel, left + TOP_PANEL_WIDTH / 2, top + height / 2, TOP_PANEL_WIDTH, height);
+    addThemedPanel(this, left + TOP_PANEL_WIDTH / 2, top + height / 2, TOP_PANEL_WIDTH, height);
     this.enemyAgeText = this.add
-      .text(left + 16, top + 22, '', { fontFamily: UI_FONT, fontSize: '18px', color: UiTextColors.parchment })
+      .text(left + 16, top + 22, '', {
+        fontFamily: UI_TITLE_FONT,
+        fontSize: '20px',
+        color: UiTextColors.title,
+        stroke: UiTextColors.stroke,
+        strokeThickness: 4,
+      })
       .setOrigin(0, 0.5);
     const controller = this.enemyController === 'off' ? 'No AI' : `${capitalize(this.enemyController)} AI`;
     this.add
@@ -332,11 +398,11 @@ export class HUDScene extends Phaser.Scene {
       tint: UiColors.panelDark,
       hoverTint: UiColors.panelHover,
     });
-    tab.add(this.add.text(0, 0, text, { fontFamily: UI_FONT, fontSize: '13px', color: UiTextColors.parchment }).setOrigin(0.5));
+    tab.add(this.add.text(0, 0, text, { fontFamily: UI_FONT, fontSize: '14px', fontStyle: '600', color: UiTextColors.parchment }).setOrigin(0.5));
     return tab;
   }
 
-  private showTab(key: TabKey): void {
+  private showTab(key: TabKey, moveCamera = true): void {
     this.activeTab = key;
     this.unitPanel.setVisible(key === 'units');
     this.turretPanel.setVisible(key === 'turrets');
@@ -344,6 +410,7 @@ export class HUDScene extends Phaser.Scene {
     this.researchPanel.setVisible(key === 'research');
     for (const tab of TAB_ORDER) this.tabs[tab].setSelected(key === tab);
     // The buildings stand behind the base: show them while their tab is open.
+    if (!moveCamera) return;
     if (key === 'buildings') emit(Events.CameraFocusRequested, { target: 'buildings' });
     else if (key !== 'research') emit(Events.CameraFocusRequested, { target: 'lane' });
   }
@@ -353,12 +420,19 @@ export class HUDScene extends Phaser.Scene {
     const cx = GAME_WIDTH / 2;
     const banner = this.add.container(cx, 250).setDepth(50);
     banner.add([
-      addPanel(this, UiTextures.panelGlass, 0, 0, 560, 118, UiColors.panelDark),
+      addThemedPanel(this, 0, 0, 580, 124, { alpha: 0.95 }),
       this.add
-        .text(0, -18, `${getAge(age).name.toUpperCase()} AGE`, { fontFamily: UI_FONT, fontSize: '44px', color: UiTextColors.gold })
-        .setOrigin(0.5),
+        .text(0, -18, `${getAge(age).name.toUpperCase()} AGE`, {
+          fontFamily: UI_TITLE_FONT,
+          fontSize: '52px',
+          color: UiTextColors.gold,
+          stroke: UiTextColors.stroke,
+          strokeThickness: 7,
+        })
+        .setOrigin(0.5)
+        .setShadow(0, 4, 'rgba(0,0,0,0.5)', 4, true, true),
       this.add
-        .text(0, 30, 'New units, turrets and special unlocked', { fontFamily: UI_FONT, fontSize: '16px', color: UiTextColors.parchment })
+        .text(0, 34, 'New units, turrets and special unlocked', { fontFamily: UI_FONT, fontSize: '17px', color: UiTextColors.parchment })
         .setOrigin(0.5),
     ]);
     this.showBanner(banner);
@@ -368,11 +442,11 @@ export class HUDScene extends Phaser.Scene {
   private announceEnemyAge(age: number): void {
     const text = this.add
       .text(GAME_WIDTH - MARGIN - TOP_PANEL_WIDTH / 2, 104, `Enemy reached the ${getAge(age).name} Age`, {
-        fontFamily: UI_FONT,
-        fontSize: '16px',
+        fontFamily: UI_TITLE_FONT,
+        fontSize: '18px',
         color: '#f08a80',
-        stroke: '#2a2233',
-        strokeThickness: 4,
+        stroke: UiTextColors.stroke,
+        strokeThickness: 5,
       })
       .setOrigin(0.5)
       .setDepth(50);
@@ -408,7 +482,7 @@ export class HUDScene extends Phaser.Scene {
   }
 
   private label(x: number, y: number, text: string): void {
-    this.add.text(x, y, text, { fontFamily: UI_FONT, fontSize: '14px', color: UiTextColors.dim }).setOrigin(0, 0.5);
+    this.add.text(x, y, text, { fontFamily: UI_FONT, fontSize: '14px', fontStyle: '600', color: UiTextColors.dim }).setOrigin(0, 0.5);
   }
 
   private showAge(age: number): void {

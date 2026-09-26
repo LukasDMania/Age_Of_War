@@ -3,7 +3,7 @@ import { AI_DIFFICULTIES, type AiDifficultyName } from '@config/ai.config';
 import { getAge } from '@config/ages.config';
 import { GAME_HEIGHT, GAME_WIDTH, SCENE_KEYS } from '@config/constants';
 import type { SideStats } from '@systems/StatsSystem';
-import { addPanel, UI_FONT, UiColors, UiTextColors, UiTextures } from '@ui/kenneyUi';
+import { addThemedPanel, UI_FONT, UI_TITLE_FONT, UiTextColors } from '@ui/kenneyUi';
 import { UiButton } from '@ui/UiButton';
 import { emit, Events } from '@utils/EventBus';
 
@@ -53,20 +53,27 @@ export class OverlayScene extends Phaser.Scene {
     const panel = this.add.container(GAME_WIDTH / 2, GAME_HEIGHT / 2 - 40);
     const lines = data.kind === 'gameover' ? summaryLines(data.summary) : ['The match is on hold.', 'P or Esc to resume.'];
     const height = 150 + lines.length * 26 + BUTTON_HEIGHT;
-    panel.add(addPanel(this, UiTextures.panelGlass, 0, 0, PANEL_WIDTH, height, UiColors.panelDark));
+    panel.add(addThemedPanel(this, 0, 0, PANEL_WIDTH, height, { alpha: 0.97 }));
 
     const top = -height / 2;
     const title = data.kind === 'paused' ? 'PAUSED' : data.summary.won ? 'VICTORY' : 'DEFEAT';
     const titleColor = data.kind === 'paused' ? UiTextColors.parchment : data.summary.won ? '#8fe08f' : '#f08a80';
     panel.add(
       this.add
-        .text(0, top + 46, title, { fontFamily: UI_FONT, fontSize: '48px', color: titleColor })
-        .setOrigin(0.5),
+        .text(0, top + 50, title, {
+          fontFamily: UI_TITLE_FONT,
+          fontSize: '58px',
+          color: titleColor,
+          stroke: UiTextColors.stroke,
+          strokeThickness: 8,
+        })
+        .setOrigin(0.5)
+        .setShadow(0, 5, 'rgba(0,0,0,0.45)', 5, true, true),
     );
     lines.forEach((line, i) => {
       panel.add(
         this.add
-          .text(0, top + 100 + i * 26, line, { fontFamily: UI_FONT, fontSize: '16px', color: UiTextColors.parchment })
+          .text(0, top + 108 + i * 26, line, { fontFamily: UI_FONT, fontSize: '17px', color: UiTextColors.parchment })
           .setOrigin(0.5),
       );
     });
@@ -87,9 +94,11 @@ export class OverlayScene extends Phaser.Scene {
     const buttonY = height / 2 - 20 - BUTTON_HEIGHT / 2;
     buttons.forEach((spec, i) => {
       const x = -rowWidth / 2 + BUTTON_WIDTH / 2 + i * (BUTTON_WIDTH + gap);
-      const button = new UiButton(this, x, buttonY, BUTTON_WIDTH, BUTTON_HEIGHT, { onPress: spec.onPress });
+      const button = new UiButton(this, x, buttonY, BUTTON_WIDTH, BUTTON_HEIGHT, { onPress: spec.onPress, framed: true });
       button.add(
-        this.add.text(0, 0, spec.label, { fontFamily: UI_FONT, fontSize: '17px', color: UiTextColors.parchment }).setOrigin(0.5),
+        this.add
+          .text(0, 0, spec.label, { fontFamily: UI_TITLE_FONT, fontSize: '20px', color: UiTextColors.parchment, stroke: UiTextColors.stroke, strokeThickness: 4 })
+          .setOrigin(0.5),
       );
       panel.add(button.container);
     });

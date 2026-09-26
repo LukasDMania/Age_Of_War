@@ -3,6 +3,7 @@ import { BUILDINGS, BUILDING_LAYOUT, MAX_BUILDING_LEVEL, type BuildingId } from 
 import { LANE_Y } from '@config/constants';
 import type { Side } from '@state/types';
 import { textureKeyFor } from '@utils/PlaceholderArt';
+import { UI_FONT } from '@ui/kenneyUi';
 
 /**
  * The picture of one building behind a base (Phase 14): its sprite, name and
@@ -24,7 +25,7 @@ export class Building extends Phaser.GameObjects.Container {
     this.sprite = scene.add.image(0, 0, textureKeyFor(def.spriteKey, side)).setOrigin(0.5, 1);
     this.label = scene.add
       .text(0, -BUILDING_LAYOUT.size.h - 30, def.name, {
-        fontFamily: 'monospace',
+        fontFamily: UI_FONT,
         fontSize: '15px',
         color: '#f1e4c3',
         stroke: '#2a2233',

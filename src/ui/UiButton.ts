@@ -8,6 +8,8 @@ export interface UiButtonOptions {
   hoverTint?: number;
   /** Called when the pointer enters (true) or leaves (false). */
   onHover?: (over: boolean) => void;
+  /** Adds the theme's ornate trim frame around the button (2026-09-26). */
+  framed?: boolean;
 }
 
 const DISABLED_ALPHA = 0.4;
@@ -41,6 +43,11 @@ export class UiButton {
       options.tint ?? UiColors.panelMid,
     );
     this.container.add(this.background);
+    if (options.framed) {
+      const frame = scene.add.nineslice(0, 0, UiTextures.frameOrnate, undefined, width + 6, height + 6, 12, 12, 12, 12);
+      frame.setTint(UiColors.trim);
+      this.container.add(frame);
+    }
     this.background.setInteractive({ useHandCursor: true });
     this.background.on('pointerover', () => {
       this.hovered = true;

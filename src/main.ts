@@ -1,4 +1,8 @@
 import Phaser from 'phaser';
+// UI fonts (SIL OFL, bundled from npm): Fredoka for text, Lilita One for titles.
+import '@fontsource/fredoka/500.css';
+import '@fontsource/fredoka/600.css';
+import '@fontsource/lilita-one/400.css';
 import { GAME_HEIGHT, GAME_WIDTH } from '@config/constants';
 import { BootScene } from '@/scenes/BootScene';
 import { PreloadScene } from '@/scenes/PreloadScene';

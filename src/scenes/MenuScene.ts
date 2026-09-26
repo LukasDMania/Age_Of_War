@@ -6,34 +6,66 @@ import {
   isAiDifficultyName,
   type AiDifficultyName,
 } from '@config/ai.config';
-import { getAge } from '@config/ages.config';
-import { BASE_X, GAME_HEIGHT, GAME_WIDTH, LANE_COLOR, LANE_Y, SCENE_KEYS } from '@config/constants';
+import { BACKGROUNDS } from '@config/backgrounds.config';
+import { BASE_X, GAME_WIDTH, LANE_Y, SCENE_KEYS } from '@config/constants';
+import { unitArtKey } from '@config/unitArt.config';
 import type { GameSceneData } from '@/scenes/GameScene';
-import { addPanel, UI_FONT, UiColors, UiTextColors, UiTextures } from '@ui/kenneyUi';
+import { Backdrop } from '@entities/Backdrop';
+import { unitArtFor } from '@entities/unitArt';
+import {
+  addThemedPanel,
+  applyUiTheme,
+  UI_FONT,
+  UI_TITLE_FONT,
+  UiColors,
+  UiTextColors,
+} from '@ui/kenneyUi';
 import { UiButton } from '@ui/UiButton';
-import { baseSpriteKey, textureKeyFor } from '@utils/PlaceholderArt';
+import { baseArtKey, BASE_SUPERSAMPLE, ensureBaseArt } from '@utils/BaseArt';
+import { ensureRigArt } from '@utils/RigArt';
 
 /** Registry key that remembers the last difficulty picked this session. */
 const REGISTRY_DIFFICULTY = 'menu-ai-difficulty';
 
-const CARD_WIDTH = 300;
-const CARD_HEIGHT = 120;
-const CARD_GAP = 20;
-const CARD_Y = 300;
+const CARD_WIDTH = 280;
+const CARD_HEIGHT = 112;
+const CARD_GAP = 18;
+const CARD_Y = 316;
+
+/** The title screen parade: one unit per age, walking the lane in order. */
+const PARADE: readonly string[] = [
+  'stone-mammoth-rider',
+  'stone-clubber',
+  'castle-knight',
+  'castle-archer',
+  'renaissance-musketeer',
+  'renaissance-pikeman',
+  'modern-tank',
+  'modern-rifleman',
+  'future-mech',
+  'future-blade-trooper',
+];
+const PARADE_SPEED = 38;
+const PARADE_GAP = 120;
 
 /**
- * Title screen (Phase 13): pick the enemy's difficulty and start a match.
- * Keys: Left/Right or 1-3 choose, Enter or Space plays.
+ * Title screen (Phase 13; restyled 2026-09-26): pick the enemy's difficulty
+ * and start a match. A parade of units from all five ages walks the lane in
+ * front of the forest backdrop. Keys: Left/Right or 1-3 choose, Enter or
+ * Space plays.
  */
 export class MenuScene extends Phaser.Scene {
   private choice: AiDifficultyName = DEFAULT_AI_DIFFICULTY;
   private cards: Partial<Record<AiDifficultyName, UiButton>> = {};
+  private backdrop: Backdrop | null = null;
+  private parade: Phaser.GameObjects.Sprite[] = [];
 
   constructor() {
     super({ key: SCENE_KEYS.menu });
   }
 
   create(): void {
+    applyUiTheme(0);
     const remembered: unknown = this.registry.get(REGISTRY_DIFFICULTY);
     this.choice = isAiDifficultyName(remembered) ? remembered : DEFAULT_AI_DIFFICULTY;
     this.cards = {};
@@ -41,13 +73,33 @@ export class MenuScene extends Phaser.Scene {
 
     const cx = GAME_WIDTH / 2;
     this.add
-      .text(cx, 104, 'AGE OF WAR', { fontFamily: UI_FONT, fontSize: '64px', color: UiTextColors.parchment, stroke: '#2a2233', strokeThickness: 8 })
+      .text(cx, 96, 'AGE OF WAR', {
+        fontFamily: UI_TITLE_FONT,
+        fontSize: '92px',
+        color: '#f7cf5a',
+        stroke: '#241408',
+        strokeThickness: 12,
+      })
+      .setOrigin(0.5)
+      .setShadow(0, 6, 'rgba(0,0,0,0.45)', 6, true, true);
+    this.add
+      .text(cx, 164, 'Five ages  ·  one lane  ·  hold the line', {
+        fontFamily: UI_FONT,
+        fontSize: '20px',
+        fontStyle: '600',
+        color: '#fff6de',
+        stroke: '#241408',
+        strokeThickness: 5,
+      })
       .setOrigin(0.5);
     this.add
-      .text(cx, 158, 'clone  ·  five ages, one lane', { fontFamily: UI_FONT, fontSize: '18px', color: '#2a2233' })
-      .setOrigin(0.5);
-    this.add
-      .text(cx, 222, 'Choose your opponent', { fontFamily: UI_FONT, fontSize: '20px', color: '#2a2233' })
+      .text(cx, 234, 'Choose your opponent', {
+        fontFamily: UI_TITLE_FONT,
+        fontSize: '26px',
+        color: '#fff6de',
+        stroke: '#241408',
+        strokeThickness: 6,
+      })
       .setOrigin(0.5);
 
     const rowWidth = AI_DIFFICULTY_NAMES.length * CARD_WIDTH + (AI_DIFFICULTY_NAMES.length - 1) * CARD_GAP;
@@ -58,15 +110,22 @@ export class MenuScene extends Phaser.Scene {
         onPress: () => this.select(name),
         tint: UiColors.panelDark,
         hoverTint: UiColors.panelHover,
+        framed: true,
       });
       card.add(
         this.add
-          .text(0, -30, `${i + 1}  ${preset.label}`, { fontFamily: UI_FONT, fontSize: '24px', color: UiTextColors.gold })
+          .text(0, -28, `${i + 1}  ${preset.label}`, {
+            fontFamily: UI_TITLE_FONT,
+            fontSize: '28px',
+            color: UiTextColors.gold,
+            stroke: UiTextColors.stroke,
+            strokeThickness: 5,
+          })
           .setOrigin(0.5),
         this.add
-          .text(0, 16, preset.description, {
+          .text(0, 18, preset.description, {
             fontFamily: UI_FONT,
-            fontSize: '14px',
+            fontSize: '15px',
             color: UiTextColors.parchment,
             align: 'center',
             wordWrap: { width: CARD_WIDTH - 36 },
@@ -76,20 +135,30 @@ export class MenuScene extends Phaser.Scene {
       this.cards[name] = card;
     });
 
-    const play = new UiButton(this, cx, 446, 240, 60, { onPress: () => this.play(), tint: UiColors.ready });
-    play.add(this.add.text(0, 0, 'Play', { fontFamily: UI_FONT, fontSize: '28px', color: UiTextColors.parchment }).setOrigin(0.5));
+    const play = new UiButton(this, cx, 438, 250, 64, { onPress: () => this.play(), tint: UiColors.ready, framed: true });
+    play.add(
+      this.add
+        .text(0, 0, 'PLAY', {
+          fontFamily: UI_TITLE_FONT,
+          fontSize: '38px',
+          color: '#fff6de',
+          stroke: UiTextColors.stroke,
+          strokeThickness: 6,
+        })
+        .setOrigin(0.5),
+    );
+    this.tweens.add({ targets: play.container, scale: 1.04, duration: 900, yoyo: true, repeat: -1, ease: 'Sine.easeInOut' });
 
-    addPanel(this, UiTextures.panel, cx, 628, 820, 92, UiColors.panelDark).setAlpha(0.85);
+    addThemedPanel(this, cx, 650, 840, 84, { alpha: 0.9 });
     this.add
       .text(
         cx,
-        628,
+        650,
         [
-          'Buy units 1-5  ·  Units/Turrets tab: Tab  ·  Special: S  ·  Age up: A',
-          'Pause: P or Esc  ·  Destroy the enemy base, keep yours standing.',
-          'Menu: Left/Right or 1-3 to choose, Enter to play',
+          'Buy units 1-5  ·  Tab switches panels  ·  Special: S  ·  Age up: A  ·  Pause: P or Esc',
+          'Destroy the enemy base, keep yours standing.  Menu: Left/Right or 1-3, Enter to play',
         ],
-        { fontFamily: UI_FONT, fontSize: '14px', color: UiTextColors.parchment, align: 'center', lineSpacing: 8 },
+        { fontFamily: UI_FONT, fontSize: '15px', color: UiTextColors.parchment, align: 'center', lineSpacing: 8 },
       )
       .setOrigin(0.5);
 
@@ -103,18 +172,46 @@ export class MenuScene extends Phaser.Scene {
     keys?.on('keydown-SPACE', () => this.play());
 
     this.select(this.choice);
+    this.events.once(Phaser.Scenes.Events.SHUTDOWN, () => {
+      this.backdrop?.destroy(true);
+      this.backdrop = null;
+      this.parade = [];
+    });
+  }
+
+  update(time: number, delta: number): void {
+    this.backdrop?.update(time * 0.02, time);
+    for (const unit of this.parade) {
+      unit.x += (PARADE_SPEED * delta) / 1000;
+      if (unit.x > GAME_WIDTH + 80) unit.x -= PARADE.length * PARADE_GAP;
+    }
   }
 
   private drawScenery(): void {
-    const { sky, ground } = getAge(0).visuals;
-    this.cameras.main.setBackgroundColor(sky);
-    const g = this.add.graphics();
-    g.fillStyle(ground, 1);
-    g.fillRect(0, LANE_Y, GAME_WIDTH, GAME_HEIGHT - LANE_Y);
-    g.lineStyle(4, LANE_COLOR, 1);
-    g.lineBetween(0, LANE_Y, GAME_WIDTH, LANE_Y);
-    this.add.image(BASE_X.player, LANE_Y, textureKeyFor(baseSpriteKey(0), 'player')).setOrigin(0.5, 1);
-    this.add.image(BASE_X.enemy, LANE_Y, textureKeyFor(baseSpriteKey(0), 'enemy')).setOrigin(0.5, 1).setFlipX(true);
+    this.cameras.main.setBackgroundColor(0x87ceeb);
+    const forest = BACKGROUNDS.find((b) => b.id === 'forest-path-bright') ?? BACKGROUNDS[0]!;
+    this.backdrop = new Backdrop(this);
+    this.backdrop.show(forest);
+    for (const side of ['player', 'enemy'] as const) {
+      ensureBaseArt(this, 0, side);
+      this.add
+        .image(BASE_X[side], LANE_Y, baseArtKey(0, side))
+        .setOrigin(0.5, 1)
+        .setScale(1 / BASE_SUPERSAMPLE)
+        .setFlipX(side === 'enemy');
+    }
+    // A parade of the ages walking out of the player's base.
+    this.parade = PARADE.map((unitId, i) => {
+      ensureRigArt(this, unitId);
+      const art = unitArtFor(unitId);
+      const key = unitArtKey(unitId, 'walk', 'player');
+      const sprite = this.add
+        .sprite(GAME_WIDTH - i * PARADE_GAP, LANE_Y, key, art?.standFrame ?? 0)
+        .setOrigin(art?.originX ?? 0.5, art?.footY ?? 1)
+        .setScale(art?.scale ?? 1);
+      if (this.anims.exists(key)) sprite.play({ key, startFrame: i % 8 });
+      return sprite;
+    });
   }
 
   private select(name: AiDifficultyName): void {

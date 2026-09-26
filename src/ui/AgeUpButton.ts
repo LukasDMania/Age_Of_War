@@ -29,6 +29,7 @@ export class AgeUpButton {
     this.button = new UiButton(scene, x, y, width, height, {
       onPress: () => emit(Events.AgeUpRequested, { side: this.side }),
       tint: UiColors.panelDark,
+      framed: true,
       hoverTint: UiColors.ready,
     });
     const halfW = width / 2;
