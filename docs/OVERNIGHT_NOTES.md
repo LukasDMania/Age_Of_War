@@ -172,9 +172,9 @@ starting relic, extra gold, rarer relics). Clearing a run unlocks the next
   have maxed buildings and turrets, and the 5-unit training queue caps
   what they can spend (one AI sat on 35,000 gold). Ideas for this are
   below ("late-game gold sinks").
-- **Conquest late starts:** the AI's gentle opening is timed from the start
-  of the match, so an enemy starting in the Renaissance age still eases in.
-  That makes those battles a bit easier; it could skip the opening there.
+- **Conquest late starts:** the AI's gentle opening is meant for the Stone
+  age, so an enemy that starts in a later age skips it and plays at full
+  pace from the first second.
 - **Conquest:** if the page is reloaded mid-battle, you can fight that
   battle again from the start (lenient on purpose for a prototype).
 - **Not tested:** real play with a mouse by a person (I drove the game from

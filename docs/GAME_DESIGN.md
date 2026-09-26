@@ -524,5 +524,7 @@ is built only as a switchable prototype for the owner to judge.
   enemy +8% HP, +6% damage and +10% income per level. This is the owner's
   section 11 "difficulty (later)" idea, kept inside Conquest only.
 - Battle setups go through the normal rules (`ConquestSystem`: it grants
-  exactly the gold a purchase costs, then sends the usual request). Numbers
+  exactly the gold a purchase costs, then sends the usual request). In a
+  battle that starts in a later age, the enemy AI skips its Stone-age
+  opening. Numbers
   in `config/conquest.config.ts`; progress in localStorage.

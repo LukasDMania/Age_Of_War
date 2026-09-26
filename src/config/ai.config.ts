@@ -83,6 +83,23 @@ export interface AiOpening {
   endsAtMs: number;
 }
 
+/** No opening at all: full income, no caps (Conquest battles that start in a later age). */
+export const NO_OPENING: AiOpening = {
+  incomeStartMult: 1,
+  incomeRampMs: 1,
+  armyCapStart: 0,
+  armyCapPerMin: 0,
+  threatBonus: 0,
+  heavyAfterMs: 0,
+  specialAfterMs: 0,
+  endsAtMs: 0,
+};
+
+/** A difficulty preset without its opening. */
+export function withoutOpening(difficulty: AiDifficulty): AiDifficulty {
+  return { ...difficulty, opening: NO_OPENING };
+}
+
 const smoothstep = (x: number): number => {
   const k = Math.max(0, Math.min(1, x));
   return k * k * (3 - 2 * k);

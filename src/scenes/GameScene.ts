@@ -2,7 +2,13 @@ import Phaser from 'phaser';
 import { AGE_COUNT, getAge, isFinalAge } from '@config/ages.config';
 import { BACKGROUND_STORAGE_KEY, BACKGROUNDS, type BackgroundDef } from '@config/backgrounds.config';
 import { activeBuildingIds, buildingX, perksPending, scrollMargin, type BuildingId } from '@config/buildings.config';
-import { AI_DIFFICULTIES, DEFAULT_AI_DIFFICULTY, type AiDifficulty, type AiDifficultyName } from '@config/ai.config';
+import {
+  AI_DIFFICULTIES,
+  DEFAULT_AI_DIFFICULTY,
+  withoutOpening,
+  type AiDifficulty,
+  type AiDifficultyName,
+} from '@config/ai.config';
 import { DEFAULT_AI_PROFILE, findAiProfile, type AiGenome } from '@config/aiGenome.config';
 import {
   BASE_X,
@@ -205,9 +211,9 @@ export class GameScene extends Phaser.Scene {
     this.aiIncome = [];
     if (this.aiSetting !== 'off') {
       const bonus = conquestAiIncomeMult(this.sceneData.conquest?.effects ?? []);
-      this.aiIncome.push(new AiIncomeSystem(this.state, 'enemy', AI_DIFFICULTIES[this.aiSetting], bonus));
+      this.aiIncome.push(new AiIncomeSystem(this.state, 'enemy', this.difficultyFor(this.aiSetting), bonus));
     }
-    if (this.playerAiSetting) this.aiIncome.push(new AiIncomeSystem(this.state, 'player', AI_DIFFICULTIES[this.playerAiSetting]));
+    if (this.playerAiSetting) this.aiIncome.push(new AiIncomeSystem(this.state, 'player', this.difficultyFor(this.playerAiSetting)));
     this.buildingViews = {
       player: this.createBuildingViews('player'),
       enemy: this.createBuildingViews('enemy'),
@@ -221,11 +227,11 @@ export class GameScene extends Phaser.Scene {
     this.ai =
       this.aiSetting === 'off'
         ? null
-        : this.makeBrain('enemy', AI_DIFFICULTIES[this.aiSetting], this.sceneData.profile, this.sceneData.genome);
+        : this.makeBrain('enemy', this.difficultyFor(this.aiSetting), this.sceneData.profile, this.sceneData.genome);
     this.playerAi =
       this.playerAiSetting === null
         ? null
-        : this.makeBrain('player', AI_DIFFICULTIES[this.playerAiSetting], this.sceneData.playerProfile, this.sceneData.playerGenome);
+        : this.makeBrain('player', this.difficultyFor(this.playerAiSetting), this.sceneData.playerProfile, this.sceneData.playerGenome);
 
     this.cleanups.push(
       on(Events.BaseDestroyed, ({ side }) => this.onBaseDestroyed(side)),
@@ -342,6 +348,12 @@ export class GameScene extends Phaser.Scene {
     for (const income of this.aiIncome) income.update(dt, this.match.elapsedMs);
     for (const experiment of this.experiments) experiment.update?.(now);
     this.logger?.update(this.match.elapsedMs);
+  }
+
+  /** A difficulty preset; a Conquest battle that starts in a later age skips the opening. */
+  private difficultyFor(name: AiDifficultyName): AiDifficulty {
+    const lateStart = this.sceneData.conquest?.effects.some((e) => e.kind === 'start-age' && e.age > 0) ?? false;
+    return lateStart ? withoutOpening(AI_DIFFICULTIES[name]) : AI_DIFFICULTIES[name];
   }
 
   /**
