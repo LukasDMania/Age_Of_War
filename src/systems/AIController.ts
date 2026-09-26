@@ -1,4 +1,10 @@
-import { AI_RICH_GOLD_MULT, AI_THREAT_DISTANCE, AI_UNIT_MIX, type AiDifficulty } from '@config/ai.config';
+import {
+  AI_RICH_GOLD_MULT,
+  AI_THREAT_DISTANCE,
+  AI_UNIT_MIX,
+  openingArmyCap,
+  type AiDifficulty,
+} from '@config/ai.config';
 import { getAge } from '@config/ages.config';
 import {
   buildingUpgradeCost,
@@ -80,6 +86,8 @@ export class AIController {
    * moment it could, which with a small income meant only first-slot units).
    */
   private plannedSlot: 1 | 2 | 3 | null = null;
+  /** Simulation time of the current think, for the opening limits. */
+  private now = 0;
 
   constructor(
     state: MatchState,
@@ -107,6 +115,7 @@ export class AIController {
   }
 
   private think(nowMs: number): void {
+    this.now = nowMs;
     this.tryAgeUp(nowMs);
     const view = this.observe();
     this.trySpecial(nowMs, view);
@@ -189,6 +198,7 @@ export class AIController {
     const d = this.difficulty;
     if (this.me.specialReadyAt > nowMs) return;
     if (d.specialOnlyWhenThreatened && !view.threat) return;
+    if (nowMs < d.opening.specialAfterMs && !view.threat) return;
     if (view.theirCount >= d.specialMinTargets) {
       emit(Events.SpecialRequested, { side: this.side });
     }
@@ -217,14 +227,26 @@ export class AIController {
     return true;
   }
 
-  /** Queue depth it keeps: its preset's, or the full queue when rich. */
+  /** Queue depth it keeps: 1 in the opening, its preset's, or the full queue when rich. */
   private get queueLimit(): number {
+    if (this.inOpening) return 1;
     const heavy = getUnitDefinition(getAge(this.me.age).unitIds[2]).cost;
     return this.me.gold >= heavy * AI_RICH_GOLD_MULT ? UNIT_QUEUE_LIMIT : this.difficulty.maxQueue;
   }
 
+  private get inOpening(): boolean {
+    return this.now < this.difficulty.opening.endsAtMs;
+  }
+
+  /** Heavies (slot 3) are held back early in the match (see `AiOpening`). */
+  private get heavyAllowed(): boolean {
+    return this.now >= this.difficulty.opening.heavyAfterMs;
+  }
+
   private buyUnits(view: LaneView): void {
     if (this.me.trainingQueue.length >= this.queueLimit) return;
+    // The opening grows the army gradually instead of flooding the lane.
+    if (view.myCombat >= openingArmyCap(this.difficulty.opening, this.now, view.threat)) return;
     const unitIds = getAge(this.me.age).unitIds;
     const d = this.difficulty;
     if (d.utilityEvery > 0 && this.fightersSinceUtility >= d.utilityEvery && view.myCombat >= 2) {
@@ -270,6 +292,7 @@ export class AIController {
     let bestScore = -Infinity;
     for (const slot of [1, 2, 3] as const) {
       const unitId = unitIds[slot - 1];
+      if (slot === 3 && !this.heavyAllowed) continue;
       if (affordableOnly && getUnitDefinition(unitId).cost > this.me.gold) continue;
       const score = (weights[slot] * AI_UNIT_MIX[slot]) / (1 + view.mine[slot]);
       if (score > bestScore) {
@@ -282,10 +305,11 @@ export class AIController {
 
   /** Easy: a random fighter slot, weighted by `AI_UNIT_MIX`. */
   private randomSlot(): 1 | 2 | 3 {
-    const total = AI_UNIT_MIX[1] + AI_UNIT_MIX[2] + AI_UNIT_MIX[3];
+    const heavy = this.heavyAllowed ? AI_UNIT_MIX[3] : 0;
+    const total = AI_UNIT_MIX[1] + AI_UNIT_MIX[2] + heavy;
     let roll = Math.random() * total;
     for (const slot of [1, 2, 3] as const) {
-      roll -= AI_UNIT_MIX[slot];
+      roll -= slot === 3 ? heavy : AI_UNIT_MIX[slot];
       if (roll <= 0) return slot;
     }
     return 1;

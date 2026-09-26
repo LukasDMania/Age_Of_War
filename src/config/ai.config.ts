@@ -47,6 +47,54 @@ export interface AiDifficulty {
    * XP it gets on top of kills and buildings, so it can't be starved.
    */
   incomeMult: number;
+  /** How the AI eases into a match (owner, 2026-09-26: too much, too soon). */
+  opening: AiOpening;
+}
+
+/**
+ * The AI's opening (owner, 2026-09-26: "they have a mammoth and a bunch of
+ * clubbers in the first minute, slow that down, more gradually going up").
+ * The hard AI used to field six units in the first ten seconds and eleven
+ * plus a mammoth by the one-minute mark, against a player with 100 gold.
+ *
+ * - Its own income starts at `incomeStartMult` of the normal rate and eases
+ *   (smoothstep) up to the full rate at `incomeRampMs`.
+ * - It keeps at most `armyCapStart` fighters (alive + queued), growing by
+ *   `armyCapPerMin` per minute, until `endsAtMs`; with enemies at its gate
+ *   it may go `threatBonus` over.
+ * - No heavy units (slot 3) before `heavyAfterMs`.
+ * - Queue depth 1 until the opening ends.
+ * - The special is only fired in defence (enemies near its base) before
+ *   `specialAfterMs` (the hard AI used to wipe the player's first wave at
+ *   about 19 s).
+ * PROPOSED numbers.
+ */
+export interface AiOpening {
+  incomeStartMult: number;
+  incomeRampMs: number;
+  armyCapStart: number;
+  armyCapPerMin: number;
+  threatBonus: number;
+  heavyAfterMs: number;
+  specialAfterMs: number;
+  endsAtMs: number;
+}
+
+const smoothstep = (x: number): number => {
+  const k = Math.max(0, Math.min(1, x));
+  return k * k * (3 - 2 * k);
+};
+
+/** Multiplier on the AI's own income at a moment of the match (1 once warmed up). */
+export function openingIncomeMult(opening: AiOpening, nowMs: number): number {
+  return opening.incomeStartMult + (1 - opening.incomeStartMult) * smoothstep(nowMs / opening.incomeRampMs);
+}
+
+/** Most fighters the AI keeps (alive + queued) at a moment, or Infinity after the opening. */
+export function openingArmyCap(opening: AiOpening, nowMs: number, threatened: boolean): number {
+  if (nowMs >= opening.endsAtMs) return Infinity;
+  const cap = Math.floor(opening.armyCapStart + (opening.armyCapPerMin * nowMs) / 60000);
+  return cap + (threatened ? opening.threatBonus : 0);
 }
 
 /**
@@ -93,6 +141,16 @@ export const AI_DIFFICULTIES: Readonly<Record<AiDifficultyName, AiDifficulty>> =
     buildingLevelCap: 2,
     researchTierCap: 1,
     incomeMult: 1,
+    opening: {
+      incomeStartMult: 0.2,
+      incomeRampMs: 300000,
+      armyCapStart: 2,
+      armyCapPerMin: 2,
+      threatBonus: 1,
+      heavyAfterMs: 150000,
+      specialAfterMs: 150000,
+      endsAtMs: 300000,
+    },
   },
   normal: {
     name: 'normal',
@@ -114,6 +172,16 @@ export const AI_DIFFICULTIES: Readonly<Record<AiDifficultyName, AiDifficulty>> =
     buildingLevelCap: 4,
     researchTierCap: 3,
     incomeMult: 1.5,
+    opening: {
+      incomeStartMult: 0.25,
+      incomeRampMs: 240000,
+      armyCapStart: 2,
+      armyCapPerMin: 2.5,
+      threatBonus: 2,
+      heavyAfterMs: 100000,
+      specialAfterMs: 100000,
+      endsAtMs: 240000,
+    },
   },
   hard: {
     name: 'hard',
@@ -135,6 +203,16 @@ export const AI_DIFFICULTIES: Readonly<Record<AiDifficultyName, AiDifficulty>> =
     buildingLevelCap: 5,
     researchTierCap: 5,
     incomeMult: 2.5,
+    opening: {
+      incomeStartMult: 0.3,
+      incomeRampMs: 180000,
+      armyCapStart: 3,
+      armyCapPerMin: 3,
+      threatBonus: 2,
+      heavyAfterMs: 70000,
+      specialAfterMs: 60000,
+      endsAtMs: 200000,
+    },
   },
 };
 

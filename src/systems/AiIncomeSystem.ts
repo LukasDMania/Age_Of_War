@@ -1,4 +1,4 @@
-import { AI_INCOME, type AiDifficulty } from '@config/ai.config';
+import { AI_INCOME, openingIncomeMult, type AiDifficulty } from '@config/ai.config';
 import { getAge } from '@config/ages.config';
 import { addGold, addXp } from '@state/economyOps';
 import type { MatchState } from '@state/GameState';
@@ -7,7 +7,8 @@ import type { Side } from '@state/types';
 /**
  * The AI's own income (Phase 15, owner's "option C"): an AI-played side earns
  * gold and XP every second regardless of kills, scaled by its age factor, a
- * ramp over match time and its difficulty's `incomeMult`. The AI still buys
+ * ramp over match time, its difficulty's `incomeMult` and the opening
+ * warm-up (`AiOpening`, low at the start so it can't flood the lane). The AI still buys
  * everything through the normal `*-requested` events; this only fills its
  * purse, so it can't be starved into doing nothing.
  *
@@ -50,6 +51,11 @@ export class AiIncomeSystem {
 
   private factor(nowMs: number): number {
     const ramp = AI_INCOME.rampMax * Math.min(1, nowMs / AI_INCOME.rampFullAtMs);
-    return getAge(this.state[this.side].age).scale * (1 + ramp) * this.difficulty.incomeMult;
+    return (
+      getAge(this.state[this.side].age).scale *
+      (1 + ramp) *
+      this.difficulty.incomeMult *
+      openingIncomeMult(this.difficulty.opening, nowMs)
+    );
   }
 }
