@@ -1,4 +1,5 @@
 import { getAge, isFinalAge } from '@config/ages.config';
+import { baseMaxHp } from '@config/constants';
 import type { Base } from '@entities/Base';
 import { spendXp } from '@state/economyOps';
 import type { MatchState } from '@state/GameState';
@@ -55,6 +56,8 @@ export class AgeProgressionSystem {
       sideState.age = from;
       return;
     }
+    // The base grows with the age; it gains the extra max HP (Phase 15).
+    sideState.baseHp += baseMaxHp(sideState.age) - baseMaxHp(from);
     this.bases[side].setAge(sideState.age);
     emit(Events.AgeChanged, { side, age: sideState.age });
   }

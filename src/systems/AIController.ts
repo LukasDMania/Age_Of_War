@@ -1,5 +1,4 @@
-import Phaser from 'phaser';
-import { AI_RICH_GOLD_MULT, AI_THREAT_DISTANCE, type AiDifficulty } from '@config/ai.config';
+import { AI_RICH_GOLD_MULT, AI_THREAT_DISTANCE, AI_UNIT_MIX, type AiDifficulty } from '@config/ai.config';
 import { getAge } from '@config/ages.config';
 import {
   buildingUpgradeCost,
@@ -75,6 +74,12 @@ export class AIController {
   private nextThinkAt = 0;
   private ageUpReadySince: number | null = null;
   private fightersSinceUtility = 0;
+  /**
+   * The fighter slot it has decided to buy next and is saving up for
+   * (owner, 2026-09-26: the AI used to buy whatever it could afford the
+   * moment it could, which with a small income meant only first-slot units).
+   */
+  private plannedSlot: 1 | 2 | 3 | null = null;
 
   constructor(
     state: MatchState,
@@ -156,8 +161,12 @@ export class AIController {
   }
 
   /** Gold kept back for fighters before spending on turrets or money units. */
+  /** Gold kept back from turrets, buildings and research: 2 cheap fighters, or the unit it is saving for. */
   private get reserve(): number {
-    return getUnitDefinition(getAge(this.me.age).unitIds[0]).cost * 2;
+    const unitIds = getAge(this.me.age).unitIds;
+    const cheap = getUnitDefinition(unitIds[0]).cost * 2;
+    const planned = this.plannedSlot === null ? 0 : getUnitDefinition(unitIds[this.plannedSlot - 1]).cost;
+    return Math.max(cheap, planned);
   }
 
   /* ---- Decisions --------------------------------------------------------- */
@@ -223,16 +232,33 @@ export class AIController {
         return;
       }
     }
-    const slot = d.unitChoice === 'random' ? Phaser.Math.Between(1, 3) : this.counterSlot(view);
-    if (this.request(unitIds[slot - 1])) this.fightersSinceUtility++;
+    // Decide what to buy first, then save up for it, instead of buying
+    // whatever is affordable right now (that was always the first slot).
+    if (this.plannedSlot === null) {
+      this.plannedSlot = d.unitChoice === 'random' ? this.randomSlot() : this.counterSlot(view, false);
+    }
+    const planned = unitIds[this.plannedSlot - 1];
+    if (this.me.gold >= getUnitDefinition(planned).cost) {
+      if (this.request(planned)) {
+        this.fightersSinceUtility++;
+        this.plannedSlot = null;
+      }
+      return;
+    }
+    // Still saving. Only when enemies are at the gate and it has no fighter
+    // left does it grab the best unit it can afford right now.
+    if (view.threat && view.myCombat === 0) {
+      const slot = this.counterSlot(view, true);
+      if (this.request(unitIds[slot - 1])) this.fightersSinceUtility++;
+    }
   }
 
   /**
    * The fighter slot that best answers the player's army while keeping ours
    * mixed: melee beats massed ranged, heavy tramples massed melee, ranged
-   * wears down heavies. Only slots it can afford are considered.
+   * wears down heavies. With `affordableOnly`, only slots it can pay for now.
    */
-  private counterSlot(view: LaneView): 1 | 2 | 3 {
+  private counterSlot(view: LaneView, affordableOnly: boolean): 1 | 2 | 3 {
     const weights: Record<1 | 2 | 3, number> = {
       1: 1 + 0.6 * view.theirs[2],
       2: 1 + 0.6 * view.theirs[3],
@@ -243,14 +269,25 @@ export class AIController {
     let bestScore = -Infinity;
     for (const slot of [1, 2, 3] as const) {
       const unitId = unitIds[slot - 1];
-      if (getUnitDefinition(unitId).cost > this.me.gold) continue;
-      const score = weights[slot] / (1 + view.mine[slot]);
+      if (affordableOnly && getUnitDefinition(unitId).cost > this.me.gold) continue;
+      const score = (weights[slot] * AI_UNIT_MIX[slot]) / (1 + view.mine[slot]);
       if (score > bestScore) {
         best = slot;
         bestScore = score;
       }
     }
     return best;
+  }
+
+  /** Easy: a random fighter slot, weighted by `AI_UNIT_MIX`. */
+  private randomSlot(): 1 | 2 | 3 {
+    const total = AI_UNIT_MIX[1] + AI_UNIT_MIX[2] + AI_UNIT_MIX[3];
+    let roll = Math.random() * total;
+    for (const slot of [1, 2, 3] as const) {
+      roll -= AI_UNIT_MIX[slot];
+      if (roll <= 0) return slot;
+    }
+    return 1;
   }
 
   private tryEconomyUnit(view: LaneView): boolean {

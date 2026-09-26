@@ -1,5 +1,5 @@
 import { researchMult } from '@config/buildings.config';
-import { ECONOMY_KILL_BOUNTY_MULT, ECONOMY_PENALTY_FLOOR } from '@config/constants';
+import { ECONOMY_KILL_BOUNTY_MULT, ECONOMY_PENALTY_FLOOR, KILL_GOLD_MULT, KILL_XP_MULT } from '@config/constants';
 import type { UnitFactory } from '@entities/UnitFactory';
 import { getUnitDefinition } from '@entities/unitDefinitions';
 import { addGold, addXp } from '@state/economyOps';
@@ -89,8 +89,8 @@ export class EconomySystem {
     const definition = getUnitDefinition(unitId);
     const bounty = definition.income ? ECONOMY_KILL_BOUNTY_MULT : 1;
     const plunder = researchMult('bounty', this.state[killerSide].research.bounty);
-    addGold(this.state, killerSide, definition.killGold * bounty * plunder, 'kill');
-    addXp(this.state, killerSide, definition.killXp);
+    addGold(this.state, killerSide, definition.killGold * bounty * plunder * KILL_GOLD_MULT, 'kill');
+    addXp(this.state, killerSide, definition.killXp * KILL_XP_MULT);
     if (definition.income) this.recompute(side);
   }
 

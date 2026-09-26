@@ -45,7 +45,9 @@ These come from the locked design, so the code must not contradict them:
 - **Turrets** exist on the base only, always target the front-most enemy in
   range, keep their stats through age-ups (no auto-upgrade), and can be
   upgraded and sold.
-- **The enemy AI plays by the same rules** and uses the same `*-requested`
+- **The enemy AI acts through the same rules** (owner, 2026-09-26: except
+  that it gets its own difficulty-scaled income, `systems/AiIncomeSystem.ts`,
+  so it can't be starved) and uses the same `*-requested`
   events as the player. It never edits state directly.
 - Both sides use the same `SideState` shape, so nothing is written twice for
   "player" and "enemy".

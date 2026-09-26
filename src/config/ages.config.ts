@@ -68,8 +68,8 @@ export const AGE_NAMES = [
 
 export const AGE_COUNT = AGE_NAMES.length;
 
-/** Every special recharges in the same time for now. */
-const SPECIAL_COOLDOWN_MS = 45000;
+/** Every special recharges in the same time for now (owner: 75 s, 2026-09-26; was 45 s). */
+const SPECIAL_COOLDOWN_MS = 75000;
 
 export const AGES: readonly AgeConfig[] = [
   {

@@ -1,5 +1,5 @@
 import Phaser from 'phaser';
-import { BASE_HP, LANE_Y, MAX_TURRET_SLOTS } from '@config/constants';
+import { baseMaxHp, LANE_Y, MAX_TURRET_SLOTS } from '@config/constants';
 import { turretSlotPosition } from '@entities/Turret';
 import type { SideState } from '@state/GameState';
 import type { Side } from '@state/types';
@@ -19,7 +19,6 @@ const HIT_FLASH_MS = 70;
  */
 export class Base extends Phaser.GameObjects.Image {
   readonly side: Side;
-  readonly maxHp = BASE_HP;
 
   private readonly sideState: SideState;
   private readonly ledges: Phaser.GameObjects.Graphics;
@@ -49,6 +48,11 @@ export class Base extends Phaser.GameObjects.Image {
       const { x, y } = turretSlotPosition(this.side, i);
       this.ledges.fillRect(x - LEDGE_WIDTH / 2, y, LEDGE_WIDTH, LEDGE_HEIGHT);
     }
+  }
+
+  /** Max HP grows with the side's age (`BASE_HP_BY_AGE`). */
+  get maxHp(): number {
+    return baseMaxHp(this.sideState.age);
   }
 
   get hp(): number {

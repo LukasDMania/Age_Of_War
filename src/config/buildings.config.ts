@@ -120,8 +120,8 @@ export const RESEARCH: readonly ResearchDefinition[] = [
   { id: 'rangedRange', name: 'Keen eyes', short: 'Ranged range', target: { kind: 'unit', slots: [2], stat: 'range' }, perTier: 0.08, baseCost: 50 },
   { id: 'heavyDamage', name: 'Heavy weapons', short: 'Heavy dmg', target: { kind: 'unit', slots: [3], stat: 'damage' }, perTier: 0.1, baseCost: 70 },
   { id: 'heavyArmor', name: 'Heavy plating', short: 'Heavy armor', target: { kind: 'unit', slots: [3], stat: 'damageTaken' }, perTier: -0.06, baseCost: 70 },
-  { id: 'turretDamage', name: 'Turret power', short: 'Turret dmg', target: { kind: 'turret', stat: 'damage' }, perTier: 0.08, baseCost: 60 },
-  { id: 'turretRange', name: 'Turret sights', short: 'Turret range', target: { kind: 'turret', stat: 'range' }, perTier: 0.05, baseCost: 60 },
+  { id: 'turretDamage', name: 'Turret power', short: 'Turret dmg', target: { kind: 'turret', stat: 'damage' }, perTier: 0.05, baseCost: 60 },
+  { id: 'turretRange', name: 'Turret sights', short: 'Turret range', target: { kind: 'turret', stat: 'range' }, perTier: 0.03, baseCost: 60 },
 ];
 
 export function getResearch(id: ResearchId): ResearchDefinition {

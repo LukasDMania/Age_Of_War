@@ -31,6 +31,7 @@ export const Events = {
   ResearchRequested: 'research-requested',
   GameSpeedRequested: 'game-speed-requested',
   CameraFocusRequested: 'camera-focus-requested',
+  BackgroundCycleRequested: 'background-cycle-requested',
   // Notifications
   GoldChanged: 'gold-changed',
   XpChanged: 'xp-changed',
@@ -57,6 +58,7 @@ export const Events = {
   BuildingUpgraded: 'building-upgraded',
   ResearchCompleted: 'research-completed',
   GameSpeedChanged: 'game-speed-changed',
+  BackgroundChanged: 'background-changed',
 } as const;
 
 /** The utility effect kinds (see `UtilityEffect` in unitDefinitions). */
@@ -66,6 +68,7 @@ export type UtilityKind = 'heal' | 'aoe' | 'slow' | 'buff' | 'shield';
 export type GoldSource =
   | 'kill'
   | 'mine'
+  | 'ai-income'
   | 'economy-unit'
   | 'purchase'
   | 'refund'
@@ -96,6 +99,8 @@ export interface EventPayloads {
   /** Playtest speed: 1, 2, 3, 4 or 8. */
   [Events.GameSpeedRequested]: { multiplier: number };
   [Events.CameraFocusRequested]: { target: 'lane' | 'buildings' };
+  /** Playtest: show the next background option. */
+  [Events.BackgroundCycleRequested]: Record<string, never>;
 
   [Events.GoldChanged]: {
     side: Side;
@@ -176,6 +181,7 @@ export interface EventPayloads {
   [Events.BuildingUpgraded]: { side: Side; buildingId: BuildingId; level: number };
   [Events.ResearchCompleted]: { side: Side; researchId: ResearchId; tier: number };
   [Events.GameSpeedChanged]: { multiplier: number };
+  [Events.BackgroundChanged]: { id: string; name: string };
 }
 
 export type EventName = keyof EventPayloads;

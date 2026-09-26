@@ -337,6 +337,7 @@ validates and acts):
 | `research-requested` | `{ side, researchId }` | BuildingSystem |
 | `game-speed-requested` | `{ multiplier }` | GameScene (HUD speed button) |
 | `camera-focus-requested` | `{ target: 'lane' \| 'buildings' }` | GameScene (HUD tabs) |
+| `background-cycle-requested` | `{}` | GameScene (HUD BG button; playtest) |
 
 **Notifications** (emitted by systems; anyone may listen):
 
@@ -367,6 +368,7 @@ validates and acts):
 | `building-upgraded` | `{ side, buildingId, level }` | BuildingSystem |
 | `research-completed` | `{ side, researchId, tier }` | BuildingSystem |
 | `game-speed-changed` | `{ multiplier }` | GameScene |
+| `background-changed` | `{ id, name }` | GameScene |
 
 ## Appendix B: Data shape sketches
 
@@ -1137,4 +1139,91 @@ decisions made, anything the owner needs to confirm.
   `vite.config.ts`, serve only) that writes `playtest-logs/<date>_vs-<ai>_<result>.json`.
   Listens only; no new events. Checked headless: lost, quit and closed
   logs all saved; typecheck and build pass.
+- 2026-09-26: Owner playtest feedback (7 logs in `playtest-logs/`, all vs
+  hard). Ranged units now keep walking while they shoot until they are right
+  behind the friendly unit in front (`LaneSystem.closeRanks`), so the army
+  stays one row; with no friendly ahead they hold at range. Checked headless
+  (two slingers closed up behind a clubber while firing); typecheck passes.
+  Log findings: in 5 of 6 finished matches the hard AI spent its 100
+  starting gold on units at once, lost them, and then sat at 0-30 gold with
+  no Mine and no income (its Mine needs 2 living fighters first), so it
+  never recovered. In the long win the player held with turrets alone for
+  ~6 minutes while gold piled up to 3000. AI economy redesign under
+  discussion with the owner (AI may get its own economy instead of the
+  same rules).
+- 2026-09-26: Phase 15 (owner decisions): special cooldown 45 s -> 75 s.
+  AI income "option C": `systems/AiIncomeSystem.ts`, one per AI-played side,
+  pays gold (2/s) and XP (0.5/s) x age factor x match-time ramp (to x2 at
+  30 min) x difficulty `incomeMult` (1 / 1.5 / 2.5), source `ai-income`.
+  CLAUDE.md and GAME_DESIGN section 8 updated (the AI is no longer on the
+  player's economy alone). Checks: typecheck passes; a turret-only player
+  (the owner's cheese) now loses to every difficulty (hard in under 4 min,
+  normal ~7 min, easy ~10 min). AI-vs-AI between equal AIs still stalls in
+  the Future age (known, only matters for AI-vs-AI). To watch in playtests:
+  the AI now reaches the Castle age around 3 min on hard; its XP trickle may
+  make it age too fast for a human.
+- 2026-09-26: Playtest round 3 (owner feedback + 1 long logged match: 27 min
+  vs hard, lost; 570k kill gold for the player, both sides banking 100k+,
+  front line stuck mid-lane between two turret lines).
+  - Money and utility units walk and block like everyone else (`LaneSystem`
+    rewritten: no more phasing, trailing or rally point; spawn point checks
+    every unit). Checked: clubber, shaman, trader, clubber queue in one row.
+  - Heal and shield auras don't stack: each ally gets at most one heal / one
+    shield refresh per interval (`Unit.healLockUntil` / `shieldLockUntil`),
+    and a shield is capped at one drone's absorb. Checked: 4 shamans heal a
+    clubber exactly as fast as 1 (10 HP per 1.5 s).
+  - Base max HP grows per age (`BASE_HP_BY_AGE` 1000/1500/2100/2800/3600);
+    age-up adds the difference.
+  - Kill rewards cut (`KILL_GOLD_MULT` 0.5, `KILL_XP_MULT` 0.6): a turret
+    line was farming more gold than the enemy spent.
+  - Turret upgrades weaker (full path ~x1.55 DPS instead of ~x2.05); turret
+    research +5% damage / +3% range per tier (was +8% / +5%).
+  - AI XP income 0.5 -> 0.25 per s (AIs reached the Future age in ~8 min).
+  - AI-vs-AI after the changes: matches end in 7-13 min (no stall in 3
+    runs); a turret-only player loses to every difficulty. All PROPOSED.
+- 2026-09-26: AI unit variety (owner: the AI streamed only first-slot units
+  when it wasn't rich). `AIController` now picks the next fighter first
+  (counter weights, or random on easy) and saves up for it
+  (`plannedSlot`); its reserve for turrets/buildings/research covers that
+  unit. Only with enemies at its gate and no fighter left does it buy the
+  best unit it can afford right away. Check vs a stand-in player (a clubber
+  every 12 s): easy 9/4/9 melee/ranged/heavy, normal 8/7/7 + 3 shamans,
+  hard 6/6/4 + 2 shamans. Typecheck passes.
+- 2026-09-26: Background options for playtesting. The owner's `art/` packs
+  (4 Craftpix layered scenes, 2 forest parallax packs) resized to 720 px
+  high into `public/assets/backgrounds/<id>/` (2.5 MB). New
+  `config/backgrounds.config.ts` (7 options incl. the old plain colors,
+  per-layer parallax factor and cloud drift, ground mode) and
+  `entities/Backdrop.ts` (screen-fixed tile sprites offset by camera scroll
+  x factor; loads a set on demand and unloads the previous one). HUD button
+  "BG: <name>" and the B key cycle options; choice kept in localStorage.
+  Forest packs use their own ground (strip and lane line hidden); the others
+  keep a colored ground strip. Unbuilt buildings now show a faded name
+  (the "(not built)" labels overlapped). AI unit mix: `AI_UNIT_MIX`
+  1 / 0.65 / 0.33 on melee / ranged / heavy (easy picks randomly with the
+  same weights); vs the stand-in player it now sends about 55 / 30 / 15 %.
+  Checked: screenshots of all 7 options and a pan to the buildings,
+  no console errors; typecheck passes.
+- 2026-09-26: Phase 16, crisp rendering + Stone age rig art.
+  - Blur fix (`utils/renderScale.ts`): the canvas was 1280x720 stretched by
+    CSS and the screen's pixel ratio. It is now created at its shown size
+    (window fit x devicePixelRatio, capped at 3x, in 0.25 steps) and every
+    scene camera zooms by that factor from its top-left (hooked in
+    `main.ts` on each scene's CREATE), so game code keeps 1280x720
+    coordinates. Text is rendered at the same resolution (the `add.text`
+    factory is wrapped). GameScene clamps its own camera scroll now
+    (Phaser's setBounds assumes centered zoom); drag scrolling divides by
+    the zoom. Checked at 1.5x pixel ratio: 2240x1260 canvas, sharp text,
+    buy-button clicks and the Buildings tab work.
+  - Rig art (`art/rigDraw.ts` drawing, `utils/RigArt.ts` sheet generation,
+    `rigArt()` entries in `config/unitArt.config.ts`): all five Stone units
+    (clubber, slinger, mammoth rider with a spear rider, trader with a sack,
+    shaman with feather headdress and a glowing skull staff). Sheets are
+    drawn at boot per side (team-colored belts, headbands, saddle) at the
+    render scale, walk strip = stand + 8 frames, attack = 8 frames that
+    strike first (damage lands at the start of an attack). The shaman's
+    heal (and any shield pulse) plays its attack animation. Footprints
+    stay the placeholders' sizes. The LPC clubber sheet is kept as
+    `LPC_CLUBBER_ART` but unused. Checked in screenshots on the forest
+    background, no console errors; typecheck and build pass.
 

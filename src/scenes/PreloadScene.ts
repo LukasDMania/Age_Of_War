@@ -5,6 +5,7 @@ import type { GameSceneData } from '@/scenes/GameScene';
 import { loadUnitArt, registerUnitArt } from '@entities/unitArt';
 import { loadKenneyUi } from '@ui/kenneyUi';
 import { generatePlaceholderTextures } from '@utils/PlaceholderArt';
+import { generateRigArt } from '@utils/RigArt';
 
 /**
  * Loads the Kenney UI pieces and generates the placeholder textures, then
@@ -22,6 +23,7 @@ export class PreloadScene extends Phaser.Scene {
 
   create(): void {
     generatePlaceholderTextures(this);
+    generateRigArt(this);
     registerUnitArt(this);
 
     const params = new URLSearchParams(window.location.search);

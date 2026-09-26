@@ -1,7 +1,7 @@
 import Phaser from 'phaser';
 import { getAge } from '@config/ages.config';
 import type { AiDifficultyName } from '@config/ai.config';
-import { AGE_BANNER_MS, BASE_HP, GAME_HEIGHT, GAME_SPEEDS, GAME_WIDTH, SCENE_KEYS } from '@config/constants';
+import { AGE_BANNER_MS, baseMaxHp, GAME_HEIGHT, GAME_SPEEDS, GAME_WIDTH, SCENE_KEYS } from '@config/constants';
 import { xpToNextAge } from '@state/economyOps';
 import type { MatchState } from '@state/GameState';
 import type { Side } from '@state/types';
@@ -22,6 +22,8 @@ export interface HudSceneData {
   state: MatchState;
   /** Who plays the enemy, shown next to its age ('off' when nobody does). */
   enemyController: AiDifficultyName | 'off';
+  /** Playtest background currently shown (Phase 15). */
+  backgroundName: string;
 }
 
 function capitalize(text: string): string {
@@ -90,6 +92,8 @@ export class HUDScene extends Phaser.Scene {
   private speedButton!: UiButton;
   private speedText!: Phaser.GameObjects.Text;
   private speed = 1;
+  private backgroundText!: Phaser.GameObjects.Text;
+  private backgroundName = '';
   private lastEconomy = { units: 0, incomePerSec: 0, damageMult: 1, speedMult: 1 };
   private specialButton!: SpecialButton;
   private ageUpButton!: AgeUpButton;
@@ -104,6 +108,7 @@ export class HUDScene extends Phaser.Scene {
   init(data: HudSceneData): void {
     this.state = data.state;
     this.enemyController = data.enemyController;
+    this.backgroundName = data.backgroundName;
     this.cleanups = [];
     this.activeTab = 'units';
   }
@@ -171,6 +176,16 @@ export class HUDScene extends Phaser.Scene {
       .text(0, 0, '1x', { fontFamily: UI_FONT, fontSize: '16px', color: UiTextColors.parchment })
       .setOrigin(0.5);
     this.speedButton.add(this.speedText);
+    // Playtest: cycle the background options (also the B key).
+    const backgroundButton = new UiButton(this, GAME_WIDTH / 2 + 54 + 26 + 8 + 75, 34, 150, 40, {
+      onPress: () => emit(Events.BackgroundCycleRequested, {}),
+      tint: UiColors.panelDark,
+    });
+    this.backgroundText = this.add
+      .text(0, 0, '', { fontFamily: UI_FONT, fontSize: '11px', color: UiTextColors.parchment })
+      .setOrigin(0.5);
+    backgroundButton.add(this.backgroundText);
+    this.showBackgroundName(this.backgroundName);
     this.input.keyboard?.addCapture('TAB');
     this.input.keyboard?.on('keydown-TAB', () =>
       this.showTab(TAB_ORDER[(TAB_ORDER.indexOf(this.activeTab) + 1) % TAB_ORDER.length] ?? 'units'),
@@ -181,8 +196,8 @@ export class HUDScene extends Phaser.Scene {
     this.showAge(own.age);
     this.showGold(own.gold);
     this.showXp(own.xp, xpToNextAge(this.state, HUD_SIDE));
-    this.showBaseHp('player', this.state.player.baseHp, BASE_HP);
-    this.showBaseHp('enemy', this.state.enemy.baseHp, BASE_HP);
+    this.showBaseHp('player', this.state.player.baseHp, baseMaxHp(this.state.player.age));
+    this.showBaseHp('enemy', this.state.enemy.baseHp, baseMaxHp(this.state.enemy.age));
 
     this.cleanups.push(
       on(Events.GoldChanged, ({ side, gold }) => {
@@ -198,6 +213,7 @@ export class HUDScene extends Phaser.Scene {
         if (side === HUD_SIDE) this.unitPanel.setQueue(queue);
       }),
       on(Events.AgeChanged, ({ side, age }) => {
+        this.showBaseHp(side, this.state[side].baseHp, baseMaxHp(age));
         if (side !== HUD_SIDE) {
           this.showEnemyAge(age);
           this.announceEnemyAge(age);
@@ -243,6 +259,7 @@ export class HUDScene extends Phaser.Scene {
       on(Events.ResearchCompleted, ({ side }) => {
         if (side === HUD_SIDE) this.researchPanel.rebuild();
       }),
+      on(Events.BackgroundChanged, ({ name }) => this.showBackgroundName(name)),
       on(Events.GameSpeedChanged, ({ multiplier }) => {
         this.speed = multiplier;
         this.speedText.setText(`${multiplier}x`).setColor(multiplier === 1 ? UiTextColors.parchment : UiTextColors.gold);
@@ -384,6 +401,10 @@ export class HUDScene extends Phaser.Scene {
     this.specialButton.setLocked(locked);
     this.ageUpButton.setLocked(locked);
     this.pauseButton.setEnabled(!locked);
+  }
+
+  private showBackgroundName(name: string): void {
+    this.backgroundText.setText(`BG: ${name}`);
   }
 
   private label(x: number, y: number, text: string): void {

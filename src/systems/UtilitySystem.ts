@@ -66,18 +66,29 @@ export class UtilitySystem {
       case 'heal': {
         unit.utilityReadyAt = nowMs + effect.intervalMs;
         for (const ally of this.alliesWithin(unit, effect.radius)) {
+          // Several healers don't stack: one heal per ally per heal interval.
+          if (nowMs < ally.healLockUntil) continue;
+          ally.healLockUntil = nowMs + effect.intervalMs;
           const restored = ally.heal(effect.amount);
           if (restored > 0) {
             emit(Events.UnitHealed, { side: ally.side, instanceId: ally.instanceId, amount: restored, x: ally.x, topY: ally.topY });
           }
         }
         this.pulse(unit, 'heal', effect.radius);
+        unit.playAttack(); // visual: the shaman raises its staff
         return;
       }
       case 'shield': {
         unit.utilityReadyAt = nowMs + effect.intervalMs;
-        for (const ally of this.alliesWithin(unit, effect.radius)) grantShield(ally, effect.absorb);
+        for (const ally of this.alliesWithin(unit, effect.radius)) {
+          // Several shielders don't stack: one refresh per ally per interval,
+          // and a shield never grows past one drone's worth.
+          if (nowMs < ally.shieldLockUntil) continue;
+          ally.shieldLockUntil = nowMs + effect.intervalMs;
+          grantShield(ally, effect.absorb, effect.absorb * ally.getStat('shield'));
+        }
         this.pulse(unit, 'shield', effect.radius);
+        unit.playAttack();
         return;
       }
       case 'aoe': {

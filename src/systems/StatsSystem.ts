@@ -13,7 +13,7 @@ export interface SideStats {
 }
 
 /** Gold that counts as earned: refunds and cheats don't. */
-const EARNED_SOURCES: ReadonlySet<GoldSource> = new Set<GoldSource>(['kill', 'mine', 'economy-unit']);
+const EARNED_SOURCES: ReadonlySet<GoldSource> = new Set<GoldSource>(['kill', 'mine', 'economy-unit', 'ai-income']);
 
 function emptyStats(): SideStats {
   return { unitsTrained: 0, kills: 0, losses: 0, goldEarned: 0, goldSpent: 0, turretsBuilt: 0, specialsFired: 0 };

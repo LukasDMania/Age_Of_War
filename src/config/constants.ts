@@ -68,6 +68,27 @@ export const MAX_FRAME_DELTA_MS = 100;
 /** PROPOSED. Starting hit points of each base. */
 export const BASE_HP = 1000;
 
+/**
+ * Base max HP per age (owner, 2026-09-26: base HP goes up with each age).
+ * On age-up the base gains the difference, so damage already taken stays.
+ * PROPOSED numbers.
+ */
+export const BASE_HP_BY_AGE: readonly number[] = [1000, 1500, 2100, 2800, 3600];
+
+export function baseMaxHp(age: number): number {
+  return BASE_HP_BY_AGE[age] ?? BASE_HP;
+}
+
+/**
+ * Multipliers on every kill's gold and XP (Phase 15). Kill gold was set to
+ * ~1.2x a unit's cost when kills were the only income; with Mines and the
+ * AI's own income, killing a stream of enemies at a turret line paid far
+ * more than it cost (one logged match: 570k kill gold), so defense farmed
+ * endless gold and XP. PROPOSED.
+ */
+export const KILL_GOLD_MULT = 0.5;
+export const KILL_XP_MULT = 0.6;
+
 /** PROPOSED. Enough for a couple of early units. */
 export const STARTING_GOLD = 100;
 export const STARTING_XP = 0;

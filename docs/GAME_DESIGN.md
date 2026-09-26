@@ -215,7 +215,8 @@ PROPOSED details:
   same mechanic with their own look and numbers (arrows, cannon barrage,
   airstrike, orbital strike).
 - Stone numbers (PROPOSED): 12 strikes over 2 s, 30 damage each in a 36 px
-  radius, 45 s cooldown, ready at the start of a match. Strikes aim at random
+  radius, 75 s cooldown (owner, 2026-09-26; was 45 s), ready at the start of
+  a match. Strikes aim at random
   enemy units and never hit the base.
 
 ## 8. Enemy AI (PROPOSED)
@@ -223,6 +224,15 @@ PROPOSED details:
 - The AI is a scripted opponent that plays through the **same buy/upgrade/
   age-up/special requests as the human player**, using the same event names.
   It never mutates state directly.
+- **AI income (LOCKED, owner 2026-09-26, "option C"):** the AI does not play
+  on the player's economy alone. Each AI-played side earns its own gold and
+  XP per second, independent of kills, so it can never be starved into a
+  softlock. Rate = base (2 gold/s, 0.5 XP/s) x its age factor x a match-time
+  ramp (up to x2 at 30 min) x the difficulty's income multiplier (easy 1,
+  normal 1.5, hard 2.5). Numbers PROPOSED. It still shops through the same
+  request events. The "no bonus on any difficulty" note below is outdated.
+- Future (owner interest): train the AI with self-play / machine learning,
+  then add named strategies (turret-heavy, economy-heavy...). Not now.
 - Difficulty is a preset of tunables: reaction delay, how eagerly it buys
   economy units, its turret build schedule, when it ages up.
 - Built in Phase 12 (all PROPOSED): `systems/AIController.ts`,
@@ -337,4 +347,16 @@ Ideas reviewed from Age of War 2/3:
 - **Special:** stays as it is for now.
 - **Difficulty (later, not now):** higher difficulty gives the enemy more
   health and damage, like the original Age of War.
+
+## 12. Playtest round 3 decisions (owner, 2026-09-26)
+
+- Money and utility units follow the same walking rules as everyone else
+  (LOCKED): no phasing through units, they queue in the row like a unit
+  without an attack.
+- Healing/shielding from several utility units must not stack (LOCKED); built
+  as one heal / shield refresh per ally per interval.
+- Base HP goes up with each age (LOCKED); numbers PROPOSED (1000 / 1500 /
+  2100 / 2800 / 3600).
+- Turrets stay strong but must not hold forever late game; first pass: weaker
+  upgrades and turret research, and lower kill rewards (PROPOSED).
 

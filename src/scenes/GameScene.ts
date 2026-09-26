@@ -1,5 +1,6 @@
 import Phaser from 'phaser';
 import { getAge, isFinalAge } from '@config/ages.config';
+import { BACKGROUND_STORAGE_KEY, BACKGROUNDS, type BackgroundDef } from '@config/backgrounds.config';
 import { BUILDING_IDS, BUILDING_LAYOUT, buildingX, type BuildingId } from '@config/buildings.config';
 import { AI_DIFFICULTIES, DEFAULT_AI_DIFFICULTY, type AiDifficultyName } from '@config/ai.config';
 import {
@@ -14,14 +15,15 @@ import {
   MAX_FRAME_DELTA_MS,
   SCENE_KEYS,
 } from '@config/constants';
+import { Backdrop } from '@entities/Backdrop';
 import { Base } from '@entities/Base';
 import { Building } from '@entities/Building';
 import { HitEffects } from '@entities/HitEffects';
 import { ProjectileFactory } from '@entities/ProjectileFactory';
 import { UnitFactory } from '@entities/UnitFactory';
-import { getUnitDefinition } from '@entities/unitDefinitions';
 import { AgeProgressionSystem } from '@systems/AgeProgressionSystem';
 import { AIController } from '@systems/AIController';
+import { AiIncomeSystem } from '@systems/AiIncomeSystem';
 import { BuildingSystem } from '@systems/BuildingSystem';
 import { CasualtySystem } from '@systems/CasualtySystem';
 import { CombatSystem } from '@systems/CombatSystem';
@@ -103,9 +105,15 @@ export class GameScene extends Phaser.Scene {
   private scrollKeys: Phaser.Input.Keyboard.Key[][] = [];
   private ai: AIController | null = null;
   private playerAi: AIController | null = null;
+  /** The AI's own income, one per AI-played side (Phase 15). */
+  private aiIncome: AiIncomeSystem[] = [];
   /** Dev builds, human player only: records the match to playtest-logs/. */
   private logger: MatchLogger | null = null;
   private ground!: Phaser.GameObjects.Graphics;
+  private laneLine!: Phaser.GameObjects.Graphics;
+  private backdrop!: Backdrop;
+  /** Playtest background choice (index into BACKGROUNDS). */
+  private backgroundIndex = 0;
 
   private aiSetting: AiDifficultyName | 'off' = DEFAULT_AI_DIFFICULTY;
   private playerAiSetting: AiDifficultyName | null = null;
@@ -143,11 +151,7 @@ export class GameScene extends Phaser.Scene {
     this.lane = new LaneSystem(this.units, this.bases);
     this.economy = new EconomySystem(this.state, this.units);
     this.spawn = new SpawnSystem(this.state, this.units, (unitId, side) =>
-      this.lane.isSpawnPointClear(
-        side,
-        this.units.spriteWidth(unitId, side),
-        getUnitDefinition(unitId).role !== 'combat',
-      ),
+      this.lane.isSpawnPointClear(side, this.units.spriteWidth(unitId, side)),
     );
     this.turrets = new TurretSystem(this, this.state, this.bases, this.units, this.projectiles);
     this.special = new SpecialSystem(this.state, this.units, this.projectiles, () => this.match.elapsedMs);
@@ -156,6 +160,9 @@ export class GameScene extends Phaser.Scene {
     this.utility = new UtilitySystem(this.units, this.projectiles);
     this.stats = new StatsSystem();
     this.buildingSystem = new BuildingSystem(this.state, this.units);
+    this.aiIncome = [];
+    if (this.aiSetting !== 'off') this.aiIncome.push(new AiIncomeSystem(this.state, 'enemy', AI_DIFFICULTIES[this.aiSetting]));
+    if (this.playerAiSetting) this.aiIncome.push(new AiIncomeSystem(this.state, 'player', AI_DIFFICULTIES[this.playerAiSetting]));
     this.buildingViews = {
       player: this.createBuildingViews('player'),
       enemy: this.createBuildingViews('enemy'),
@@ -191,11 +198,13 @@ export class GameScene extends Phaser.Scene {
       on(Events.BuildingUpgraded, ({ side, buildingId, level }) => this.buildingViews[side][buildingId].setLevel(level)),
       on(Events.GameSpeedRequested, ({ multiplier }) => this.setSimSpeed(multiplier)),
       on(Events.CameraFocusRequested, ({ target }) => this.panCamera(target)),
+      on(Events.BackgroundCycleRequested, () => this.cycleBackground()),
       on(Events.QuitToMenuRequested, () => {
         this.logger?.finish('quit');
         this.scene.start(SCENE_KEYS.menu);
       }),
     );
+    this.input.keyboard?.on('keydown-B', () => this.cycleBackground());
     this.input.keyboard?.on('keydown-P', () => this.match.togglePause());
     this.input.keyboard?.on('keydown-ESC', () => this.match.togglePause());
 
@@ -216,12 +225,15 @@ export class GameScene extends Phaser.Scene {
     this.scene.launch(SCENE_KEYS.hud, {
       state: this.state,
       enemyController: this.aiSetting,
+      backgroundName: this.background.name,
     } satisfies HudSceneData);
     this.match.start();
   }
 
-  update(_time: number, delta: number): void {
+  update(time: number, delta: number): void {
     this.scrollCameraByKeys(delta);
+    this.clampCamera();
+    this.backdrop.update(this.cameras.main.scrollX, time);
     if (this.match.phase !== 'playing') return;
     // Fixed-size sub-steps, so a high playtest speed doesn't make units skip
     // past each other in one giant step.
@@ -253,6 +265,7 @@ export class GameScene extends Phaser.Scene {
     this.lane.update(dt);
     this.economy.update(dt);
     this.buildingSystem.update(dt);
+    for (const income of this.aiIncome) income.update(dt, this.match.elapsedMs);
     this.logger?.update(this.match.elapsedMs);
   }
 
@@ -267,20 +280,60 @@ export class GameScene extends Phaser.Scene {
   }
 
   private drawBackground(): void {
+    this.backdrop = new Backdrop(this);
     this.ground = this.add.graphics();
-    this.paintScenery();
-    const lane = this.add.graphics();
-    lane.lineStyle(4, LANE_COLOR, 1);
+    this.laneLine = this.add.graphics();
+    this.laneLine.lineStyle(4, LANE_COLOR, 1);
     const margin = BUILDING_LAYOUT.scrollMarginX;
-    lane.lineBetween(-margin, LANE_Y, GAME_WIDTH + margin, LANE_Y);
+    this.laneLine.lineBetween(-margin, LANE_Y, GAME_WIDTH + margin, LANE_Y);
+    this.backgroundIndex = this.loadBackgroundChoice();
+    this.applyBackground();
   }
 
-  /** Sky and ground in the colors of the player's current age. */
+  private get background(): BackgroundDef {
+    return BACKGROUNDS[this.backgroundIndex] ?? BACKGROUNDS[0]!;
+  }
+
+  /** Playtest: next background option (HUD button or the B key). */
+  private cycleBackground(): void {
+    this.backgroundIndex = (this.backgroundIndex + 1) % BACKGROUNDS.length;
+    try {
+      window.localStorage.setItem(BACKGROUND_STORAGE_KEY, this.background.id);
+    } catch {
+      // Storage can be unavailable; the choice then lasts until reload.
+    }
+    this.applyBackground();
+  }
+
+  private loadBackgroundChoice(): number {
+    try {
+      const id = window.localStorage.getItem(BACKGROUND_STORAGE_KEY);
+      const index = BACKGROUNDS.findIndex((b) => b.id === id);
+      return index >= 0 ? index : 0;
+    } catch {
+      return 0;
+    }
+  }
+
+  private applyBackground(): void {
+    this.backdrop.show(this.background);
+    this.paintScenery();
+    emit(Events.BackgroundChanged, { id: this.background.id, name: this.background.name });
+  }
+
+  /**
+   * Sky color and the ground strip under the lane: the player's age colors,
+   * or the chosen background's strip color. Backgrounds whose art has its own
+   * ground hide the strip and the lane line.
+   */
   private paintScenery(): void {
+    const def = this.background;
     const { sky, ground } = getAge(this.state.player.age).visuals;
     this.cameras.main.setBackgroundColor(sky);
     this.ground.clear();
-    this.ground.fillStyle(ground, 1);
+    this.laneLine.setVisible(def.ground === 'strip');
+    if (def.ground !== 'strip') return;
+    this.ground.fillStyle(def.stripColor ?? ground, 1);
     const margin = BUILDING_LAYOUT.scrollMarginX;
     this.ground.fillRect(-margin, LANE_Y, GAME_WIDTH + 2 * margin, GAME_HEIGHT - LANE_Y);
   }
@@ -342,9 +395,10 @@ export class GameScene extends Phaser.Scene {
    * dragging; the HUD's Buildings tab pans to them.
    */
   private setupCamera(): void {
-    const margin = BUILDING_LAYOUT.scrollMarginX;
     const camera = this.cameras.main;
-    camera.setBounds(-margin, 0, GAME_WIDTH + 2 * margin, GAME_HEIGHT);
+    // Scroll limits are enforced in `clampCamera` (Phaser's setBounds assumes
+    // a camera zoomed around its center; ours zooms from the top-left, see
+    // utils/renderScale).
     camera.setScroll(0, 0);
     const keyboard = this.input.keyboard;
     if (keyboard) {
@@ -356,11 +410,18 @@ export class GameScene extends Phaser.Scene {
     }
     this.input.on('pointermove', (pointer: Phaser.Input.Pointer) => {
       if (!pointer.isDown) return;
-      camera.scrollX -= pointer.x - pointer.prevPosition.x;
+      camera.scrollX -= (pointer.x - pointer.prevPosition.x) / camera.zoom;
     });
     this.input.on('wheel', (_p: Phaser.Input.Pointer, _o: unknown, dx: number, dy: number) => {
       camera.scrollX += dx !== 0 ? dx : dy;
     });
+  }
+
+  /** Keeps the view inside the world: buildings on the left, enemy buildings on the right. */
+  private clampCamera(): void {
+    const camera = this.cameras.main;
+    const margin = BUILDING_LAYOUT.scrollMarginX;
+    camera.scrollX = Phaser.Math.Clamp(camera.scrollX, -margin, margin);
   }
 
   private scrollCameraByKeys(deltaMs: number): void {
@@ -489,6 +550,7 @@ export class GameScene extends Phaser.Scene {
     this.scene.stop(SCENE_KEYS.overlay);
     this.anims.resumeAll();
     this.stats.destroy();
+    this.backdrop.destroy();
     this.buildingSystem.destroy();
     this.logger?.finish('quit');
     this.logger?.destroy();

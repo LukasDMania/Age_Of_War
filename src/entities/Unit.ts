@@ -59,6 +59,12 @@ export class Unit extends Phaser.GameObjects.Sprite {
   /** Utility units: sim time of the next effect use, and of the next aura pulse. */
   utilityReadyAt = 0;
   auraPulseAt = 0;
+  /**
+   * Sim time until which this unit can't get another heal / shield from a
+   * utility unit (Phase 15: effects from several utility units don't stack).
+   */
+  healLockUntil = 0;
+  shieldLockUntil = 0;
   /** Side credited with the kill once HP reaches 0 (set by `markDead`). */
   killerSide: Side | null = null;
   /**
@@ -103,7 +109,7 @@ export class Unit extends Phaser.GameObjects.Sprite {
     this.art = unitArtFor(definition.id) ?? null;
     this.anims.stop();
     if (this.art) {
-      this.setTexture(unitArtKey(definition.id, 'walk'), this.art.standFrame);
+      this.setTexture(unitArtKey(definition.id, 'walk', side), this.art.standFrame);
       this.setScale(this.art.scale).setOrigin(0.5, this.art.footY);
       this.baseTint = side === 'enemy' ? (this.art.enemyTint ?? null) : null;
     } else {
@@ -119,6 +125,8 @@ export class Unit extends Phaser.GameObjects.Sprite {
     this.attackReadyAt = 0;
     this.utilityReadyAt = 0;
     this.auraPulseAt = 0;
+    this.healLockUntil = 0;
+    this.shieldLockUntil = 0;
     this.killerSide = null;
     this.flashUntil = 0;
     this.restoreTint();
@@ -174,10 +182,7 @@ export class Unit extends Phaser.GameObjects.Sprite {
     return this.unitState !== UnitState.Dead;
   }
 
-  /**
-   * Money and utility units: they follow the army instead of leading it, and
-   * friendly combat units walk through them (see `LaneSystem`).
-   */
+  /** Money and utility units (no attack). Since 2026-09-26 they walk and block like everyone else. */
   get isSupport(): boolean {
     return this.definition.role !== 'combat';
   }
@@ -194,7 +199,7 @@ export class Unit extends Phaser.GameObjects.Sprite {
 
   /** Visual only: plays the attack animation, if the unit has art. */
   playAttack(): void {
-    if (this.art) this.play(unitArtKey(this.definition.id, 'attack'));
+    if (this.art) this.play(unitArtKey(this.definition.id, 'attack', this.side));
   }
 
   /**
@@ -250,13 +255,13 @@ export class Unit extends Phaser.GameObjects.Sprite {
   private syncPose(): void {
     const art = this.art;
     if (!art) return;
-    const attackKey = unitArtKey(this.definition.id, 'attack');
+    const attackKey = unitArtKey(this.definition.id, 'attack', this.side);
     if (this.anims.isPlaying && this.anims.currentAnim?.key === attackKey) return;
     if (this.unitState === UnitState.Walking) {
-      this.play(unitArtKey(this.definition.id, 'walk'), true);
-    } else if (this.anims.isPlaying || this.texture.key !== unitArtKey(this.definition.id, 'walk')) {
+      this.play(unitArtKey(this.definition.id, 'walk', this.side), true);
+    } else if (this.anims.isPlaying || this.texture.key !== unitArtKey(this.definition.id, 'walk', this.side)) {
       this.anims.stop();
-      this.setTexture(unitArtKey(this.definition.id, 'walk'), art.standFrame);
+      this.setTexture(unitArtKey(this.definition.id, 'walk', this.side), art.standFrame);
     }
   }
 

@@ -42,7 +42,35 @@ export interface AiDifficulty {
   buildingLevelCap: number;
   /** Highest Forge research tier it buys (Phase 14); 0 = no research. */
   researchTierCap: number;
+  /**
+   * Multiplier on the AI's own income (Phase 15, see `AI_INCOME`): gold and
+   * XP it gets on top of kills and buildings, so it can't be starved.
+   */
+  incomeMult: number;
 }
+
+/**
+ * The AI's own income (owner chose "option C", 2026-09-26): every AI-played
+ * side earns gold and XP per second no matter what happens on the lane, so
+ * it can never be starved into a softlock. Rate = base x the side's age
+ * factor x (1 + time ramp) x the difficulty's `incomeMult`. The ramp grows
+ * linearly to `rampMax` at `rampFullAtMs`. PROPOSED numbers.
+ */
+/**
+ * How much the AI favors each fighter slot (owner, 2026-09-26: mostly cheap
+ * melee, some ranged, fewer heavies; roughly 50 / 33 / 17 %). Multiplies
+ * the counter weights in `AIController.counterSlot`; easy picks at random
+ * with these weights. PROPOSED.
+ */
+export const AI_UNIT_MIX: Readonly<Record<1 | 2 | 3, number>> = { 1: 1, 2: 0.65, 3: 0.33 };
+
+export const AI_INCOME = {
+  goldPerSec: 2,
+  // Was 0.5 (Phase 15 first pass): AIs reached the Future age in ~8 min.
+  xpPerSec: 0.25,
+  rampMax: 1,
+  rampFullAtMs: 30 * 60 * 1000,
+} as const;
 
 export const AI_DIFFICULTIES: Readonly<Record<AiDifficultyName, AiDifficulty>> = {
   easy: {
@@ -64,6 +92,7 @@ export const AI_DIFFICULTIES: Readonly<Record<AiDifficultyName, AiDifficulty>> =
     specialOnlyWhenThreatened: true,
     buildingLevelCap: 2,
     researchTierCap: 1,
+    incomeMult: 1,
   },
   normal: {
     name: 'normal',
@@ -84,6 +113,7 @@ export const AI_DIFFICULTIES: Readonly<Record<AiDifficultyName, AiDifficulty>> =
     specialOnlyWhenThreatened: true,
     buildingLevelCap: 4,
     researchTierCap: 3,
+    incomeMult: 1.5,
   },
   hard: {
     name: 'hard',
@@ -104,6 +134,7 @@ export const AI_DIFFICULTIES: Readonly<Record<AiDifficultyName, AiDifficulty>> =
     specialOnlyWhenThreatened: false,
     buildingLevelCap: 5,
     researchTierCap: 5,
+    incomeMult: 2.5,
   },
 };
 

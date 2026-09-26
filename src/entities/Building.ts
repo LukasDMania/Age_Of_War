@@ -40,7 +40,8 @@ export class Building extends Phaser.GameObjects.Container {
 
   setLevel(level: number): void {
     this.sprite.setAlpha(level > 0 ? 1 : 0.3);
-    this.label.setText(level > 0 ? BUILDINGS[this.buildingId].name : `${BUILDINGS[this.buildingId].name} (not built)`);
+    // Unbuilt: faded sprite and label (the full "(not built)" text overlapped its neighbours).
+    this.label.setAlpha(level > 0 ? 1 : 0.6);
     this.pips.clear();
     const y = -BUILDING_LAYOUT.size.h - 12;
     for (let i = 0; i < MAX_BUILDING_LEVEL; i++) {

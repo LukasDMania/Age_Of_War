@@ -67,20 +67,22 @@ interface UpgradeStep {
  * one from the next age but is far behind one from two ages later.
  */
 export const TURRET_UPGRADE_CURVES: Readonly<Record<TurretKind, readonly UpgradeStep[]>> = {
+  // Phase 15 (owner: max-level turrets too strong late): a full upgrade
+  // path now gives about x1.55 damage per second instead of about x2.05.
   rapid: [
-    { costShare: 0.5, damageMult: 1.2, cooldownMult: 0.83 },
-    { costShare: 0.75, damageMult: 1.1, cooldownMult: 0.9 },
-    { costShare: 1.1, damageMult: 1.1, cooldownMult: 0.95 },
+    { costShare: 0.5, damageMult: 1.1, cooldownMult: 0.9 },
+    { costShare: 0.75, damageMult: 1.08, cooldownMult: 0.93 },
+    { costShare: 1.1, damageMult: 1.06, cooldownMult: 0.96 },
   ],
   heavy: [
-    { costShare: 0.5, damageMult: 1.44, cooldownMult: 1 },
-    { costShare: 0.75, damageMult: 1.24, cooldownMult: 1 },
-    { costShare: 1.1, damageMult: 1.14, cooldownMult: 1 },
+    { costShare: 0.5, damageMult: 1.2, cooldownMult: 1 },
+    { costShare: 0.75, damageMult: 1.14, cooldownMult: 1 },
+    { costShare: 1.1, damageMult: 1.12, cooldownMult: 1 },
   ],
   area: [
-    { costShare: 0.5, damageMult: 1.3, cooldownMult: 0.9 },
-    { costShare: 0.75, damageMult: 1.15, cooldownMult: 0.93 },
-    { costShare: 1.1, damageMult: 1.1, cooldownMult: 0.96 },
+    { costShare: 0.5, damageMult: 1.15, cooldownMult: 0.92 },
+    { costShare: 0.75, damageMult: 1.1, cooldownMult: 0.95 },
+    { costShare: 1.1, damageMult: 1.06, cooldownMult: 0.97 },
   ],
 };
 
