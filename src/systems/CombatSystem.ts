@@ -7,6 +7,7 @@ import type { ProjectileFactory } from '@entities/ProjectileFactory';
 import type { UnitFactory } from '@entities/UnitFactory';
 import { laneDir, otherSide, type Side } from '@state/types';
 import { dealBaseDamage, dealSplashDamage, dealUnitDamage } from '@systems/damageOps';
+import { emit, Events } from '@utils/EventBus';
 
 /**
  * Unit targeting and attacks. Each frame every armed unit looks for the
@@ -22,8 +23,8 @@ import { dealBaseDamage, dealSplashDamage, dealUnitDamage } from '@systems/damag
  * Damage goes through `damageOps`; deaths are reported by `CasualtySystem`,
  * and gold/XP rewards come from `unit-died` (EconomySystem).
  *
- * Emits (through damageOps): `unit-damaged`, `area-hit`, `base-damaged`,
- * `base-destroyed`.
+ * Emits: `unit-struck` (feedback, each blow or shot); through damageOps
+ * `unit-damaged`, `area-hit`, `base-damaged`, `base-destroyed`.
  */
 export class CombatSystem {
   private readonly units: UnitFactory;
@@ -80,6 +81,15 @@ export class CombatSystem {
   /** The hit (melee) or the release (ranged) of an attack. */
   private resolve(unit: Unit, attack: UnitAttack, targetUnit?: Unit | null, targetBase?: Base | null): void {
     const damage = unit.getStat('damage');
+    emit(Events.UnitStruck, {
+      side: unit.side,
+      instanceId: unit.instanceId,
+      unitId: unit.definition.id,
+      slot: unit.definition.slot,
+      x: unit.x,
+      frontX: unit.x + laneDir(unit.side) * unit.halfWidth,
+      ranged: attack.projectileKey !== undefined,
+    });
     if (attack.projectileKey) {
       this.shoot(unit, attack, attack.projectileKey, damage);
       return;

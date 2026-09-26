@@ -189,31 +189,11 @@ export const LANE_COLOR = 0x3b2f2f;
 
 /* ---- Game feel (Phase 13) ---------------------------------------------- */
 
-/** One camera shake: strength (fraction of the screen) and length. */
-export interface ShakeConfig {
-  intensity: number;
-  durationMs: number;
-  /** No new shake of this kind until this long after the last one. */
-  cooldownMs: number;
-}
-
-/**
- * PROPOSED. Screen shakes. Kept small: a base taking hits, a big splash
- * (special strikes, heavy area shots) and a base falling.
+/*
+ * Screen shake (Phase 13) was replaced on 2026-09-26 by the graceful camera
+ * "thump" (owner: a more graceful impact shake for the heavy units); its
+ * tunables are `CAMERA_THUMP` in `config/effects.config.ts`.
  */
-export const SCREEN_SHAKE: {
-  baseHit: ShakeConfig;
-  bigSplash: ShakeConfig;
-  baseDestroyed: ShakeConfig;
-  /** Splashes at least this wide count as big. */
-  bigSplashRadius: number;
-} = {
-  baseHit: { intensity: 0.0025, durationMs: 90, cooldownMs: 700 },
-  // Off (owner, 2026-09-26: mortar splashes shook the screen constantly).
-  bigSplash: { intensity: 0, durationMs: 0, cooldownMs: 250 },
-  baseDestroyed: { intensity: 0.012, durationMs: 700, cooldownMs: 0 },
-  bigSplashRadius: 50,
-};
 
 /** Real time between a base falling and the game-over panel, in ms. */
 export const GAME_OVER_DELAY_MS = 1200;

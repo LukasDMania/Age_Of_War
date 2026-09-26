@@ -1,5 +1,5 @@
 import Phaser from 'phaser';
-import { BASE_X, LANE_Y, SCREEN_SHAKE, type ShakeConfig } from '@config/constants';
+import { BASE_X, LANE_Y } from '@config/constants';
 import type { Side } from '@state/types';
 import { UI_FONT } from '@ui/kenneyUi';
 import { Events, on, type EventPayloads, type UtilityKind } from '@utils/EventBus';
@@ -39,10 +39,10 @@ const AGE_UP_FLASH_MS = 350;
 /**
  * Hit feedback that has no effect on the game: floating damage and heal
  * numbers, a puff where a unit died, a ring where splash damage landed and a
- * colored pulse when a utility unit acts. Since Phase 13 it also shakes the
- * camera (the player's base taking hits, big splashes, a base falling, all
- * throttled, see `SCREEN_SHAKE`), throws rubble when a base falls and
- * flashes the screen when the player ages up. (The white flash on a damaged
+ * colored pulse when a utility unit acts. It also throws rubble when a base
+ * falls and flashes the screen when the player ages up. (Camera thumps and
+ * particles are in `ImpactEffects` since 2026-09-26; the old random shake is
+ * gone.) (The white flash on a damaged
  * unit is done by `Unit.takeDamage` itself.)
  *
  * Every visual comes from a pool, and it is driven purely by events, like
@@ -59,8 +59,8 @@ export class HitEffects {
   /** Falling bodies of units with a die animation (Phase 16). */
   private readonly corpses: ObjectPool<Phaser.GameObjects.Sprite>;
   private readonly cleanups: (() => void)[];
-  /** Real time (scene clock) before which each kind of shake is held back. */
-  private readonly shakeReadyAt = new Map<ShakeConfig, number>();
+  /** Set while the simulation runs in bulk without rendering (dev tooling). */
+  muted = false;
 
   constructor(scene: Phaser.Scene) {
     this.scene = scene;
@@ -105,13 +105,7 @@ export class HitEffects {
       on(Events.UnitDied, ({ side, unitId, x }) => {
         if (!this.showCorpse(side, unitId, x)) this.showPuff(side, x);
       }),
-      on(Events.AreaHit, ({ x, radius }) => {
-        this.showRing(x, radius);
-        if (radius >= SCREEN_SHAKE.bigSplashRadius) this.shake(SCREEN_SHAKE.bigSplash);
-      }),
-      on(Events.BaseDamaged, ({ side }) => {
-        if (side === 'player') this.shake(SCREEN_SHAKE.baseHit);
-      }),
+      on(Events.AreaHit, ({ x, radius }) => this.showRing(x, radius, RING_COLOR, RING_DURATION_MS, 0.3)),
       on(Events.BaseDestroyed, ({ side }) => this.showBaseFall(side)),
       on(Events.AgeChanged, ({ side }) => {
         if (side === 'player') this.scene.cameras.main.flash(AGE_UP_FLASH_MS, 255, 240, 200);
@@ -131,6 +125,7 @@ export class HitEffects {
 
   /** Plays the unit's die animation where it fell; false if it has none. */
   private showCorpse(side: Side, unitId: string, x: number): boolean {
+    if (this.muted) return true;
     const art = unitArtFor(unitId);
     if (!art?.die) return false;
     const key = unitArtKey(unitId, 'die', side);
@@ -150,16 +145,7 @@ export class HitEffects {
     return true;
   }
 
-  private shake(config: ShakeConfig): void {
-    const now = this.scene.time.now;
-    if (now < (this.shakeReadyAt.get(config) ?? 0)) return;
-    this.shakeReadyAt.set(config, now + config.cooldownMs);
-    // `force` lets a big shake replace a small one already running.
-    this.scene.cameras.main.shake(config.durationMs, config.intensity, config === SCREEN_SHAKE.baseDestroyed);
-  }
-
   private showBaseFall(side: Side): void {
-    this.shake(SCREEN_SHAKE.baseDestroyed);
     for (let i = 0; i < BASE_RUBBLE_PUFFS; i++) {
       this.scene.time.delayedCall(i * 90, () => this.showPuff(side, BASE_X[side] + Phaser.Math.Between(-50, 50), Phaser.Math.Between(20, 110)));
     }
@@ -174,6 +160,7 @@ export class HitEffects {
   }
 
   private showFloatingText(label: string, color: string, x: number, topY: number): void {
+    if (this.muted) return;
     const text = this.numbers.acquire();
     text
       .setText(label)
@@ -193,6 +180,7 @@ export class HitEffects {
   }
 
   private showPuff(side: Side, x: number, height = 20): void {
+    if (this.muted) return;
     const puff = this.puffs.acquire();
     puff
       .setFillStyle(PUFF_COLOR[side], 1)
@@ -211,14 +199,15 @@ export class HitEffects {
     });
   }
 
-  private showRing(x: number, radius: number, color = RING_COLOR, durationMs = RING_DURATION_MS): void {
+  private showRing(x: number, radius: number, color = RING_COLOR, durationMs = RING_DURATION_MS, alpha = 0.55): void {
+    if (this.muted) return;
     const ring = this.rings.acquire();
     ring
       .setFillStyle(color, 1)
       .setRadius(radius)
       .setPosition(x, LANE_Y)
       .setScale(0.3, 0.3 * RING_SQUASH)
-      .setAlpha(0.55)
+      .setAlpha(alpha)
       .setActive(true)
       .setVisible(true);
     this.scene.tweens.add({

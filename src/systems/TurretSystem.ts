@@ -50,7 +50,8 @@ export type TurretRejection =
  *
  * Listens for: `buy-slot-requested`, `buy-turret-requested`,
  * `upgrade-turret-requested`, `sell-turret-requested`.
- * Emits: `slot-unlocked`, `turret-built`, `turret-upgraded`, `turret-sold`;
+ * Emits: `slot-unlocked`, `turret-built`, `turret-upgraded`, `turret-sold`,
+ * `turret-fired` (feedback);
  * `gold-changed`
  * through economyOps; damage events through damageOps.
  */
@@ -248,6 +249,13 @@ export class TurretSystem {
     const damage = turret.getStat('damage');
     const splash = definition.splashRadius ?? 0;
     turret.playFire();
+    emit(Events.TurretFired, {
+      side: turret.side,
+      slotIndex: turret.slotIndex,
+      turretId: definition.id,
+      x: turret.muzzleX,
+      y: turret.muzzleY,
+    });
     if (definition.projectileKey) {
       // Straight at the target's middle; it hits the first enemy on that line
       // (usually the target) or the ground.

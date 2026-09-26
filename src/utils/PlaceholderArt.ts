@@ -166,7 +166,8 @@ function drawBuilding(g: Phaser.GameObjects.Graphics, id: BuildingId, palette: S
 
 /* ---- What exists ------------------------------------------------------ */
 
-function projectileKeys(): string[] {
+/** Every projectile key used by units, turrets, specials and utility throws. */
+export function projectileKeys(): string[] {
   const keys = new Set<string>();
   for (const def of UNIT_DEFINITIONS) {
     if (def.attack?.projectileKey) keys.add(def.attack.projectileKey);

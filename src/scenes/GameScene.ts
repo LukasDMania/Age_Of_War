@@ -19,6 +19,7 @@ import { Backdrop } from '@entities/Backdrop';
 import { Base } from '@entities/Base';
 import { Building } from '@entities/Building';
 import { HitEffects } from '@entities/HitEffects';
+import { ImpactEffects } from '@entities/ImpactEffects';
 import { ProjectileFactory } from '@entities/ProjectileFactory';
 import { UnitFactory } from '@entities/UnitFactory';
 import { AgeProgressionSystem } from '@systems/AgeProgressionSystem';
@@ -91,6 +92,7 @@ export class GameScene extends Phaser.Scene {
   private units!: UnitFactory;
   private projectiles!: ProjectileFactory;
   private effects!: HitEffects;
+  private impacts!: ImpactEffects;
   private match!: MatchSystem;
   private combat!: CombatSystem;
   private projectileSystem!: ProjectileSystem;
@@ -148,6 +150,7 @@ export class GameScene extends Phaser.Scene {
     this.units = new UnitFactory(this);
     this.projectiles = new ProjectileFactory(this);
     this.effects = new HitEffects(this);
+    this.impacts = new ImpactEffects(this);
     this.match = new MatchSystem(this.state);
     this.combat = new CombatSystem(this.units, this.bases, this.projectiles);
     this.projectileSystem = new ProjectileSystem(this.projectiles, this.units, this.bases);
@@ -239,7 +242,11 @@ export class GameScene extends Phaser.Scene {
   update(time: number, delta: number): void {
     this.scrollCameraByKeys(delta);
     this.clampCamera();
-    this.backdrop.update(this.cameras.main.scrollX, time);
+    // The graceful thump (heavy blows, big blasts, base hits) moves the view.
+    const thump = this.impacts.thump.offset(time);
+    this.cameras.main.scrollY = thump;
+    this.backdrop.update(this.cameras.main.scrollX, time, thump);
+    this.impacts.updateTrails(this.projectiles.activeProjectiles, time, delta);
     if (this.match.phase !== 'playing') return;
     // Fixed-size sub-steps, so a high playtest speed doesn't make units skip
     // past each other in one giant step.
@@ -341,7 +348,8 @@ export class GameScene extends Phaser.Scene {
     if (def.ground !== 'strip') return;
     this.ground.fillStyle(def.stripColor ?? ground, 1);
     const margin = BUILDING_LAYOUT.scrollMarginX;
-    this.ground.fillRect(-margin, LANE_Y, GAME_WIDTH + 2 * margin, GAME_HEIGHT - LANE_Y);
+    // A little past the bottom edge: the camera thump lifts the view a few px.
+    this.ground.fillRect(-margin, LANE_Y, GAME_WIDTH + 2 * margin, GAME_HEIGHT - LANE_Y + 24);
   }
 
   /**
@@ -351,11 +359,12 @@ export class GameScene extends Phaser.Scene {
    * released once none of their units are left on the lane.
    */
   private refreshRigArt(): void {
-    const ages = [this.state.player.age, this.state.enemy.age];
-    const lo = Math.min(...ages);
-    const hi = Math.max(...ages);
-    for (const age of new Set(ages)) ensureRigArtForAge(this, age);
+    for (const age of new Set([this.state.player.age, this.state.enemy.age])) ensureRigArtForAge(this, age);
     this.time.delayedCall(RIG_ART_PREDRAW_DELAY_MS, () => {
+      // Read the ages now, not when this was scheduled: several age-ups can
+      // happen in between, and the current age's art must never be released.
+      const lo = Math.min(this.state.player.age, this.state.enemy.age);
+      const hi = Math.max(this.state.player.age, this.state.enemy.age);
       if (hi + 1 < AGE_COUNT) ensureRigArtForAge(this, hi + 1);
       const inUse = new Set([...this.units.activeUnits].map((u) => u.definition.id));
       for (const queued of [...this.state.player.trainingQueue, ...this.state.enemy.trainingQueue]) inUse.add(queued.unitId);
@@ -509,7 +518,14 @@ export class GameScene extends Phaser.Scene {
         })),
       }),
       spawn: (unitId, side) => this.spawn.spawnNow(unitId, side),
-      step: (ms) => this.stepSim(ms),
+      step: (ms) => {
+        // Bulk steps render nothing: skip the effects (keeps AI training fast).
+        this.effects.muted = true;
+        this.impacts.muted = true;
+        this.stepSim(ms);
+        this.effects.muted = false;
+        this.impacts.muted = false;
+      },
       restart: (data = {}) => this.scene.restart(data),
       projectileCount: () => this.projectiles.activeProjectiles.size,
       projectilePoolSize: () => this.projectiles.createdCount,
@@ -589,6 +605,7 @@ export class GameScene extends Phaser.Scene {
     this.economy.destroy();
     this.match.destroy();
     this.effects.destroy();
+    this.impacts.destroy();
     this.projectiles.destroy();
     this.units.destroy();
     if (import.meta.env.DEV) removeDebugHandle();

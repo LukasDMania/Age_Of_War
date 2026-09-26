@@ -3,6 +3,7 @@ import type { ProjectileFlight } from '@config/projectiles.config';
 import type { Base } from '@entities/Base';
 import type { Unit } from '@entities/Unit';
 import type { Side } from '@state/types';
+import { FX_SUPERSAMPLE } from '@utils/FxArt';
 
 /**
  * A pooled projectile: a sprite plus the state of one shot. Built and
@@ -25,6 +26,8 @@ export class Projectile extends Phaser.GameObjects.Image {
   flight!: ProjectileFlight;
 
   impactX = 0;
+  /** The texture / projectile key, for effects (trails, impacts). */
+  key = '';
   impactUnit: Unit | null = null;
   impactBase: Base | null = null;
 
@@ -45,11 +48,12 @@ export class Projectile extends Phaser.GameObjects.Image {
     splashRadius: number,
     flight: ProjectileFlight,
   ): this {
-    this.setTexture(textureKey);
+    this.setTexture(textureKey).setScale(1 / FX_SUPERSAMPLE);
     this.side = side;
     this.damage = damage;
     this.splashRadius = splashRadius;
     this.flight = flight;
+    this.key = textureKey;
     this.ageMs = 0;
     this.hitsBase = false;
     this.impactUnit = null;

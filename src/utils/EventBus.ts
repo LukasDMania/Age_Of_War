@@ -59,6 +59,9 @@ export const Events = {
   ResearchCompleted: 'research-completed',
   GameSpeedChanged: 'game-speed-changed',
   BackgroundChanged: 'background-changed',
+  ProjectileImpact: 'projectile-impact',
+  UnitStruck: 'unit-struck',
+  TurretFired: 'turret-fired',
 } as const;
 
 /** The utility effect kinds (see `UtilityEffect` in unitDefinitions). */
@@ -182,6 +185,33 @@ export interface EventPayloads {
   [Events.ResearchCompleted]: { side: Side; researchId: ResearchId; tier: number };
   [Events.GameSpeedChanged]: { multiplier: number };
   [Events.BackgroundChanged]: { id: string; name: string };
+  /**
+   * A projectile landed (feedback only): what it hit, where, its key (for the
+   * look) and its splash radius. `side` fired it.
+   */
+  [Events.ProjectileImpact]: {
+    side: Side;
+    key: string;
+    x: number;
+    y: number;
+    radius: number;
+    target: 'unit' | 'base' | 'ground';
+  };
+  /**
+   * A unit's attack happened (feedback only): a melee blow landed or a shot
+   * left. `frontX` is the unit's leading edge; `slot` 3 is a heavy.
+   */
+  [Events.UnitStruck]: {
+    side: Side;
+    instanceId: number;
+    unitId: string;
+    slot: number;
+    x: number;
+    frontX: number;
+    ranged: boolean;
+  };
+  /** A turret fired (feedback only); (`x`, `y`) is its muzzle. */
+  [Events.TurretFired]: { side: Side; slotIndex: number; turretId: string; x: number; y: number };
 }
 
 export type EventName = keyof EventPayloads;

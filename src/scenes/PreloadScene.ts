@@ -4,7 +4,8 @@ import { SCENE_KEYS } from '@config/constants';
 import type { GameSceneData } from '@/scenes/GameScene';
 import { loadUnitArt, registerUnitArt } from '@entities/unitArt';
 import { loadKenneyUi } from '@ui/kenneyUi';
-import { generatePlaceholderTextures } from '@utils/PlaceholderArt';
+import { generateFxArt } from '@utils/FxArt';
+import { generatePlaceholderTextures, projectileKeys } from '@utils/PlaceholderArt';
 import { ensureRigArtForAge } from '@utils/RigArt';
 
 /**
@@ -22,6 +23,8 @@ export class PreloadScene extends Phaser.Scene {
   }
 
   create(): void {
+    // Drawn projectiles first: the placeholders skip keys that already exist.
+    generateFxArt(this, projectileKeys());
     generatePlaceholderTextures(this);
     // Rig sheets of later ages are drawn when a side reaches them.
     ensureRigArtForAge(this, 0);

@@ -6,6 +6,7 @@ import type { ProjectileFactory } from '@entities/ProjectileFactory';
 import type { UnitFactory } from '@entities/UnitFactory';
 import { otherSide, type Side } from '@state/types';
 import { dealBaseDamage, dealSplashDamage, dealUnitDamage } from '@systems/damageOps';
+import { emit, Events } from '@utils/EventBus';
 
 /** How far past the screen edges a projectile may go before it is dropped. */
 const OFFSCREEN_MARGIN = 60;
@@ -58,8 +59,8 @@ function entryFraction(
  * hits its own side. The hit takes the shot's damage; splash, if any, is
  * centered where it hit.
  *
- * Emits (through damageOps): `unit-damaged`, `area-hit`, `base-damaged`,
- * `base-destroyed`.
+ * Emits: `projectile-impact` (feedback); through damageOps `unit-damaged`,
+ * `area-hit`, `base-damaged`, `base-destroyed`.
  */
 export class ProjectileSystem {
   private readonly projectiles: ProjectileFactory;
@@ -153,6 +154,14 @@ export class ProjectileSystem {
 
   private land(projectile: Projectile): void {
     const unit = projectile.impactUnit;
+    emit(Events.ProjectileImpact, {
+      side: projectile.side,
+      key: projectile.key,
+      x: projectile.x,
+      y: projectile.y,
+      radius: projectile.splashRadius,
+      target: unit ? 'unit' : projectile.impactBase ? 'base' : 'ground',
+    });
     if (unit) dealUnitDamage(unit, projectile.damage, projectile.side);
     else if (projectile.impactBase) dealBaseDamage(projectile.impactBase, projectile.damage);
     if (projectile.splashRadius > 0) {

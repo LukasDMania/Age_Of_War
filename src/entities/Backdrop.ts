@@ -54,10 +54,15 @@ export class Backdrop {
     this.scene.load.start();
   }
 
-  /** Call every frame with the camera's scroll and the scene clock. */
-  update(scrollX: number, timeMs: number): void {
+  /**
+   * Call every frame with the camera's scroll and the scene clock. `offsetY`
+   * is the camera's vertical bounce (a thump): layers follow it by their
+   * parallax factor, so painted ground moves with the units on it.
+   */
+  update(scrollX: number, timeMs: number, offsetY = 0): void {
     for (const layer of this.layers) {
       layer.sprite.tilePositionX = scrollX * layer.scroll + (layer.drift * timeMs) / 1000;
+      layer.sprite.y = -offsetY * layer.scroll;
     }
   }
 
