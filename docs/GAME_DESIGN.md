@@ -232,7 +232,11 @@ PROPOSED details:
   normal 1.5, hard 2.5). Numbers PROPOSED. It still shops through the same
   request events. The "no bonus on any difficulty" note below is outdated.
 - Future (owner interest): train the AI with self-play / machine learning,
-  then add named strategies (turret-heavy, economy-heavy...). Not now.
+  then add named strategies (turret-heavy, economy-heavy...). Built on the
+  owner's request 2026-09-26 as playtest options (a utility AI, profiles,
+  a training tool); Classic below stays the default. See section 13.
+- Opening (2026-09-26): each difficulty eases in over the first minutes
+  (lower income, army cap, no early heavies); see section 13.
 - Difficulty is a preset of tunables: reaction delay, how eagerly it buys
   economy units, its turret build schedule, when it ages up.
 - Built in Phase 12 (all PROPOSED): `systems/AIController.ts`,
@@ -273,10 +277,13 @@ PROPOSED details:
 - Targeting priority options for turrets.
 - Forward turrets or outposts anywhere on the lane.
 - Investment buildings beyond the Mine, Library and Forge (Phase 14, see
-  section 11), e.g. a market.
+  section 11), e.g. a market. (2026-09-26: the owner asked for ideas;
+  Barracks, Shrine and Market exist as a switchable prototype, section 13.)
 - Interest on banked gold, caravan-style lump payouts, mid-lane bounties,
   frontline-based income.
-- Multiple lanes, campaign, survival/roguelite modes.
+- Multiple lanes, campaign, survival/roguelite modes. (2026-09-26: the
+  owner asked for roguelite experiments; Conquest mode exists as a
+  switchable prototype, section 13.)
 
 ## 10. Open questions and tunables
 
@@ -307,7 +314,9 @@ These need decisions or playtest tuning. Keep them all in `config/`.
   smooth style (shared body parts rotated by code, per-age outfits and
   weapons, team-colored accents). Prototype: `docs/art/rig-demo.html`
   (clubman, slinger, catapult). Not to be built into the game until the
-  owner says; gameplay first.
+  owner says; gameplay first. (The owner then asked for the Stone age, and
+  on 2026-09-26 for all other ages, turrets, bases and effects: built, see
+  section 13.)
 - Target match length. Owner, 2026-09-24: "it can be around 30 min per
   game". Current AI-vs-AI median is about 14 min (7-34).
 
@@ -336,7 +345,9 @@ Ideas reviewed from Age of War 2/3:
   - No free starting Mine (owner): a side that never builds one only
     earns from kills and money units.
   - Output scales with the age factor (owner OK'd the "age bonus mult").
-  - Built in Phase 14. PROPOSED numbers (all in `config/buildings.config.ts`):
+  - Built in Phase 14. PROPOSED numbers (all in `config/buildings.config.ts`;
+    the level scheme was reworked to five levels per age on 2026-09-26, see
+    section 13, so the numbers below are history):
     max level = age number (1-5); Mine 1 / 1.5 / 2 / 2.5 / 3 gold/s and
     Library 0.5 / 0.8 / 1.1 / 1.4 / 1.8 XP/s per level, times the age
     factor; costs Mine 60 / 220 / 800 / 2200 / 5500, Library 80 / 260 /
@@ -360,3 +371,158 @@ Ideas reviewed from Age of War 2/3:
 - Turrets stay strong but must not hold forever late game; first pass: weaker
   upgrades and turret research, and lower kill rewards (PROPOSED).
 
+
+## 13. Overnight session (owner requests, 2026-09-26)
+
+The owner asked for a long unattended session: art for every age, a slower
+Stone-age AI opening, effects, a themed UI, a smarter (trained) AI with
+profiles to playtest, a building rework, and independent, easily
+reversible prototypes for more strategy and replayability. Everything below
+is **PROPOSED** unless tagged; the prototypes are behind switches (see
+"Prototype switches") so the owner can try each one and turn it off.
+
+### Enemy AI opening (PROPOSED)
+
+The hard AI used to field six units in the first ten seconds and a mammoth
+plus eleven fighters by one minute. Each difficulty now has an opening
+(`AiOpening` in `config/ai.config.ts`): its own income starts at 20% /
+25% / 30% (easy / normal / hard) and eases to full over 5 / 4 / 3 minutes;
+its army (alive plus queued) is capped at 2 / 2 / 3 units, growing by
+2 / 2.5 / 3 per minute (+1-2 when the player pushes); no heavies before
+150 / 100 / 70 s; queue depth 1; no offensive special before 150 / 100 /
+60 s. Measured on hard: 3 units at 10 s and 6 at 60 s.
+
+### AI profiles and training (PROPOSED)
+
+The "future: machine learning and named strategies" note in section 8 is
+now built as a playtest option; the Classic AI (section 8) stays the
+default.
+
+- `systems/UtilityAI.ts` is a second enemy brain. Every think it scores all
+  its options (each unit slot, utility and money units, the next level of
+  each building, the best research track, turrets, slots, upgrades,
+  replacing outdated turrets) from what it sees (army values and mix,
+  threat near its base, base HP, payback times), times a **genome** of 38
+  named weights (`config/aiGenome.config.ts`). It buys the best option,
+  saves up for it, or falls back to the best affordable one. It plays by
+  the same requests, the same difficulty presets, opening and caps.
+- Profiles (menu: Q/E, or `?profile=` in the URL): **Classic** (section 8),
+  **Balanced** (the hand-tuned starting genome), **Warlord** (big armies,
+  heavies, few buildings), **Turtle** (turrets, upgrades, research, late
+  push), **Economist** (mines, libraries, money units, fast ages),
+  **Tactician** (hard counters, keeps a healer close), plus trained
+  profiles from `config/aiTrained.json`.
+- Training (`tools/train-ai.mjs`): a genetic algorithm over genomes by
+  self-play in headless Chromium, against the Classic hard AI, the hand
+  profiles and a hall of fame of earlier champions (both sides on hard, so
+  only strategy differs). Fitness per match: win 1 / draw 0.5 / loss 0,
+  plus 0.3 x base HP margin and 0.4 x front-line pressure (equal AIs often
+  stall in the Future age). A final exam picks the champion; `--publish`
+  adds it as a profile.
+
+### Art and feel
+
+- Art direction (LOCKED, section 10) is now built for every age (owner:
+  "make the art as you've done for the first age for the remaining ages").
+  All 25 units, 15 turrets, 5 bases, every projectile and the buildings are
+  drawn in code in the rig style.
+- **Turrets** get a visible addition per upgrade level (owner: "slight
+  additions in sprite coolness"): level 1 reinforcement (bands, plates,
+  rivets), level 2 team banners plus an extra part (second barrel, bolt
+  rack), level 3 the elite look (gold trim, trophies, glowing parts). Heads
+  track their target, recoil and flash.
+- **Effects**: projectile trails and per-projectile impacts, scorch marks,
+  sparks on melee blows, exploding machines, coins for the player's kills,
+  particles on heals/shields/buffs, rubble from bases.
+- **Heavy impact shake** (owner: "more graceful"): Phaser's random jitter
+  is replaced by a damped vertical thump (`CAMERA_THUMP` in
+  `config/effects.config.ts`) for heavy units' blows and shots, special
+  strikes, exploding tanks and mechs, hits on the player's base and a base
+  falling, each with a cooldown so a line of heavies stays calm. Turret
+  splashes never thump (playtest round 4: mortar fire shook the screen
+  constantly). Section 8b's "small screen shakes" now means this thump.
+- **Themed UI**: the HUD wears the player's age (Stone dark wood and bone,
+  Castle slate and gold, Renaissance burgundy damask, Modern olive canvas,
+  Future navy grid; `config/uiTheme.config.ts`) and rebuilds on age-up.
+  Fonts Fredoka and Lilita One (SIL OFL, from npm). New title screen with a
+  parade of units from all ages.
+
+### Buildings rework (PROPOSED; section 11's LOCKED rules still hold)
+
+Owner: "I don't like how it's just 1 level then you can't interact with
+them until you go to the next age." Replaces section 11's PROPOSED
+"max level = age number":
+
+- **Five levels per age, 25 in all.** Each age opens five cheaper steps
+  (step costs x the tier's age factor, e.g. Mine 40 / 55 / 70 / 90 / 110 in
+  the Stone age); output grows steadily per level (Mine +0.4 gold/s at
+  level 1, +0.2 per level after, times the age factor; Library 0.25 XP/s
+  +0.1). Levels are kept on age-up, and higher levels stay locked behind
+  ages (LOCKED rules unchanged).
+- Research tier N now needs Forge level 5(N-1)+1 (1, 6, 11, 16, 21); every
+  Forge level also gives combat units +1% damage.
+- **Staged art**: each building gets a new look every five levels (a
+  Stone, Castle, Renaissance, Modern and Future version) and a new prop on
+  every level; level-ups bounce the building with dust and sparkles, and a
+  new stage flashes.
+- **Prototype: Barracks, Shrine, Market** (switch `extraBuildings`; section
+  11 LOCKED "Forge, Library and Mine for now", and section 9 DEFERRED more
+  investment buildings, so these are only a proposal for the owner to try):
+  Barracks trains 2% faster per level (floor 50%) and +1% unit HP per
+  level; Shrine recharges the special 1.5% faster and +3% special damage per
+  level; Market sells XP you don't need for your next age-up for gold (1.5
+  gold per XP, 0.4 XP/s at level 1).
+- **Prototype: building perks** (switch `buildingPerks`): every fifth level
+  of a building, pick one of two permanent perks (e.g. Mine: +15% mine gold
+  or +8% kill gold). A PERK! badge shows on the building until picked.
+
+### Prototype switches
+
+`config/features.config.ts` holds one switch per prototype (all default on,
+all PROPOSED); the title screen's **Experiments** button toggles them per
+browser (localStorage `aow-features`). Each prototype lives in its own files
+(`systems/experimental/`, `ui/experimental/`, its own config) and is only
+wired in when its switch is on, so dropping one means turning it off or
+deleting its files and the few lines that check the switch.
+
+- `buildingPerks`, `extraBuildings`: above.
+- `veterancy`: the fighter of the killing side nearest a kill gets the
+  credit; 1 / 3 / 6 kills give ranks with +10% / +20% / +35% max HP and
+  +10% / +20% / +30% damage, a full heal, and gold chevrons over the HP bar.
+- `ageDoctrines`: after each age-up, pick one of three doctrines from nine
+  (e.g. Shield Wall: melee +20% max HP; Volley Fire: ranged attack 15%
+  faster; Forced March: all units walk 15% faster). They stack across
+  ages. The AI picks what fits its army.
+- `warCry`: a second, free ability (W): every 45 s, 6 s of +30% speed and
+  +20% damage for the whole army. The AI uses it when its front meets the
+  enemy.
+- `conquest`: the roguelite mode below.
+
+### Conquest mode (prototype, switch `conquest`)
+
+Owner: "experiment with how this game could go beyond just a 1 time play,
+with roguelite elements or other options / other stage with higher
+difficulty". Section 9 DEFERRED "campaign, survival/roguelite modes"; this
+is built only as a switchable prototype for the owner to judge.
+
+- A **run** is five battles (Skirmish, Battle, Battle, Elite, Warlord).
+  Before each, pick one of two or three **nodes**: each is a battle against
+  its own difficulty and AI profile, with 0-3 **mutators** (Veteran foes:
+  enemy +25% HP; Fury; Glass cannons; Gold rush; Fortified: the enemy
+  starts with two upgraded turrets; Swift armies; War economy: enemy
+  income x1.5; Enemy scholars) and a Glory reward. Later nodes may start
+  in the Castle or Renaissance age with extra gold for both sides.
+- Win and pick one of three **relics** for the rest of the run (e.g.
+  Whetstone: your units +10% damage; Prospector's map: start with a Mine at
+  level 3; Watchtower: start with an upgraded turret). Lose once and the
+  run ends. No restarts inside a run; pausing offers Retreat (a loss).
+- Every win earns **Glory** (the stage's, plus its mutators', plus the
+  ascension level), kept between runs and spent in the **Hall of Glory** on
+  permanent unlocks: four relic choices, one reroll per run, a random
+  starting relic, +100 gold every battle, two more relics in the pool.
+- Clearing a run unlocks the next **Ascension** level (up to 10): every
+  enemy +8% HP, +6% damage and +10% income per level. This is the owner's
+  section 11 "difficulty (later)" idea, kept inside Conquest only.
+- Battle setups go through the normal rules (`ConquestSystem`: it grants
+  exactly the gold a purchase costs, then sends the usual request). Numbers
+  in `config/conquest.config.ts`; progress in localStorage.

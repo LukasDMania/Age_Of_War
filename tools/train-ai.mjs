@@ -54,6 +54,8 @@ const LABEL = String(opt('label', 'Trained'));
 const FITNESS = String(opt('fitness', 'balanced'));
 const PUBLISH = Boolean(opt('publish', false));
 const NO_BUILD = Boolean(opt('no-build', false));
+/** Also seed a fresh run with the champions of earlier runs (training/<other id>/champion.json). */
+const SEED_HOF = Boolean(opt('seed-hof', false));
 const OUT = path.join(ROOT, 'training', ID);
 const BUILD = path.join(ROOT, 'training', 'build');
 fs.mkdirSync(OUT, { recursive: true });
@@ -140,7 +142,7 @@ async function runAll(setups) {
 
 /* ---- Genomes ---------------------------------------------------------------- */
 
-const norm = (g) => GENES.map((id) => (g[id] - spec[id].min) / (spec[id].max - spec[id].min));
+const norm = (g) => GENES.map((id) => ((g[id] ?? spec[id].base) - spec[id].min) / (spec[id].max - spec[id].min));
 const denorm = (v) => Object.fromEntries(GENES.map((id, i) => [id, +(spec[id].min + Math.min(1, Math.max(0, v[i])) * (spec[id].max - spec[id].min)).toFixed(3)]));
 const gauss = () => Math.sqrt(-2 * Math.log(1 - Math.random())) * Math.cos(2 * Math.PI * Math.random());
 
@@ -233,6 +235,14 @@ if (fs.existsSync(statePath)) {
   log(`resuming at generation ${state.gen}`);
 } else {
   const seeds = handProfiles.filter((p) => p.genome).map((p) => norm(p.genome));
+  if (SEED_HOF) {
+    for (const dir of fs.readdirSync(path.join(ROOT, 'training'))) {
+      const file = path.join(ROOT, 'training', dir, 'champion.json');
+      if (dir === ID || !fs.existsSync(file)) continue;
+      seeds.push(norm(JSON.parse(fs.readFileSync(file, 'utf8')).genome));
+      log(`seeded with the champion of ${dir}`);
+    }
+  }
   const population = seeds.map((v) => ({ v }));
   while (population.length < POPULATION) {
     const seed = seeds[Math.floor(Math.random() * seeds.length)];

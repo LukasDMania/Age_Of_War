@@ -148,6 +148,15 @@ These come from the locked design, so the code must not contradict them:
 ## Repo notes
 
 - `src/main.ts` exists as of Phase 0. `?gallery` on the dev URL opens a
-  dev-only viewer of all placeholder textures.
-- The folder was not a git repository when this was written. Ask the owner
-  before running `git init`.
+  dev-only viewer of all placeholder textures; `/artlab.html` shows the rig
+  art (units, `?turrets`, `?buildings`).
+- The project is a git repository now (the owner's GitHub). Commit and push
+  only when the owner asks, to the branch you are given.
+- Art is drawn in code (`src/art/`); `utils/RigArt.ts`, `TurretArt.ts`,
+  `BaseArt.ts`, `BuildingArt.ts`, `FxArt.ts` turn it into textures on
+  demand. Gameplay code still refers only to texture keys.
+- Prototypes (2026-09-26) are behind switches in `config/features.config.ts`
+  and live in `systems/experimental/` and `ui/experimental/`. Keep new
+  experiments the same way: own files, wired only when the switch is on.
+- `?headless` (dev) simulates without drawing; `tools/train-ai.mjs` trains
+  AI genomes by self-play (README, "Training an AI profile").

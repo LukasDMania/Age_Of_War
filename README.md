@@ -19,6 +19,13 @@ feel (screen shake, age-up banners). Numbers are first-pass and meant to be
 tuned from playtests. See
 `docs/IMPLEMENTATION_PLAN.md` for the build order and progress.
 
+Since then: buildings behind the base (Mine, Library, Forge; five levels per
+age) and Forge research, code-drawn art for every unit, turret, base,
+building and projectile, an age-themed UI, AI profiles (including AIs
+trained by self-play), and switchable prototypes (building perks, Barracks /
+Shrine / Market, veterancy, age doctrines, War Cry, and the Conquest
+roguelite mode). `docs/OVERNIGHT_NOTES.md` summarizes the latest session.
+
 ## Setup and running
 
 You need Node.js 18 or newer. In the project folder:
@@ -73,6 +80,12 @@ Stone age, times the age factor later (about 4, 10, 21 and 46 gold/s).
 - `?ai=easy`, `?ai=normal`, `?ai=hard` or `?ai=off` in the URL skips the
   menu and starts a match against that enemy (`off` = nobody plays it). The
   top-right panel shows the enemy's age and difficulty.
+- **AI profiles**: on the title screen, `Q`/`E` (or the arrows) pick the
+  enemy's strategy: Classic (default), Balanced, Warlord, Turtle, Economist,
+  Tactician, and trained ones. `?profile=turtle` in the URL does the same.
+- **Experiments** (title screen, top right) switches the prototypes on or
+  off for your browser. **Conquest** (title screen, or `C`) opens the
+  roguelite campaign.
 
 - `P`, `Esc` or the `II` button at the top pauses. The pause panel has
   Resume, Restart and Main menu (keys Enter, `R`, `M`). When a base falls,
@@ -104,6 +117,31 @@ Stone age, times the age factor later (about 4, 10, 21 and 46 gold/s).
     the numbers the game-over panel will report;
     `__aow.setSpeed(4)` fast-forwards in real time; `__aow.bus` is the bus.
 - `npm run typecheck` and `npm run build` must pass before a phase counts as done.
+- `http://localhost:5173/artlab.html` (dev server) draws the rig art for
+  review: `?age=2`, `?kinds=knight,tank`, `?anims=walk,attack`, `?scale=2`,
+  `?bounds` (measured frame boxes), `?turrets`, `?buildings`.
+- `?headless` (dev server) simulates without drawing, for fast automated
+  runs; `window.__aowTrain.runMatch(...)` plays a whole match
+  (`src/dev/trainHarness.ts`).
+
+### Training an AI profile
+
+`tools/train-ai.mjs` evolves AI genomes by self-play in headless Chromium
+(needs Playwright: `npm i -D playwright && npx playwright install chromium`,
+or set `PLAYWRIGHT_MODULE` and `CHROMIUM_PATH`):
+
+```bash
+node tools/train-ai.mjs --generations 30 --population 20 --workers 3 \
+  --id trained --label "Trained" --publish
+```
+
+It builds a dev bundle into `training/build`, logs each generation to
+`training/<id>/log.jsonl` (resumes from `state.json`), writes the winner to
+`training/<id>/champion.json`, and with `--publish` adds it to
+`src/config/aiTrained.json`, where it shows up as a menu profile. Other
+options: `--fitness aggressive` (rewards pushing the front and quick wins more), `--seed-hof`
+(start from the champions of earlier runs), `--minutes` (match time limit),
+`--no-build`.
 
 ## What makes it different from the original
 
@@ -122,8 +160,12 @@ Full details: `docs/GAME_DESIGN.md`.
 
 ## Structure
 
-- `src/scenes/`: Boot, Preload, Menu (title and difficulty), Game, and the
-  dev-only texture gallery.
+- `src/scenes/`: Boot, Preload, Menu (title and difficulty), Game, Conquest
+  (prototype campaign screen), and the dev-only texture gallery.
+- `src/art/`: the code-drawn art (units, turrets, bases, buildings,
+  projectiles and effects); `src/utils/*Art.ts` turn it into textures.
+- `src/systems/experimental/`, `src/ui/experimental/`: prototypes, each
+  wired in only when its switch in `src/config/features.config.ts` is on.
 - `src/ui/`: `HUDScene` (a parallel scene on top of the game),
   `OverlayScene` (pause and game-over panel, on top of the HUD), `UnitBuyPanel`
   and `TurretPanel` (the two tabs), `SpecialButton`, `UiButton`, `HudBar`, and
@@ -150,8 +192,8 @@ full event list is in `docs/IMPLEMENTATION_PLAN.md`.
 
 ## Art
 
-Unit, turret, base and projectile textures are generated at startup as
-placeholders. Real unit art is being swapped in one unit at a time:
+Units, turrets, bases, buildings, projectiles and effects are drawn in code
+in the "rig" style (`src/art/`), per age and on demand. Older notes:
 
 - A unit listed in `src/config/unitArt.config.ts` is drawn from sprite
   strips in `public/assets/sprites/units/<unitId>/` (frames facing right;

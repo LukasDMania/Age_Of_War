@@ -3,12 +3,13 @@
 Handoff document. Read `CLAUDE.md` (rules) and `docs/GAME_DESIGN.md` (what
 we're building) first, then work through the phases below **in order**.
 
-**Current status:** All phases (0 to 13) are done (see Session log). The
-owner is playtesting next and will give general directions; features are
-expected to change, so long balance simulations are on hold. The owner reviewed the phase 4-7
-choices; the Phase 8 to 13 choices are listed under "Choices to review" in
-the latest session log entries. The folder is intentionally not a git
-repository yet; the owner said not to `git init` or push for now.
+**Current status:** Phases 0 to 17 are done (see Session log; 15 and 16
+are log-only). Phase 17 was an overnight session on the owner's list
+(art for every age, effects, themed UI, a trained AI, a building rework and
+switchable prototypes including a roguelite mode); its choices to review
+are in the last Session log entry and `docs/OVERNIGHT_NOTES.md`. The repo
+is on git now (the owner's GitHub; work of that session is on the branch
+`claude/gallant-goldberg-kmxnuj`).
 
 ## How to work
 
@@ -303,6 +304,37 @@ Owner direction 2026-09-26 (GAME_DESIGN section 11).
 Acceptance: both sides can build, upgrade and research by the rules; the AI
 uses them; typecheck and build pass.
 
+## Phase 17: Overnight session (owner's list, 2026-09-26)
+
+Design in GAME_DESIGN section 13. Prototypes are behind
+`config/features.config.ts` switches.
+
+- [x] AI opening per difficulty (`AiOpening`): eased income, army cap, no
+  early heavies or offensive special.
+- [x] Rig art for all 25 units (`src/art/`: rigKit, rigFigure, rigMounts,
+  rigMachines, rigDraw), drawn per age on demand and released for ages
+  nobody is near; `/artlab.html` dev review page.
+- [x] Turret art (15 turrets, mount + tracking head, recoil, flash, a new
+  look per upgrade level).
+- [x] Projectile art, trails, impact effects (`entities/ImpactEffects.ts`),
+  camera thump instead of shake (`entities/CameraThump.ts`), base art per
+  age with cracks.
+- [x] Themed UI per age (`config/uiTheme.config.ts`, `addThemedPanel`),
+  new fonts, title screen.
+- [x] Utility AI with genomes and profiles (`systems/UtilityAI.ts`,
+  `config/aiGenome.config.ts`), headless sim mode (`?headless`), training
+  harness (`src/dev/trainHarness.ts`, `tools/train-ai.mjs`), trained
+  profiles in `config/aiTrained.json`.
+- [x] Buildings: five levels per age, staged art, level-up celebration;
+  prototypes Barracks/Shrine/Market and building perks.
+- [x] Prototypes: veterancy, age doctrines, War Cry, Experiments panel.
+- [x] Prototype: Conquest mode (`scenes/ConquestScene.ts`,
+  `state/conquestState.ts`, `systems/experimental/ConquestSystem.ts`,
+  `config/conquest.config.ts`).
+
+Acceptance: every prototype can be switched off and the game still runs;
+typecheck and build pass; checked in headless Chromium screenshots.
+
 ---
 
 ## Appendix A: Event catalog
@@ -313,7 +345,8 @@ table current: add a row whenever you add an event. `side` is always
 
 Payload types live in `EventPayloads` in `utils/EventBus.ts`. Details the
 tables leave open: `gold-changed.source` is a `GoldSource` (`'kill' | 'mine'
-| 'economy-unit' | 'purchase' | 'refund' | 'cheat'`), `unit-queue-changed.queue`
+| 'market' | 'ai-income' | 'economy-unit' | 'purchase' | 'refund' |
+'conquest' | 'cheat'`; `market` and `conquest` are prototypes), `unit-queue-changed.queue`
 is a list of `{ unitId, remainingMs }`, and `modifier-applied.stat` is a
 `ModifiableStat`.
 
@@ -338,6 +371,10 @@ validates and acts):
 | `game-speed-requested` | `{ multiplier }` | GameScene (HUD speed button) |
 | `camera-focus-requested` | `{ target: 'lane' \| 'buildings' }` | GameScene (HUD tabs) |
 | `background-cycle-requested` | `{}` | GameScene (HUD BG button; playtest) |
+| `choose-perk-requested` | `{ side, buildingId, choice }` (`choice` `'a' \| 'b'`) | BuildingSystem (prototype `buildingPerks`; HUD perk popup, both AIs) |
+| `choose-doctrine-requested` | `{ side, doctrineId }` | DoctrineSystem (prototype `ageDoctrines`; HUD popup, DoctrineAi) |
+| `war-cry-requested` | `{ side }` | WarCrySystem (prototype `warCry`; HUD button or W, WarCryAi) |
+| `conquest-continue-requested` | `{}` | GameScene (prototype `conquest`; game-over Continue or pause Retreat: records a retreat as a loss, returns to the campaign screen) |
 
 **Notifications** (emitted by systems; anyone may listen):
 
@@ -369,6 +406,15 @@ validates and acts):
 | `research-completed` | `{ side, researchId, tier }` | BuildingSystem |
 | `game-speed-changed` | `{ multiplier }` | GameScene |
 | `background-changed` | `{ id, name }` | GameScene |
+| `projectile-impact` | `{ side, key, x, y, radius, target }` (`target` `'unit' \| 'base' \| 'ground'`) | ProjectileSystem (feedback: impact effects) |
+| `unit-struck` | `{ side, instanceId, unitId, slot, x, frontX, ranged }` | CombatSystem (feedback: a blow landed or a shot left; heavies thump the camera) |
+| `turret-fired` | `{ side, slotIndex, turretId, x, y }` (muzzle position) | TurretSystem (feedback: muzzle effects) |
+| `building-perk-chosen` | `{ side, buildingId, choice, picks }` | BuildingSystem (prototype `buildingPerks`) |
+| `unit-promoted` | `{ side, instanceId, rank, x, topY }` | VeterancySystem (prototype `veterancy`) |
+| `doctrine-offered` | `{ side, age, options }` (doctrine ids) | DoctrineSystem (prototype; 400 ms of sim time after an age-up) |
+| `doctrine-chosen` | `{ side, doctrineId }` | DoctrineSystem (prototype) |
+| `war-cry-used` | `{ side, durationMs, positions }` (x of every rallied unit) | WarCrySystem (prototype) |
+| `war-cry-cooldown-changed` | `{ side, remainingMs, totalMs }` | WarCrySystem (prototype; in 100 ms steps) |
 
 ## Appendix B: Data shape sketches
 
@@ -1257,3 +1303,59 @@ decisions made, anything the owner needs to confirm.
   - AI reserve back to 2 cheap fighters (holding back the planned unit's
     price stopped the hard AI from ever building turrets).
 
+- 2026-09-26 (overnight, owner away): Phase 17, the owner's list. Design in
+  GAME_DESIGN section 13; the owner-facing summary with ideas and how to
+  turn things off is `docs/OVERNIGHT_NOTES.md`.
+  - AI opening (PROPOSED, `AiOpening`): income 20 / 25 / 30% at the start
+    easing to full over 5 / 4 / 3 min, army cap 2 / 2 / 3 growing 2 / 2.5 /
+    3 per minute, heavies from 150 / 100 / 70 s, queue depth 1, no offensive
+    special before 150 / 100 / 60 s. Measured on hard: 3 units at 10 s and
+    6 at 60 s (was 6 and 12 plus a mammoth). `buildingLevelCap` in the
+    difficulty presets now means levels per age (the AI's cap is
+    5 x age + that).
+  - Art: all 25 units as rigs (`src/art/`), per-unit measured frame boxes
+    and `windupMs` matched to the strike frame; sheets drawn per age on
+    demand and released for ages more than one away from both sides
+    (28-47 MB of rig textures measured during a match instead of several
+    hundred). 15 turrets with a look per upgrade level, tracking heads,
+    recoil and muzzle flash (shots leave from the drawn muzzle). Bases per
+    age (same 120x200 box, so hits are unchanged), ledges per age, cracks
+    below 66% / 33%. Projectiles, trails, impacts, scorch marks. Screen
+    shake replaced by `CAMERA_THUMP` (PROPOSED numbers in
+    `config/effects.config.ts`; `SCREEN_SHAKE` removed). Buildings drawn
+    per level with five staged looks.
+  - UI: per-age themes, patterns and the ornate Kenney frame; fonts from
+    npm (`@fontsource/fredoka`, `@fontsource/lilita-one`, SIL OFL); the HUD
+    restarts itself in the new look when the player ages up (keeps tab,
+    speed and the age banner). New title screen.
+  - AI: `UtilityAI` + genomes + profiles (menu Q/E, `?profile=`), classic
+    stays the default. `?headless` dev mode (Canvas renderer, hidden camera,
+    no HUD, no rig art, effects muted) runs a 20-minute match in about 2 s.
+    `tools/train-ai.mjs` trains genomes by self-play (see README).
+  - Buildings (changes the PROPOSED "max level = age number"): five levels
+    per age, step costs x the age factor, steady per-level output, research
+    tier N at Forge level 5(N-1)+1, +1% unit damage per Forge level.
+  - Prototypes behind `config/features.config.ts` (all default on; the
+    title screen's Experiments button switches them per browser):
+    `buildingPerks`, `extraBuildings` (Barracks, Shrine, Market),
+    `veterancy`, `ageDoctrines`, `warCry`, `conquest`. Extra buildings and
+    Conquest touch DEFERRED items (GAME_DESIGN section 9); the owner asked
+    for such experiments, so they are built only as switchable prototypes.
+  - Rules kept: the AI and all prototypes act through `*-requested` events
+    (new: `choose-perk-requested`, `choose-doctrine-requested`,
+    `war-cry-requested`, `conquest-continue-requested`); Conquest battle
+    grants are exactly the price of each purchase, paid in with the new
+    gold source `conquest` and then requested as usual. New feedback events
+    `projectile-impact`, `unit-struck`, `turret-fired`. All added to
+    Appendix A.
+  - Checked: typecheck and build pass; screenshots in headless Chromium of
+    every age's units, turrets, bases, effects, the HUD per age, the
+    buildings at each stage, the prototypes' popups and the Conquest
+    screens; a Conquest battle set up with a Renaissance start, turrets,
+    a Forge and research; an AI-vs-AI match with every prototype switched
+    off (no errors). Not checked: real-time play with a mouse by a person,
+    audio (none), mobile.
+  - Choices to review: every number above (PROPOSED); whether Barracks,
+    Shrine, Market, perks, veterancy, doctrines, War Cry and Conquest stay;
+    whether the HUD should restyle on age-up; the Classic vs trained AI as
+    the default.

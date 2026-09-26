@@ -349,7 +349,9 @@ export class ImpactEffects {
       this.ring(x, r, 0xffc070);
       this.scorch(x, r * 1.6);
     }
-    if (heavy || radius >= CAMERA_THUMP.bigBlastRadius) this.thumpAt(CAMERA_THUMP.bigBlast, x);
+    // Only specials and exploding machines thump: turret splashes never do
+    // (the owner turned off shaking from mortar fire, playtest round 4).
+    if (heavy) this.thumpAt(CAMERA_THUMP.bigBlast, x);
   }
 
   /** A thump for something at world x, only when it is on screen. */
@@ -396,7 +398,8 @@ export class ImpactEffects {
         this.burst('smoke', 2, x, gy - 4);
         break;
       case 'explosion':
-        this.explosion(x, gy, radius);
+        // The airstrike special's bombs thump; mortars, grenades and shells don't.
+        this.explosion(x, gy, radius, key === 'proj-bomb');
         break;
       case 'meteor':
         this.explosion(x, gy, Math.max(radius, 30), true);

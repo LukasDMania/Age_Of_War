@@ -90,10 +90,9 @@ export const CAMERA_THUMP: {
   heavyStrike: ThumpConfig;
   /** The player's base taking a hit. */
   baseHit: ThumpConfig;
-  /** Big explosions (splash radius >= `bigBlastRadius`): specials, heavy shells. */
+  /** Big explosions: special strikes (meteors, bombs, orbital) and exploding tanks and mechs, never turret splashes. */
   bigBlast: ThumpConfig;
   baseDestroyed: ThumpConfig;
-  bigBlastRadius: number;
   /** The bounce never exceeds this, however many thumps overlap. */
   maxOffset: number;
 } = {
@@ -101,7 +100,6 @@ export const CAMERA_THUMP: {
   baseHit: { amplitude: 1.2, durationMs: 240, cycles: 1.5, cooldownMs: 700 },
   bigBlast: { amplitude: 1.4, durationMs: 300, cycles: 1.5, cooldownMs: 600 },
   baseDestroyed: { amplitude: 7, durationMs: 1100, cycles: 4, cooldownMs: 0 },
-  bigBlastRadius: 50,
   maxOffset: 8,
 };
 
