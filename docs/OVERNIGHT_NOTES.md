@@ -15,7 +15,8 @@ topic. Design details: `docs/GAME_DESIGN.md` section 13. Per-step log:
    off. **Conquest** (or `C`) opens the roguelite campaign.
 3. Play a Normal match against Classic. The enemy should now build up
    gradually instead of sending a mammoth and a crowd of clubbers in the
-   first minute.
+   first minute. Then try the **Trained** or **Raider** profile, the
+   strongest AIs (see "AI training results").
 4. Press `N` (dev only) a few times to jump through the ages: units,
    turrets, bases and the HUD all change their look each age. `G` gives
    gold, so you can buy turrets and upgrade them to see each level's look.
@@ -188,6 +189,7 @@ What this means for playtesting:
 | `e4387d1` | Docs; turret splashes no longer thump |
 | `1416844` | Conquest late starts skip the AI opening |
 | `97ed46c` | AI ladder tool; first training run |
+| `00c44ca` | Trained and Raider profiles, results |
 
 ## Decisions I made that you may want to change
 
@@ -211,11 +213,13 @@ What this means for playtesting:
 
 ## Things I noticed
 
-- **Late-game stalemates.** In AI-vs-AI tests, matches between strong AIs
-  often stall in the Future age with both bases nearly full: both sides
+- **Late-game stalemates.** Some AI-vs-AI matches between the hand-made
+  profiles stall in the Future age with both bases nearly full: both sides
   have maxed buildings and turrets, and the 5-unit training queue caps
-  what they can spend (one AI sat on 35,000 gold). Ideas for this are
-  below ("late-game gold sinks").
+  what they can spend (a Turtle AI sat on 35,000 gold). In the ladder,
+  2-10 of each hand-made profile's 28 games hit the 15-minute limit; the
+  trained AIs' games never did. Ideas for this are below ("late-game gold
+  sinks").
 - **Conquest late starts:** the AI's gentle opening is meant for the Stone
   age, so an enemy that starts in a later age skips it and plays at full
   pace from the first second.
