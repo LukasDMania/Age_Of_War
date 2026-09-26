@@ -217,8 +217,8 @@ What this means for playtesting:
   profiles stall in the Future age with both bases nearly full: both sides
   have maxed buildings and turrets, and the 5-unit training queue caps
   what they can spend (a Turtle AI sat on 35,000 gold). In the ladder,
-  2-10 of each hand-made profile's 28 games hit the 15-minute limit; the
-  trained AIs' games never did. Ideas for this are below ("late-game gold
+  2 to 10 of each other profile's 28 games hit the 15-minute limit
+  (Classic 2, Turtle and Economist 10); the trained AIs' games never did. Ideas for this are below ("late-game gold
   sinks").
 - **Conquest late starts:** the AI's gentle opening is meant for the Stone
   age, so an enemy that starts in a later age skips it and plays at full
