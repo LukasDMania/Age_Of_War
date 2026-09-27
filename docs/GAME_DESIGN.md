@@ -136,6 +136,8 @@ PROPOSED numbers (all in config, tune in playtests):
   bounty multiplier so the enemy is tempted to hunt them. (Implemented as a
   config knob, currently 1: no extra bounty.)
 - Every age's money unit pays back its price in about 77 s (Phase 9).
+- Rework 2026-09-27 (switch `moneyUnitRework`, section 14): income grows
+  while the unit lives, kills near it pay extra, and its bounty is halved.
 
 Support units (PROPOSED, Phase 9): money and utility units have no attack,
 so they don't lead the army. They follow about 140 px (money) or 40 px
@@ -503,6 +505,9 @@ deleting its files and the few lines that check the switch.
 
 ### Conquest mode (prototype, switch `conquest`)
 
+(First version, 2026-09-26. Replaced by the campaign of 2026-09-27, see
+section 14; kept here for history.)
+
 Owner: "experiment with how this game could go beyond just a 1 time play,
 with roguelite elements or other options / other stage with higher
 difficulty". Section 9 DEFERRED "campaign, survival/roguelite modes"; this
@@ -531,3 +536,90 @@ is built only as a switchable prototype for the owner to judge.
   battle that starts in a later age, the enemy AI skips its Stone-age
   opening. Numbers
   in `config/conquest.config.ts`; progress in localStorage.
+
+## 14. Playtest round 5 (owner, 2026-09-27)
+
+Owner feedback after playing the overnight build, then "don't ask anything,
+just go ahead". Numbers PROPOSED unless tagged.
+
+- **Death animation jumped forward (bug, fixed).** Phaser mirrors a flipped
+  sprite inside its frame, so every enemy sprite with an off-center origin
+  (units, their death strips, turret heads, muzzle flashes) was drawn
+  shifted from its real position, and the shift changed at death. Enemy
+  art is now an exact mirror of the player's (`utils/spriteOrigin.ts`).
+- **Mammoth too strong.** It beat equal gold of clubbers, slingers and
+  mixed armies. Now 90 gold (was 80), 240 HP (300), 14 damage (16). Knight
+  600 HP (660) and cuirassier 1300 HP (1440), milder. Heavies still edge
+  out equal gold of pure ranged units in every age (packed ranged units die
+  one by one at the front); not tuned further.
+- **Veterancy must not reset HP (LOCKED, owner).** A promotion raises max
+  HP; current HP stays as it was.
+- **Catapult crew is two units wide** (footprint 60 px instead of 30; its
+  art is centered on it). Any unit can now set its own footprint
+  (`UnitDefinition.bodyWidth`).
+- **Heavy unit area damage doesn't hurt bases (LOCKED, owner: "heavy unit
+  AOE shouldn't damage base").** Built as: unit shots with splash (tank
+  shells, mech plasma, catapult boulders) deal no damage to a base they
+  hit (`AREA_SHOT_BASE_DAMAGE_MULT` = 0). Melee blows (including the
+  mammoth's trample hits) and plain shots still hit bases.
+- **Money units** (owner: "rarely valuable; make them more useful but not
+  always easy money"; switch `moneyUnitRework`, `MONEY_UNIT_REWORK`):
+  income starts at 50% and grows to 200% after 60 s alive (a gold bar under
+  the HP bar shows it); enemies killed within 170 px of a living friendly
+  money unit pay +35% kill gold per such unit (max +100%); killing a money
+  unit pays half the old bounty. The section 4 LOCKED rules (expensive, gold
+  while alive, army penalty while alive, same walking rules) are unchanged.
+- **Age snowball** (owner: "I go ahead in age before the enemy, then it's
+  basically over for them"; switch `ageCatchUp`): per age behind, +50% XP
+  from kills and +35% turret damage (both sides); an AI that is behind
+  earns catch-up XP to reach its next age within 150 / 100 / 70 s (easy /
+  normal / hard) and ages up without delay. Measured: after an early player
+  age-up the AI followed in 60 s on normal (was 180 s) and 35 s on hard
+  (was 130 s). The AI's own income was already its exception to "same
+  rules" (section 8); this extends it.
+
+### Conquest campaign (prototype, switch `conquest`)
+
+Owner: "flesh out the roguelite idea more where it can really be a long
+term idea, not a 1 h run idea, more like a 10 h game idea"; "we never get to
+the space age". Replaces the five-battle run of section 13.
+
+- **A run marches through history: five chapters, one per age** (Dawn of
+  War, Age of Castles, Powder and Sail, The Great Wars, Among the Stars).
+  Battles start in the chapter's age and **can't age up** (a per-side age
+  cap, `SideState.maxAge`); the campaign moves to the next age after each
+  chapter's boss, so every full run ends in the Future.
+- **Chapter map:** three columns of three nodes, then a boss. A node leads
+  to the neighbouring rows of the next column, so the route matters. Node
+  types: Battle, Elite (harder, pays a relic), Camp, Event, Treasure (a
+  relic, no fight), and the chapter's **warlord** (Grok the Mammoth King,
+  Baron Blackwall, the Iron Admiral, General Kessler, the Overmind), each a
+  hard AI with its own rules.
+- **Banners** are the run's lives: 3 at the start (5 max); a lost battle
+  costs one (a lost boss is fought again), a boss win gives one back, camps
+  can restore one. No banners left ends the run.
+- **Supplies**, earned by wins (more for a healthy base), buy **camp
+  upgrades** for the rest of the run (Drill yard, Armory, Treasury, Masons,
+  Surveyors, Smithy, Recruiting office).
+- **Events** (10): choices and gambles (mercenaries, a cursed shrine,
+  deserters, a fever, a wandering smith, dice, an ambush...).
+- **Relics** (21, some rare), after elites, bosses and treasure, with
+  rerolls from Legacy unlocks.
+- **Commanders** (7) shape a run (e.g. the Warlord: units +15% damage,
+  -10% HP; the Castellan: two turrets every battle). Six are unlocked by
+  **achievements** (11: win 3 boss fights, reach chapter 3, hold 6 relics,
+  reach the Future, lose 3 runs, win a run...).
+- **Legacy** (Hall of Glory): 17 permanent unlocks in four tiers bought with
+  Glory; a tier opens after enough unlocks (0 / 3 / 7 / 12). **Ascension**
+  0-10 as before (a cleared run opens the next level).
+- **Siege:** age-locked battles had no tiebreaker (AI-vs-AI chapter
+  battles stalled for 20 minutes). From minute 5 all units deal +20% damage
+  per minute (up to x3); from minute 8 siege guns hit both bases every 4 s,
+  harder each minute. Battles end within about 15 minutes; the side with
+  the healthier base wins a stalemate.
+- Length: a strong run is about 20 nodes and 14 battles (~1.5-2.5 h) and
+  earns ~180 Glory; the Legacy tree costs ~1000, so unlocking it takes
+  about 6 full clears (10+ hours), with commanders and Ascension beyond.
+- Numbers in `config/conquest.config.ts`; state in `state/conquestState.ts`
+  (localStorage; runs from the first version are dropped, Glory and
+  matching unlocks carry over).

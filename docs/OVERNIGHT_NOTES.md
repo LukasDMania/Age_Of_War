@@ -1,3 +1,56 @@
+# Session notes
+
+## Round 2 (2026-09-27): your playtest feedback
+
+Everything is on `main`, one commit per item. Details: `docs/GAME_DESIGN.md`
+section 14; per-step log: `docs/IMPLEMENTATION_PLAN.md` Phase 18.
+
+| You said | What changed |
+| --- | --- |
+| Death animation starts in front of where they die | Bug: Phaser mirrors flipped sprites inside their frame, so every enemy sprite with an off-center anchor was drawn off its real position, and the death strip's shift was different. Fixed for units, corpses, turret heads and muzzle flashes; both sides are now exact mirror images. |
+| Mammoth very strong | 80 -> 90 gold, 300 -> 240 HP, 16 -> 14 damage (it beat equal gold of anything). Knight and cuirassier -10% HP. |
+| Veterancy resets HP | Promotions raise max HP but never heal. |
+| Money units rarely valuable | Switch `moneyUnitRework`: income starts at 50% and grows to 200% after a minute alive (gold bar under the unit), kills near your money units pay up to +100% gold, and the enemy's bounty for killing one is halved. |
+| Catapult hidden between units | Two units wide (60 px footprint), art centered on it. |
+| Heavy unit AOE shouldn't damage base | Area shots (tank shells, mech plasma, catapult boulders) deal no damage to bases. Melee blows still do. |
+| Going ahead in age wins the game | Switch `ageCatchUp`: the side behind gets +50% kill XP and +35% turret damage per age behind; a lagging AI catches up in about a minute (it took 2-3 minutes before). |
+| Conquest never reaches the space age; make it a 10 h game | Conquest is now a five-chapter campaign, one chapter per age, from Stone to Future. See below. |
+
+**The new Conquest campaign** (title screen: Conquest, or C):
+
+- Pick a **commander** (one at first, six more unlock through achievements),
+  then march. Each chapter is a **map**: three columns of three nodes
+  (battles, elites, camps, events, treasure) linked by roads, then the
+  chapter's **warlord** (Grok the Mammoth King, Baron Blackwall, the Iron
+  Admiral, General Kessler, the Overmind).
+- Battles are fought in the chapter's age and can't age up; the campaign
+  advances the age after each boss, so every full run ends among the stars.
+- **Banners** are your lives (lose a battle, lose a banner). **Supplies** from
+  wins buy **camp upgrades** for the run. **Relics** come from elites, bosses
+  and treasure. **Events** offer choices and gambles.
+- Between runs: **Glory** buys **Legacy** unlocks (17, in four tiers) in the
+  Hall of Glory, which also lists the **achievements**. Clearing a run opens
+  the next **Ascension** level.
+- A **siege** rule ends stalemates: from minute 5 all units hit harder every
+  minute; from minute 8 siege guns hit both bases. Without it, AI-vs-AI
+  chapter battles stalled for 20 minutes in every age.
+- Size: a strong run is ~20 nodes and ~14 battles (1.5-2.5 h); the Legacy
+  tree takes about six full clears, with commanders and Ascension beyond.
+- Old five-battle runs are dropped; your Glory carries over.
+
+**Please check / decide:**
+
+1. Area shots no longer hurt bases, so an army of only tanks or mechs can't
+   finish a base. Is that what you meant, or only the catapult?
+2. The catch-up numbers and the siege timing are first guesses.
+3. The campaign's numbers (banners, supplies, Glory, Legacy costs) come from
+   simulated runs, not from a person playing hours of it.
+4. Heavies still beat equal gold of pure ranged units in every age. The
+   counter triangle would need ranged units to survive longer at the front
+   (a design question, so I left it).
+
+---
+
 # Overnight session notes (2026-09-26)
 
 Hi! This covers everything from your list, what to look at first, what I

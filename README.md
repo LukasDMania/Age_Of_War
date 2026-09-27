@@ -23,8 +23,10 @@ Since then: buildings behind the base (Mine, Library, Forge; five levels per
 age) and Forge research, code-drawn art for every unit, turret, base,
 building and projectile, an age-themed UI, AI profiles (including AIs
 trained by self-play), and switchable prototypes (building perks, Barracks /
-Shrine / Market, veterancy, age doctrines, War Cry, and the Conquest
-roguelite mode). `docs/OVERNIGHT_NOTES.md` summarizes the latest session.
+Shrine / Market, veterancy, age doctrines, War Cry, a money-unit rework, age
+catch-up, and Conquest: a roguelite campaign through all five ages with
+commanders, relics, camps, events, bosses and a Legacy tree).
+`docs/OVERNIGHT_NOTES.md` summarizes the latest sessions.
 
 ## Setup and running
 

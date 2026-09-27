@@ -3,8 +3,9 @@
 Handoff document. Read `CLAUDE.md` (rules) and `docs/GAME_DESIGN.md` (what
 we're building) first, then work through the phases below **in order**.
 
-**Current status:** Phases 0 to 17 are done (see Session log; 15 and 16
-are log-only). Phase 17 was an overnight session on the owner's list
+**Current status:** Phases 0 to 18 are done (see Session log; 15 and 16
+are log-only). Phase 18 (2026-09-27) is the owner's fifth playtest round
+and the Conquest campaign. Phase 17 was an overnight session on the owner's list
 (art for every age, effects, themed UI, a trained AI, a building rework and
 switchable prototypes including a roguelite mode); its choices to review
 are in the last Session log entry and `docs/OVERNIGHT_NOTES.md`. The repo
@@ -335,6 +336,32 @@ Design in GAME_DESIGN section 13. Prototypes are behind
 Acceptance: every prototype can be switched off and the game still runs;
 typecheck and build pass; checked in headless Chromium screenshots.
 
+## Phase 18: Playtest round 5 and the Conquest campaign (2026-09-27)
+
+Design in GAME_DESIGN section 14.
+
+- [x] Flipped sprites keep their anchor (`utils/spriteOrigin.ts`): enemy
+  corpses no longer jump forward; enemy units and turret heads line up.
+- [x] Mammoth, knight and cuirassier nerfs; veterancy promotions don't heal
+  (`statusOps.applyModifier` HP mode `keep`).
+- [x] `UnitDefinition.bodyWidth`; the catapult crew is two units wide.
+- [x] Area shots don't damage bases (`AREA_SHOT_BASE_DAMAGE_MULT`).
+- [x] Money-unit rework (switch `moneyUnitRework`): growing income, loot,
+  smaller bounty, income bar.
+- [x] Age catch-up (switch `ageCatchUp`, `systems/ageCatchUp.ts`).
+- [x] Per-side age cap (`SideState.maxAge`, `age-capped` rejection, Age
+  locked button).
+- [x] Conquest campaign: chapters, map, nodes, bosses, banners, supplies,
+  camps, events, relics, commanders, achievements, Legacy tiers, siege
+  (`config/conquest.config.ts`, `state/conquestState.ts`,
+  `systems/experimental/ConquestSystem.ts`, `scenes/ConquestScene.ts`,
+  `ui/experimental/conquestWidgets.ts`).
+
+Acceptance: typecheck and build pass; 12 simulated runs of the campaign
+state machine finish without getting stuck; AI-vs-AI chapter battles in
+every age end within about 15 minutes; screens checked in headless
+Chromium.
+
 ---
 
 ## Appendix A: Event catalog
@@ -415,6 +442,7 @@ validates and acts):
 | `doctrine-chosen` | `{ side, doctrineId }` | DoctrineSystem (prototype) |
 | `war-cry-used` | `{ side, durationMs, positions }` (x of every rallied unit) | WarCrySystem (prototype) |
 | `war-cry-cooldown-changed` | `{ side, remainingMs, totalMs }` | WarCrySystem (prototype; in 100 ms steps) |
+| `siege-changed` | `{ mult }` (every unit's siege damage multiplier) | ConquestSystem (prototype; each minute of siege in a Conquest battle) |
 
 ## Appendix B: Data shape sketches
 
@@ -1366,3 +1394,33 @@ decisions made, anything the owner needs to confirm.
     Shrine, Market, perks, veterancy, doctrines, War Cry and Conquest stay;
     whether the HUD should restyle on age-up; the Classic vs trained AI as
     the default.
+- 2026-09-27: Phase 18, playtest round 5 (owner away: "don't ask anything
+  just go ahead"). Design in GAME_DESIGN section 14. Each item was pushed to
+  `main` as its own commit.
+  - Bug: enemy corpses jumped forward. Cause: Phaser mirrors flipped
+    sprites inside their frame, so off-center origins landed on the
+    mirrored spot (enemy units, death strips, turret heads and flashes were
+    all drawn off their real position). `flipOriginX` fixes all of them;
+    checked with mirrored melee screenshots in two ages.
+  - Balance (PROPOSED values changed): mammoth 80 -> 90 gold, 300 -> 240
+    HP, 16 -> 14 damage; knight 660 -> 600 HP; cuirassier 1440 -> 1300 HP.
+    Measured with equal-gold fights (the mammoth used to beat 90 gold of
+    slingers with a third of its HP left). Veterancy no longer heals.
+  - Catapult crew footprint 60 px (`bodyWidth`), art centered
+    (`rigArt` anchorX). Area shots deal no damage to bases (owner call).
+  - Money-unit rework and age catch-up behind new switches (see section
+    14 for numbers). Catch-up measured: AI follows an early player age-up
+    in 60 s (normal) / 35 s (hard), was 180 s / 130 s.
+  - Conquest rebuilt as a five-chapter campaign with meta progression.
+    Twelve simulated runs (random choices, 60-95% win rates) all ended in a
+    win or a loss without a stuck state; a strong run is ~20 nodes, ~14
+    battles, ~180 Glory. Age-locked battles stalled AI-vs-AI for 20
+    minutes in every age, so a siege rule ends them in about 15.
+  - New event `siege-changed` (Appendix A). New switches
+    `moneyUnitRework`, `ageCatchUp` (both default on).
+  - Not checked: a full human playthrough of a campaign (hours long);
+    balance of later chapters against a human; how the siege feels.
+  - Choices to review: the area-shot rule (tanks and mechs can't hurt
+    bases now, so a pure tank army can't finish a base); the catch-up
+    numbers; the siege timing; the campaign's numbers (banners, supplies,
+    Glory, Legacy costs).
