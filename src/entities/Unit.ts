@@ -1,4 +1,5 @@
 import { UNIT_WALK_SPEED } from '@config/constants';
+import { flipOriginX } from '@utils/spriteOrigin';
 import Phaser from 'phaser';
 import { LANE_Y } from '@config/constants';
 import { unitArtKey, type UnitArt } from '@config/unitArt.config';
@@ -126,7 +127,7 @@ export class Unit extends Phaser.GameObjects.Sprite {
     if (this.art) {
       ensureRigArt(this.scene, definition.id);
       this.setTexture(unitArtKey(definition.id, 'walk', side), this.art.standFrame);
-      this.setScale(this.art.scale).setOrigin(this.art.originX ?? 0.5, this.art.footY);
+      this.setScale(this.art.scale).setOrigin(flipOriginX(this.art.originX ?? 0.5, side === 'enemy'), this.art.footY);
       this.baseTint = side === 'enemy' ? (this.art.enemyTint ?? null) : null;
     } else {
       this.setTexture(textureKeyFor(definition.spriteKey, side));

@@ -5,6 +5,7 @@ import { getTurretDefinition, type TurretDefinition } from '@entities/turretDefi
 import { researchMult } from '@config/buildings.config';
 import type { SideState, TurretState } from '@state/GameState';
 import { laneDir, type Side } from '@state/types';
+import { flipOriginX } from '@utils/spriteOrigin';
 import {
   ensureTurretArt,
   TURRET_FLASH_ORIGIN,
@@ -84,11 +85,11 @@ export class Turret extends Phaser.GameObjects.Image {
     this.aim = this.motion.rest;
     this.aimTarget = this.motion.rest;
     const k = 1 / TURRET_SUPERSAMPLE;
-    this.setOrigin(TURRET_MOUNT_ORIGIN.x, TURRET_MOUNT_ORIGIN.y).setScale(k).setFlipX(side === 'enemy').setDepth(2);
+    this.setOrigin(flipOriginX(TURRET_MOUNT_ORIGIN.x, side === 'enemy'), TURRET_MOUNT_ORIGIN.y).setScale(k).setFlipX(side === 'enemy').setDepth(2);
     scene.add.existing(this);
     this.head = scene.add
       .image(0, 0, turretHeadKey(artId, turretState.level, side))
-      .setOrigin(TURRET_HEAD_ORIGIN.x, TURRET_HEAD_ORIGIN.y)
+      .setOrigin(flipOriginX(TURRET_HEAD_ORIGIN.x, side === 'enemy'), TURRET_HEAD_ORIGIN.y)
       .setScale(k)
       .setFlipX(side === 'enemy')
       .setDepth(2.1);
@@ -97,7 +98,7 @@ export class Turret extends Phaser.GameObjects.Image {
         ? null
         : scene.add
             .image(0, 0, turretFlashKey(this.motion.flash))
-            .setOrigin(TURRET_FLASH_ORIGIN.x, TURRET_FLASH_ORIGIN.y)
+            .setOrigin(flipOriginX(TURRET_FLASH_ORIGIN.x, side === 'enemy'), TURRET_FLASH_ORIGIN.y)
             .setScale(k)
             .setFlipX(side === 'enemy')
             .setDepth(2.2)

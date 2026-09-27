@@ -27,6 +27,7 @@ import {
 } from '@state/conquestState';
 import { addThemedPanel, applyUiTheme, UI_FONT, UI_TITLE_FONT, UiColors, UiTextColors } from '@ui/kenneyUi';
 import { UiButton } from '@ui/UiButton';
+import { flipOriginX } from '@utils/spriteOrigin';
 
 const CX = GAME_WIDTH / 2;
 const TRACK_Y = 138;
@@ -292,7 +293,7 @@ export class ConquestScene extends Phaser.Scene {
         const scale = (art.scale ?? 1) * Math.min(0.85, room);
         const unit = this.add
           .sprite([-72, -10, 62][i] ?? 0, groundY, unitArtKey(unitId, 'walk', 'enemy'), art.standFrame ?? 0)
-          .setOrigin(art.originX ?? 0.5, art.footY ?? 1)
+          .setOrigin(flipOriginX(art.originX ?? 0.5, true), art.footY ?? 1)
           .setScale(scale)
           .setFlipX(true);
         items.push(unit);

@@ -7,6 +7,7 @@ import { ObjectPool } from '@utils/ObjectPool';
 import { HEADLESS_SIM } from '@utils/runtimeFlags';
 import { unitArtKey } from '@config/unitArt.config';
 import { unitArtFor } from '@entities/unitArt';
+import { flipOriginX } from '@utils/spriteOrigin';
 
 const NUMBER_RISE_PX = 26;
 const NUMBER_DURATION_MS = 650;
@@ -135,7 +136,7 @@ export class HitEffects {
     const sprite = this.corpses.acquire();
     sprite
       .setTexture(key, 0)
-      .setOrigin(art.dieBox?.originX ?? art.originX ?? 0.5, art.dieBox?.originY ?? art.footY)
+      .setOrigin(flipOriginX(art.dieBox?.originX ?? art.originX ?? 0.5, side === 'enemy'), art.dieBox?.originY ?? art.footY)
       .setScale(art.scale)
       .setFlipX(side === 'enemy')
       .setPosition(x, LANE_Y)
