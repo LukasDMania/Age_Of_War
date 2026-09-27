@@ -22,7 +22,7 @@ import {
   mineGoldPerSec,
 } from '@systems/BuildingSystem';
 import { addPanel, addThemedPanel, UI_FONT, UI_TITLE_FONT, UiColors, UiTextColors, UiTextures } from '@ui/kenneyUi';
-import { UiButton } from '@ui/UiButton';
+import { UiButton, type PressModifiers } from '@ui/UiButton';
 import { UnitBuyPanel } from '@ui/UnitBuyPanel';
 import { emit, Events } from '@utils/EventBus';
 
@@ -48,7 +48,11 @@ const pct = (mult: number): string => `${Math.round(Math.abs(1 - mult) * 100)}%`
  * of the current stage), what it gives now and an Upgrade button. When a
  * perk is waiting (prototype, every fifth level), the button turns into
  * "Pick perk", which opens a choice between the building's two perks.
- * Presses only emit `upgrade-building-requested` / `choose-perk-requested`.
+ * Shift buys levels up to the end of the stage, Ctrl (Cmd) as many as the
+ * gold and the age allow (owner, 2026-09-27: "tired spam clicking"); each
+ * level is still its own request, and it stops at the first refusal or a
+ * perk to pick. Presses only emit `upgrade-building-requested` /
+ * `choose-perk-requested`.
  */
 export class BuildingPanel {
   readonly root: Phaser.GameObjects.Container;
@@ -131,7 +135,7 @@ export class BuildingPanel {
 
     const pending = perksPending(level, me.buildingPerks[id].length) > 0;
     const button = new UiButton(this.scene, width / 2, CARD_HEIGHT - 16, width - 10, 24, {
-      onPress: () => (pending ? this.openPerkChoice(id) : emit(Events.UpgradeBuildingRequested, { side: this.side, buildingId: id })),
+      onPress: (modifiers) => (pending ? this.openPerkChoice(id) : this.buyLevels(id, modifiers)),
       tint: pending ? UiColors.ready : UiColors.panelDark,
     });
     const cost = buildingUpgradeCost(id, level);
@@ -152,6 +156,25 @@ export class BuildingPanel {
     }
     container.add(button.container);
     this.cards.set(id, { container, button, perk: pending });
+  }
+
+  /** Presses a building's card as a click with these modifiers would (keyboard). */
+  press(id: BuildingId, modifiers: PressModifiers): void {
+    this.cards.get(id)?.button.press(modifiers);
+  }
+
+  /** One level, or with Shift up to the stage's end, with Ctrl as many as allowed. */
+  private buyLevels(id: BuildingId, modifiers: PressModifiers): void {
+    const me = this.sideState;
+    const start = me.buildings[id];
+    const stageEnd = (Math.floor(start / LEVELS_PER_AGE) + 1) * LEVELS_PER_AGE;
+    const wanted = modifiers.ctrl ? Infinity : modifiers.shift ? stageEnd - start : 1;
+    for (let bought = 0; bought < wanted; bought++) {
+      const before = me.buildings[id];
+      emit(Events.UpgradeBuildingRequested, { side: this.side, buildingId: id });
+      if (me.buildings[id] === before) return;
+      if (perksPending(me.buildings[id], me.buildingPerks[id].length) > 0) return;
+    }
   }
 
   private effectText(id: BuildingId, level: number): string {

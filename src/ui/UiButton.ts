@@ -1,8 +1,21 @@
 import Phaser from 'phaser';
 import { addPanel, UiColors, UiTextures } from '@ui/kenneyUi';
 
+/** Modifier keys held during a press (Shift; Ctrl or Cmd). Multi-buys read them. */
+export interface PressModifiers {
+  shift: boolean;
+  ctrl: boolean;
+}
+
+export const NO_MODIFIERS: PressModifiers = { shift: false, ctrl: false };
+
+/** The modifiers of a mouse, touch or keyboard event (Cmd counts as Ctrl on a Mac). */
+export function modifiersOf(event: { shiftKey?: boolean; ctrlKey?: boolean; metaKey?: boolean } | null | undefined): PressModifiers {
+  return { shift: event?.shiftKey === true, ctrl: event?.ctrlKey === true || event?.metaKey === true };
+}
+
 export interface UiButtonOptions {
-  onPress: () => void;
+  onPress: (modifiers: PressModifiers) => void;
   texture?: typeof UiTextures.panel | typeof UiTextures.panelGlass;
   tint?: number;
   hoverTint?: number;
@@ -59,7 +72,7 @@ export class UiButton {
       this.refreshTint();
       options.onHover?.(false);
     });
-    this.background.on('pointerdown', () => this.press());
+    this.background.on('pointerdown', (pointer: Phaser.Input.Pointer) => this.press(modifiersOf(pointer.event)));
   }
 
   add(...children: Phaser.GameObjects.GameObject[]): this {
@@ -86,9 +99,9 @@ export class UiButton {
   }
 
   /** Presses the button as a click would (keyboard shortcuts use this). */
-  press(): void {
+  press(modifiers: PressModifiers = NO_MODIFIERS): void {
     if (!this.enabled) return;
-    this.options.onPress();
+    this.options.onPress(modifiers);
     this.scene.tweens.add({
       targets: this.container,
       scale: { from: 0.93, to: 1 },

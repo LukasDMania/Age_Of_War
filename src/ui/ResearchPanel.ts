@@ -11,7 +11,7 @@ import type { SideState } from '@state/GameState';
 import type { Side } from '@state/types';
 import { researchPrice, researchRejection } from '@systems/BuildingSystem';
 import { UI_FONT, UiColors, UiTextColors } from '@ui/kenneyUi';
-import { UiButton } from '@ui/UiButton';
+import { UiButton, type PressModifiers } from '@ui/UiButton';
 import { UnitBuyPanel } from '@ui/UnitBuyPanel';
 import { emit, Events } from '@utils/EventBus';
 
@@ -35,8 +35,9 @@ function bonusText(def: ResearchDefinition, tier: number): string {
 /**
  * HUD tab for Forge research (Phase 14): a grid of tracks, each showing its
  * tier, its current bonus and the price of the next tier (or what locks it).
- * Hovering shows the next bonus in the info cell. Presses only emit
- * `research-requested`.
+ * Hovering shows the next bonus in the info cell. Shift or Ctrl (Cmd)
+ * buys as many tiers as the Forge and the gold allow, one request each.
+ * Presses only emit `research-requested`.
  */
 export class ResearchPanel {
   readonly root: Phaser.GameObjects.Container;
@@ -87,6 +88,20 @@ export class ResearchPanel {
     this.refreshButtons();
   }
 
+  /** Presses a track's cell as a click with these modifiers would (keyboard). */
+  press(id: ResearchId, modifiers: PressModifiers): void {
+    this.cells.get(id)?.button.press(modifiers);
+  }
+
+  private buyTiers(id: ResearchId, modifiers: PressModifiers): void {
+    const many = modifiers.shift || modifiers.ctrl;
+    do {
+      const before = this.sideState.research[id];
+      emit(Events.ResearchRequested, { side: this.side, researchId: id });
+      if (this.sideState.research[id] === before) return;
+    } while (many);
+  }
+
   private defaultInfo(): string {
     const forge = this.sideState.buildings.forge;
     if (forge === 0) return 'Build a Forge to unlock research';
@@ -109,7 +124,7 @@ export class ResearchPanel {
     const cost = researchPrice(this.sideState, def.id);
     const rejection = researchRejection(this.sideState, def.id);
     const button = new UiButton(this.scene, x + CELL_WIDTH / 2, y + CELL_HEIGHT / 2, CELL_WIDTH, CELL_HEIGHT, {
-      onPress: () => emit(Events.ResearchRequested, { side: this.side, researchId: def.id }),
+      onPress: (modifiers) => this.buyTiers(def.id, modifiers),
       tint: UiColors.panelMid,
       hoverTint: UiColors.panelHover,
       onHover: (over) => {
