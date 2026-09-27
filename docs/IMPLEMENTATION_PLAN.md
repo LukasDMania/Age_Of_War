@@ -358,6 +358,9 @@ Design in GAME_DESIGN section 14.
   (`config/conquest.config.ts`, `state/conquestState.ts`,
   `systems/experimental/ConquestSystem.ts`, `scenes/ConquestScene.ts`,
   `ui/experimental/conquestWidgets.ts`).
+- [x] Conquest battle economy (`BATTLE_ECONOMY`, Conquest effect
+  `kill-gold`), `GameSceneData.playerAiIncome` for human-like balance runs,
+  Conquest battles in match logs (log version 2).
 
 Acceptance: typecheck and build pass; 12 simulated runs of the campaign
 state machine finish without getting stuck; AI-vs-AI chapter battles in
@@ -1443,3 +1446,61 @@ decisions made, anything the owner needs to confirm.
   the unit. `CombatSystem` now targets enemies in the gate before the base;
   checked: the same setup lands every blow on the defender (trample on the
   one behind it) and the base only once both are dead.
+- 2026-09-27 (evening): owner: "I was playing the conquest mode but i can
+  never win, always lose in the time out damage", suspecting the player
+  should get more gold for kills. Read the five campaign logs pushed to
+  `playtest-logs/` (17:43-17:58, chapter 1, vs normal, normal, hard,
+  normal, easy; all lost; the 10:03 and 10:05 logs are the old five-battle
+  prototype).
+  - The player out-killed the AI in all five (74-43, 105-21, 92-51, 35-16,
+    88-53) and the AI out-earned the player in all five (for example 3602
+    vs 2708 gold, and 3126 vs 2695 on easy). The AI's own income alone
+    (1613-2237 gold, 2-5 gold/s) beat the best Stone-age Mine (1.2 gold/s at
+    level 5) several times over, and in three battles it beat everything the
+    player earned. The player's army was 0-1 units at most snapshots.
+  - The AI's base was untouched (1000; 965 in one battle) when the siege
+    guns started at minute 8; the player's was at 166-899. The guns take the
+    same share from both bases, so the lower one dies first: the siege
+    finished battles that were already lost on the lane. The siege's damage
+    growth (units only, not turrets) also favors the bigger army.
+  - Cause: the AI's own income was made for skirmish, where the player can
+    out-age it; Conquest battles are age-locked. The campaign's simulated
+    runs missed it because an AI on the player's side gets that income too.
+  - New dev option `GameSceneData.playerAiIncome: false`: an AI plays the
+    player's side on a human's economy. Measured with
+    `__aowTrain.runMatch`, a hard player AI (Classic, Balanced, Trained)
+    against the six Conquest enemy profiles, 24 battles per row: it won
+    8 / 0 / 0% of Stone-age battles against easy / normal / hard and 0-4% in
+    later ages (hard battles there ended in about 3 minutes, with no AI
+    opening).
+  - Tried (18 battles per row, Stone age, easy / normal / hard): player
+    kill gold x1.5: 22 / 6 / 0%; x2: 67 / 72 / 28% (later-age hard battles
+    17-42%); x3: 100 / 89 / 56%; kill gold x2 for both sides: 50 / 17 /
+    22%. AI income x0: 72 / 72 / 56%; x0.1: 44 / 50 / 11%; x0.25: 22 / 11 /
+    0%. So the player's kills alone can't make up the AI's free income in
+    hard battles (every elite, every boss, chapters 4-5), and small amounts
+    of free income swing the Stone age hard.
+  - Changed (new PROPOSED values, `BATTLE_ECONOMY` in
+    `config/conquest.config.ts`): every Conquest battle scales the AI's own
+    income x0.1 and the player's kill gold x1.5. New Conquest effect
+    `kill-gold` (per side), read by GameScene into `EconomySystem` the way
+    `ai-income` is read into `AiIncomeSystem`. Measured (two sets of 24 per
+    row, no mutators or relics): 75-92% against easy, 83% against normal,
+    63-71% against hard in the Stone age; 63-88% of battles in later ages;
+    38% against Grok and 42% against the Iron Admiral. Battles average 6-9
+    minutes, so fewer reach the siege guns. Skirmish is unchanged.
+  - Checked in the browser (dev server, a real run's `battleSetup`): the AI
+    earned 90 gold of its own in 6 minutes (907 in the same skirmish); a
+    Clubber kill pays the player 18.75 (was 12.5) and the AI still 12.5.
+  - Match logs (version 2) record a Conquest battle's label and effects, and
+    the file name says `conquest-vs-<difficulty>`.
+  - Not checked: a human playthrough with the new numbers; battles with
+    mutators; elites and bosses beyond the two measured.
+  - Choice to review: the income cut is a Conquest-only number under the
+    owner's "option C" (the AI gets its own income so it can't be starved).
+    It keeps 10%, plus its Mine and kill gold, and the siege ends every
+    Conquest battle, so it can't stall. Keeping the AI's income whole would
+    take about x3 kill gold for the player, and hard battles would still be
+    lopsided. Side effect: whatever multiplies the AI's income (the War
+    economy mutator, the Sunstone relic's drawback, ascension's +10% a
+    level) now multiplies a much smaller number, so those matter less.

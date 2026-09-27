@@ -39,7 +39,9 @@ export type ConquestEffect =
   /** Free units of the battle's age in a slot, queued at the start. */
   | { kind: 'units'; side: Side | 'both'; slot: 1 | 2 | 3 | 4 | 5; count: number }
   /** Multiplier on the enemy AI's own income. */
-  | { kind: 'ai-income'; mult: number };
+  | { kind: 'ai-income'; mult: number }
+  /** Multiplier on the gold a side gets for kills. */
+  | { kind: 'kill-gold'; side: Side | 'both'; mult: number };
 
 /* ---- Mutators (battlefield rules) -------------------------------------------------- */
 
@@ -626,6 +628,41 @@ export const LEGACY: readonly LegacyUnlock[] = [
   { id: 'master-builders', name: 'Master builders', about: 'Start every battle with a Mine and a Forge at level 3', cost: 120, tier: 4, battle: [{ kind: 'building', side: 'player', buildingId: 'mine', levels: 3 }, { kind: 'building', side: 'player', buildingId: 'forge', levels: 3 }] },
   { id: 'legend-status', name: 'Living legend', about: 'Your units +8% damage and HP in every battle', cost: 160, tier: 4, battle: [{ kind: 'unit-stat', side: 'player', stat: 'damage', mult: 1.08 }, { kind: 'unit-stat', side: 'player', stat: 'maxHp', mult: 1.08 }] },
 ];
+
+/* ---- Battle economy -------------------------------------------------------------------------- */
+
+/**
+ * Every Conquest battle's economy (2026-09-27, owner: "i can never win,
+ * always lose in the time out damage").
+ *
+ * The AI's own income (`AI_INCOME`, easy 1 / normal 1.5 / hard 2.5) is made
+ * for skirmish, where the player can out-age it. Conquest battles are locked
+ * to one age, so it was pure extra money: in the owner's five chapter-1
+ * battles it paid the AI 2-5 gold/s against a Mine of about 1, the AI
+ * out-earned the player in all five although the player out-killed it
+ * (74-43, 105-21, 92-51, 35-16, 88-53), the AI's base was untouched when
+ * the siege guns started, and the siege finished the player's base. The
+ * earlier simulated runs missed it: an AI on the player's side gets that
+ * income too, a human doesn't (`playerAiIncome: false` plays it like a
+ * human now).
+ *
+ * Measured (a hard player AI without the income, 24 battles per row, no
+ * mutators or relics; the siege ends every battle, so the AI can't be
+ * starved into a stall): before, it won 8 / 0 / 0% of Stone-age battles
+ * against easy / normal / hard and 0-4% in later ages. With `aiIncome` 0.1
+ * and `playerKillGold` 1.5: 75-92 / 83 / 63-71% in the Stone age, 63-88%
+ * in later ages, about 40% against Grok and the Iron Admiral. Kill gold
+ * alone (x2, AI income unchanged) fixed easy and normal battles but left
+ * hard ones (every elite and boss, chapters 4-5) at 17-42%.
+ *
+ * Mutators, relics and ascension still multiply on top. PROPOSED.
+ */
+export const BATTLE_ECONOMY = {
+  /** The enemy AI's own income x this (`ai-income`). */
+  aiIncome: 0.1,
+  /** The player's kill gold x this (`kill-gold`). */
+  playerKillGold: 1.5,
+} as const;
 
 /* ---- Siege --------------------------------------------------------------------------------- */
 

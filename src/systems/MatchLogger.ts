@@ -1,13 +1,14 @@
 import type { AiDifficultyName } from '@config/ai.config';
 import { BUILDINGS, RESEARCH } from '@config/buildings.config';
+import type { ConquestEffect } from '@config/conquest.config';
 import type { UnitFactory } from '@entities/UnitFactory';
 import type { MatchState, SideState } from '@state/GameState';
 import type { Side } from '@state/types';
 import { mineGoldPerSec, libraryXpPerSec } from '@systems/BuildingSystem';
 import { Events, on, type GoldSource } from '@utils/EventBus';
 
-/** Bump when the log shape changes. */
-const LOG_VERSION = 1;
+/** Bump when the log shape changes. 2: `conquest`. */
+const LOG_VERSION = 2;
 /** Sim time between state snapshots. */
 const SNAPSHOT_EVERY_MS = 15000;
 /** Where the dev server saves logs (see the `playtest-logs` plugin in vite.config.ts). */
@@ -63,6 +64,8 @@ export interface MatchLog {
   snapshots: { t: number; front: { player: number | null; enemy: number | null }; player: SideSnapshot; enemy: SideSnapshot }[];
   /** The tunables in force, so logs from different balance versions can be told apart. */
   config: { buildings: unknown; research: unknown };
+  /** A Conquest battle's label and effects (mutators, relics, upgrades...); null in a normal match. */
+  conquest: { label: string; effects: readonly ConquestEffect[] } | null;
 }
 
 function emptyTotals(): SideTotals {
@@ -80,7 +83,8 @@ function pad(n: number): string {
 /**
  * Records a human-played match for balance work (dev builds only): what each
  * side bought and built and when, gold earned by source, kills and losses,
- * and a snapshot of both sides every 15 s of game time. When the match ends
+ * a snapshot of both sides every 15 s of game time, and a Conquest battle's
+ * setup (file names say `conquest-vs-...`). When the match ends
  * (win, loss, restart, quit to menu or closing the tab) the log is posted to
  * the dev server, which writes it to `playtest-logs/` in the project.
  *
@@ -103,7 +107,13 @@ export class MatchLogger {
   private readonly baseMarks: Record<Side, Set<number>> = { player: new Set(), enemy: new Set() };
   private readonly onUnload = (): void => this.finish('closed');
 
-  constructor(state: MatchState, units: UnitFactory, opponent: AiDifficultyName | 'off', now: () => number) {
+  constructor(
+    state: MatchState,
+    units: UnitFactory,
+    opponent: AiDifficultyName | 'off',
+    now: () => number,
+    conquest: MatchLog['conquest'] = null,
+  ) {
     this.state = state;
     this.units = units;
     this.now = now;
@@ -111,7 +121,7 @@ export class MatchLogger {
     this.log = {
       version: LOG_VERSION,
       startedAt: d.toISOString(),
-      fileStem: `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}_${pad(d.getHours())}-${pad(d.getMinutes())}-${pad(d.getSeconds())}_vs-${opponent}`,
+      fileStem: `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}_${pad(d.getHours())}-${pad(d.getMinutes())}-${pad(d.getSeconds())}_${conquest ? 'conquest-' : ''}vs-${opponent}`,
       opponent,
       result: null,
       durationSec: 0,
@@ -119,6 +129,7 @@ export class MatchLogger {
       events: [],
       snapshots: [],
       config: { buildings: BUILDINGS, research: RESEARCH },
+      conquest,
     };
     const add = (type: string, side?: Side, detail?: string | number): void => {
       const entry: LoggedEvent = { t: this.seconds(), type };

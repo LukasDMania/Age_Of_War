@@ -20,6 +20,7 @@ import {
   ASCENSION,
   BANNERS,
   BASE_BONUS_SUPPLIES,
+  BATTLE_ECONOMY,
   BOSSES,
   CAMP_REST_COST,
   CAMP_UPGRADES,
@@ -426,6 +427,7 @@ export function battleSetup(run: ConquestRun): BattleSetup | null {
   const effects: ConquestEffect[] = [];
   if (chapter.age > 0) effects.push({ kind: 'start-age', age: chapter.age });
   effects.push({ kind: 'gold', side: 'both', amount: chapter.startGold });
+  effects.push({ kind: 'ai-income', mult: BATTLE_ECONOMY.aiIncome }, { kind: 'kill-gold', side: 'player', mult: BATTLE_ECONOMY.playerKillGold });
   for (const id of battle.mutators) effects.push(...(MUTATORS.find((m) => m.id === id)?.effects ?? []));
   if (battle.boss !== undefined) effects.push(...(BOSSES[battle.boss]?.effects ?? []));
   effects.push(...(COMMANDERS.find((c) => c.id === run.commander)?.effects ?? []));

@@ -233,6 +233,7 @@ PROPOSED details:
   ramp (up to x2 at 30 min) x the difficulty's income multiplier (easy 1,
   normal 1.5, hard 2.5). Numbers PROPOSED. It still shops through the same
   request events. The "no bonus on any difficulty" note below is outdated.
+  Conquest battles scale it x0.1 (section 14, "Battle economy").
 - Future (owner interest): train the AI with self-play / machine learning,
   then add named strategies (turret-heavy, economy-heavy...). Built on the
   owner's request 2026-09-26 as playtest options (a utility AI, profiles,
@@ -621,6 +622,16 @@ the space age". Replaces the five-battle run of section 13.
   per minute (up to x3); from minute 8 siege guns hit both bases every 4 s,
   harder each minute. Battles end within about 15 minutes; the side with
   the healthier base wins a stalemate.
+- **Battle economy** (2026-09-27, owner: "i can never win, always lose in
+  the time out damage"): in every Conquest battle the AI's own income is
+  x0.1 and the player's kill gold x1.5 (`BATTLE_ECONOMY`, PROPOSED;
+  mutators, relics and ascension multiply on top). The AI's income was
+  made for skirmish, where the player can out-age it; in age-locked battles
+  it was pure extra money. In the owner's five chapter-1 logs the AI
+  out-earned the player in all five while the player out-killed it, the
+  AI's base was untouched when the siege guns started, and the siege
+  finished the player's already lower base. Details and measurements in
+  the session log.
 - Length: a strong run is about 20 nodes and 14 battles (~1.5-2.5 h) and
   earns ~180 Glory; the Legacy tree costs ~1000, so unlocking it takes
   about 6 full clears (10+ hours), with commanders and Ascension beyond.

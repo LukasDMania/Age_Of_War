@@ -37,7 +37,7 @@ import { feature } from '@config/features.config';
 import { DoctrineAi, DoctrineSystem } from '@systems/experimental/DoctrineSystem';
 import { VeterancySystem } from '@systems/experimental/VeterancySystem';
 import { WarCryAi, WarCrySystem } from '@systems/experimental/WarCrySystem';
-import { ConquestSystem, conquestAiIncomeMult } from '@systems/experimental/ConquestSystem';
+import { ConquestSystem, conquestAiIncomeMult, conquestKillGoldMult } from '@systems/experimental/ConquestSystem';
 import type { ConquestEffect } from '@config/conquest.config';
 import { finishBattle } from '@state/conquestState';
 import { AiIncomeSystem } from '@systems/AiIncomeSystem';
@@ -86,6 +86,12 @@ export interface GameSceneData {
   ai?: AiDifficultyName | 'off';
   /** Dev and tuning only: an AI also plays the player's side (AI vs AI). */
   playerAi?: AiDifficultyName;
+  /**
+   * Tuning: false plays the player-side AI without the AI's own income, on a
+   * human's economy (Mine, kills). Conquest balance runs need this: with the
+   * income on, the player side gets money no human gets.
+   */
+  playerAiIncome?: boolean;
   /** Enemy AI profile (strategy) by id, see `AI_PROFILES`; default 'classic'. */
   profile?: string;
   /** Player-side AI profile for AI vs AI. */
@@ -208,7 +214,7 @@ export class GameScene extends Phaser.Scene {
     this.projectileSystem = new ProjectileSystem(this.projectiles, this.units, this.bases);
     this.casualties = new CasualtySystem(this.units);
     this.lane = new LaneSystem(this.units, this.bases);
-    this.economy = new EconomySystem(this.state, this.units);
+    this.economy = new EconomySystem(this.state, this.units, conquestKillGoldMult(this.sceneData.conquest?.effects ?? []));
     this.spawn = new SpawnSystem(this.state, this.units, (unitId, side) =>
       this.lane.isSpawnPointClear(side, this.units.spriteWidth(unitId, side)),
     );
@@ -224,7 +230,7 @@ export class GameScene extends Phaser.Scene {
       const bonus = conquestAiIncomeMult(this.sceneData.conquest?.effects ?? []);
       this.aiIncome.push(new AiIncomeSystem(this.state, 'enemy', this.difficultyFor(this.aiSetting), bonus));
     }
-    if (this.playerAiSetting) this.aiIncome.push(new AiIncomeSystem(this.state, 'player', this.difficultyFor(this.playerAiSetting)));
+    if (this.playerAiSetting && this.sceneData.playerAiIncome !== false) this.aiIncome.push(new AiIncomeSystem(this.state, 'player', this.difficultyFor(this.playerAiSetting)));
     this.buildingViews = {
       player: this.createBuildingViews('player'),
       enemy: this.createBuildingViews('enemy'),
@@ -233,7 +239,7 @@ export class GameScene extends Phaser.Scene {
     this.createExperiments();
     this.logger =
       import.meta.env.DEV && this.playerAiSetting === null
-        ? new MatchLogger(this.state, this.units, this.aiSetting, () => this.match.elapsedMs)
+        ? new MatchLogger(this.state, this.units, this.aiSetting, () => this.match.elapsedMs, this.sceneData.conquest ?? null)
         : null;
     this.ai =
       this.aiSetting === 'off'

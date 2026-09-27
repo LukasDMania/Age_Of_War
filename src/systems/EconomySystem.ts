@@ -26,7 +26,8 @@ const PENALTY_SPEED_ID = 'economy-penalty-speed';
  * Income, and the money units' trade-off.
  *
  * - Kills: the dead unit's `killGold` (x `ECONOMY_KILL_BOUNTY_MULT` for a
- *   money unit, x the killer's Plunder research) and `killXp` go to the side
+ *   money unit, x the killer's Plunder research, x the killer's
+ *   `killGoldMult`: 1 except in Conquest battles) and `killXp` go to the side
  *   that scored the kill.
  * - Passive income was removed in Phase 14: the Mine (`BuildingSystem`)
  *   replaces it.
@@ -70,11 +71,14 @@ export class EconomySystem {
   private readonly bornAt = new Map<number, number>();
   private nextReportAt = 0;
   private readonly rework = feature('moneyUnitRework');
+  /** Extra multiplier on each side's kill gold (Conquest effects; 1 otherwise). */
+  private readonly killGoldMult: Record<Side, number>;
   private readonly cleanups: (() => void)[];
 
-  constructor(state: MatchState, units: UnitFactory) {
+  constructor(state: MatchState, units: UnitFactory, killGoldMult: Record<Side, number> = { player: 1, enemy: 1 }) {
     this.state = state;
     this.units = units;
+    this.killGoldMult = killGoldMult;
     this.cleanups = [
       on(Events.UnitDied, (payload) => this.onUnitDied(payload)),
       on(Events.UnitSpawned, ({ side, unitId, instanceId }) => {
@@ -159,8 +163,9 @@ export class EconomySystem {
     const plunder = researchMult('bounty', this.state[killerSide].research.bounty);
     const perks = buildingEffects(this.state[killerSide]).killGold;
     const loot = this.rework ? 1 + this.lootBonus(killerSide, x) : 1;
+    const mult = this.killGoldMult[killerSide];
     this.bornAt.delete(instanceId);
-    addGold(this.state, killerSide, definition.killGold * bounty * plunder * perks * loot * KILL_GOLD_MULT, 'kill');
+    addGold(this.state, killerSide, definition.killGold * bounty * plunder * perks * loot * mult * KILL_GOLD_MULT, 'kill');
     // Catch-up: a side behind in age learns faster from its kills.
     const catchUp = 1 + AGE_CATCH_UP.killXpPerAge * ageGap(this.state, killerSide);
     addXp(this.state, killerSide, definition.killXp * KILL_XP_MULT * catchUp);

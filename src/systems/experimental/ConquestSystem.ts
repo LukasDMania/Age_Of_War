@@ -20,6 +20,16 @@ export function conquestAiIncomeMult(effects: readonly ConquestEffect[]): number
 
 const sidesOf = (side: Side | 'both'): readonly Side[] => (side === 'both' ? SIDES : [side]);
 
+/** Each side's product of a battle's `kill-gold` effects (for EconomySystem). */
+export function conquestKillGoldMult(effects: readonly ConquestEffect[]): Record<Side, number> {
+  const mult: Record<Side, number> = { player: 1, enemy: 1 };
+  for (const e of effects) {
+    if (e.kind !== 'kill-gold') continue;
+    for (const side of sidesOf(e.side)) mult[side] *= e.mult;
+  }
+  return mult;
+}
+
 /**
  * Sets up a Conquest battle (prototype, feature `conquest`): the node's
  * mutators, the run's relics and the ascension level, applied once on the
@@ -28,7 +38,8 @@ const sidesOf = (side: Side | 'both'): readonly Side[] => (side === 'both' ? SID
  * they cost (source `conquest`) followed by the usual `*-requested` event,
  * so the owning systems still validate and build them; stat changes are
  * side modifiers. `ai-income` effects are read by GameScene for
- * AiIncomeSystem (`conquestAiIncomeMult`).
+ * AiIncomeSystem (`conquestAiIncomeMult`), `kill-gold` effects for
+ * EconomySystem (`conquestKillGoldMult`).
  *
  * Free units (`units`) are granted their price and bought through
  * `buy-unit-requested`, so they queue and train like any purchase (the
@@ -168,6 +179,9 @@ export class ConquestSystem {
         return;
       case 'ai-income':
         // Read by GameScene when it builds AiIncomeSystem.
+        return;
+      case 'kill-gold':
+        // Read by GameScene when it builds EconomySystem.
         return;
     }
   }
