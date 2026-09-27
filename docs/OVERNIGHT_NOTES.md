@@ -38,6 +38,14 @@ section 14; per-step log: `docs/IMPLEMENTATION_PLAN.md` Phase 18.
   tree takes about six full clears, with commanders and Ascension beyond.
 - Old five-battle runs are dropped; your Glory carries over.
 
+**AI retrained on the new rules.** The mammoth nerf and catch-up hurt the
+old Raider (its round-robin score fell from 96% to 31%). Both trained
+profiles were retrained for 15 more generations, seeded from all earlier
+champions, and replaced in place (same menu names). Round robin on hard,
+3 games per side and pairing: **Trained 89%**, Raider 72%, Warlord 42%,
+Tactician 19%, Classic 14%. Matches now last 9-10 minutes on average
+(they were 4).
+
 **Please check / decide:**
 
 1. Area shots no longer hurt bases, so an army of only tanks or mechs can't

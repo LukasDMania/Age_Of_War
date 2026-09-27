@@ -1420,6 +1420,11 @@ decisions made, anything the owner needs to confirm.
     `moneyUnitRework`, `ageCatchUp` (both default on).
   - Not checked: a full human playthrough of a campaign (hours long);
     balance of later chapters against a human; how the siege feels.
+  - AI: the round-5 rules dropped the old Raider to 31% in a round robin;
+    both trained profiles were retrained (15 more generations each,
+    `training/trained-r5`, `training/raider-r5`) and replaced in place in
+    `aiTrained.json`. Round robin on hard: Trained 89%, Raider 72%,
+    Warlord 42%, Tactician 19%, Classic 14%.
   - Choices to review: the area-shot rule (tanks and mechs can't hurt
     bases now, so a pure tank army can't finish a base); the catch-up
     numbers; the siege timing; the campaign's numbers (banners, supplies,

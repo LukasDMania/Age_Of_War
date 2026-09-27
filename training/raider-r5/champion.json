@@ -1,0 +1,85 @@
+{
+ "id": "raider-r5",
+ "label": "Raider",
+ "genome": {
+  "armyDrive": 1.275,
+  "armyTarget": 1.043,
+  "armyFloor": 3.004,
+  "armyUrgency": 2.687,
+  "threatUnits": 1.017,
+  "bias1": 0.373,
+  "bias2": 0.491,
+  "bias3": 1.724,
+  "counter": 1.249,
+  "mix": 1.128,
+  "utilityEvery": 4.548,
+  "mine": 0.333,
+  "library": 1.014,
+  "forge": 1.261,
+  "research": 0.83,
+  "focusMelee": 2,
+  "focusRanged": 0.244,
+  "focusHeavy": 1.404,
+  "focusTurret": 0.578,
+  "focusBounty": 0.596,
+  "moneyUnits": 0,
+  "moneySafety": 1.294,
+  "moneyMax": 1.208,
+  "horizon": 709.56,
+  "turrets": 0.283,
+  "turretSlots": 1.009,
+  "turretUpgrade": 0.145,
+  "turretThreat": 0,
+  "modernize": 0.543,
+  "kindRapid": 0.755,
+  "kindHeavy": 0.322,
+  "kindArea": 0.769,
+  "saveThreshold": 1.199,
+  "costAversion": 0.141,
+  "reserve": 2.221,
+  "ageUpDelay": 0,
+  "specialTargets": 5.194,
+  "specialDefensive": 0.26
+ },
+ "exam": {
+  "fitness": 1.289,
+  "byOpponent": {
+   "classic": {
+    "wins": 4,
+    "games": 4
+   },
+   "balanced": {
+    "wins": 4,
+    "games": 4
+   },
+   "warlord": {
+    "wins": 1,
+    "games": 4
+   },
+   "turtle": {
+    "wins": 4,
+    "games": 4
+   },
+   "economist": {
+    "wins": 4,
+    "games": 4
+   },
+   "tactician": {
+    "wins": 4,
+    "games": 4
+   },
+   "trained": {
+    "wins": 1,
+    "games": 4
+   },
+   "raider": {
+    "wins": 4,
+    "games": 4
+   }
+  }
+ },
+ "generations": 15,
+ "population": 20,
+ "fitness": "aggressive",
+ "minutes": 22
+}
