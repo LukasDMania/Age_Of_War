@@ -1,0 +1,7581 @@
+{
+ "version": 2,
+ "startedAt": "2026-09-27T17:28:05.790Z",
+ "fileStem": "2026-09-27_19-28-05_conquest-vs-hard_won",
+ "opponent": "hard",
+ "result": "won",
+ "durationSec": 800,
+ "totals": {
+  "player": {
+   "goldEarned": {
+    "conquest": 24020,
+    "mine": 37056,
+    "kill": 119410.4767200001,
+    "market": 12594,
+    "economy-unit": 516
+   },
+   "goldSpent": 160203,
+   "spawned": {
+    "modern-rifleman": 6,
+    "modern-tank": 45,
+    "modern-sniper": 69,
+    "modern-contractor": 1,
+    "modern-officer": 13
+   },
+   "kills": {
+    "stone-mammoth-rider": 1,
+    "modern-tank": 49,
+    "modern-sniper": 76,
+    "modern-rifleman": 56,
+    "modern-officer": 5
+   },
+   "losses": {
+    "modern-rifleman": 6,
+    "modern-tank": 41,
+    "modern-sniper": 62,
+    "modern-contractor": 1,
+    "modern-officer": 12
+   }
+  },
+  "enemy": {
+   "goldEarned": {
+    "conquest": 3255,
+    "ai-income": 5133,
+    "mine": 24743,
+    "market": 46779,
+    "kill": 58910.708505599956
+   },
+   "goldSpent": 137640,
+   "spawned": {
+    "stone-mammoth-rider": 1,
+    "modern-tank": 51,
+    "modern-sniper": 77,
+    "modern-rifleman": 62,
+    "modern-officer": 5
+   },
+   "kills": {
+    "modern-rifleman": 6,
+    "modern-tank": 41,
+    "modern-sniper": 62,
+    "modern-contractor": 1,
+    "modern-officer": 12
+   },
+   "losses": {
+    "stone-mammoth-rider": 1,
+    "modern-tank": 49,
+    "modern-sniper": 76,
+    "modern-rifleman": 56,
+    "modern-officer": 5
+   }
+  }
+ },
+ "events": [
+  {
+   "t": 0,
+   "type": "playing"
+  },
+  {
+   "t": 0,
+   "type": "age-up",
+   "side": "player",
+   "detail": 1
+  },
+  {
+   "t": 0,
+   "type": "age-up",
+   "side": "player",
+   "detail": 2
+  },
+  {
+   "t": 0,
+   "type": "age-up",
+   "side": "player",
+   "detail": 3
+  },
+  {
+   "t": 0,
+   "type": "age-up",
+   "side": "enemy",
+   "detail": 1
+  },
+  {
+   "t": 0,
+   "type": "age-up",
+   "side": "enemy",
+   "detail": 2
+  },
+  {
+   "t": 0,
+   "type": "age-up",
+   "side": "enemy",
+   "detail": 3
+  },
+  {
+   "t": 0,
+   "type": "building",
+   "side": "player",
+   "detail": "mine:L1"
+  },
+  {
+   "t": 0,
+   "type": "building",
+   "side": "player",
+   "detail": "mine:L2"
+  },
+  {
+   "t": 0,
+   "type": "building",
+   "side": "player",
+   "detail": "mine:L3"
+  },
+  {
+   "t": 0,
+   "type": "building",
+   "side": "player",
+   "detail": "mine:L4"
+  },
+  {
+   "t": 0,
+   "type": "building",
+   "side": "player",
+   "detail": "mine:L5"
+  },
+  {
+   "t": 0,
+   "type": "building",
+   "side": "player",
+   "detail": "mine:L6"
+  },
+  {
+   "t": 0,
+   "type": "building",
+   "side": "player",
+   "detail": "mine:L7"
+  },
+  {
+   "t": 0,
+   "type": "building",
+   "side": "player",
+   "detail": "mine:L8"
+  },
+  {
+   "t": 0,
+   "type": "building",
+   "side": "player",
+   "detail": "mine:L9"
+  },
+  {
+   "t": 0,
+   "type": "turret-built",
+   "side": "player",
+   "detail": "0:modern-machine-gun"
+  },
+  {
+   "t": 0,
+   "type": "turret-upgraded",
+   "side": "player",
+   "detail": "0:L1"
+  },
+  {
+   "t": 0,
+   "type": "slot-unlocked",
+   "side": "player",
+   "detail": 1
+  },
+  {
+   "t": 0,
+   "type": "turret-built",
+   "side": "player",
+   "detail": "1:modern-artillery"
+  },
+  {
+   "t": 0,
+   "type": "slot-unlocked",
+   "side": "player",
+   "detail": 2
+  },
+  {
+   "t": 0,
+   "type": "turret-built",
+   "side": "player",
+   "detail": "2:modern-artillery"
+  },
+  {
+   "t": 0,
+   "type": "slot-unlocked",
+   "side": "player",
+   "detail": 3
+  },
+  {
+   "t": 0,
+   "type": "turret-built",
+   "side": "player",
+   "detail": "3:modern-machine-gun"
+  },
+  {
+   "t": 0,
+   "type": "turret-upgraded",
+   "side": "player",
+   "detail": "3:L1"
+  },
+  {
+   "t": 0,
+   "type": "slot-unlocked",
+   "side": "player",
+   "detail": 4
+  },
+  {
+   "t": 0,
+   "type": "turret-built",
+   "side": "player",
+   "detail": "4:modern-machine-gun"
+  },
+  {
+   "t": 0,
+   "type": "turret-upgraded",
+   "side": "player",
+   "detail": "4:L1"
+  },
+  {
+   "t": 0.5,
+   "type": "building",
+   "side": "enemy",
+   "detail": "forge:L1"
+  },
+  {
+   "t": 1,
+   "type": "research",
+   "side": "enemy",
+   "detail": "heavyDamage:T1"
+  },
+  {
+   "t": 1.5,
+   "type": "unit",
+   "side": "player",
+   "detail": "modern-rifleman"
+  },
+  {
+   "t": 1.5,
+   "type": "research",
+   "side": "enemy",
+   "detail": "heavyArmor:T1"
+  },
+  {
+   "t": 2,
+   "type": "research",
+   "side": "enemy",
+   "detail": "meleeDamage:T1"
+  },
+  {
+   "t": 2.6,
+   "type": "research",
+   "side": "enemy",
+   "detail": "meleeArmor:T1"
+  },
+  {
+   "t": 3.1,
+   "type": "building",
+   "side": "enemy",
+   "detail": "mine:L1"
+  },
+  {
+   "t": 3.5,
+   "type": "unit",
+   "side": "enemy",
+   "detail": "stone-mammoth-rider"
+  },
+  {
+   "t": 3.6,
+   "type": "building",
+   "side": "enemy",
+   "detail": "mine:L2"
+  },
+  {
+   "t": 4.1,
+   "type": "building",
+   "side": "enemy",
+   "detail": "mine:L3"
+  },
+  {
+   "t": 4.6,
+   "type": "building",
+   "side": "enemy",
+   "detail": "mine:L4"
+  },
+  {
+   "t": 5.1,
+   "type": "building",
+   "side": "enemy",
+   "detail": "mine:L5"
+  },
+  {
+   "t": 5.6,
+   "type": "building",
+   "side": "enemy",
+   "detail": "mine:L6"
+  },
+  {
+   "t": 6.1,
+   "type": "building",
+   "side": "enemy",
+   "detail": "mine:L7"
+  },
+  {
+   "t": 6.6,
+   "type": "research",
+   "side": "enemy",
+   "detail": "bounty:T1"
+  },
+  {
+   "t": 7,
+   "type": "unit",
+   "side": "enemy",
+   "detail": "modern-tank"
+  },
+  {
+   "t": 7.1,
+   "type": "building",
+   "side": "enemy",
+   "detail": "forge:L2"
+  },
+  {
+   "t": 7.6,
+   "type": "building",
+   "side": "enemy",
+   "detail": "mine:L8"
+  },
+  {
+   "t": 8.2,
+   "type": "building",
+   "side": "enemy",
+   "detail": "library:L1"
+  },
+  {
+   "t": 10.2,
+   "type": "research",
+   "side": "enemy",
+   "detail": "rangedDamage:T1"
+  },
+  {
+   "t": 10.5,
+   "type": "unit",
+   "side": "enemy",
+   "detail": "modern-tank"
+  },
+  {
+   "t": 12.3,
+   "type": "research",
+   "side": "enemy",
+   "detail": "rangedRange:T1"
+  },
+  {
+   "t": 14.8,
+   "type": "building",
+   "side": "enemy",
+   "detail": "market:L1"
+  },
+  {
+   "t": 16.5,
+   "type": "speed",
+   "detail": 2
+  },
+  {
+   "t": 16.8,
+   "type": "building",
+   "side": "enemy",
+   "detail": "shrine:L1"
+  },
+  {
+   "t": 18.8,
+   "type": "building",
+   "side": "enemy",
+   "detail": "barracks:L1"
+  },
+  {
+   "t": 19.3,
+   "type": "building",
+   "side": "enemy",
+   "detail": "market:L2"
+  },
+  {
+   "t": 19.8,
+   "type": "building",
+   "side": "enemy",
+   "detail": "market:L3"
+  },
+  {
+   "t": 20.7,
+   "type": "special",
+   "side": "player"
+  },
+  {
+   "t": 21.9,
+   "type": "building",
+   "side": "enemy",
+   "detail": "library:L2"
+  },
+  {
+   "t": 23.9,
+   "type": "building",
+   "side": "enemy",
+   "detail": "shrine:L2"
+  },
+  {
+   "t": 26.4,
+   "type": "unit",
+   "side": "player",
+   "detail": "modern-rifleman"
+  },
+  {
+   "t": 26.5,
+   "type": "building",
+   "side": "enemy",
+   "detail": "library:L3"
+  },
+  {
+   "t": 27.9,
+   "type": "unit",
+   "side": "player",
+   "detail": "modern-rifleman"
+  },
+  {
+   "t": 29.4,
+   "type": "unit",
+   "side": "player",
+   "detail": "modern-rifleman"
+  },
+  {
+   "t": 29.9,
+   "type": "turret-upgraded",
+   "side": "player",
+   "detail": "0:L2"
+  },
+  {
+   "t": 30.3,
+   "type": "turret-upgraded",
+   "side": "player",
+   "detail": "0:L3"
+  },
+  {
+   "t": 33.4,
+   "type": "turret-upgraded",
+   "side": "player",
+   "detail": "1:L1"
+  },
+  {
+   "t": 33.7,
+   "type": "turret-upgraded",
+   "side": "player",
+   "detail": "1:L2"
+  },
+  {
+   "t": 34,
+   "type": "unit",
+   "side": "enemy",
+   "detail": "modern-sniper"
+  },
+  {
+   "t": 34.1,
+   "type": "turret-upgraded",
+   "side": "player",
+   "detail": "1:L3"
+  },
+  {
+   "t": 35,
+   "type": "turret-upgraded",
+   "side": "player",
+   "detail": "2:L1"
+  },
+  {
+   "t": 35.3,
+   "type": "turret-upgraded",
+   "side": "player",
+   "detail": "2:L2"
+  },
+  {
+   "t": 35.6,
+   "type": "turret-upgraded",
+   "side": "player",
+   "detail": "2:L3"
+  },
+  {
+   "t": 36.5,
+   "type": "turret-upgraded",
+   "side": "player",
+   "detail": "3:L2"
+  },
+  {
+   "t": 36.8,
+   "type": "turret-upgraded",
+   "side": "player",
+   "detail": "3:L3"
+  },
+  {
+   "t": 38.2,
+   "type": "turret-upgraded",
+   "side": "player",
+   "detail": "4:L2"
+  },
+  {
+   "t": 38.5,
+   "type": "turret-upgraded",
+   "side": "player",
+   "detail": "4:L3"
+  },
+  {
+   "t": 48.2,
+   "type": "unit",
+   "side": "enemy",
+   "detail": "modern-tank"
+  },
+  {
+   "t": 49.6,
+   "type": "unit",
+   "side": "enemy",
+   "detail": "modern-rifleman"
+  },
+  {
+   "t": 57.9,
+   "type": "building",
+   "side": "enemy",
+   "detail": "forge:L3"
+  },
+  {
+   "t": 60,
+   "type": "building",
+   "side": "enemy",
+   "detail": "barracks:L2"
+  },
+  {
+   "t": 62.5,
+   "type": "building",
+   "side": "enemy",
+   "detail": "library:L4"
+  },
+  {
+   "t": 65,
+   "type": "building",
+   "side": "enemy",
+   "detail": "barracks:L3"
+  },
+  {
+   "t": 68.1,
+   "type": "building",
+   "side": "enemy",
+   "detail": "mine:L9"
+  },
+  {
+   "t": 69.6,
+   "type": "building",
+   "side": "enemy",
+   "detail": "market:L4"
+  },
+  {
+   "t": 72.1,
+   "type": "building",
+   "side": "enemy",
+   "detail": "shrine:L3"
+  },
+  {
+   "t": 75.2,
+   "type": "building",
+   "side": "enemy",
+   "detail": "forge:L4"
+  },
+  {
+   "t": 76.1,
+   "type": "building",
+   "side": "player",
+   "detail": "mine:L10"
+  },
+  {
+   "t": 78.2,
+   "type": "building",
+   "side": "enemy",
+   "detail": "library:L5"
+  },
+  {
+   "t": 78.4,
+   "type": "building",
+   "side": "player",
+   "detail": "mine:L11"
+  },
+  {
+   "t": 78.7,
+   "type": "building",
+   "side": "player",
+   "detail": "mine:L12"
+  },
+  {
+   "t": 79,
+   "type": "building",
+   "side": "player",
+   "detail": "mine:L13"
+  },
+  {
+   "t": 79.6,
+   "type": "building",
+   "side": "player",
+   "detail": "mine:L14"
+  },
+  {
+   "t": 80.7,
+   "type": "building",
+   "side": "enemy",
+   "detail": "library:L6"
+  },
+  {
+   "t": 83.8,
+   "type": "building",
+   "side": "enemy",
+   "detail": "barracks:L4"
+  },
+  {
+   "t": 84.4,
+   "type": "building",
+   "side": "player",
+   "detail": "mine:L15"
+  },
+  {
+   "t": 87.4,
+   "type": "building",
+   "side": "player",
+   "detail": "mine:L16"
+  },
+  {
+   "t": 89.2,
+   "type": "unit",
+   "side": "enemy",
+   "detail": "modern-sniper"
+  },
+  {
+   "t": 92.1,
+   "type": "building",
+   "side": "player",
+   "detail": "mine:L17"
+  },
+  {
+   "t": 93.2,
+   "type": "unit",
+   "side": "enemy",
+   "detail": "modern-rifleman"
+  },
+  {
+   "t": 99.6,
+   "type": "special",
+   "side": "player"
+  },
+  {
+   "t": 101,
+   "type": "building",
+   "side": "player",
+   "detail": "market:L1"
+  },
+  {
+   "t": 101.3,
+   "type": "unit",
+   "side": "enemy",
+   "detail": "modern-rifleman"
+  },
+  {
+   "t": 101.5,
+   "type": "building",
+   "side": "player",
+   "detail": "shrine:L1"
+  },
+  {
+   "t": 102,
+   "type": "building",
+   "side": "player",
+   "detail": "barracks:L1"
+  },
+  {
+   "t": 102.5,
+   "type": "building",
+   "side": "player",
+   "detail": "forge:L1"
+  },
+  {
+   "t": 103.1,
+   "type": "building",
+   "side": "player",
+   "detail": "library:L1"
+  },
+  {
+   "t": 103.6,
+   "type": "building",
+   "side": "player",
+   "detail": "mine:L18"
+  },
+  {
+   "t": 111.3,
+   "type": "unit",
+   "side": "enemy",
+   "detail": "modern-sniper"
+  },
+  {
+   "t": 112.3,
+   "type": "building",
+   "side": "player",
+   "detail": "library:L2"
+  },
+  {
+   "t": 112.8,
+   "type": "building",
+   "side": "player",
+   "detail": "forge:L2"
+  },
+  {
+   "t": 113.3,
+   "type": "building",
+   "side": "player",
+   "detail": "barracks:L2"
+  },
+  {
+   "t": 113.8,
+   "type": "building",
+   "side": "player",
+   "detail": "shrine:L2"
+  },
+  {
+   "t": 114.3,
+   "type": "building",
+   "side": "player",
+   "detail": "market:L2"
+  },
+  {
+   "t": 116,
+   "type": "building",
+   "side": "player",
+   "detail": "library:L3"
+  },
+  {
+   "t": 116.5,
+   "type": "building",
+   "side": "player",
+   "detail": "forge:L3"
+  },
+  {
+   "t": 120.3,
+   "type": "unit",
+   "side": "enemy",
+   "detail": "modern-tank"
+  },
+  {
+   "t": 127.5,
+   "type": "unit",
+   "side": "enemy",
+   "detail": "modern-sniper"
+  },
+  {
+   "t": 128.8,
+   "type": "building",
+   "side": "player",
+   "detail": "mine:L19"
+  },
+  {
+   "t": 138.9,
+   "type": "building",
+   "side": "enemy",
+   "detail": "shrine:L4"
+  },
+  {
+   "t": 139.5,
+   "type": "unit",
+   "side": "player",
+   "detail": "modern-rifleman"
+  },
+  {
+   "t": 148.4,
+   "type": "unit",
+   "side": "player",
+   "detail": "modern-tank"
+  },
+  {
+   "t": 149.4,
+   "type": "unit",
+   "side": "enemy",
+   "detail": "modern-sniper"
+  },
+  {
+   "t": 150.4,
+   "type": "unit",
+   "side": "player",
+   "detail": "modern-sniper"
+  },
+  {
+   "t": 155.2,
+   "type": "unit",
+   "side": "player",
+   "detail": "modern-contractor"
+  },
+  {
+   "t": 158.4,
+   "type": "unit",
+   "side": "enemy",
+   "detail": "modern-tank"
+  },
+  {
+   "t": 161.1,
+   "type": "unit",
+   "side": "enemy",
+   "detail": "modern-rifleman"
+  },
+  {
+   "t": 166.7,
+   "type": "unit",
+   "side": "enemy",
+   "detail": "modern-sniper"
+  },
+  {
+   "t": 171.8,
+   "type": "unit",
+   "side": "enemy",
+   "detail": "modern-rifleman"
+  },
+  {
+   "t": 180.4,
+   "type": "unit",
+   "side": "enemy",
+   "detail": "modern-rifleman"
+  },
+  {
+   "t": 187.3,
+   "type": "unit",
+   "side": "enemy",
+   "detail": "modern-tank"
+  },
+  {
+   "t": 188.3,
+   "type": "building",
+   "side": "player",
+   "detail": "mine:L20"
+  },
+  {
+   "t": 188.7,
+   "type": "unit",
+   "side": "enemy",
+   "detail": "modern-rifleman"
+  },
+  {
+   "t": 193,
+   "type": "building",
+   "side": "player",
+   "detail": "library:L4"
+  },
+  {
+   "t": 193.4,
+   "type": "building",
+   "side": "player",
+   "detail": "library:L5"
+  },
+  {
+   "t": 193.8,
+   "type": "building",
+   "side": "enemy",
+   "detail": "mine:L10"
+  },
+  {
+   "t": 194.1,
+   "type": "building",
+   "side": "player",
+   "detail": "forge:L4"
+  },
+  {
+   "t": 194.3,
+   "type": "building",
+   "side": "enemy",
+   "detail": "mine:L11"
+  },
+  {
+   "t": 194.8,
+   "type": "building",
+   "side": "enemy",
+   "detail": "library:L7"
+  },
+  {
+   "t": 195.3,
+   "type": "building",
+   "side": "player",
+   "detail": "forge:L5"
+  },
+  {
+   "t": 198.3,
+   "type": "building",
+   "side": "enemy",
+   "detail": "market:L5"
+  },
+  {
+   "t": 200.8,
+   "type": "unit",
+   "side": "player",
+   "detail": "modern-sniper"
+  },
+  {
+   "t": 200.9,
+   "type": "building",
+   "side": "enemy",
+   "detail": "market:L6"
+  },
+  {
+   "t": 203.4,
+   "type": "building",
+   "side": "enemy",
+   "detail": "barracks:L5"
+  },
+  {
+   "t": 204.2,
+   "type": "unit",
+   "side": "player",
+   "detail": "modern-tank"
+  },
+  {
+   "t": 205.4,
+   "type": "building",
+   "side": "enemy",
+   "detail": "barracks:L6"
+  },
+  {
+   "t": 207.1,
+   "type": "unit",
+   "side": "player",
+   "detail": "modern-officer"
+  },
+  {
+   "t": 209,
+   "type": "unit",
+   "side": "player",
+   "detail": "modern-sniper"
+  },
+  {
+   "t": 210.6,
+   "type": "unit",
+   "side": "enemy",
+   "detail": "modern-sniper"
+  },
+  {
+   "t": 210.9,
+   "type": "unit",
+   "side": "player",
+   "detail": "modern-sniper"
+  },
+  {
+   "t": 211,
+   "type": "special",
+   "side": "enemy"
+  },
+  {
+   "t": 211.9,
+   "type": "unit",
+   "side": "enemy",
+   "detail": "modern-rifleman"
+  },
+  {
+   "t": 213,
+   "type": "building",
+   "side": "enemy",
+   "detail": "mine:L12"
+  },
+  {
+   "t": 213.6,
+   "type": "building",
+   "side": "enemy",
+   "detail": "mine:L13"
+  },
+  {
+   "t": 214.1,
+   "type": "building",
+   "side": "enemy",
+   "detail": "mine:L14"
+  },
+  {
+   "t": 214.2,
+   "type": "unit",
+   "side": "enemy",
+   "detail": "modern-sniper"
+  },
+  {
+   "t": 214.4,
+   "type": "unit",
+   "side": "player",
+   "detail": "modern-sniper"
+  },
+  {
+   "t": 214.6,
+   "type": "building",
+   "side": "enemy",
+   "detail": "market:L7"
+  },
+  {
+   "t": 215.1,
+   "type": "building",
+   "side": "enemy",
+   "detail": "market:L8"
+  },
+  {
+   "t": 215.6,
+   "type": "building",
+   "side": "enemy",
+   "detail": "barracks:L7"
+  },
+  {
+   "t": 217.5,
+   "type": "unit",
+   "side": "player",
+   "detail": "modern-sniper"
+  },
+  {
+   "t": 219.5,
+   "type": "unit",
+   "side": "player",
+   "detail": "modern-sniper"
+  },
+  {
+   "t": 222.8,
+   "type": "unit",
+   "side": "player",
+   "detail": "modern-tank"
+  },
+  {
+   "t": 223.3,
+   "type": "building",
+   "side": "player",
+   "detail": "barracks:L3"
+  },
+  {
+   "t": 223.5,
+   "type": "unit",
+   "side": "enemy",
+   "detail": "modern-tank"
+  },
+  {
+   "t": 223.7,
+   "type": "building",
+   "side": "player",
+   "detail": "barracks:L4"
+  },
+  {
+   "t": 224,
+   "type": "building",
+   "side": "player",
+   "detail": "barracks:L5"
+  },
+  {
+   "t": 226.2,
+   "type": "unit",
+   "side": "player",
+   "detail": "modern-tank"
+  },
+  {
+   "t": 227.4,
+   "type": "building",
+   "side": "player",
+   "detail": "barracks:L6"
+  },
+  {
+   "t": 227.7,
+   "type": "building",
+   "side": "player",
+   "detail": "barracks:L7"
+  },
+  {
+   "t": 228,
+   "type": "unit",
+   "side": "enemy",
+   "detail": "modern-rifleman"
+  },
+  {
+   "t": 228,
+   "type": "building",
+   "side": "player",
+   "detail": "barracks:L8"
+  },
+  {
+   "t": 228.1,
+   "type": "unit",
+   "side": "player",
+   "detail": "modern-sniper"
+  },
+  {
+   "t": 228.3,
+   "type": "building",
+   "side": "player",
+   "detail": "barracks:L9"
+  },
+  {
+   "t": 228.6,
+   "type": "building",
+   "side": "player",
+   "detail": "barracks:L10"
+  },
+  {
+   "t": 229.2,
+   "type": "unit",
+   "side": "enemy",
+   "detail": "modern-rifleman"
+  },
+  {
+   "t": 231.5,
+   "type": "unit",
+   "side": "enemy",
+   "detail": "modern-rifleman"
+  },
+  {
+   "t": 232.2,
+   "type": "building",
+   "side": "player",
+   "detail": "barracks:L11"
+  },
+  {
+   "t": 232.5,
+   "type": "building",
+   "side": "player",
+   "detail": "barracks:L12"
+  },
+  {
+   "t": 234.2,
+   "type": "building",
+   "side": "player",
+   "detail": "shrine:L3"
+  },
+  {
+   "t": 234.6,
+   "type": "building",
+   "side": "player",
+   "detail": "shrine:L4"
+  },
+  {
+   "t": 234.9,
+   "type": "building",
+   "side": "player",
+   "detail": "shrine:L5"
+  },
+  {
+   "t": 237,
+   "type": "unit",
+   "side": "enemy",
+   "detail": "modern-sniper"
+  },
+  {
+   "t": 238.6,
+   "type": "unit",
+   "side": "enemy",
+   "detail": "modern-sniper"
+  },
+  {
+   "t": 240.3,
+   "type": "unit",
+   "side": "enemy",
+   "detail": "modern-sniper"
+  },
+  {
+   "t": 240.5,
+   "type": "special",
+   "side": "player"
+  },
+  {
+   "t": 242.1,
+   "type": "unit",
+   "side": "enemy",
+   "detail": "modern-sniper"
+  },
+  {
+   "t": 251.3,
+   "type": "unit",
+   "side": "enemy",
+   "detail": "modern-rifleman"
+  },
+  {
+   "t": 252,
+   "type": "building",
+   "side": "player",
+   "detail": "barracks:L13"
+  },
+  {
+   "t": 252.4,
+   "type": "building",
+   "side": "player",
+   "detail": "barracks:L14"
+  },
+  {
+   "t": 252.7,
+   "type": "building",
+   "side": "player",
+   "detail": "barracks:L15"
+  },
+  {
+   "t": 254.4,
+   "type": "unit",
+   "side": "enemy",
+   "detail": "modern-tank"
+  },
+  {
+   "t": 254.9,
+   "type": "building",
+   "side": "player",
+   "detail": "shrine:L6"
+  },
+  {
+   "t": 255.2,
+   "type": "building",
+   "side": "player",
+   "detail": "shrine:L7"
+  },
+  {
+   "t": 255.5,
+   "type": "building",
+   "side": "player",
+   "detail": "shrine:L8"
+  },
+  {
+   "t": 255.9,
+   "type": "building",
+   "side": "player",
+   "detail": "shrine:L9"
+  },
+  {
+   "t": 256.2,
+   "type": "building",
+   "side": "player",
+   "detail": "shrine:L10"
+  },
+  {
+   "t": 258.4,
+   "type": "unit",
+   "side": "enemy",
+   "detail": "modern-rifleman"
+  },
+  {
+   "t": 259.4,
+   "type": "building",
+   "side": "player",
+   "detail": "forge:L6"
+  },
+  {
+   "t": 259.7,
+   "type": "building",
+   "side": "player",
+   "detail": "forge:L7"
+  },
+  {
+   "t": 260.1,
+   "type": "building",
+   "side": "player",
+   "detail": "forge:L8"
+  },
+  {
+   "t": 260.4,
+   "type": "building",
+   "side": "player",
+   "detail": "forge:L9"
+  },
+  {
+   "t": 260.7,
+   "type": "building",
+   "side": "player",
+   "detail": "forge:L10"
+  },
+  {
+   "t": 262.4,
+   "type": "unit",
+   "side": "enemy",
+   "detail": "modern-sniper"
+  },
+  {
+   "t": 262.9,
+   "type": "building",
+   "side": "player",
+   "detail": "forge:L11"
+  },
+  {
+   "t": 263.2,
+   "type": "building",
+   "side": "player",
+   "detail": "forge:L12"
+  },
+  {
+   "t": 263.5,
+   "type": "building",
+   "side": "player",
+   "detail": "forge:L13"
+  },
+  {
+   "t": 264.9,
+   "type": "unit",
+   "side": "enemy",
+   "detail": "modern-sniper"
+  },
+  {
+   "t": 266.4,
+   "type": "research",
+   "side": "player",
+   "detail": "bounty:T1"
+  },
+  {
+   "t": 266.7,
+   "type": "research",
+   "side": "player",
+   "detail": "bounty:T2"
+  },
+  {
+   "t": 267.8,
+   "type": "research",
+   "side": "player",
+   "detail": "bounty:T3"
+  },
+  {
+   "t": 269.4,
+   "type": "research",
+   "side": "player",
+   "detail": "heavyArmor:T1"
+  },
+  {
+   "t": 269.5,
+   "type": "unit",
+   "side": "enemy",
+   "detail": "modern-rifleman"
+  },
+  {
+   "t": 270.5,
+   "type": "research",
+   "side": "player",
+   "detail": "heavyDamage:T1"
+  },
+  {
+   "t": 271,
+   "type": "research",
+   "side": "player",
+   "detail": "meleeDamage:T1"
+  },
+  {
+   "t": 271.7,
+   "type": "research",
+   "side": "player",
+   "detail": "meleeArmor:T1"
+  },
+  {
+   "t": 272.6,
+   "type": "research",
+   "side": "player",
+   "detail": "turretDamage:T1"
+  },
+  {
+   "t": 273.4,
+   "type": "research",
+   "side": "player",
+   "detail": "rangedDamage:T1"
+  },
+  {
+   "t": 274,
+   "type": "research",
+   "side": "player",
+   "detail": "turretRange:T1"
+  },
+  {
+   "t": 274.1,
+   "type": "unit",
+   "side": "enemy",
+   "detail": "modern-rifleman"
+  },
+  {
+   "t": 274.5,
+   "type": "research",
+   "side": "player",
+   "detail": "rangedRange:T1"
+  },
+  {
+   "t": 275.7,
+   "type": "unit",
+   "side": "enemy",
+   "detail": "modern-sniper"
+  },
+  {
+   "t": 276.3,
+   "type": "research",
+   "side": "player",
+   "detail": "meleeDamage:T2"
+  },
+  {
+   "t": 280.6,
+   "type": "unit",
+   "side": "enemy",
+   "detail": "modern-sniper"
+  },
+  {
+   "t": 282,
+   "type": "building",
+   "side": "enemy",
+   "detail": "market:L9"
+  },
+  {
+   "t": 282.5,
+   "type": "building",
+   "side": "enemy",
+   "detail": "barracks:L8"
+  },
+  {
+   "t": 284,
+   "type": "building",
+   "side": "enemy",
+   "detail": "forge:L5"
+  },
+  {
+   "t": 285.1,
+   "type": "unit",
+   "side": "player",
+   "detail": "modern-sniper"
+  },
+  {
+   "t": 286.1,
+   "type": "building",
+   "side": "enemy",
+   "detail": "forge:L6"
+  },
+  {
+   "t": 287.6,
+   "type": "research",
+   "side": "enemy",
+   "detail": "meleeDamage:T2"
+  },
+  {
+   "t": 289.1,
+   "type": "research",
+   "side": "enemy",
+   "detail": "meleeArmor:T2"
+  },
+  {
+   "t": 289.7,
+   "type": "unit",
+   "side": "player",
+   "detail": "modern-officer"
+  },
+  {
+   "t": 291.1,
+   "type": "building",
+   "side": "player",
+   "detail": "forge:L14"
+  },
+  {
+   "t": 291.5,
+   "type": "building",
+   "side": "player",
+   "detail": "forge:L15"
+  },
+  {
+   "t": 296.9,
+   "type": "unit",
+   "side": "enemy",
+   "detail": "modern-tank"
+  },
+  {
+   "t": 297.4,
+   "type": "speed",
+   "detail": 3
+  },
+  {
+   "t": 297.8,
+   "type": "speed",
+   "detail": 4
+  },
+  {
+   "t": 298.2,
+   "type": "research",
+   "side": "enemy",
+   "detail": "heavyDamage:T2"
+  },
+  {
+   "t": 298.3,
+   "type": "speed",
+   "detail": 8
+  },
+  {
+   "t": 298.7,
+   "type": "research",
+   "side": "enemy",
+   "detail": "heavyArmor:T2"
+  },
+  {
+   "t": 300.7,
+   "type": "speed",
+   "detail": 1
+  },
+  {
+   "t": 301.8,
+   "type": "research",
+   "side": "enemy",
+   "detail": "bounty:T2"
+  },
+  {
+   "t": 302.3,
+   "type": "building",
+   "side": "enemy",
+   "detail": "market:L10"
+  },
+  {
+   "t": 302.5,
+   "type": "unit",
+   "side": "enemy",
+   "detail": "modern-rifleman"
+  },
+  {
+   "t": 303.8,
+   "type": "building",
+   "side": "enemy",
+   "detail": "market:L11"
+  },
+  {
+   "t": 304.3,
+   "type": "research",
+   "side": "enemy",
+   "detail": "rangedDamage:T2"
+  },
+  {
+   "t": 305.3,
+   "type": "research",
+   "side": "enemy",
+   "detail": "rangedRange:T2"
+  },
+  {
+   "t": 306.8,
+   "type": "building",
+   "side": "enemy",
+   "detail": "market:L12"
+  },
+  {
+   "t": 306.9,
+   "type": "base-below",
+   "side": "player",
+   "detail": 75
+  },
+  {
+   "t": 307,
+   "type": "unit",
+   "side": "player",
+   "detail": "modern-sniper"
+  },
+  {
+   "t": 307.3,
+   "type": "special",
+   "side": "player"
+  },
+  {
+   "t": 307.3,
+   "type": "building",
+   "side": "enemy",
+   "detail": "barracks:L9"
+  },
+  {
+   "t": 308.3,
+   "type": "unit",
+   "side": "player",
+   "detail": "modern-sniper"
+  },
+  {
+   "t": 310.6,
+   "type": "unit",
+   "side": "player",
+   "detail": "modern-tank"
+  },
+  {
+   "t": 310.6,
+   "type": "unit",
+   "side": "enemy",
+   "detail": "modern-officer"
+  },
+  {
+   "t": 312,
+   "type": "unit",
+   "side": "enemy",
+   "detail": "modern-rifleman"
+  },
+  {
+   "t": 318.5,
+   "type": "unit",
+   "side": "enemy",
+   "detail": "modern-sniper"
+  },
+  {
+   "t": 325.2,
+   "type": "unit",
+   "side": "enemy",
+   "detail": "modern-tank"
+  },
+  {
+   "t": 327.2,
+   "type": "unit",
+   "side": "enemy",
+   "detail": "modern-rifleman"
+  },
+  {
+   "t": 328.8,
+   "type": "unit",
+   "side": "enemy",
+   "detail": "modern-sniper"
+  },
+  {
+   "t": 329.9,
+   "type": "unit",
+   "side": "enemy",
+   "detail": "modern-rifleman"
+  },
+  {
+   "t": 332.7,
+   "type": "unit",
+   "side": "enemy",
+   "detail": "modern-sniper"
+  },
+  {
+   "t": 335.7,
+   "type": "unit",
+   "side": "enemy",
+   "detail": "modern-sniper"
+  },
+  {
+   "t": 337.7,
+   "type": "building",
+   "side": "enemy",
+   "detail": "forge:L7"
+  },
+  {
+   "t": 338.2,
+   "type": "building",
+   "side": "player",
+   "detail": "forge:L16"
+  },
+  {
+   "t": 338.5,
+   "type": "building",
+   "side": "player",
+   "detail": "forge:L17"
+  },
+  {
+   "t": 338.7,
+   "type": "building",
+   "side": "player",
+   "detail": "forge:L18"
+  },
+  {
+   "t": 338.8,
+   "type": "building",
+   "side": "player",
+   "detail": "forge:L19"
+  },
+  {
+   "t": 339,
+   "type": "building",
+   "side": "player",
+   "detail": "forge:L20"
+  },
+  {
+   "t": 339.7,
+   "type": "building",
+   "side": "enemy",
+   "detail": "forge:L8"
+  },
+  {
+   "t": 340.5,
+   "type": "building",
+   "side": "player",
+   "detail": "barracks:L16"
+  },
+  {
+   "t": 340.7,
+   "type": "building",
+   "side": "player",
+   "detail": "barracks:L17"
+  },
+  {
+   "t": 341.7,
+   "type": "building",
+   "side": "enemy",
+   "detail": "shrine:L5"
+  },
+  {
+   "t": 343.3,
+   "type": "building",
+   "side": "enemy",
+   "detail": "shrine:L6"
+  },
+  {
+   "t": 345.3,
+   "type": "building",
+   "side": "enemy",
+   "detail": "shrine:L7"
+  },
+  {
+   "t": 346,
+   "type": "unit",
+   "side": "player",
+   "detail": "modern-tank"
+  },
+  {
+   "t": 346,
+   "type": "speed",
+   "detail": 2
+  },
+  {
+   "t": 350.4,
+   "type": "unit",
+   "side": "player",
+   "detail": "modern-sniper"
+  },
+  {
+   "t": 352,
+   "type": "unit",
+   "side": "enemy",
+   "detail": "modern-tank"
+  },
+  {
+   "t": 354.3,
+   "type": "unit",
+   "side": "player",
+   "detail": "modern-sniper"
+  },
+  {
+   "t": 356.6,
+   "type": "unit",
+   "side": "enemy",
+   "detail": "modern-rifleman"
+  },
+  {
+   "t": 357.4,
+   "type": "building",
+   "side": "enemy",
+   "detail": "market:L13"
+  },
+  {
+   "t": 357.9,
+   "type": "building",
+   "side": "enemy",
+   "detail": "forge:L9"
+  },
+  {
+   "t": 359.5,
+   "type": "building",
+   "side": "enemy",
+   "detail": "library:L8"
+  },
+  {
+   "t": 360.9,
+   "type": "special",
+   "side": "player"
+  },
+  {
+   "t": 361.5,
+   "type": "building",
+   "side": "enemy",
+   "detail": "library:L9"
+  },
+  {
+   "t": 365.1,
+   "type": "unit",
+   "side": "enemy",
+   "detail": "modern-sniper"
+  },
+  {
+   "t": 366.6,
+   "type": "unit",
+   "side": "enemy",
+   "detail": "modern-sniper"
+  },
+  {
+   "t": 368.7,
+   "type": "unit",
+   "side": "enemy",
+   "detail": "modern-rifleman"
+  },
+  {
+   "t": 372.5,
+   "type": "unit",
+   "side": "player",
+   "detail": "modern-officer"
+  },
+  {
+   "t": 375.8,
+   "type": "unit",
+   "side": "player",
+   "detail": "modern-tank"
+  },
+  {
+   "t": 376.2,
+   "type": "special",
+   "side": "enemy"
+  },
+  {
+   "t": 377.1,
+   "type": "unit",
+   "side": "player",
+   "detail": "modern-sniper"
+  },
+  {
+   "t": 379.6,
+   "type": "unit",
+   "side": "player",
+   "detail": "modern-officer"
+  },
+  {
+   "t": 380.4,
+   "type": "unit",
+   "side": "enemy",
+   "detail": "modern-tank"
+  },
+  {
+   "t": 381.9,
+   "type": "unit",
+   "side": "enemy",
+   "detail": "modern-sniper"
+  },
+  {
+   "t": 382.2,
+   "type": "building",
+   "side": "enemy",
+   "detail": "barracks:L10"
+  },
+  {
+   "t": 382.3,
+   "type": "unit",
+   "side": "player",
+   "detail": "modern-sniper"
+  },
+  {
+   "t": 384.6,
+   "type": "unit",
+   "side": "enemy",
+   "detail": "modern-tank"
+  },
+  {
+   "t": 384.8,
+   "type": "unit",
+   "side": "player",
+   "detail": "modern-officer"
+  },
+  {
+   "t": 386.2,
+   "type": "unit",
+   "side": "enemy",
+   "detail": "modern-sniper"
+  },
+  {
+   "t": 387,
+   "type": "unit",
+   "side": "player",
+   "detail": "modern-tank"
+  },
+  {
+   "t": 388.3,
+   "type": "unit",
+   "side": "enemy",
+   "detail": "modern-officer"
+  },
+  {
+   "t": 388.8,
+   "type": "unit",
+   "side": "player",
+   "detail": "modern-officer"
+  },
+  {
+   "t": 389.4,
+   "type": "unit",
+   "side": "enemy",
+   "detail": "modern-rifleman"
+  },
+  {
+   "t": 391,
+   "type": "unit",
+   "side": "player",
+   "detail": "modern-tank"
+  },
+  {
+   "t": 391.2,
+   "type": "unit",
+   "side": "enemy",
+   "detail": "modern-sniper"
+  },
+  {
+   "t": 392.3,
+   "type": "unit",
+   "side": "player",
+   "detail": "modern-sniper"
+  },
+  {
+   "t": 393.2,
+   "type": "unit",
+   "side": "enemy",
+   "detail": "modern-sniper"
+  },
+  {
+   "t": 394.5,
+   "type": "unit",
+   "side": "player",
+   "detail": "modern-tank"
+  },
+  {
+   "t": 395.4,
+   "type": "unit",
+   "side": "enemy",
+   "detail": "modern-rifleman"
+  },
+  {
+   "t": 396.5,
+   "type": "unit",
+   "side": "enemy",
+   "detail": "modern-rifleman"
+  },
+  {
+   "t": 396.6,
+   "type": "unit",
+   "side": "player",
+   "detail": "modern-tank"
+  },
+  {
+   "t": 399.8,
+   "type": "unit",
+   "side": "enemy",
+   "detail": "modern-sniper"
+  },
+  {
+   "t": 400.8,
+   "type": "research",
+   "side": "player",
+   "detail": "rangedDamage:T2"
+  },
+  {
+   "t": 401.1,
+   "type": "research",
+   "side": "player",
+   "detail": "rangedDamage:T3"
+  },
+  {
+   "t": 401.4,
+   "type": "research",
+   "side": "player",
+   "detail": "rangedDamage:T4"
+  },
+  {
+   "t": 402.2,
+   "type": "research",
+   "side": "player",
+   "detail": "turretRange:T2"
+  },
+  {
+   "t": 402.3,
+   "type": "unit",
+   "side": "enemy",
+   "detail": "modern-tank"
+  },
+  {
+   "t": 403.3,
+   "type": "research",
+   "side": "player",
+   "detail": "heavyArmor:T2"
+  },
+  {
+   "t": 403.4,
+   "type": "unit",
+   "side": "enemy",
+   "detail": "modern-rifleman"
+  },
+  {
+   "t": 404,
+   "type": "research",
+   "side": "player",
+   "detail": "meleeArmor:T2"
+  },
+  {
+   "t": 404.4,
+   "type": "research",
+   "side": "player",
+   "detail": "meleeArmor:T3"
+  },
+  {
+   "t": 404.9,
+   "type": "research",
+   "side": "player",
+   "detail": "meleeArmor:T4"
+  },
+  {
+   "t": 405.4,
+   "type": "research",
+   "side": "player",
+   "detail": "meleeDamage:T3"
+  },
+  {
+   "t": 405.5,
+   "type": "building",
+   "side": "enemy",
+   "detail": "barracks:L11"
+  },
+  {
+   "t": 406.5,
+   "type": "building",
+   "side": "enemy",
+   "detail": "shrine:L8"
+  },
+  {
+   "t": 407.1,
+   "type": "research",
+   "side": "player",
+   "detail": "heavyDamage:T2"
+  },
+  {
+   "t": 408,
+   "type": "unit",
+   "side": "enemy",
+   "detail": "modern-tank"
+  },
+  {
+   "t": 408.2,
+   "type": "research",
+   "side": "player",
+   "detail": "heavyArmor:T3"
+  },
+  {
+   "t": 410.2,
+   "type": "research",
+   "side": "player",
+   "detail": "rangedRange:T2"
+  },
+  {
+   "t": 410.6,
+   "type": "research",
+   "side": "player",
+   "detail": "rangedRange:T3"
+  },
+  {
+   "t": 412.6,
+   "type": "building",
+   "side": "enemy",
+   "detail": "shrine:L9"
+  },
+  {
+   "t": 415.6,
+   "type": "building",
+   "side": "enemy",
+   "detail": "library:L10"
+  },
+  {
+   "t": 415.8,
+   "type": "research",
+   "side": "player",
+   "detail": "heavyDamage:T3"
+  },
+  {
+   "t": 417.7,
+   "type": "building",
+   "side": "enemy",
+   "detail": "library:L11"
+  },
+  {
+   "t": 420.2,
+   "type": "building",
+   "side": "enemy",
+   "detail": "market:L14"
+  },
+  {
+   "t": 420.2,
+   "type": "unit",
+   "side": "enemy",
+   "detail": "modern-sniper"
+  },
+  {
+   "t": 420.7,
+   "type": "building",
+   "side": "enemy",
+   "detail": "barracks:L12"
+  },
+  {
+   "t": 421.2,
+   "type": "special",
+   "side": "player"
+  },
+  {
+   "t": 423.7,
+   "type": "unit",
+   "side": "enemy",
+   "detail": "modern-officer"
+  },
+  {
+   "t": 424.8,
+   "type": "unit",
+   "side": "enemy",
+   "detail": "modern-rifleman"
+  },
+  {
+   "t": 426.1,
+   "type": "unit",
+   "side": "enemy",
+   "detail": "modern-sniper"
+  },
+  {
+   "t": 426.3,
+   "type": "research",
+   "side": "player",
+   "detail": "meleeDamage:T4"
+  },
+  {
+   "t": 427,
+   "type": "research",
+   "side": "player",
+   "detail": "heavyArmor:T4"
+  },
+  {
+   "t": 427.4,
+   "type": "research",
+   "side": "player",
+   "detail": "heavyDamage:T4"
+  },
+  {
+   "t": 427.5,
+   "type": "unit",
+   "side": "enemy",
+   "detail": "modern-sniper"
+  },
+  {
+   "t": 428,
+   "type": "research",
+   "side": "player",
+   "detail": "bounty:T4"
+  },
+  {
+   "t": 429.4,
+   "type": "research",
+   "side": "player",
+   "detail": "turretDamage:T2"
+  },
+  {
+   "t": 430.1,
+   "type": "research",
+   "side": "player",
+   "detail": "turretRange:T3"
+  },
+  {
+   "t": 430.7,
+   "type": "unit",
+   "side": "enemy",
+   "detail": "modern-sniper"
+  },
+  {
+   "t": 430.8,
+   "type": "research",
+   "side": "player",
+   "detail": "rangedRange:T4"
+  },
+  {
+   "t": 435.7,
+   "type": "unit",
+   "side": "enemy",
+   "detail": "modern-sniper"
+  },
+  {
+   "t": 437.9,
+   "type": "unit",
+   "side": "player",
+   "detail": "modern-tank"
+  },
+  {
+   "t": 439.5,
+   "type": "special",
+   "side": "enemy"
+  },
+  {
+   "t": 439.8,
+   "type": "unit",
+   "side": "enemy",
+   "detail": "modern-sniper"
+  },
+  {
+   "t": 440.1,
+   "type": "unit",
+   "side": "player",
+   "detail": "modern-tank"
+  },
+  {
+   "t": 440.8,
+   "type": "unit",
+   "side": "enemy",
+   "detail": "modern-rifleman"
+  },
+  {
+   "t": 442.2,
+   "type": "unit",
+   "side": "player",
+   "detail": "modern-tank"
+  },
+  {
+   "t": 443.3,
+   "type": "unit",
+   "side": "enemy",
+   "detail": "modern-tank"
+  },
+  {
+   "t": 444.4,
+   "type": "unit",
+   "side": "player",
+   "detail": "modern-tank"
+  },
+  {
+   "t": 445.7,
+   "type": "unit",
+   "side": "player",
+   "detail": "modern-sniper"
+  },
+  {
+   "t": 445.7,
+   "type": "unit",
+   "side": "enemy",
+   "detail": "modern-tank"
+  },
+  {
+   "t": 446,
+   "type": "speed",
+   "detail": 3
+  },
+  {
+   "t": 446.9,
+   "type": "unit",
+   "side": "player",
+   "detail": "modern-sniper"
+  },
+  {
+   "t": 448.1,
+   "type": "unit",
+   "side": "enemy",
+   "detail": "modern-tank"
+  },
+  {
+   "t": 448.2,
+   "type": "unit",
+   "side": "player",
+   "detail": "modern-sniper"
+  },
+  {
+   "t": 449.1,
+   "type": "unit",
+   "side": "enemy",
+   "detail": "modern-rifleman"
+  },
+  {
+   "t": 449.4,
+   "type": "unit",
+   "side": "player",
+   "detail": "modern-sniper"
+  },
+  {
+   "t": 454,
+   "type": "unit",
+   "side": "enemy",
+   "detail": "modern-sniper"
+  },
+  {
+   "t": 456.7,
+   "type": "unit",
+   "side": "enemy",
+   "detail": "modern-sniper"
+  },
+  {
+   "t": 458.1,
+   "type": "unit",
+   "side": "enemy",
+   "detail": "modern-rifleman"
+  },
+  {
+   "t": 459.4,
+   "type": "unit",
+   "side": "enemy",
+   "detail": "modern-sniper"
+  },
+  {
+   "t": 464.3,
+   "type": "unit",
+   "side": "player",
+   "detail": "modern-sniper"
+  },
+  {
+   "t": 466.9,
+   "type": "unit",
+   "side": "player",
+   "detail": "modern-officer"
+  },
+  {
+   "t": 469.1,
+   "type": "unit",
+   "side": "player",
+   "detail": "modern-tank"
+  },
+  {
+   "t": 471.3,
+   "type": "unit",
+   "side": "player",
+   "detail": "modern-tank"
+  },
+  {
+   "t": 472.4,
+   "type": "building",
+   "side": "enemy",
+   "detail": "forge:L10"
+  },
+  {
+   "t": 473.5,
+   "type": "unit",
+   "side": "player",
+   "detail": "modern-tank"
+  },
+  {
+   "t": 474.7,
+   "type": "special",
+   "side": "player"
+  },
+  {
+   "t": 475.7,
+   "type": "unit",
+   "side": "player",
+   "detail": "modern-tank"
+  },
+  {
+   "t": 476.5,
+   "type": "unit",
+   "side": "enemy",
+   "detail": "modern-tank"
+  },
+  {
+   "t": 477.8,
+   "type": "unit",
+   "side": "enemy",
+   "detail": "modern-sniper"
+  },
+  {
+   "t": 477.9,
+   "type": "unit",
+   "side": "player",
+   "detail": "modern-tank"
+  },
+  {
+   "t": 479.2,
+   "type": "unit",
+   "side": "enemy",
+   "detail": "modern-sniper"
+  },
+  {
+   "t": 480,
+   "type": "unit",
+   "side": "player",
+   "detail": "modern-tank"
+  },
+  {
+   "t": 480.5,
+   "type": "unit",
+   "side": "enemy",
+   "detail": "modern-sniper"
+  },
+  {
+   "t": 481.5,
+   "type": "unit",
+   "side": "enemy",
+   "detail": "modern-rifleman"
+  },
+  {
+   "t": 482.6,
+   "type": "building",
+   "side": "enemy",
+   "detail": "forge:L11"
+  },
+  {
+   "t": 482.9,
+   "type": "unit",
+   "side": "enemy",
+   "detail": "modern-sniper"
+  },
+  {
+   "t": 484.4,
+   "type": "unit",
+   "side": "enemy",
+   "detail": "modern-rifleman"
+  },
+  {
+   "t": 484.8,
+   "type": "unit",
+   "side": "player",
+   "detail": "modern-tank"
+  },
+  {
+   "t": 486.9,
+   "type": "unit",
+   "side": "player",
+   "detail": "modern-tank"
+  },
+  {
+   "t": 488,
+   "type": "building",
+   "side": "player",
+   "detail": "barracks:L18"
+  },
+  {
+   "t": 488.5,
+   "type": "building",
+   "side": "player",
+   "detail": "barracks:L19"
+  },
+  {
+   "t": 489,
+   "type": "building",
+   "side": "player",
+   "detail": "barracks:L20"
+  },
+  {
+   "t": 490.4,
+   "type": "unit",
+   "side": "enemy",
+   "detail": "modern-rifleman"
+  },
+  {
+   "t": 495.3,
+   "type": "research",
+   "side": "enemy",
+   "detail": "heavyDamage:T3"
+  },
+  {
+   "t": 495.8,
+   "type": "unit",
+   "side": "enemy",
+   "detail": "modern-rifleman"
+  },
+  {
+   "t": 500.9,
+   "type": "special",
+   "side": "enemy"
+  },
+  {
+   "t": 502.4,
+   "type": "research",
+   "side": "enemy",
+   "detail": "heavyArmor:T3"
+  },
+  {
+   "t": 502.8,
+   "type": "building",
+   "side": "player",
+   "detail": "shrine:L11"
+  },
+  {
+   "t": 502.9,
+   "type": "research",
+   "side": "enemy",
+   "detail": "meleeDamage:T3"
+  },
+  {
+   "t": 503.3,
+   "type": "building",
+   "side": "player",
+   "detail": "shrine:L12"
+  },
+  {
+   "t": 503.3,
+   "type": "unit",
+   "side": "enemy",
+   "detail": "modern-tank"
+  },
+  {
+   "t": 503.8,
+   "type": "building",
+   "side": "player",
+   "detail": "shrine:L13"
+  },
+  {
+   "t": 504.3,
+   "type": "building",
+   "side": "player",
+   "detail": "shrine:L14"
+  },
+  {
+   "t": 504.7,
+   "type": "unit",
+   "side": "enemy",
+   "detail": "modern-sniper"
+  },
+  {
+   "t": 504.8,
+   "type": "building",
+   "side": "player",
+   "detail": "shrine:L15"
+  },
+  {
+   "t": 507,
+   "type": "unit",
+   "side": "enemy",
+   "detail": "modern-tank"
+  },
+  {
+   "t": 509.4,
+   "type": "unit",
+   "side": "enemy",
+   "detail": "modern-tank"
+  },
+  {
+   "t": 510.2,
+   "type": "building",
+   "side": "player",
+   "detail": "shrine:L16"
+  },
+  {
+   "t": 510.7,
+   "type": "building",
+   "side": "player",
+   "detail": "shrine:L17"
+  },
+  {
+   "t": 510.8,
+   "type": "unit",
+   "side": "enemy",
+   "detail": "modern-sniper"
+  },
+  {
+   "t": 511.3,
+   "type": "building",
+   "side": "player",
+   "detail": "shrine:L18"
+  },
+  {
+   "t": 511.7,
+   "type": "building",
+   "side": "player",
+   "detail": "shrine:L19"
+  },
+  {
+   "t": 512.1,
+   "type": "unit",
+   "side": "enemy",
+   "detail": "modern-sniper"
+  },
+  {
+   "t": 512.3,
+   "type": "building",
+   "side": "player",
+   "detail": "shrine:L20"
+  },
+  {
+   "t": 513.5,
+   "type": "unit",
+   "side": "enemy",
+   "detail": "modern-sniper"
+  },
+  {
+   "t": 517.1,
+   "type": "research",
+   "side": "enemy",
+   "detail": "meleeArmor:T3"
+  },
+  {
+   "t": 517.4,
+   "type": "building",
+   "side": "player",
+   "detail": "library:L6"
+  },
+  {
+   "t": 517.6,
+   "type": "research",
+   "side": "enemy",
+   "detail": "bounty:T3"
+  },
+  {
+   "t": 517.9,
+   "type": "building",
+   "side": "player",
+   "detail": "library:L7"
+  },
+  {
+   "t": 518.1,
+   "type": "research",
+   "side": "enemy",
+   "detail": "rangedDamage:T3"
+  },
+  {
+   "t": 518.4,
+   "type": "building",
+   "side": "player",
+   "detail": "library:L8"
+  },
+  {
+   "t": 518.9,
+   "type": "building",
+   "side": "player",
+   "detail": "library:L9"
+  },
+  {
+   "t": 520.1,
+   "type": "research",
+   "side": "enemy",
+   "detail": "rangedRange:T3"
+  },
+  {
+   "t": 523,
+   "type": "building",
+   "side": "player",
+   "detail": "library:L10"
+  },
+  {
+   "t": 523.1,
+   "type": "building",
+   "side": "enemy",
+   "detail": "library:L12"
+  },
+  {
+   "t": 526.7,
+   "type": "building",
+   "side": "enemy",
+   "detail": "forge:L12"
+  },
+  {
+   "t": 528.7,
+   "type": "special",
+   "side": "player"
+  },
+  {
+   "t": 529.7,
+   "type": "building",
+   "side": "enemy",
+   "detail": "shrine:L10"
+  },
+  {
+   "t": 530.7,
+   "type": "unit",
+   "side": "enemy",
+   "detail": "modern-tank"
+  },
+  {
+   "t": 531.3,
+   "type": "building",
+   "side": "enemy",
+   "detail": "mine:L15"
+  },
+  {
+   "t": 532.1,
+   "type": "unit",
+   "side": "enemy",
+   "detail": "modern-sniper"
+  },
+  {
+   "t": 533.1,
+   "type": "unit",
+   "side": "enemy",
+   "detail": "modern-rifleman"
+  },
+  {
+   "t": 534.1,
+   "type": "unit",
+   "side": "enemy",
+   "detail": "modern-rifleman"
+  },
+  {
+   "t": 538.7,
+   "type": "unit",
+   "side": "enemy",
+   "detail": "modern-sniper"
+  },
+  {
+   "t": 540.4,
+   "type": "research",
+   "side": "player",
+   "detail": "turretDamage:T3"
+  },
+  {
+   "t": 540.9,
+   "type": "research",
+   "side": "player",
+   "detail": "turretDamage:T4"
+  },
+  {
+   "t": 541.9,
+   "type": "building",
+   "side": "enemy",
+   "detail": "mine:L16"
+  },
+  {
+   "t": 542.1,
+   "type": "unit",
+   "side": "enemy",
+   "detail": "modern-sniper"
+  },
+  {
+   "t": 542.3,
+   "type": "research",
+   "side": "player",
+   "detail": "turretRange:T4"
+  },
+  {
+   "t": 548.1,
+   "type": "building",
+   "side": "player",
+   "detail": "library:L11"
+  },
+  {
+   "t": 548.5,
+   "type": "building",
+   "side": "enemy",
+   "detail": "shrine:L11"
+  },
+  {
+   "t": 549.3,
+   "type": "building",
+   "side": "player",
+   "detail": "library:L12"
+  },
+  {
+   "t": 549.4,
+   "type": "unit",
+   "side": "enemy",
+   "detail": "modern-sniper"
+  },
+  {
+   "t": 549.7,
+   "type": "building",
+   "side": "player",
+   "detail": "library:L13"
+  },
+  {
+   "t": 550.1,
+   "type": "building",
+   "side": "player",
+   "detail": "library:L14"
+  },
+  {
+   "t": 550.5,
+   "type": "building",
+   "side": "player",
+   "detail": "library:L15"
+  },
+  {
+   "t": 552.1,
+   "type": "building",
+   "side": "enemy",
+   "detail": "library:L13"
+  },
+  {
+   "t": 554.9,
+   "type": "unit",
+   "side": "enemy",
+   "detail": "modern-sniper"
+  },
+  {
+   "t": 555.9,
+   "type": "building",
+   "side": "player",
+   "detail": "library:L16"
+  },
+  {
+   "t": 556.1,
+   "type": "building",
+   "side": "enemy",
+   "detail": "barracks:L13"
+  },
+  {
+   "t": 556.4,
+   "type": "building",
+   "side": "player",
+   "detail": "library:L17"
+  },
+  {
+   "t": 556.8,
+   "type": "building",
+   "side": "player",
+   "detail": "library:L18"
+  },
+  {
+   "t": 557.3,
+   "type": "building",
+   "side": "player",
+   "detail": "library:L19"
+  },
+  {
+   "t": 558.2,
+   "type": "building",
+   "side": "player",
+   "detail": "library:L20"
+  },
+  {
+   "t": 560.2,
+   "type": "building",
+   "side": "enemy",
+   "detail": "forge:L13"
+  },
+  {
+   "t": 564.3,
+   "type": "building",
+   "side": "enemy",
+   "detail": "market:L15"
+  },
+  {
+   "t": 564.8,
+   "type": "building",
+   "side": "enemy",
+   "detail": "mine:L17"
+  },
+  {
+   "t": 565.2,
+   "type": "special",
+   "side": "player"
+  },
+  {
+   "t": 566.4,
+   "type": "unit",
+   "side": "enemy",
+   "detail": "modern-tank"
+  },
+  {
+   "t": 568.8,
+   "type": "unit",
+   "side": "enemy",
+   "detail": "modern-tank"
+  },
+  {
+   "t": 571.2,
+   "type": "unit",
+   "side": "enemy",
+   "detail": "modern-tank"
+  },
+  {
+   "t": 572.5,
+   "type": "unit",
+   "side": "enemy",
+   "detail": "modern-sniper"
+  },
+  {
+   "t": 573.4,
+   "type": "unit",
+   "side": "player",
+   "detail": "modern-tank"
+  },
+  {
+   "t": 573.8,
+   "type": "unit",
+   "side": "enemy",
+   "detail": "modern-sniper"
+  },
+  {
+   "t": 575.4,
+   "type": "unit",
+   "side": "player",
+   "detail": "modern-tank"
+  },
+  {
+   "t": 575.9,
+   "type": "special",
+   "side": "enemy"
+  },
+  {
+   "t": 576.9,
+   "type": "building",
+   "side": "enemy",
+   "detail": "market:L16"
+  },
+  {
+   "t": 577.1,
+   "type": "unit",
+   "side": "player",
+   "detail": "modern-officer"
+  },
+  {
+   "t": 578.4,
+   "type": "building",
+   "side": "enemy",
+   "detail": "shrine:L12"
+  },
+  {
+   "t": 579.1,
+   "type": "unit",
+   "side": "player",
+   "detail": "modern-tank"
+  },
+  {
+   "t": 580.3,
+   "type": "unit",
+   "side": "enemy",
+   "detail": "modern-sniper"
+  },
+  {
+   "t": 581.1,
+   "type": "unit",
+   "side": "player",
+   "detail": "modern-tank"
+  },
+  {
+   "t": 582.8,
+   "type": "unit",
+   "side": "player",
+   "detail": "modern-officer"
+  },
+  {
+   "t": 583.5,
+   "type": "building",
+   "side": "enemy",
+   "detail": "barracks:L14"
+  },
+  {
+   "t": 584.7,
+   "type": "unit",
+   "side": "player",
+   "detail": "modern-tank"
+  },
+  {
+   "t": 586,
+   "type": "building",
+   "side": "enemy",
+   "detail": "library:L14"
+  },
+  {
+   "t": 587.4,
+   "type": "unit",
+   "side": "player",
+   "detail": "modern-tank"
+  },
+  {
+   "t": 588.6,
+   "type": "building",
+   "side": "enemy",
+   "detail": "market:L17"
+  },
+  {
+   "t": 589.1,
+   "type": "unit",
+   "side": "player",
+   "detail": "modern-officer"
+  },
+  {
+   "t": 589.4,
+   "type": "unit",
+   "side": "enemy",
+   "detail": "modern-sniper"
+  },
+  {
+   "t": 592.1,
+   "type": "building",
+   "side": "enemy",
+   "detail": "shrine:L13"
+  },
+  {
+   "t": 593.1,
+   "type": "unit",
+   "side": "player",
+   "detail": "modern-tank"
+  },
+  {
+   "t": 594.6,
+   "type": "building",
+   "side": "enemy",
+   "detail": "market:L18"
+  },
+  {
+   "t": 594.8,
+   "type": "unit",
+   "side": "enemy",
+   "detail": "modern-sniper"
+  },
+  {
+   "t": 596.8,
+   "type": "unit",
+   "side": "player",
+   "detail": "modern-sniper"
+  },
+  {
+   "t": 598,
+   "type": "unit",
+   "side": "enemy",
+   "detail": "modern-tank"
+  },
+  {
+   "t": 598.7,
+   "type": "turret-built",
+   "side": "enemy",
+   "detail": "0:modern-grenade-launcher"
+  },
+  {
+   "t": 599.2,
+   "type": "research",
+   "side": "enemy",
+   "detail": "turretDamage:T1"
+  },
+  {
+   "t": 599.3,
+   "type": "unit",
+   "side": "enemy",
+   "detail": "modern-sniper"
+  },
+  {
+   "t": 600.7,
+   "type": "unit",
+   "side": "player",
+   "detail": "modern-rifleman"
+  },
+  {
+   "t": 602.7,
+   "type": "unit",
+   "side": "player",
+   "detail": "modern-sniper"
+  },
+  {
+   "t": 603.3,
+   "type": "research",
+   "side": "enemy",
+   "detail": "turretDamage:T2"
+  },
+  {
+   "t": 603.8,
+   "type": "unit",
+   "side": "player",
+   "detail": "modern-sniper"
+  },
+  {
+   "t": 603.8,
+   "type": "research",
+   "side": "enemy",
+   "detail": "turretDamage:T3"
+  },
+  {
+   "t": 604.3,
+   "type": "research",
+   "side": "enemy",
+   "detail": "turretRange:T1"
+  },
+  {
+   "t": 604.8,
+   "type": "research",
+   "side": "enemy",
+   "detail": "turretRange:T2"
+  },
+  {
+   "t": 604.9,
+   "type": "unit",
+   "side": "player",
+   "detail": "modern-sniper"
+  },
+  {
+   "t": 605.2,
+   "type": "special",
+   "side": "player"
+  },
+  {
+   "t": 606.1,
+   "type": "unit",
+   "side": "player",
+   "detail": "modern-sniper"
+  },
+  {
+   "t": 606.3,
+   "type": "unit",
+   "side": "enemy",
+   "detail": "modern-tank"
+  },
+  {
+   "t": 607.2,
+   "type": "unit",
+   "side": "player",
+   "detail": "modern-sniper"
+  },
+  {
+   "t": 607.2,
+   "type": "unit",
+   "side": "enemy",
+   "detail": "modern-rifleman"
+  },
+  {
+   "t": 609.5,
+   "type": "unit",
+   "side": "enemy",
+   "detail": "modern-tank"
+  },
+  {
+   "t": 610.4,
+   "type": "unit",
+   "side": "enemy",
+   "detail": "modern-rifleman"
+  },
+  {
+   "t": 613.4,
+   "type": "research",
+   "side": "enemy",
+   "detail": "turretRange:T3"
+  },
+  {
+   "t": 613.6,
+   "type": "unit",
+   "side": "enemy",
+   "detail": "modern-tank"
+  },
+  {
+   "t": 616.1,
+   "type": "unit",
+   "side": "player",
+   "detail": "modern-officer"
+  },
+  {
+   "t": 617,
+   "type": "turret-upgraded",
+   "side": "enemy",
+   "detail": "0:L1"
+  },
+  {
+   "t": 617.2,
+   "type": "unit",
+   "side": "enemy",
+   "detail": "modern-sniper"
+  },
+  {
+   "t": 617.8,
+   "type": "unit",
+   "side": "player",
+   "detail": "modern-officer"
+  },
+  {
+   "t": 620.9,
+   "type": "unit",
+   "side": "player",
+   "detail": "modern-tank"
+  },
+  {
+   "t": 622.1,
+   "type": "building",
+   "side": "enemy",
+   "detail": "forge:L14"
+  },
+  {
+   "t": 622.9,
+   "type": "unit",
+   "side": "player",
+   "detail": "modern-tank"
+  },
+  {
+   "t": 624.9,
+   "type": "unit",
+   "side": "player",
+   "detail": "modern-tank"
+  },
+  {
+   "t": 626.1,
+   "type": "building",
+   "side": "enemy",
+   "detail": "library:L15"
+  },
+  {
+   "t": 626.2,
+   "type": "unit",
+   "side": "enemy",
+   "detail": "modern-sniper"
+  },
+  {
+   "t": 627.7,
+   "type": "building",
+   "side": "enemy",
+   "detail": "barracks:L15"
+  },
+  {
+   "t": 628.4,
+   "type": "unit",
+   "side": "enemy",
+   "detail": "modern-tank"
+  },
+  {
+   "t": 631.2,
+   "type": "special",
+   "side": "enemy"
+  },
+  {
+   "t": 632.8,
+   "type": "building",
+   "side": "enemy",
+   "detail": "market:L19"
+  },
+  {
+   "t": 633.3,
+   "type": "building",
+   "side": "enemy",
+   "detail": "market:L20"
+  },
+  {
+   "t": 633.8,
+   "type": "building",
+   "side": "enemy",
+   "detail": "barracks:L16"
+  },
+  {
+   "t": 634.3,
+   "type": "building",
+   "side": "enemy",
+   "detail": "library:L16"
+  },
+  {
+   "t": 637.8,
+   "type": "building",
+   "side": "enemy",
+   "detail": "barracks:L17"
+  },
+  {
+   "t": 637.9,
+   "type": "unit",
+   "side": "enemy",
+   "detail": "modern-rifleman"
+  },
+  {
+   "t": 638.5,
+   "type": "unit",
+   "side": "player",
+   "detail": "modern-sniper"
+  },
+  {
+   "t": 639.2,
+   "type": "unit",
+   "side": "enemy",
+   "detail": "modern-sniper"
+  },
+  {
+   "t": 639.6,
+   "type": "unit",
+   "side": "player",
+   "detail": "modern-sniper"
+  },
+  {
+   "t": 640.4,
+   "type": "building",
+   "side": "enemy",
+   "detail": "mine:L18"
+  },
+  {
+   "t": 640.8,
+   "type": "unit",
+   "side": "player",
+   "detail": "modern-sniper"
+  },
+  {
+   "t": 640.8,
+   "type": "special",
+   "side": "player"
+  },
+  {
+   "t": 640.8,
+   "type": "unit",
+   "side": "enemy",
+   "detail": "modern-rifleman"
+  },
+  {
+   "t": 641.9,
+   "type": "unit",
+   "side": "player",
+   "detail": "modern-sniper"
+  },
+  {
+   "t": 642.8,
+   "type": "unit",
+   "side": "enemy",
+   "detail": "modern-tank"
+  },
+  {
+   "t": 643,
+   "type": "unit",
+   "side": "player",
+   "detail": "modern-sniper"
+  },
+  {
+   "t": 644.7,
+   "type": "unit",
+   "side": "enemy",
+   "detail": "modern-tank"
+  },
+  {
+   "t": 646.4,
+   "type": "unit",
+   "side": "enemy",
+   "detail": "modern-officer"
+  },
+  {
+   "t": 647.2,
+   "type": "unit",
+   "side": "enemy",
+   "detail": "modern-rifleman"
+  },
+  {
+   "t": 647.2,
+   "type": "unit",
+   "side": "player",
+   "detail": "modern-tank"
+  },
+  {
+   "t": 648,
+   "type": "unit",
+   "side": "enemy",
+   "detail": "modern-rifleman"
+  },
+  {
+   "t": 648.3,
+   "type": "unit",
+   "side": "player",
+   "detail": "modern-sniper"
+  },
+  {
+   "t": 649.5,
+   "type": "unit",
+   "side": "player",
+   "detail": "modern-sniper"
+  },
+  {
+   "t": 650.6,
+   "type": "unit",
+   "side": "player",
+   "detail": "modern-sniper"
+  },
+  {
+   "t": 652.6,
+   "type": "unit",
+   "side": "player",
+   "detail": "modern-tank"
+  },
+  {
+   "t": 653.7,
+   "type": "unit",
+   "side": "player",
+   "detail": "modern-sniper"
+  },
+  {
+   "t": 654.9,
+   "type": "unit",
+   "side": "player",
+   "detail": "modern-sniper"
+  },
+  {
+   "t": 656,
+   "type": "unit",
+   "side": "player",
+   "detail": "modern-sniper"
+  },
+  {
+   "t": 656.1,
+   "type": "building",
+   "side": "enemy",
+   "detail": "forge:L15"
+  },
+  {
+   "t": 656.4,
+   "type": "unit",
+   "side": "enemy",
+   "detail": "modern-sniper"
+  },
+  {
+   "t": 657.7,
+   "type": "unit",
+   "side": "enemy",
+   "detail": "modern-rifleman"
+  },
+  {
+   "t": 660,
+   "type": "base-below",
+   "side": "player",
+   "detail": 50
+  },
+  {
+   "t": 660,
+   "type": "base-below",
+   "side": "enemy",
+   "detail": 75
+  },
+  {
+   "t": 661.2,
+   "type": "building",
+   "side": "enemy",
+   "detail": "forge:L16"
+  },
+  {
+   "t": 664.5,
+   "type": "unit",
+   "side": "enemy",
+   "detail": "modern-tank"
+  },
+  {
+   "t": 666.3,
+   "type": "research",
+   "side": "enemy",
+   "detail": "heavyDamage:T4"
+  },
+  {
+   "t": 666.5,
+   "type": "unit",
+   "side": "enemy",
+   "detail": "modern-tank"
+  },
+  {
+   "t": 668.3,
+   "type": "speed",
+   "detail": 4
+  },
+  {
+   "t": 669,
+   "type": "speed",
+   "detail": 8
+  },
+  {
+   "t": 669.4,
+   "type": "unit",
+   "side": "enemy",
+   "detail": "modern-sniper"
+  },
+  {
+   "t": 670.1,
+   "type": "speed",
+   "detail": 1
+  },
+  {
+   "t": 670.2,
+   "type": "speed",
+   "detail": 2
+  },
+  {
+   "t": 671.3,
+   "type": "unit",
+   "side": "enemy",
+   "detail": "modern-tank"
+  },
+  {
+   "t": 672.2,
+   "type": "unit",
+   "side": "enemy",
+   "detail": "modern-rifleman"
+  },
+  {
+   "t": 673.3,
+   "type": "unit",
+   "side": "enemy",
+   "detail": "modern-sniper"
+  },
+  {
+   "t": 673.5,
+   "type": "special",
+   "side": "player"
+  },
+  {
+   "t": 674.1,
+   "type": "unit",
+   "side": "enemy",
+   "detail": "modern-rifleman"
+  },
+  {
+   "t": 675.2,
+   "type": "unit",
+   "side": "enemy",
+   "detail": "modern-sniper"
+  },
+  {
+   "t": 677.1,
+   "type": "unit",
+   "side": "enemy",
+   "detail": "modern-tank"
+  },
+  {
+   "t": 679.1,
+   "type": "unit",
+   "side": "enemy",
+   "detail": "modern-tank"
+  },
+  {
+   "t": 679.9,
+   "type": "unit",
+   "side": "enemy",
+   "detail": "modern-rifleman"
+  },
+  {
+   "t": 681,
+   "type": "unit",
+   "side": "enemy",
+   "detail": "modern-sniper"
+  },
+  {
+   "t": 681.8,
+   "type": "unit",
+   "side": "enemy",
+   "detail": "modern-rifleman"
+  },
+  {
+   "t": 683,
+   "type": "research",
+   "side": "enemy",
+   "detail": "heavyArmor:T4"
+  },
+  {
+   "t": 683.4,
+   "type": "building",
+   "side": "player",
+   "detail": "market:L3"
+  },
+  {
+   "t": 683.8,
+   "type": "unit",
+   "side": "enemy",
+   "detail": "modern-tank"
+  },
+  {
+   "t": 683.8,
+   "type": "building",
+   "side": "player",
+   "detail": "market:L4"
+  },
+  {
+   "t": 684.1,
+   "type": "building",
+   "side": "player",
+   "detail": "market:L5"
+  },
+  {
+   "t": 684.9,
+   "type": "unit",
+   "side": "enemy",
+   "detail": "modern-sniper"
+  },
+  {
+   "t": 685.1,
+   "type": "special",
+   "side": "enemy"
+  },
+  {
+   "t": 686.6,
+   "type": "research",
+   "side": "enemy",
+   "detail": "meleeDamage:T4"
+  },
+  {
+   "t": 687.1,
+   "type": "research",
+   "side": "enemy",
+   "detail": "meleeArmor:T4"
+  },
+  {
+   "t": 687.6,
+   "type": "research",
+   "side": "enemy",
+   "detail": "bounty:T4"
+  },
+  {
+   "t": 689.7,
+   "type": "unit",
+   "side": "enemy",
+   "detail": "modern-officer"
+  },
+  {
+   "t": 690.8,
+   "type": "unit",
+   "side": "enemy",
+   "detail": "modern-sniper"
+  },
+  {
+   "t": 691.1,
+   "type": "building",
+   "side": "player",
+   "detail": "market:L6"
+  },
+  {
+   "t": 691.5,
+   "type": "building",
+   "side": "player",
+   "detail": "market:L7"
+  },
+  {
+   "t": 691.7,
+   "type": "building",
+   "side": "player",
+   "detail": "market:L8"
+  },
+  {
+   "t": 692,
+   "type": "building",
+   "side": "player",
+   "detail": "market:L9"
+  },
+  {
+   "t": 692.4,
+   "type": "building",
+   "side": "player",
+   "detail": "market:L10"
+  },
+  {
+   "t": 692.7,
+   "type": "research",
+   "side": "enemy",
+   "detail": "turretDamage:T4"
+  },
+  {
+   "t": 693.2,
+   "type": "unit",
+   "side": "enemy",
+   "detail": "modern-sniper"
+  },
+  {
+   "t": 694.7,
+   "type": "building",
+   "side": "player",
+   "detail": "market:L11"
+  },
+  {
+   "t": 695.1,
+   "type": "building",
+   "side": "player",
+   "detail": "market:L12"
+  },
+  {
+   "t": 695.4,
+   "type": "building",
+   "side": "player",
+   "detail": "market:L13"
+  },
+  {
+   "t": 695.7,
+   "type": "building",
+   "side": "player",
+   "detail": "market:L14"
+  },
+  {
+   "t": 696,
+   "type": "building",
+   "side": "player",
+   "detail": "market:L15"
+  },
+  {
+   "t": 696.2,
+   "type": "building",
+   "side": "enemy",
+   "detail": "shrine:L14"
+  },
+  {
+   "t": 698.8,
+   "type": "research",
+   "side": "enemy",
+   "detail": "turretRange:T4"
+  },
+  {
+   "t": 699.1,
+   "type": "building",
+   "side": "player",
+   "detail": "market:L16"
+  },
+  {
+   "t": 699.3,
+   "type": "research",
+   "side": "enemy",
+   "detail": "rangedDamage:T4"
+  },
+  {
+   "t": 699.4,
+   "type": "building",
+   "side": "player",
+   "detail": "market:L17"
+  },
+  {
+   "t": 699.8,
+   "type": "building",
+   "side": "player",
+   "detail": "market:L18"
+  },
+  {
+   "t": 700.1,
+   "type": "building",
+   "side": "player",
+   "detail": "market:L19"
+  },
+  {
+   "t": 700.5,
+   "type": "building",
+   "side": "player",
+   "detail": "market:L20"
+  },
+  {
+   "t": 704.4,
+   "type": "research",
+   "side": "enemy",
+   "detail": "rangedRange:T4"
+  },
+  {
+   "t": 706.3,
+   "type": "special",
+   "side": "player"
+  },
+  {
+   "t": 710,
+   "type": "unit",
+   "side": "player",
+   "detail": "modern-tank"
+  },
+  {
+   "t": 711.5,
+   "type": "unit",
+   "side": "enemy",
+   "detail": "modern-sniper"
+  },
+  {
+   "t": 712,
+   "type": "unit",
+   "side": "player",
+   "detail": "modern-tank"
+  },
+  {
+   "t": 713.1,
+   "type": "unit",
+   "side": "player",
+   "detail": "modern-sniper"
+  },
+  {
+   "t": 713.6,
+   "type": "unit",
+   "side": "enemy",
+   "detail": "modern-sniper"
+  },
+  {
+   "t": 714.3,
+   "type": "unit",
+   "side": "player",
+   "detail": "modern-sniper"
+  },
+  {
+   "t": 714.4,
+   "type": "unit",
+   "side": "enemy",
+   "detail": "modern-rifleman"
+  },
+  {
+   "t": 715.2,
+   "type": "unit",
+   "side": "enemy",
+   "detail": "modern-rifleman"
+  },
+  {
+   "t": 715.4,
+   "type": "unit",
+   "side": "player",
+   "detail": "modern-sniper"
+  },
+  {
+   "t": 716.3,
+   "type": "unit",
+   "side": "enemy",
+   "detail": "modern-sniper"
+  },
+  {
+   "t": 716.7,
+   "type": "unit",
+   "side": "player",
+   "detail": "modern-sniper"
+  },
+  {
+   "t": 717.8,
+   "type": "unit",
+   "side": "player",
+   "detail": "modern-sniper"
+  },
+  {
+   "t": 719,
+   "type": "unit",
+   "side": "player",
+   "detail": "modern-sniper"
+  },
+  {
+   "t": 719.1,
+   "type": "unit",
+   "side": "enemy",
+   "detail": "modern-sniper"
+  },
+  {
+   "t": 720.1,
+   "type": "unit",
+   "side": "player",
+   "detail": "modern-sniper"
+  },
+  {
+   "t": 721.2,
+   "type": "unit",
+   "side": "player",
+   "detail": "modern-sniper"
+  },
+  {
+   "t": 722.4,
+   "type": "unit",
+   "side": "player",
+   "detail": "modern-sniper"
+  },
+  {
+   "t": 723.5,
+   "type": "unit",
+   "side": "player",
+   "detail": "modern-sniper"
+  },
+  {
+   "t": 725.5,
+   "type": "unit",
+   "side": "player",
+   "detail": "modern-tank"
+  },
+  {
+   "t": 727.5,
+   "type": "unit",
+   "side": "player",
+   "detail": "modern-tank"
+  },
+  {
+   "t": 728.5,
+   "type": "base-below",
+   "side": "enemy",
+   "detail": 50
+  },
+  {
+   "t": 728.6,
+   "type": "unit",
+   "side": "player",
+   "detail": "modern-sniper"
+  },
+  {
+   "t": 729.1,
+   "type": "unit",
+   "side": "enemy",
+   "detail": "modern-tank"
+  },
+  {
+   "t": 729.7,
+   "type": "unit",
+   "side": "player",
+   "detail": "modern-sniper"
+  },
+  {
+   "t": 730.9,
+   "type": "unit",
+   "side": "player",
+   "detail": "modern-sniper"
+  },
+  {
+   "t": 731,
+   "type": "unit",
+   "side": "enemy",
+   "detail": "modern-tank"
+  },
+  {
+   "t": 731.9,
+   "type": "unit",
+   "side": "enemy",
+   "detail": "modern-rifleman"
+  },
+  {
+   "t": 732,
+   "type": "base-below",
+   "side": "enemy",
+   "detail": 25
+  },
+  {
+   "t": 732.8,
+   "type": "unit",
+   "side": "player",
+   "detail": "modern-tank"
+  },
+  {
+   "t": 733,
+   "type": "unit",
+   "side": "enemy",
+   "detail": "modern-sniper"
+  },
+  {
+   "t": 733.8,
+   "type": "unit",
+   "side": "enemy",
+   "detail": "modern-rifleman"
+  },
+  {
+   "t": 737.6,
+   "type": "unit",
+   "side": "enemy",
+   "detail": "modern-rifleman"
+  },
+  {
+   "t": 738.8,
+   "type": "special",
+   "side": "enemy"
+  },
+  {
+   "t": 741.5,
+   "type": "unit",
+   "side": "player",
+   "detail": "modern-tank"
+  },
+  {
+   "t": 741.9,
+   "type": "building",
+   "side": "enemy",
+   "detail": "barracks:L18"
+  },
+  {
+   "t": 742.3,
+   "type": "unit",
+   "side": "enemy",
+   "detail": "modern-tank"
+  },
+  {
+   "t": 742.6,
+   "type": "unit",
+   "side": "player",
+   "detail": "modern-sniper"
+  },
+  {
+   "t": 742.9,
+   "type": "building",
+   "side": "enemy",
+   "detail": "barracks:L19"
+  },
+  {
+   "t": 743.4,
+   "type": "unit",
+   "side": "enemy",
+   "detail": "modern-sniper"
+  },
+  {
+   "t": 743.7,
+   "type": "unit",
+   "side": "player",
+   "detail": "modern-sniper"
+  },
+  {
+   "t": 744.9,
+   "type": "unit",
+   "side": "player",
+   "detail": "modern-sniper"
+  },
+  {
+   "t": 745.3,
+   "type": "unit",
+   "side": "enemy",
+   "detail": "modern-tank"
+  },
+  {
+   "t": 746,
+   "type": "unit",
+   "side": "player",
+   "detail": "modern-sniper"
+  },
+  {
+   "t": 747.1,
+   "type": "unit",
+   "side": "player",
+   "detail": "modern-sniper"
+  },
+  {
+   "t": 747.2,
+   "type": "unit",
+   "side": "enemy",
+   "detail": "modern-tank"
+  },
+  {
+   "t": 748,
+   "type": "base-below",
+   "side": "player",
+   "detail": 25
+  },
+  {
+   "t": 748.2,
+   "type": "unit",
+   "side": "enemy",
+   "detail": "modern-sniper"
+  },
+  {
+   "t": 749,
+   "type": "unit",
+   "side": "enemy",
+   "detail": "modern-rifleman"
+  },
+  {
+   "t": 749.1,
+   "type": "unit",
+   "side": "player",
+   "detail": "modern-tank"
+  },
+  {
+   "t": 750.3,
+   "type": "unit",
+   "side": "player",
+   "detail": "modern-sniper"
+  },
+  {
+   "t": 750.8,
+   "type": "unit",
+   "side": "enemy",
+   "detail": "modern-tank"
+  },
+  {
+   "t": 751.4,
+   "type": "unit",
+   "side": "player",
+   "detail": "modern-sniper"
+  },
+  {
+   "t": 751.6,
+   "type": "unit",
+   "side": "enemy",
+   "detail": "modern-rifleman"
+  },
+  {
+   "t": 752.5,
+   "type": "unit",
+   "side": "player",
+   "detail": "modern-sniper"
+  },
+  {
+   "t": 753.7,
+   "type": "unit",
+   "side": "player",
+   "detail": "modern-sniper"
+  },
+  {
+   "t": 754.4,
+   "type": "unit",
+   "side": "enemy",
+   "detail": "modern-tank"
+  },
+  {
+   "t": 755.6,
+   "type": "unit",
+   "side": "player",
+   "detail": "modern-tank"
+  },
+  {
+   "t": 756.8,
+   "type": "unit",
+   "side": "player",
+   "detail": "modern-sniper"
+  },
+  {
+   "t": 756.9,
+   "type": "unit",
+   "side": "enemy",
+   "detail": "modern-tank"
+  },
+  {
+   "t": 757.9,
+   "type": "unit",
+   "side": "player",
+   "detail": "modern-sniper"
+  },
+  {
+   "t": 757.9,
+   "type": "unit",
+   "side": "enemy",
+   "detail": "modern-sniper"
+  },
+  {
+   "t": 760.2,
+   "type": "unit",
+   "side": "player",
+   "detail": "modern-sniper"
+  },
+  {
+   "t": 760.4,
+   "type": "unit",
+   "side": "enemy",
+   "detail": "modern-rifleman"
+  },
+  {
+   "t": 765.3,
+   "type": "building",
+   "side": "enemy",
+   "detail": "forge:L17"
+  },
+  {
+   "t": 765.8,
+   "type": "building",
+   "side": "enemy",
+   "detail": "library:L17"
+  },
+  {
+   "t": 766.3,
+   "type": "unit",
+   "side": "enemy",
+   "detail": "modern-sniper"
+  },
+  {
+   "t": 766.4,
+   "type": "special",
+   "side": "player"
+  },
+  {
+   "t": 768.1,
+   "type": "unit",
+   "side": "enemy",
+   "detail": "modern-rifleman"
+  },
+  {
+   "t": 769.1,
+   "type": "unit",
+   "side": "enemy",
+   "detail": "modern-sniper"
+  },
+  {
+   "t": 770.9,
+   "type": "unit",
+   "side": "enemy",
+   "detail": "modern-tank"
+  },
+  {
+   "t": 771.7,
+   "type": "unit",
+   "side": "enemy",
+   "detail": "modern-rifleman"
+  },
+  {
+   "t": 773.7,
+   "type": "unit",
+   "side": "enemy",
+   "detail": "modern-tank"
+  },
+  {
+   "t": 774.4,
+   "type": "unit",
+   "side": "enemy",
+   "detail": "modern-rifleman"
+  },
+  {
+   "t": 775.7,
+   "type": "unit",
+   "side": "enemy",
+   "detail": "modern-rifleman"
+  },
+  {
+   "t": 776.7,
+   "type": "unit",
+   "side": "enemy",
+   "detail": "modern-sniper"
+  },
+  {
+   "t": 780.3,
+   "type": "unit",
+   "side": "player",
+   "detail": "modern-sniper"
+  },
+  {
+   "t": 784.9,
+   "type": "unit",
+   "side": "enemy",
+   "detail": "modern-rifleman"
+  },
+  {
+   "t": 785.1,
+   "type": "unit",
+   "side": "player",
+   "detail": "modern-tank"
+  },
+  {
+   "t": 785.7,
+   "type": "unit",
+   "side": "enemy",
+   "detail": "modern-rifleman"
+  },
+  {
+   "t": 786.5,
+   "type": "unit",
+   "side": "enemy",
+   "detail": "modern-rifleman"
+  },
+  {
+   "t": 786.8,
+   "type": "unit",
+   "side": "player",
+   "detail": "modern-officer"
+  },
+  {
+   "t": 788,
+   "type": "unit",
+   "side": "player",
+   "detail": "modern-sniper"
+  },
+  {
+   "t": 789.1,
+   "type": "unit",
+   "side": "player",
+   "detail": "modern-sniper"
+  },
+  {
+   "t": 791.1,
+   "type": "unit",
+   "side": "enemy",
+   "detail": "modern-tank"
+  },
+  {
+   "t": 791.7,
+   "type": "special",
+   "side": "enemy"
+  },
+  {
+   "t": 792.9,
+   "type": "unit",
+   "side": "enemy",
+   "detail": "modern-tank"
+  },
+  {
+   "t": 793,
+   "type": "unit",
+   "side": "player",
+   "detail": "modern-sniper"
+  },
+  {
+   "t": 794.1,
+   "type": "unit",
+   "side": "player",
+   "detail": "modern-sniper"
+  },
+  {
+   "t": 795.2,
+   "type": "building",
+   "side": "enemy",
+   "detail": "shrine:L15"
+  },
+  {
+   "t": 795.7,
+   "type": "building",
+   "side": "enemy",
+   "detail": "shrine:L16"
+  },
+  {
+   "t": 796.7,
+   "type": "building",
+   "side": "enemy",
+   "detail": "barracks:L20"
+  },
+  {
+   "t": 796.8,
+   "type": "unit",
+   "side": "enemy",
+   "detail": "modern-rifleman"
+  },
+  {
+   "t": 798.2,
+   "type": "unit",
+   "side": "player",
+   "detail": "modern-tank"
+  },
+  {
+   "t": 799.3,
+   "type": "unit",
+   "side": "player",
+   "detail": "modern-sniper"
+  }
+ ],
+ "snapshots": [
+  {
+   "t": 0,
+   "front": {
+    "player": null,
+    "enemy": null
+   },
+   "player": {
+    "gold": 7975,
+    "xp": 0,
+    "age": 3,
+    "baseHp": 2800,
+    "units": [
+     0,
+     0,
+     0,
+     0,
+     0
+    ],
+    "armyValue": 0,
+    "queue": 1,
+    "turrets": [
+     "modern-machine-gun:L1",
+     "modern-artillery:L0",
+     "modern-artillery:L0",
+     "modern-machine-gun:L1",
+     "modern-machine-gun:L1"
+    ],
+    "buildings": "mine9 lib0 forge0",
+    "researchTiers": 0,
+    "mineGoldPerSec": 21,
+    "libraryXpPerSec": 0
+   },
+   "enemy": {
+    "gold": 1585,
+    "xp": 0,
+    "age": 3,
+    "baseHp": 2800,
+    "units": [
+     0,
+     0,
+     0,
+     0,
+     0
+    ],
+    "armyValue": 0,
+    "queue": 3,
+    "turrets": [],
+    "buildings": "mine0 lib0 forge0",
+    "researchTiers": 0,
+    "mineGoldPerSec": 0,
+    "libraryXpPerSec": 0
+   }
+  },
+  {
+   "t": 15,
+   "front": {
+    "player": 659,
+    "enemy": 712
+   },
+   "player": {
+    "gold": 8290,
+    "xp": 0,
+    "age": 3,
+    "baseHp": 2800,
+    "units": [
+     1,
+     0,
+     0,
+     0,
+     0
+    ],
+    "armyValue": 210,
+    "queue": 0,
+    "turrets": [
+     "modern-machine-gun:L1",
+     "modern-artillery:L0",
+     "modern-artillery:L0",
+     "modern-machine-gun:L1",
+     "modern-machine-gun:L1"
+    ],
+    "buildings": "mine9 lib0 forge0",
+    "researchTiers": 0,
+    "mineGoldPerSec": 21,
+    "libraryXpPerSec": 0
+   },
+   "enemy": {
+    "gold": 484,
+    "xp": 26,
+    "age": 3,
+    "baseHp": 2800,
+    "units": [
+     0,
+     0,
+     3,
+     0,
+     0
+    ],
+    "armyValue": 1770,
+    "queue": 0,
+    "turrets": [],
+    "buildings": "mine8 lib1 forge2",
+    "researchTiers": 7,
+    "mineGoldPerSec": 18.9,
+    "libraryXpPerSec": 2.6
+   }
+  },
+  {
+   "t": 30,
+   "front": {
+    "player": 303,
+    "enemy": 398
+   },
+   "player": {
+    "gold": 8327,
+    "xp": 276,
+    "age": 3,
+    "baseHp": 2800,
+    "units": [
+     3,
+     0,
+     0,
+     0,
+     0
+    ],
+    "armyValue": 630,
+    "queue": 0,
+    "turrets": [
+     "modern-machine-gun:L2",
+     "modern-artillery:L0",
+     "modern-artillery:L0",
+     "modern-machine-gun:L1",
+     "modern-machine-gun:L1"
+    ],
+    "buildings": "mine9 lib0 forge0",
+    "researchTiers": 0,
+    "mineGoldPerSec": 21,
+    "libraryXpPerSec": 0
+   },
+   "enemy": {
+    "gold": 611,
+    "xp": 43,
+    "age": 3,
+    "baseHp": 2800,
+    "units": [
+     0,
+     0,
+     1,
+     0,
+     0
+    ],
+    "armyValue": 840,
+    "queue": 0,
+    "turrets": [],
+    "buildings": "mine8 lib3 forge2",
+    "researchTiers": 7,
+    "mineGoldPerSec": 18.9,
+    "libraryXpPerSec": 4.7
+   }
+  },
+  {
+   "t": 45,
+   "front": {
+    "player": 840,
+    "enemy": 891
+   },
+   "player": {
+    "gold": 443,
+    "xp": 528,
+    "age": 3,
+    "baseHp": 2800,
+    "units": [
+     2,
+     0,
+     0,
+     0,
+     0
+    ],
+    "armyValue": 420,
+    "queue": 0,
+    "turrets": [
+     "modern-machine-gun:L3",
+     "modern-artillery:L3",
+     "modern-artillery:L3",
+     "modern-machine-gun:L3",
+     "modern-machine-gun:L3"
+    ],
+    "buildings": "mine9 lib0 forge0",
+    "researchTiers": 0,
+    "mineGoldPerSec": 21,
+    "libraryXpPerSec": 0
+   },
+   "enemy": {
+    "gold": 160,
+    "xp": 61,
+    "age": 3,
+    "baseHp": 2800,
+    "units": [
+     0,
+     1,
+     0,
+     0,
+     0
+    ],
+    "armyValue": 315,
+    "queue": 1,
+    "turrets": [],
+    "buildings": "mine8 lib3 forge2",
+    "researchTiers": 7,
+    "mineGoldPerSec": 18.9,
+    "libraryXpPerSec": 4.7
+   }
+  },
+  {
+   "t": 60,
+   "front": {
+    "player": 1043,
+    "enemy": 1095
+   },
+   "player": {
+    "gold": 1041,
+    "xp": 622,
+    "age": 3,
+    "baseHp": 2800,
+    "units": [
+     1,
+     0,
+     0,
+     0,
+     0
+    ],
+    "armyValue": 210,
+    "queue": 0,
+    "turrets": [
+     "modern-machine-gun:L3",
+     "modern-artillery:L3",
+     "modern-artillery:L3",
+     "modern-machine-gun:L3",
+     "modern-machine-gun:L3"
+    ],
+    "buildings": "mine9 lib0 forge0",
+    "researchTiers": 0,
+    "mineGoldPerSec": 21,
+    "libraryXpPerSec": 0
+   },
+   "enemy": {
+    "gold": 483,
+    "xp": 80,
+    "age": 3,
+    "baseHp": 2800,
+    "units": [
+     1,
+     0,
+     1,
+     0,
+     0
+    ],
+    "armyValue": 1050,
+    "queue": 0,
+    "turrets": [],
+    "buildings": "mine8 lib3 forge3",
+    "researchTiers": 7,
+    "mineGoldPerSec": 18.9,
+    "libraryXpPerSec": 4.7
+   }
+  },
+  {
+   "t": 75,
+   "front": {
+    "player": null,
+    "enemy": 760
+   },
+   "player": {
+    "gold": 1356,
+    "xp": 622,
+    "age": 3,
+    "baseHp": 2800,
+    "units": [
+     0,
+     0,
+     0,
+     0,
+     0
+    ],
+    "armyValue": 0,
+    "queue": 0,
+    "turrets": [
+     "modern-machine-gun:L3",
+     "modern-artillery:L3",
+     "modern-artillery:L3",
+     "modern-machine-gun:L3",
+     "modern-machine-gun:L3"
+    ],
+    "buildings": "mine9 lib0 forge0",
+    "researchTiers": 0,
+    "mineGoldPerSec": 21,
+    "libraryXpPerSec": 0
+   },
+   "enemy": {
+    "gold": 587,
+    "xp": 100,
+    "age": 3,
+    "baseHp": 2800,
+    "units": [
+     1,
+     0,
+     1,
+     0,
+     0
+    ],
+    "armyValue": 1050,
+    "queue": 0,
+    "turrets": [],
+    "buildings": "mine9 lib4 forge3",
+    "researchTiers": 7,
+    "mineGoldPerSec": 21,
+    "libraryXpPerSec": 5.8
+   }
+  },
+  {
+   "t": 90,
+   "front": {
+    "player": null,
+    "enemy": 1100
+   },
+   "player": {
+    "gold": 521,
+    "xp": 937,
+    "age": 3,
+    "baseHp": 2800,
+    "units": [
+     0,
+     0,
+     0,
+     0,
+     0
+    ],
+    "armyValue": 0,
+    "queue": 0,
+    "turrets": [
+     "modern-machine-gun:L3",
+     "modern-artillery:L3",
+     "modern-artillery:L3",
+     "modern-machine-gun:L3",
+     "modern-machine-gun:L3"
+    ],
+    "buildings": "mine16 lib0 forge0",
+    "researchTiers": 0,
+    "mineGoldPerSec": 35.7,
+    "libraryXpPerSec": 0
+   },
+   "enemy": {
+    "gold": 432,
+    "xp": 74,
+    "age": 3,
+    "baseHp": 2800,
+    "units": [
+     0,
+     1,
+     0,
+     0,
+     0
+    ],
+    "armyValue": 315,
+    "queue": 0,
+    "turrets": [],
+    "buildings": "mine9 lib6 forge4",
+    "researchTiers": 7,
+    "mineGoldPerSec": 21,
+    "libraryXpPerSec": 9.1
+   }
+  },
+  {
+   "t": 105,
+   "front": {
+    "player": null,
+    "enemy": 973
+   },
+   "player": {
+    "gold": 90,
+    "xp": 1084,
+    "age": 3,
+    "baseHp": 2800,
+    "units": [
+     0,
+     0,
+     0,
+     0,
+     0
+    ],
+    "armyValue": 0,
+    "queue": 0,
+    "turrets": [
+     "modern-machine-gun:L3",
+     "modern-artillery:L3",
+     "modern-artillery:L3",
+     "modern-machine-gun:L3",
+     "modern-machine-gun:L3"
+    ],
+    "buildings": "mine18 lib1 forge1",
+    "researchTiers": 0,
+    "mineGoldPerSec": 39.9,
+    "libraryXpPerSec": 2.6
+   },
+   "enemy": {
+    "gold": 645,
+    "xp": 63,
+    "age": 3,
+    "baseHp": 2800,
+    "units": [
+     1,
+     0,
+     0,
+     0,
+     0
+    ],
+    "armyValue": 210,
+    "queue": 0,
+    "turrets": [],
+    "buildings": "mine9 lib6 forge4",
+    "researchTiers": 7,
+    "mineGoldPerSec": 21,
+    "libraryXpPerSec": 9.1
+   }
+  },
+  {
+   "t": 120,
+   "front": {
+    "player": null,
+    "enemy": 749
+   },
+   "player": {
+    "gold": 480,
+    "xp": 1123,
+    "age": 3,
+    "baseHp": 2800,
+    "units": [
+     0,
+     0,
+     0,
+     0,
+     0
+    ],
+    "armyValue": 0,
+    "queue": 0,
+    "turrets": [
+     "modern-machine-gun:L3",
+     "modern-artillery:L3",
+     "modern-artillery:L3",
+     "modern-machine-gun:L3",
+     "modern-machine-gun:L3"
+    ],
+    "buildings": "mine18 lib3 forge3",
+    "researchTiers": 0,
+    "mineGoldPerSec": 39.9,
+    "libraryXpPerSec": 4.7
+   },
+   "enemy": {
+    "gold": 126,
+    "xp": 52,
+    "age": 3,
+    "baseHp": 2800,
+    "units": [
+     0,
+     1,
+     0,
+     0,
+     0
+    ],
+    "armyValue": 315,
+    "queue": 1,
+    "turrets": [],
+    "buildings": "mine9 lib6 forge4",
+    "researchTiers": 7,
+    "mineGoldPerSec": 21,
+    "libraryXpPerSec": 9.1
+   }
+  },
+  {
+   "t": 135,
+   "front": {
+    "player": null,
+    "enemy": 478
+   },
+   "player": {
+    "gold": 646,
+    "xp": 1194,
+    "age": 3,
+    "baseHp": 2800,
+    "units": [
+     0,
+     0,
+     0,
+     0,
+     0
+    ],
+    "armyValue": 0,
+    "queue": 0,
+    "turrets": [
+     "modern-machine-gun:L3",
+     "modern-artillery:L3",
+     "modern-artillery:L3",
+     "modern-machine-gun:L3",
+     "modern-machine-gun:L3"
+    ],
+    "buildings": "mine19 lib3 forge3",
+    "researchTiers": 0,
+    "mineGoldPerSec": 42,
+    "libraryXpPerSec": 4.7
+   },
+   "enemy": {
+    "gold": 446,
+    "xp": 41,
+    "age": 3,
+    "baseHp": 2800,
+    "units": [
+     0,
+     1,
+     1,
+     0,
+     0
+    ],
+    "armyValue": 1155,
+    "queue": 0,
+    "turrets": [],
+    "buildings": "mine9 lib6 forge4",
+    "researchTiers": 7,
+    "mineGoldPerSec": 21,
+    "libraryXpPerSec": 9.1
+   }
+  },
+  {
+   "t": 150,
+   "front": {
+    "player": 612,
+    "enemy": 1111
+   },
+   "player": {
+    "gold": 312,
+    "xp": 1518,
+    "age": 3,
+    "baseHp": 2560,
+    "units": [
+     1,
+     0,
+     1,
+     0,
+     0
+    ],
+    "armyValue": 1050,
+    "queue": 2,
+    "turrets": [
+     "modern-machine-gun:L3",
+     "modern-artillery:L3",
+     "modern-artillery:L3",
+     "modern-machine-gun:L3",
+     "modern-machine-gun:L3"
+    ],
+    "buildings": "mine19 lib3 forge3",
+    "researchTiers": 0,
+    "mineGoldPerSec": 42,
+    "libraryXpPerSec": 4.7
+   },
+   "enemy": {
+    "gold": 628,
+    "xp": 29,
+    "age": 3,
+    "baseHp": 2800,
+    "units": [
+     0,
+     1,
+     0,
+     0,
+     0
+    ],
+    "armyValue": 315,
+    "queue": 0,
+    "turrets": [],
+    "buildings": "mine9 lib6 forge4",
+    "researchTiers": 7,
+    "mineGoldPerSec": 21,
+    "libraryXpPerSec": 9.1
+   }
+  },
+  {
+   "t": 165,
+   "front": {
+    "player": 811,
+    "enemy": 976
+   },
+   "player": {
+    "gold": 1526,
+    "xp": 1588,
+    "age": 3,
+    "baseHp": 2560,
+    "units": [
+     0,
+     1,
+     1,
+     1,
+     0
+    ],
+    "armyValue": 2205,
+    "queue": 0,
+    "turrets": [
+     "modern-machine-gun:L3",
+     "modern-artillery:L3",
+     "modern-artillery:L3",
+     "modern-machine-gun:L3",
+     "modern-machine-gun:L3"
+    ],
+    "buildings": "mine19 lib3 forge3",
+    "researchTiers": 0,
+    "mineGoldPerSec": 42,
+    "libraryXpPerSec": 4.7
+   },
+   "enemy": {
+    "gold": 48,
+    "xp": 82,
+    "age": 3,
+    "baseHp": 2800,
+    "units": [
+     1,
+     0,
+     1,
+     0,
+     0
+    ],
+    "armyValue": 1050,
+    "queue": 1,
+    "turrets": [],
+    "buildings": "mine9 lib6 forge4",
+    "researchTiers": 7,
+    "mineGoldPerSec": 21,
+    "libraryXpPerSec": 9.1
+   }
+  },
+  {
+   "t": 180,
+   "front": {
+    "player": 811,
+    "enemy": 976
+   },
+   "player": {
+    "gold": 2489,
+    "xp": 1565,
+    "age": 3,
+    "baseHp": 2560,
+    "units": [
+     0,
+     1,
+     1,
+     1,
+     0
+    ],
+    "armyValue": 2205,
+    "queue": 0,
+    "turrets": [
+     "modern-machine-gun:L3",
+     "modern-artillery:L3",
+     "modern-artillery:L3",
+     "modern-machine-gun:L3",
+     "modern-machine-gun:L3"
+    ],
+    "buildings": "mine19 lib3 forge3",
+    "researchTiers": 0,
+    "mineGoldPerSec": 42,
+    "libraryXpPerSec": 4.7
+   },
+   "enemy": {
+    "gold": 267,
+    "xp": 71,
+    "age": 3,
+    "baseHp": 2800,
+    "units": [
+     2,
+     1,
+     1,
+     0,
+     0
+    ],
+    "armyValue": 1575,
+    "queue": 1,
+    "turrets": [],
+    "buildings": "mine9 lib6 forge4",
+    "researchTiers": 7,
+    "mineGoldPerSec": 21,
+    "libraryXpPerSec": 9.1
+   }
+  },
+  {
+   "t": 195,
+   "front": {
+    "player": null,
+    "enemy": 816
+   },
+   "player": {
+    "gold": 2049,
+    "xp": 1545,
+    "age": 3,
+    "baseHp": 2560,
+    "units": [
+     0,
+     0,
+     0,
+     0,
+     0
+    ],
+    "armyValue": 0,
+    "queue": 0,
+    "turrets": [
+     "modern-machine-gun:L3",
+     "modern-artillery:L3",
+     "modern-artillery:L3",
+     "modern-machine-gun:L3",
+     "modern-machine-gun:L3"
+    ],
+    "buildings": "mine20 lib5 forge4",
+    "researchTiers": 0,
+    "mineGoldPerSec": 50.7,
+    "libraryXpPerSec": 6.8
+   },
+   "enemy": {
+    "gold": 482,
+    "xp": 532,
+    "age": 3,
+    "baseHp": 2800,
+    "units": [
+     4,
+     1,
+     2,
+     0,
+     0
+    ],
+    "armyValue": 2835,
+    "queue": 0,
+    "turrets": [],
+    "buildings": "mine11 lib7 forge4",
+    "researchTiers": 7,
+    "mineGoldPerSec": 25.2,
+    "libraryXpPerSec": 10.3
+   }
+  },
+  {
+   "t": 210,
+   "front": {
+    "player": 225,
+    "enemy": 367
+   },
+   "player": {
+    "gold": 2410,
+    "xp": 2089,
+    "age": 3,
+    "baseHp": 2560,
+    "units": [
+     0,
+     2,
+     1,
+     0,
+     1
+    ],
+    "armyValue": 2100,
+    "queue": 1,
+    "turrets": [
+     "modern-machine-gun:L3",
+     "modern-artillery:L3",
+     "modern-artillery:L3",
+     "modern-machine-gun:L3",
+     "modern-machine-gun:L3"
+    ],
+    "buildings": "mine20 lib5 forge5",
+    "researchTiers": 0,
+    "mineGoldPerSec": 50.7,
+    "libraryXpPerSec": 6.8
+   },
+   "enemy": {
+    "gold": 421,
+    "xp": 464,
+    "age": 3,
+    "baseHp": 2800,
+    "units": [
+     1,
+     0,
+     1,
+     0,
+     0
+    ],
+    "armyValue": 1050,
+    "queue": 1,
+    "turrets": [],
+    "buildings": "mine11 lib7 forge4",
+    "researchTiers": 7,
+    "mineGoldPerSec": 25.2,
+    "libraryXpPerSec": 10.3
+   }
+  },
+  {
+   "t": 225,
+   "front": {
+    "player": 355,
+    "enemy": 603
+   },
+   "player": {
+    "gold": 1198,
+    "xp": 2411,
+    "age": 3,
+    "baseHp": 2320,
+    "units": [
+     0,
+     3,
+     1,
+     0,
+     0
+    ],
+    "armyValue": 1785,
+    "queue": 2,
+    "turrets": [
+     "modern-machine-gun:L3",
+     "modern-artillery:L3",
+     "modern-artillery:L3",
+     "modern-machine-gun:L3",
+     "modern-machine-gun:L3"
+    ],
+    "buildings": "mine20 lib5 forge5",
+    "researchTiers": 0,
+    "mineGoldPerSec": 50.7,
+    "libraryXpPerSec": 6.8
+   },
+   "enemy": {
+    "gold": 339,
+    "xp": 1007,
+    "age": 3,
+    "baseHp": 2800,
+    "units": [
+     1,
+     2,
+     1,
+     0,
+     0
+    ],
+    "armyValue": 1680,
+    "queue": 0,
+    "turrets": [],
+    "buildings": "mine14 lib7 forge4",
+    "researchTiers": 7,
+    "mineGoldPerSec": 31.5,
+    "libraryXpPerSec": 10.3
+   }
+  },
+  {
+   "t": 240,
+   "front": {
+    "player": 332,
+    "enemy": 483
+   },
+   "player": {
+    "gold": 882,
+    "xp": 2673,
+    "age": 3,
+    "baseHp": 2320,
+    "units": [
+     0,
+     2,
+     2,
+     0,
+     0
+    ],
+    "armyValue": 2310,
+    "queue": 0,
+    "turrets": [
+     "modern-machine-gun:L3",
+     "modern-artillery:L3",
+     "modern-artillery:L3",
+     "modern-machine-gun:L3",
+     "modern-machine-gun:L3"
+    ],
+    "buildings": "mine20 lib5 forge5",
+    "researchTiers": 0,
+    "mineGoldPerSec": 50.7,
+    "libraryXpPerSec": 6.8
+   },
+   "enemy": {
+    "gold": 322,
+    "xp": 1022,
+    "age": 3,
+    "baseHp": 2800,
+    "units": [
+     3,
+     2,
+     1,
+     0,
+     0
+    ],
+    "armyValue": 2100,
+    "queue": 1,
+    "turrets": [],
+    "buildings": "mine14 lib7 forge4",
+    "researchTiers": 7,
+    "mineGoldPerSec": 31.5,
+    "libraryXpPerSec": 10.3
+   }
+  },
+  {
+   "t": 255,
+   "front": {
+    "player": 595,
+    "enemy": 747
+   },
+   "player": {
+    "gold": 2619,
+    "xp": 3405,
+    "age": 3,
+    "baseHp": 2320,
+    "units": [
+     0,
+     1,
+     2,
+     0,
+     0
+    ],
+    "armyValue": 1995,
+    "queue": 0,
+    "turrets": [
+     "modern-machine-gun:L3",
+     "modern-artillery:L3",
+     "modern-artillery:L3",
+     "modern-machine-gun:L3",
+     "modern-machine-gun:L3"
+    ],
+    "buildings": "mine20 lib5 forge5",
+    "researchTiers": 0,
+    "mineGoldPerSec": 50.7,
+    "libraryXpPerSec": 6.8
+   },
+   "enemy": {
+    "gold": 271,
+    "xp": 942,
+    "age": 3,
+    "baseHp": 2800,
+    "units": [
+     1,
+     1,
+     1,
+     0,
+     0
+    ],
+    "armyValue": 1365,
+    "queue": 0,
+    "turrets": [],
+    "buildings": "mine14 lib7 forge4",
+    "researchTiers": 7,
+    "mineGoldPerSec": 31.5,
+    "libraryXpPerSec": 10.3
+   }
+  },
+  {
+   "t": 270,
+   "front": {
+    "player": 620,
+    "enemy": 743
+   },
+   "player": {
+    "gold": 146,
+    "xp": 3570,
+    "age": 3,
+    "baseHp": 2320,
+    "units": [
+     0,
+     1,
+     2,
+     0,
+     0
+    ],
+    "armyValue": 1995,
+    "queue": 0,
+    "turrets": [
+     "modern-machine-gun:L3",
+     "modern-artillery:L3",
+     "modern-artillery:L3",
+     "modern-machine-gun:L3",
+     "modern-machine-gun:L3"
+    ],
+    "buildings": "mine20 lib5 forge13",
+    "researchTiers": 4,
+    "mineGoldPerSec": 50.7,
+    "libraryXpPerSec": 6.8
+   },
+   "enemy": {
+    "gold": 294,
+    "xp": 767,
+    "age": 3,
+    "baseHp": 2800,
+    "units": [
+     2,
+     2,
+     1,
+     0,
+     0
+    ],
+    "armyValue": 1890,
+    "queue": 0,
+    "turrets": [],
+    "buildings": "mine14 lib7 forge4",
+    "researchTiers": 7,
+    "mineGoldPerSec": 31.5,
+    "libraryXpPerSec": 10.3
+   }
+  },
+  {
+   "t": 285,
+   "front": {
+    "player": 569,
+    "enemy": 734
+   },
+   "player": {
+    "gold": 218,
+    "xp": 3579,
+    "age": 3,
+    "baseHp": 2320,
+    "units": [
+     0,
+     1,
+     1,
+     0,
+     0
+    ],
+    "armyValue": 1155,
+    "queue": 1,
+    "turrets": [
+     "modern-machine-gun:L3",
+     "modern-artillery:L3",
+     "modern-artillery:L3",
+     "modern-machine-gun:L3",
+     "modern-machine-gun:L3"
+    ],
+    "buildings": "mine20 lib5 forge13",
+    "researchTiers": 12,
+    "mineGoldPerSec": 50.7,
+    "libraryXpPerSec": 6.8
+   },
+   "enemy": {
+    "gold": 550,
+    "xp": 836,
+    "age": 3,
+    "baseHp": 2800,
+    "units": [
+     3,
+     4,
+     1,
+     0,
+     0
+    ],
+    "armyValue": 2730,
+    "queue": 0,
+    "turrets": [],
+    "buildings": "mine14 lib7 forge5",
+    "researchTiers": 7,
+    "mineGoldPerSec": 31.5,
+    "libraryXpPerSec": 10.3
+   }
+  },
+  {
+   "t": 300,
+   "front": {
+    "player": 552,
+    "enemy": 615
+   },
+   "player": {
+    "gold": 1982,
+    "xp": 4154,
+    "age": 3,
+    "baseHp": 2320,
+    "units": [
+     0,
+     2,
+     0,
+     0,
+     1
+    ],
+    "armyValue": 1260,
+    "queue": 0,
+    "turrets": [
+     "modern-machine-gun:L3",
+     "modern-artillery:L3",
+     "modern-artillery:L3",
+     "modern-machine-gun:L3",
+     "modern-machine-gun:L3"
+    ],
+    "buildings": "mine20 lib5 forge15",
+    "researchTiers": 12,
+    "mineGoldPerSec": 50.7,
+    "libraryXpPerSec": 6.8
+   },
+   "enemy": {
+    "gold": 759,
+    "xp": 876,
+    "age": 3,
+    "baseHp": 2800,
+    "units": [
+     1,
+     2,
+     1,
+     0,
+     0
+    ],
+    "armyValue": 1680,
+    "queue": 0,
+    "turrets": [],
+    "buildings": "mine14 lib7 forge6",
+    "researchTiers": 11,
+    "mineGoldPerSec": 31.5,
+    "libraryXpPerSec": 10.3
+   }
+  },
+  {
+   "t": 315,
+   "front": {
+    "player": 275,
+    "enemy": 427
+   },
+   "player": {
+    "gold": 2962,
+    "xp": 4478,
+    "age": 3,
+    "baseHp": 2096,
+    "units": [
+     0,
+     2,
+     1,
+     0,
+     0
+    ],
+    "armyValue": 1470,
+    "queue": 0,
+    "turrets": [
+     "modern-machine-gun:L3",
+     "modern-artillery:L3",
+     "modern-artillery:L3",
+     "modern-machine-gun:L3",
+     "modern-machine-gun:L3"
+    ],
+    "buildings": "mine20 lib5 forge15",
+    "researchTiers": 12,
+    "mineGoldPerSec": 50.7,
+    "libraryXpPerSec": 6.8
+   },
+   "enemy": {
+    "gold": 444,
+    "xp": 851,
+    "age": 3,
+    "baseHp": 2800,
+    "units": [
+     1,
+     0,
+     1,
+     0,
+     1
+    ],
+    "armyValue": 1680,
+    "queue": 0,
+    "turrets": [],
+    "buildings": "mine14 lib7 forge6",
+    "researchTiers": 14,
+    "mineGoldPerSec": 31.5,
+    "libraryXpPerSec": 10.3
+   }
+  },
+  {
+   "t": 330,
+   "front": {
+    "player": 512,
+    "enemy": 777
+   },
+   "player": {
+    "gold": 6341,
+    "xp": 4958,
+    "age": 3,
+    "baseHp": 2096,
+    "units": [
+     0,
+     1,
+     1,
+     0,
+     0
+    ],
+    "armyValue": 1155,
+    "queue": 0,
+    "turrets": [
+     "modern-machine-gun:L3",
+     "modern-artillery:L3",
+     "modern-artillery:L3",
+     "modern-machine-gun:L3",
+     "modern-machine-gun:L3"
+    ],
+    "buildings": "mine20 lib5 forge15",
+    "researchTiers": 12,
+    "mineGoldPerSec": 50.7,
+    "libraryXpPerSec": 6.8
+   },
+   "enemy": {
+    "gold": 270,
+    "xp": 522,
+    "age": 3,
+    "baseHp": 2800,
+    "units": [
+     2,
+     2,
+     1,
+     0,
+     0
+    ],
+    "armyValue": 1890,
+    "queue": 0,
+    "turrets": [],
+    "buildings": "mine14 lib7 forge6",
+    "researchTiers": 14,
+    "mineGoldPerSec": 31.5,
+    "libraryXpPerSec": 10.3
+   }
+  },
+  {
+   "t": 345,
+   "front": {
+    "player": 537,
+    "enemy": 703
+   },
+   "player": {
+    "gold": 192,
+    "xp": 5061,
+    "age": 3,
+    "baseHp": 2096,
+    "units": [
+     0,
+     0,
+     1,
+     0,
+     0
+    ],
+    "armyValue": 840,
+    "queue": 1,
+    "turrets": [
+     "modern-machine-gun:L3",
+     "modern-artillery:L3",
+     "modern-artillery:L3",
+     "modern-machine-gun:L3",
+     "modern-machine-gun:L3"
+    ],
+    "buildings": "mine20 lib5 forge20",
+    "researchTiers": 12,
+    "mineGoldPerSec": 50.7,
+    "libraryXpPerSec": 6.8
+   },
+   "enemy": {
+    "gold": 653,
+    "xp": 194,
+    "age": 3,
+    "baseHp": 2800,
+    "units": [
+     2,
+     3,
+     1,
+     0,
+     0
+    ],
+    "armyValue": 2205,
+    "queue": 0,
+    "turrets": [],
+    "buildings": "mine14 lib7 forge8",
+    "researchTiers": 14,
+    "mineGoldPerSec": 31.5,
+    "libraryXpPerSec": 10.3
+   }
+  },
+  {
+   "t": 360,
+   "front": {
+    "player": 508,
+    "enemy": 673
+   },
+   "player": {
+    "gold": 465,
+    "xp": 5069,
+    "age": 3,
+    "baseHp": 2096,
+    "units": [
+     0,
+     2,
+     1,
+     0,
+     0
+    ],
+    "armyValue": 1470,
+    "queue": 0,
+    "turrets": [
+     "modern-machine-gun:L3",
+     "modern-artillery:L3",
+     "modern-artillery:L3",
+     "modern-machine-gun:L3",
+     "modern-machine-gun:L3"
+    ],
+    "buildings": "mine20 lib5 forge20",
+    "researchTiers": 12,
+    "mineGoldPerSec": 50.7,
+    "libraryXpPerSec": 6.8
+   },
+   "enemy": {
+    "gold": 545,
+    "xp": 85,
+    "age": 3,
+    "baseHp": 2800,
+    "units": [
+     3,
+     3,
+     2,
+     0,
+     0
+    ],
+    "armyValue": 3255,
+    "queue": 0,
+    "turrets": [],
+    "buildings": "mine14 lib8 forge9",
+    "researchTiers": 14,
+    "mineGoldPerSec": 31.5,
+    "libraryXpPerSec": 11.5
+   }
+  },
+  {
+   "t": 375,
+   "front": {
+    "player": 664,
+    "enemy": 820
+   },
+   "player": {
+    "gold": 5159,
+    "xp": 6149,
+    "age": 3,
+    "baseHp": 2096,
+    "units": [
+     0,
+     2,
+     1,
+     0,
+     1
+    ],
+    "armyValue": 2100,
+    "queue": 1,
+    "turrets": [
+     "modern-machine-gun:L3",
+     "modern-artillery:L3",
+     "modern-artillery:L3",
+     "modern-machine-gun:L3",
+     "modern-machine-gun:L3"
+    ],
+    "buildings": "mine20 lib5 forge20",
+    "researchTiers": 12,
+    "mineGoldPerSec": 50.7,
+    "libraryXpPerSec": 6.8
+   },
+   "enemy": {
+    "gold": 480,
+    "xp": 0,
+    "age": 3,
+    "baseHp": 2800,
+    "units": [
+     1,
+     1,
+     0,
+     0,
+     0
+    ],
+    "armyValue": 525,
+    "queue": 0,
+    "turrets": [],
+    "buildings": "mine14 lib9 forge9",
+    "researchTiers": 14,
+    "mineGoldPerSec": 31.5,
+    "libraryXpPerSec": 12.7
+   }
+  },
+  {
+   "t": 390,
+   "front": {
+    "player": 626,
+    "enemy": 791
+   },
+   "player": {
+    "gold": 1480,
+    "xp": 6314,
+    "age": 3,
+    "baseHp": 2096,
+    "units": [
+     0,
+     1,
+     2,
+     0,
+     3
+    ],
+    "armyValue": 3885,
+    "queue": 3,
+    "turrets": [
+     "modern-machine-gun:L3",
+     "modern-artillery:L3",
+     "modern-artillery:L3",
+     "modern-machine-gun:L3",
+     "modern-machine-gun:L3"
+    ],
+    "buildings": "mine20 lib5 forge20",
+    "researchTiers": 12,
+    "mineGoldPerSec": 50.7,
+    "libraryXpPerSec": 6.8
+   },
+   "enemy": {
+    "gold": 259,
+    "xp": 245,
+    "age": 3,
+    "baseHp": 2800,
+    "units": [
+     1,
+     2,
+     2,
+     0,
+     1
+    ],
+    "armyValue": 3150,
+    "queue": 1,
+    "turrets": [],
+    "buildings": "mine14 lib9 forge9",
+    "researchTiers": 14,
+    "mineGoldPerSec": 31.5,
+    "libraryXpPerSec": 12.7
+   }
+  },
+  {
+   "t": 405,
+   "front": {
+    "player": 660,
+    "enemy": 803
+   },
+   "player": {
+    "gold": 551,
+    "xp": 6575,
+    "age": 3,
+    "baseHp": 2096,
+    "units": [
+     0,
+     1,
+     4,
+     0,
+     2
+    ],
+    "armyValue": 4935,
+    "queue": 0,
+    "turrets": [
+     "modern-machine-gun:L3",
+     "modern-artillery:L3",
+     "modern-artillery:L3",
+     "modern-machine-gun:L3",
+     "modern-machine-gun:L3"
+    ],
+    "buildings": "mine20 lib5 forge20",
+    "researchTiers": 20,
+    "mineGoldPerSec": 50.7,
+    "libraryXpPerSec": 6.8
+   },
+   "enemy": {
+    "gold": 339,
+    "xp": 317,
+    "age": 3,
+    "baseHp": 2800,
+    "units": [
+     4,
+     5,
+     2,
+     0,
+     1
+    ],
+    "armyValue": 4725,
+    "queue": 1,
+    "turrets": [],
+    "buildings": "mine14 lib9 forge9",
+    "researchTiers": 14,
+    "mineGoldPerSec": 31.5,
+    "libraryXpPerSec": 12.7
+   }
+  },
+  {
+   "t": 420,
+   "front": {
+    "player": 589,
+    "enemy": 838
+   },
+   "player": {
+    "gold": 352,
+    "xp": 6677,
+    "age": 3,
+    "baseHp": 2096,
+    "units": [
+     0,
+     1,
+     3,
+     0,
+     1
+    ],
+    "armyValue": 3465,
+    "queue": 0,
+    "turrets": [
+     "modern-machine-gun:L3",
+     "modern-artillery:L3",
+     "modern-artillery:L3",
+     "modern-machine-gun:L3",
+     "modern-machine-gun:L3"
+    ],
+    "buildings": "mine20 lib5 forge20",
+    "researchTiers": 26,
+    "mineGoldPerSec": 50.7,
+    "libraryXpPerSec": 6.8
+   },
+   "enemy": {
+    "gold": 1426,
+    "xp": 310,
+    "age": 3,
+    "baseHp": 2800,
+    "units": [
+     4,
+     4,
+     3,
+     0,
+     1
+    ],
+    "armyValue": 5250,
+    "queue": 1,
+    "turrets": [],
+    "buildings": "mine14 lib11 forge9",
+    "researchTiers": 14,
+    "mineGoldPerSec": 31.5,
+    "libraryXpPerSec": 17.4
+   }
+  },
+  {
+   "t": 435,
+   "front": {
+    "player": 833,
+    "enemy": 998
+   },
+   "player": {
+    "gold": 4344,
+    "xp": 8074,
+    "age": 3,
+    "baseHp": 2096,
+    "units": [
+     0,
+     1,
+     3,
+     0,
+     0
+    ],
+    "armyValue": 2835,
+    "queue": 0,
+    "turrets": [
+     "modern-machine-gun:L3",
+     "modern-artillery:L3",
+     "modern-artillery:L3",
+     "modern-machine-gun:L3",
+     "modern-machine-gun:L3"
+    ],
+    "buildings": "mine20 lib5 forge20",
+    "researchTiers": 33,
+    "mineGoldPerSec": 50.7,
+    "libraryXpPerSec": 6.8
+   },
+   "enemy": {
+    "gold": 169,
+    "xp": 61,
+    "age": 3,
+    "baseHp": 2800,
+    "units": [
+     1,
+     3,
+     1,
+     0,
+     1
+    ],
+    "armyValue": 2625,
+    "queue": 2,
+    "turrets": [],
+    "buildings": "mine14 lib11 forge9",
+    "researchTiers": 14,
+    "mineGoldPerSec": 31.5,
+    "libraryXpPerSec": 17.4
+   }
+  },
+  {
+   "t": 450,
+   "front": {
+    "player": 755,
+    "enemy": 919
+   },
+   "player": {
+    "gold": 4293,
+    "xp": 8743,
+    "age": 3,
+    "baseHp": 2096,
+    "units": [
+     0,
+     4,
+     5,
+     0,
+     0
+    ],
+    "armyValue": 5460,
+    "queue": 0,
+    "turrets": [
+     "modern-machine-gun:L3",
+     "modern-artillery:L3",
+     "modern-artillery:L3",
+     "modern-machine-gun:L3",
+     "modern-machine-gun:L3"
+    ],
+    "buildings": "mine20 lib5 forge20",
+    "researchTiers": 33,
+    "mineGoldPerSec": 50.7,
+    "libraryXpPerSec": 6.8
+   },
+   "enemy": {
+    "gold": 495,
+    "xp": 253,
+    "age": 3,
+    "baseHp": 2800,
+    "units": [
+     2,
+     3,
+     3,
+     0,
+     0
+    ],
+    "armyValue": 3885,
+    "queue": 0,
+    "turrets": [],
+    "buildings": "mine14 lib11 forge9",
+    "researchTiers": 14,
+    "mineGoldPerSec": 31.5,
+    "libraryXpPerSec": 17.4
+   }
+  },
+  {
+   "t": 465,
+   "front": {
+    "player": 795,
+    "enemy": 904
+   },
+   "player": {
+    "gold": 6714,
+    "xp": 9098,
+    "age": 3,
+    "baseHp": 2096,
+    "units": [
+     0,
+     5,
+     4,
+     0,
+     0
+    ],
+    "armyValue": 4935,
+    "queue": 0,
+    "turrets": [
+     "modern-machine-gun:L3",
+     "modern-artillery:L3",
+     "modern-artillery:L3",
+     "modern-machine-gun:L3",
+     "modern-machine-gun:L3"
+    ],
+    "buildings": "mine20 lib5 forge20",
+    "researchTiers": 33,
+    "mineGoldPerSec": 50.7,
+    "libraryXpPerSec": 6.8
+   },
+   "enemy": {
+    "gold": 483,
+    "xp": 96,
+    "age": 3,
+    "baseHp": 2800,
+    "units": [
+     2,
+     3,
+     3,
+     0,
+     0
+    ],
+    "armyValue": 3885,
+    "queue": 2,
+    "turrets": [],
+    "buildings": "mine14 lib11 forge9",
+    "researchTiers": 14,
+    "mineGoldPerSec": 31.5,
+    "libraryXpPerSec": 17.4
+   }
+  },
+  {
+   "t": 480,
+   "front": {
+    "player": 797,
+    "enemy": 961
+   },
+   "player": {
+    "gold": 5447,
+    "xp": 9769,
+    "age": 3,
+    "baseHp": 2088,
+    "units": [
+     0,
+     5,
+     9,
+     0,
+     1
+    ],
+    "armyValue": 9765,
+    "queue": 1,
+    "turrets": [
+     "modern-machine-gun:L3",
+     "modern-artillery:L3",
+     "modern-artillery:L3",
+     "modern-machine-gun:L3",
+     "modern-machine-gun:L3"
+    ],
+    "buildings": "mine20 lib5 forge20",
+    "researchTiers": 33,
+    "mineGoldPerSec": 50.7,
+    "libraryXpPerSec": 6.8
+   },
+   "enemy": {
+    "gold": 125,
+    "xp": 1,
+    "age": 3,
+    "baseHp": 2793,
+    "units": [
+     0,
+     2,
+     3,
+     0,
+     0
+    ],
+    "armyValue": 3150,
+    "queue": 3,
+    "turrets": [],
+    "buildings": "mine14 lib11 forge10",
+    "researchTiers": 14,
+    "mineGoldPerSec": 31.5,
+    "libraryXpPerSec": 17.4
+   }
+  },
+  {
+   "t": 495,
+   "front": {
+    "player": 826,
+    "enemy": 991
+   },
+   "player": {
+    "gold": 3501,
+    "xp": 10281,
+    "age": 3,
+    "baseHp": 2066,
+    "units": [
+     0,
+     5,
+     11,
+     0,
+     1
+    ],
+    "armyValue": 11445,
+    "queue": 0,
+    "turrets": [
+     "modern-machine-gun:L3",
+     "modern-artillery:L3",
+     "modern-artillery:L3",
+     "modern-machine-gun:L3",
+     "modern-machine-gun:L3"
+    ],
+    "buildings": "mine20 lib5 forge20",
+    "researchTiers": 33,
+    "mineGoldPerSec": 50.7,
+    "libraryXpPerSec": 6.8
+   },
+   "enemy": {
+    "gold": 115,
+    "xp": 0,
+    "age": 3,
+    "baseHp": 2771,
+    "units": [
+     3,
+     4,
+     1,
+     0,
+     0
+    ],
+    "armyValue": 2730,
+    "queue": 3,
+    "turrets": [],
+    "buildings": "mine14 lib11 forge11",
+    "researchTiers": 14,
+    "mineGoldPerSec": 31.5,
+    "libraryXpPerSec": 17.4
+   }
+  },
+  {
+   "t": 510,
+   "front": {
+    "player": 936,
+    "enemy": 988
+   },
+   "player": {
+    "gold": 5623,
+    "xp": 11046,
+    "age": 3,
+    "baseHp": 2036,
+    "units": [
+     0,
+     0,
+     10,
+     0,
+     1
+    ],
+    "armyValue": 9030,
+    "queue": 0,
+    "turrets": [
+     "modern-machine-gun:L3",
+     "modern-artillery:L3",
+     "modern-artillery:L3",
+     "modern-machine-gun:L3",
+     "modern-machine-gun:L3"
+    ],
+    "buildings": "mine20 lib5 forge20",
+    "researchTiers": 33,
+    "mineGoldPerSec": 50.7,
+    "libraryXpPerSec": 6.8
+   },
+   "enemy": {
+    "gold": 101,
+    "xp": 232,
+    "age": 3,
+    "baseHp": 2741,
+    "units": [
+     2,
+     1,
+     3,
+     0,
+     0
+    ],
+    "armyValue": 3255,
+    "queue": 3,
+    "turrets": [],
+    "buildings": "mine14 lib11 forge11",
+    "researchTiers": 17,
+    "mineGoldPerSec": 31.5,
+    "libraryXpPerSec": 17.4
+   }
+  },
+  {
+   "t": 525,
+   "front": {
+    "player": 806,
+    "enemy": 971
+   },
+   "player": {
+    "gold": 177,
+    "xp": 11211,
+    "age": 3,
+    "baseHp": 2006,
+    "units": [
+     0,
+     0,
+     8,
+     0,
+     0
+    ],
+    "armyValue": 6720,
+    "queue": 0,
+    "turrets": [
+     "modern-machine-gun:L3",
+     "modern-artillery:L3",
+     "modern-artillery:L3",
+     "modern-machine-gun:L3",
+     "modern-machine-gun:L3"
+    ],
+    "buildings": "mine20 lib10 forge20",
+    "researchTiers": 33,
+    "mineGoldPerSec": 50.7,
+    "libraryXpPerSec": 12.1
+   },
+   "enemy": {
+    "gold": 702,
+    "xp": 488,
+    "age": 3,
+    "baseHp": 2711,
+    "units": [
+     0,
+     4,
+     3,
+     0,
+     0
+    ],
+    "armyValue": 3780,
+    "queue": 3,
+    "turrets": [],
+    "buildings": "mine14 lib12 forge11",
+    "researchTiers": 21,
+    "mineGoldPerSec": 31.5,
+    "libraryXpPerSec": 18.7
+   }
+  },
+  {
+   "t": 540,
+   "front": {
+    "player": 858,
+    "enemy": 1023
+   },
+   "player": {
+    "gold": 5747,
+    "xp": 12180,
+    "age": 3,
+    "baseHp": 1969,
+    "units": [
+     0,
+     0,
+     7,
+     0,
+     0
+    ],
+    "armyValue": 5880,
+    "queue": 0,
+    "turrets": [
+     "modern-machine-gun:L3",
+     "modern-artillery:L3",
+     "modern-artillery:L3",
+     "modern-machine-gun:L3",
+     "modern-machine-gun:L3"
+    ],
+    "buildings": "mine20 lib10 forge20",
+    "researchTiers": 33,
+    "mineGoldPerSec": 50.7,
+    "libraryXpPerSec": 12.1
+   },
+   "enemy": {
+    "gold": 344,
+    "xp": 355,
+    "age": 3,
+    "baseHp": 2674,
+    "units": [
+     2,
+     2,
+     2,
+     0,
+     0
+    ],
+    "armyValue": 2730,
+    "queue": 3,
+    "turrets": [],
+    "buildings": "mine15 lib12 forge12",
+    "researchTiers": 21,
+    "mineGoldPerSec": 33.6,
+    "libraryXpPerSec": 18.7
+   }
+  },
+  {
+   "t": 555,
+   "front": {
+    "player": 790,
+    "enemy": 988
+   },
+   "player": {
+    "gold": 4239,
+    "xp": 12548,
+    "age": 3,
+    "baseHp": 1924,
+    "units": [
+     0,
+     0,
+     4,
+     0,
+     0
+    ],
+    "armyValue": 3360,
+    "queue": 0,
+    "turrets": [
+     "modern-machine-gun:L3",
+     "modern-artillery:L3",
+     "modern-artillery:L3",
+     "modern-machine-gun:L3",
+     "modern-machine-gun:L3"
+    ],
+    "buildings": "mine20 lib15 forge20",
+    "researchTiers": 36,
+    "mineGoldPerSec": 50.7,
+    "libraryXpPerSec": 17.3
+   },
+   "enemy": {
+    "gold": 1655,
+    "xp": 729,
+    "age": 3,
+    "baseHp": 2629,
+    "units": [
+     2,
+     5,
+     1,
+     0,
+     0
+    ],
+    "armyValue": 2835,
+    "queue": 2,
+    "turrets": [],
+    "buildings": "mine16 lib13 forge12",
+    "researchTiers": 21,
+    "mineGoldPerSec": 35.7,
+    "libraryXpPerSec": 20.1
+   }
+  },
+  {
+   "t": 570,
+   "front": {
+    "player": 920,
+    "enemy": 1085
+   },
+   "player": {
+    "gold": 5226,
+    "xp": 13634,
+    "age": 3,
+    "baseHp": 1864,
+    "units": [
+     0,
+     0,
+     3,
+     0,
+     0
+    ],
+    "armyValue": 2520,
+    "queue": 0,
+    "turrets": [
+     "modern-machine-gun:L3",
+     "modern-artillery:L3",
+     "modern-artillery:L3",
+     "modern-machine-gun:L3",
+     "modern-machine-gun:L3"
+    ],
+    "buildings": "mine20 lib20 forge20",
+    "researchTiers": 36,
+    "mineGoldPerSec": 50.7,
+    "libraryXpPerSec": 22.6
+   },
+   "enemy": {
+    "gold": 573,
+    "xp": 547,
+    "age": 3,
+    "baseHp": 2569,
+    "units": [
+     0,
+     0,
+     2,
+     0,
+     0
+    ],
+    "armyValue": 1680,
+    "queue": 3,
+    "turrets": [],
+    "buildings": "mine17 lib13 forge13",
+    "researchTiers": 21,
+    "mineGoldPerSec": 37.8,
+    "libraryXpPerSec": 20.1
+   }
+  },
+  {
+   "t": 585,
+   "front": {
+    "player": 891,
+    "enemy": 1055
+   },
+   "player": {
+    "gold": 2001,
+    "xp": 14130,
+    "age": 3,
+    "baseHp": 1804,
+    "units": [
+     0,
+     0,
+     6,
+     0,
+     2
+    ],
+    "armyValue": 6300,
+    "queue": 0,
+    "turrets": [
+     "modern-machine-gun:L3",
+     "modern-artillery:L3",
+     "modern-artillery:L3",
+     "modern-machine-gun:L3",
+     "modern-machine-gun:L3"
+    ],
+    "buildings": "mine20 lib20 forge20",
+    "researchTiers": 36,
+    "mineGoldPerSec": 50.7,
+    "libraryXpPerSec": 22.6
+   },
+   "enemy": {
+    "gold": 826,
+    "xp": 465,
+    "age": 3,
+    "baseHp": 2509,
+    "units": [
+     0,
+     3,
+     2,
+     0,
+     0
+    ],
+    "armyValue": 2625,
+    "queue": 3,
+    "turrets": [],
+    "buildings": "mine17 lib13 forge13",
+    "researchTiers": 21,
+    "mineGoldPerSec": 37.8,
+    "libraryXpPerSec": 20.1
+   }
+  },
+  {
+   "t": 600,
+   "front": {
+    "player": 826,
+    "enemy": 991
+   },
+   "player": {
+    "gold": 1403,
+    "xp": 14626,
+    "age": 3,
+    "baseHp": 1737,
+    "units": [
+     0,
+     1,
+     5,
+     0,
+     2
+    ],
+    "armyValue": 5775,
+    "queue": 1,
+    "turrets": [
+     "modern-machine-gun:L3",
+     "modern-artillery:L3",
+     "modern-artillery:L3",
+     "modern-machine-gun:L3",
+     "modern-machine-gun:L3"
+    ],
+    "buildings": "mine20 lib20 forge20",
+    "researchTiers": 36,
+    "mineGoldPerSec": 50.7,
+    "libraryXpPerSec": 22.6
+   },
+   "enemy": {
+    "gold": 697,
+    "xp": 727,
+    "age": 3,
+    "baseHp": 2442,
+    "units": [
+     0,
+     6,
+     2,
+     0,
+     0
+    ],
+    "armyValue": 3570,
+    "queue": 2,
+    "turrets": [
+     "modern-grenade-launcher:L0"
+    ],
+    "buildings": "mine17 lib14 forge13",
+    "researchTiers": 22,
+    "mineGoldPerSec": 37.8,
+    "libraryXpPerSec": 21.5
+   }
+  },
+  {
+   "t": 615,
+   "front": {
+    "player": 866,
+    "enemy": 1009
+   },
+   "player": {
+    "gold": 3802,
+    "xp": 15692,
+    "age": 3,
+    "baseHp": 1670,
+    "units": [
+     1,
+     6,
+     3,
+     0,
+     2
+    ],
+    "armyValue": 5880,
+    "queue": 2,
+    "turrets": [
+     "modern-machine-gun:L3",
+     "modern-artillery:L3",
+     "modern-artillery:L3",
+     "modern-machine-gun:L3",
+     "modern-machine-gun:L3"
+    ],
+    "buildings": "mine20 lib20 forge20",
+    "researchTiers": 36,
+    "mineGoldPerSec": 50.7,
+    "libraryXpPerSec": 22.6
+   },
+   "enemy": {
+    "gold": 132,
+    "xp": 532,
+    "age": 3,
+    "baseHp": 2375,
+    "units": [
+     2,
+     0,
+     4,
+     0,
+     0
+    ],
+    "armyValue": 3780,
+    "queue": 3,
+    "turrets": [
+     "modern-grenade-launcher:L0"
+    ],
+    "buildings": "mine17 lib14 forge13",
+    "researchTiers": 27,
+    "mineGoldPerSec": 37.8,
+    "libraryXpPerSec": 21.5
+   }
+  },
+  {
+   "t": 630,
+   "front": {
+    "player": 871,
+    "enemy": 1036
+   },
+   "player": {
+    "gold": 5186,
+    "xp": 16502,
+    "age": 3,
+    "baseHp": 1580,
+    "units": [
+     1,
+     6,
+     5,
+     0,
+     3
+    ],
+    "armyValue": 8190,
+    "queue": 0,
+    "turrets": [
+     "modern-machine-gun:L3",
+     "modern-artillery:L3",
+     "modern-artillery:L3",
+     "modern-machine-gun:L3",
+     "modern-machine-gun:L3"
+    ],
+    "buildings": "mine20 lib20 forge20",
+    "researchTiers": 36,
+    "mineGoldPerSec": 50.7,
+    "libraryXpPerSec": 22.6
+   },
+   "enemy": {
+    "gold": 646,
+    "xp": 260,
+    "age": 3,
+    "baseHp": 2285,
+    "units": [
+     1,
+     2,
+     3,
+     0,
+     0
+    ],
+    "armyValue": 3360,
+    "queue": 3,
+    "turrets": [
+     "modern-grenade-launcher:L1"
+    ],
+    "buildings": "mine17 lib15 forge14",
+    "researchTiers": 27,
+    "mineGoldPerSec": 37.8,
+    "libraryXpPerSec": 26.3
+   }
+  },
+  {
+   "t": 645,
+   "front": {
+    "player": 806,
+    "enemy": 923
+   },
+   "player": {
+    "gold": 8346,
+    "xp": 17472,
+    "age": 3,
+    "baseHp": 1491,
+    "units": [
+     0,
+     5,
+     3,
+     0,
+     0
+    ],
+    "armyValue": 4095,
+    "queue": 0,
+    "turrets": [
+     "modern-machine-gun:L3",
+     "modern-artillery:L3",
+     "modern-artillery:L3",
+     "modern-machine-gun:L3",
+     "modern-machine-gun:L3"
+    ],
+    "buildings": "mine20 lib20 forge20",
+    "researchTiers": 36,
+    "mineGoldPerSec": 50.7,
+    "libraryXpPerSec": 22.6
+   },
+   "enemy": {
+    "gold": 540,
+    "xp": 1004,
+    "age": 3,
+    "baseHp": 2196,
+    "units": [
+     0,
+     0,
+     4,
+     0,
+     0
+    ],
+    "armyValue": 3360,
+    "queue": 3,
+    "turrets": [
+     "modern-grenade-launcher:L1"
+    ],
+    "buildings": "mine18 lib16 forge14",
+    "researchTiers": 27,
+    "mineGoldPerSec": 39.9,
+    "libraryXpPerSec": 27.9
+   }
+  },
+  {
+   "t": 660,
+   "front": {
+    "player": 812,
+    "enemy": 977
+   },
+   "player": {
+    "gold": 8346,
+    "xp": 18219,
+    "age": 3,
+    "baseHp": 1394,
+    "units": [
+     0,
+     11,
+     4,
+     0,
+     0
+    ],
+    "armyValue": 6825,
+    "queue": 0,
+    "turrets": [
+     "modern-machine-gun:L3",
+     "modern-artillery:L3",
+     "modern-artillery:L3",
+     "modern-machine-gun:L3",
+     "modern-machine-gun:L3"
+    ],
+    "buildings": "mine20 lib20 forge20",
+    "researchTiers": 36,
+    "mineGoldPerSec": 50.7,
+    "libraryXpPerSec": 22.6
+   },
+   "enemy": {
+    "gold": 890,
+    "xp": 316,
+    "age": 3,
+    "baseHp": 2099,
+    "units": [
+     3,
+     1,
+     2,
+     0,
+     1
+    ],
+    "armyValue": 3255,
+    "queue": 3,
+    "turrets": [
+     "modern-grenade-launcher:L1"
+    ],
+    "buildings": "mine18 lib16 forge15",
+    "researchTiers": 27,
+    "mineGoldPerSec": 39.9,
+    "libraryXpPerSec": 27.9
+   }
+  },
+  {
+   "t": 675,
+   "front": {
+    "player": 805,
+    "enemy": 939
+   },
+   "player": {
+    "gold": 15413,
+    "xp": 19599,
+    "age": 3,
+    "baseHp": 1304,
+    "units": [
+     0,
+     10,
+     2,
+     0,
+     0
+    ],
+    "armyValue": 4830,
+    "queue": 0,
+    "turrets": [
+     "modern-machine-gun:L3",
+     "modern-artillery:L3",
+     "modern-artillery:L3",
+     "modern-machine-gun:L3",
+     "modern-machine-gun:L3"
+    ],
+    "buildings": "mine20 lib20 forge20",
+    "researchTiers": 36,
+    "mineGoldPerSec": 50.7,
+    "libraryXpPerSec": 22.6
+   },
+   "enemy": {
+    "gold": 417,
+    "xp": 33,
+    "age": 3,
+    "baseHp": 2009,
+    "units": [
+     2,
+     0,
+     3,
+     0,
+     0
+    ],
+    "armyValue": 2940,
+    "queue": 3,
+    "turrets": [
+     "modern-grenade-launcher:L1"
+    ],
+    "buildings": "mine18 lib16 forge16",
+    "researchTiers": 28,
+    "mineGoldPerSec": 39.9,
+    "libraryXpPerSec": 27.9
+   }
+  },
+  {
+   "t": 690,
+   "front": {
+    "player": 733,
+    "enemy": 898
+   },
+   "player": {
+    "gold": 21167,
+    "xp": 20781,
+    "age": 3,
+    "baseHp": 1185,
+    "units": [
+     0,
+     0,
+     2,
+     0,
+     0
+    ],
+    "armyValue": 1680,
+    "queue": 0,
+    "turrets": [
+     "modern-machine-gun:L3",
+     "modern-artillery:L3",
+     "modern-artillery:L3",
+     "modern-machine-gun:L3",
+     "modern-machine-gun:L3"
+    ],
+    "buildings": "mine20 lib20 forge20",
+    "researchTiers": 36,
+    "mineGoldPerSec": 50.7,
+    "libraryXpPerSec": 22.6
+   },
+   "enemy": {
+    "gold": 287,
+    "xp": 151,
+    "age": 3,
+    "baseHp": 1890,
+    "units": [
+     2,
+     2,
+     3,
+     0,
+     1
+    ],
+    "armyValue": 4200,
+    "queue": 1,
+    "turrets": [
+     "modern-grenade-launcher:L1"
+    ],
+    "buildings": "mine18 lib16 forge16",
+    "researchTiers": 32,
+    "mineGoldPerSec": 39.9,
+    "libraryXpPerSec": 27.9
+   }
+  },
+  {
+   "t": 705,
+   "front": {
+    "player": null,
+    "enemy": 583
+   },
+   "player": {
+    "gold": 13640,
+    "xp": 20634,
+    "age": 3,
+    "baseHp": 1065,
+    "units": [
+     0,
+     0,
+     0,
+     0,
+     0
+    ],
+    "armyValue": 0,
+    "queue": 0,
+    "turrets": [
+     "modern-machine-gun:L3",
+     "modern-artillery:L3",
+     "modern-artillery:L3",
+     "modern-machine-gun:L3",
+     "modern-machine-gun:L3"
+    ],
+    "buildings": "mine20 lib20 forge20",
+    "researchTiers": 36,
+    "mineGoldPerSec": 50.7,
+    "libraryXpPerSec": 22.6
+   },
+   "enemy": {
+    "gold": 561,
+    "xp": 0,
+    "age": 3,
+    "baseHp": 1770,
+    "units": [
+     2,
+     4,
+     3,
+     0,
+     1
+    ],
+    "armyValue": 4830,
+    "queue": 0,
+    "turrets": [
+     "modern-grenade-launcher:L1"
+    ],
+    "buildings": "mine18 lib16 forge16",
+    "researchTiers": 36,
+    "mineGoldPerSec": 39.9,
+    "libraryXpPerSec": 27.9
+   }
+  },
+  {
+   "t": 720,
+   "front": {
+    "player": 397,
+    "enemy": 758
+   },
+   "player": {
+    "gold": 17391,
+    "xp": 21730,
+    "age": 3,
+    "baseHp": 938,
+    "units": [
+     0,
+     6,
+     2,
+     0,
+     0
+    ],
+    "armyValue": 3570,
+    "queue": 5,
+    "turrets": [
+     "modern-machine-gun:L3",
+     "modern-artillery:L3",
+     "modern-artillery:L3",
+     "modern-machine-gun:L3",
+     "modern-machine-gun:L3"
+    ],
+    "buildings": "mine20 lib20 forge20",
+    "researchTiers": 36,
+    "mineGoldPerSec": 50.7,
+    "libraryXpPerSec": 22.6
+   },
+   "enemy": {
+    "gold": 240,
+    "xp": 0,
+    "age": 3,
+    "baseHp": 1643,
+    "units": [
+     2,
+     4,
+     0,
+     0,
+     0
+    ],
+    "armyValue": 1680,
+    "queue": 0,
+    "turrets": [
+     "modern-grenade-launcher:L1"
+    ],
+    "buildings": "mine18 lib16 forge16",
+    "researchTiers": 36,
+    "mineGoldPerSec": 39.9,
+    "libraryXpPerSec": 27.9
+   }
+  },
+  {
+   "t": 735,
+   "front": {
+    "player": 808,
+    "enemy": 973
+   },
+   "player": {
+    "gold": 19184,
+    "xp": 21913,
+    "age": 3,
+    "baseHp": 826,
+    "units": [
+     0,
+     13,
+     4,
+     0,
+     0
+    ],
+    "armyValue": 7455,
+    "queue": 0,
+    "turrets": [
+     "modern-machine-gun:L3",
+     "modern-artillery:L3",
+     "modern-artillery:L3",
+     "modern-machine-gun:L3",
+     "modern-machine-gun:L3"
+    ],
+    "buildings": "mine20 lib20 forge20",
+    "researchTiers": 36,
+    "mineGoldPerSec": 50.7,
+    "libraryXpPerSec": 22.6
+   },
+   "enemy": {
+    "gold": 448,
+    "xp": 0,
+    "age": 3,
+    "baseHp": 673,
+    "units": [
+     2,
+     1,
+     2,
+     0,
+     0
+    ],
+    "armyValue": 2415,
+    "queue": 0,
+    "turrets": [
+     "modern-grenade-launcher:L1"
+    ],
+    "buildings": "mine18 lib16 forge16",
+    "researchTiers": 36,
+    "mineGoldPerSec": 39.9,
+    "libraryXpPerSec": 27.9
+   }
+  },
+  {
+   "t": 750,
+   "front": {
+    "player": 713,
+    "enemy": 873
+   },
+   "player": {
+    "gold": 20589,
+    "xp": 22377,
+    "age": 3,
+    "baseHp": 677,
+    "units": [
+     0,
+     8,
+     5,
+     0,
+     0
+    ],
+    "armyValue": 6720,
+    "queue": 4,
+    "turrets": [
+     "modern-machine-gun:L3",
+     "modern-artillery:L3",
+     "modern-artillery:L3",
+     "modern-machine-gun:L3",
+     "modern-machine-gun:L3"
+    ],
+    "buildings": "mine20 lib20 forge20",
+    "researchTiers": 36,
+    "mineGoldPerSec": 50.7,
+    "libraryXpPerSec": 22.6
+   },
+   "enemy": {
+    "gold": 378,
+    "xp": 381,
+    "age": 3,
+    "baseHp": 524,
+    "units": [
+     1,
+     2,
+     3,
+     0,
+     0
+    ],
+    "armyValue": 3360,
+    "queue": 2,
+    "turrets": [
+     "modern-grenade-launcher:L1"
+    ],
+    "buildings": "mine18 lib16 forge16",
+    "researchTiers": 36,
+    "mineGoldPerSec": 39.9,
+    "libraryXpPerSec": 27.9
+   }
+  },
+  {
+   "t": 765,
+   "front": {
+    "player": 762,
+    "enemy": 928
+   },
+   "player": {
+    "gold": 21308,
+    "xp": 22654,
+    "age": 3,
+    "baseHp": 528,
+    "units": [
+     0,
+     15,
+     5,
+     0,
+     0
+    ],
+    "armyValue": 8925,
+    "queue": 5,
+    "turrets": [
+     "modern-machine-gun:L3",
+     "modern-artillery:L3",
+     "modern-artillery:L3",
+     "modern-machine-gun:L3",
+     "modern-machine-gun:L3"
+    ],
+    "buildings": "mine20 lib20 forge20",
+    "researchTiers": 36,
+    "mineGoldPerSec": 50.7,
+    "libraryXpPerSec": 22.6
+   },
+   "enemy": {
+    "gold": 531,
+    "xp": 0,
+    "age": 3,
+    "baseHp": 374,
+    "units": [
+     3,
+     2,
+     4,
+     0,
+     0
+    ],
+    "armyValue": 4620,
+    "queue": 3,
+    "turrets": [
+     "modern-grenade-launcher:L1"
+    ],
+    "buildings": "mine18 lib16 forge16",
+    "researchTiers": 36,
+    "mineGoldPerSec": 39.9,
+    "libraryXpPerSec": 27.9
+   }
+  },
+  {
+   "t": 780,
+   "front": {
+    "player": 653,
+    "enemy": 817
+   },
+   "player": {
+    "gold": 27895,
+    "xp": 23245,
+    "age": 3,
+    "baseHp": 371,
+    "units": [
+     0,
+     12,
+     4,
+     0,
+     0
+    ],
+    "armyValue": 7140,
+    "queue": 5,
+    "turrets": [
+     "modern-machine-gun:L3",
+     "modern-artillery:L3",
+     "modern-artillery:L3",
+     "modern-machine-gun:L3",
+     "modern-machine-gun:L3"
+    ],
+    "buildings": "mine20 lib20 forge20",
+    "researchTiers": 36,
+    "mineGoldPerSec": 50.7,
+    "libraryXpPerSec": 22.6
+   },
+   "enemy": {
+    "gold": 101,
+    "xp": 0,
+    "age": 3,
+    "baseHp": 218,
+    "units": [
+     5,
+     2,
+     4,
+     0,
+     0
+    ],
+    "armyValue": 5040,
+    "queue": 2,
+    "turrets": [
+     "modern-grenade-launcher:L1"
+    ],
+    "buildings": "mine18 lib17 forge17",
+    "researchTiers": 36,
+    "mineGoldPerSec": 39.9,
+    "libraryXpPerSec": 29.5
+   }
+  },
+  {
+   "t": 795,
+   "front": {
+    "player": 776,
+    "enemy": 942
+   },
+   "player": {
+    "gold": 34517,
+    "xp": 23962,
+    "age": 3,
+    "baseHp": 236,
+    "units": [
+     0,
+     6,
+     4,
+     0,
+     1
+    ],
+    "armyValue": 5880,
+    "queue": 0,
+    "turrets": [
+     "modern-machine-gun:L3",
+     "modern-artillery:L3",
+     "modern-artillery:L3",
+     "modern-machine-gun:L3",
+     "modern-machine-gun:L3"
+    ],
+    "buildings": "mine20 lib20 forge20",
+    "researchTiers": 36,
+    "mineGoldPerSec": 50.7,
+    "libraryXpPerSec": 22.6
+   },
+   "enemy": {
+    "gold": 2595,
+    "xp": 730,
+    "age": 3,
+    "baseHp": 83,
+    "units": [
+     5,
+     1,
+     3,
+     0,
+     0
+    ],
+    "armyValue": 3885,
+    "queue": 5,
+    "turrets": [
+     "modern-grenade-launcher:L1"
+    ],
+    "buildings": "mine18 lib17 forge17",
+    "researchTiers": 36,
+    "mineGoldPerSec": 39.9,
+    "libraryXpPerSec": 29.5
+   }
+  },
+  {
+   "t": 800,
+   "front": {
+    "player": 764,
+    "enemy": 943
+   },
+   "player": {
+    "gold": 33493,
+    "xp": 24107,
+    "age": 3,
+    "baseHp": 147,
+    "units": [
+     0,
+     7,
+     4,
+     0,
+     1
+    ],
+    "armyValue": 6195,
+    "queue": 4,
+    "turrets": [
+     "modern-machine-gun:L3",
+     "modern-artillery:L3",
+     "modern-artillery:L3",
+     "modern-machine-gun:L3",
+     "modern-machine-gun:L3"
+    ],
+    "buildings": "mine20 lib20 forge20",
+    "researchTiers": 36,
+    "mineGoldPerSec": 50.7,
+    "libraryXpPerSec": 22.6
+   },
+   "enemy": {
+    "gold": 1280,
+    "xp": 679,
+    "age": 3,
+    "baseHp": 0,
+    "units": [
+     6,
+     1,
+     2,
+     0,
+     0
+    ],
+    "armyValue": 3255,
+    "queue": 4,
+    "turrets": [
+     "modern-grenade-launcher:L1"
+    ],
+    "buildings": "mine18 lib17 forge17",
+    "researchTiers": 36,
+    "mineGoldPerSec": 39.9,
+    "libraryXpPerSec": 29.5
+   }
+  }
+ ],
+ "config": {
+  "buildings": {
+   "mine": {
+    "id": "mine",
+    "name": "Mine",
+    "blurb": "Makes gold",
+    "stepCosts": [
+     40,
+     55,
+     70,
+     90,
+     110
+    ],
+    "spriteKey": "building-mine"
+   },
+   "library": {
+    "id": "library",
+    "name": "Library",
+    "blurb": "Makes XP",
+    "stepCosts": [
+     50,
+     65,
+     80,
+     100,
+     125
+    ],
+    "spriteKey": "building-library"
+   },
+   "forge": {
+    "id": "forge",
+    "name": "Forge",
+    "blurb": "Research tiers, unit damage",
+    "stepCosts": [
+     60,
+     75,
+     95,
+     120,
+     150
+    ],
+    "spriteKey": "building-forge"
+   },
+   "barracks": {
+    "id": "barracks",
+    "name": "Barracks",
+    "blurb": "Faster training, tougher recruits",
+    "stepCosts": [
+     60,
+     75,
+     95,
+     120,
+     150
+    ],
+    "spriteKey": "building-barracks",
+    "extra": true
+   },
+   "shrine": {
+    "id": "shrine",
+    "name": "Shrine",
+    "blurb": "Stronger, faster special",
+    "stepCosts": [
+     70,
+     90,
+     110,
+     140,
+     170
+    ],
+    "spriteKey": "building-shrine",
+    "extra": true
+   },
+   "market": {
+    "id": "market",
+    "name": "Market",
+    "blurb": "Sells surplus XP for gold",
+    "stepCosts": [
+     60,
+     80,
+     100,
+     125,
+     150
+    ],
+    "spriteKey": "building-market",
+    "extra": true
+   }
+  },
+  "research": [
+   {
+    "id": "bounty",
+    "name": "Plunder",
+    "short": "Kill gold",
+    "target": {
+     "kind": "bounty"
+    },
+    "perTier": 0.1,
+    "baseCost": 60
+   },
+   {
+    "id": "meleeDamage",
+    "name": "Sharpened weapons",
+    "short": "Melee dmg",
+    "target": {
+     "kind": "unit",
+     "slots": [
+      1
+     ],
+     "stat": "damage"
+    },
+    "perTier": 0.1,
+    "baseCost": 50
+   },
+   {
+    "id": "meleeArmor",
+    "name": "Melee armor",
+    "short": "Melee armor",
+    "target": {
+     "kind": "unit",
+     "slots": [
+      1
+     ],
+     "stat": "damageTaken"
+    },
+    "perTier": -0.06,
+    "baseCost": 50
+   },
+   {
+    "id": "rangedDamage",
+    "name": "Better ammo",
+    "short": "Ranged dmg",
+    "target": {
+     "kind": "unit",
+     "slots": [
+      2
+     ],
+     "stat": "damage"
+    },
+    "perTier": 0.1,
+    "baseCost": 50
+   },
+   {
+    "id": "rangedRange",
+    "name": "Keen eyes",
+    "short": "Ranged range",
+    "target": {
+     "kind": "unit",
+     "slots": [
+      2
+     ],
+     "stat": "range"
+    },
+    "perTier": 0.08,
+    "baseCost": 50
+   },
+   {
+    "id": "heavyDamage",
+    "name": "Heavy weapons",
+    "short": "Heavy dmg",
+    "target": {
+     "kind": "unit",
+     "slots": [
+      3
+     ],
+     "stat": "damage"
+    },
+    "perTier": 0.1,
+    "baseCost": 70
+   },
+   {
+    "id": "heavyArmor",
+    "name": "Heavy plating",
+    "short": "Heavy armor",
+    "target": {
+     "kind": "unit",
+     "slots": [
+      3
+     ],
+     "stat": "damageTaken"
+    },
+    "perTier": -0.06,
+    "baseCost": 70
+   },
+   {
+    "id": "turretDamage",
+    "name": "Turret power",
+    "short": "Turret dmg",
+    "target": {
+     "kind": "turret",
+     "stat": "damage"
+    },
+    "perTier": 0.05,
+    "baseCost": 60
+   },
+   {
+    "id": "turretRange",
+    "name": "Turret sights",
+    "short": "Turret range",
+    "target": {
+     "kind": "turret",
+     "stat": "range"
+    },
+    "perTier": 0.03,
+    "baseCost": 60
+   }
+  ]
+ },
+ "conquest": {
+  "effects": [
+   {
+    "kind": "start-age",
+    "age": 3
+   },
+   {
+    "kind": "gold",
+    "side": "both",
+    "amount": 150
+   },
+   {
+    "kind": "ai-income",
+    "mult": 0.1
+   },
+   {
+    "kind": "kill-gold",
+    "side": "player",
+    "mult": 1.5
+   },
+   {
+    "kind": "unit-stat",
+    "side": "enemy",
+    "stat": "damageTaken",
+    "mult": 0.75,
+    "slots": [
+     3
+    ]
+   },
+   {
+    "kind": "unit-stat",
+    "side": "enemy",
+    "stat": "maxHp",
+    "mult": 1.25
+   },
+   {
+    "kind": "units",
+    "side": "enemy",
+    "slot": 3,
+    "count": 2
+   },
+   {
+    "kind": "unit-stat",
+    "side": "player",
+    "stat": "maxHp",
+    "mult": 1.12
+   },
+   {
+    "kind": "building",
+    "side": "player",
+    "buildingId": "mine",
+    "levels": 3
+   },
+   {
+    "kind": "unit-stat",
+    "side": "player",
+    "stat": "maxHp",
+    "mult": 1.5,
+    "slots": [
+     4
+    ]
+   },
+   {
+    "kind": "turrets",
+    "side": "player",
+    "count": 1,
+    "turretKind": "rapid",
+    "level": 1
+   },
+   {
+    "kind": "turrets",
+    "side": "player",
+    "count": 2,
+    "turretKind": "heavy",
+    "level": 0
+   },
+   {
+    "kind": "unit-stat",
+    "side": "player",
+    "stat": "damage",
+    "mult": 1.1
+   },
+   {
+    "kind": "unit-stat",
+    "side": "player",
+    "stat": "damage",
+    "mult": 1.2,
+    "slots": [
+     1
+    ]
+   },
+   {
+    "kind": "gold",
+    "side": "player",
+    "amount": 100
+   },
+   {
+    "kind": "gold",
+    "side": "player",
+    "amount": 100
+   },
+   {
+    "kind": "gold",
+    "side": "player",
+    "amount": 100
+   },
+   {
+    "kind": "gold",
+    "side": "player",
+    "amount": 100
+   },
+   {
+    "kind": "gold",
+    "side": "player",
+    "amount": 100
+   },
+   {
+    "kind": "turrets",
+    "side": "player",
+    "count": 1,
+    "turretKind": "rapid",
+    "level": 1
+   },
+   {
+    "kind": "turrets",
+    "side": "player",
+    "count": 1,
+    "turretKind": "rapid",
+    "level": 1
+   },
+   {
+    "kind": "building",
+    "side": "player",
+    "buildingId": "mine",
+    "levels": 2
+   },
+   {
+    "kind": "building",
+    "side": "player",
+    "buildingId": "mine",
+    "levels": 2
+   },
+   {
+    "kind": "building",
+    "side": "player",
+    "buildingId": "mine",
+    "levels": 2
+   },
+   {
+    "kind": "units",
+    "side": "player",
+    "slot": 1,
+    "count": 1
+   },
+   {
+    "kind": "unit-stat",
+    "side": "player",
+    "stat": "damage",
+    "mult": 1.08
+   },
+   {
+    "kind": "gold",
+    "side": "player",
+    "amount": 100
+   },
+   {
+    "kind": "unit-stat",
+    "side": "player",
+    "stat": "maxHp",
+    "mult": 1.05
+   }
+  ],
+  "label": "General Kessler · Modern 4/5",
+  "maxAge": 3
+ }
+}

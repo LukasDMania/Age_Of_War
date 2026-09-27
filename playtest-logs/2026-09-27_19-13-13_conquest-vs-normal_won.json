@@ -1,0 +1,3326 @@
+{
+ "version": 2,
+ "startedAt": "2026-09-27T17:13:13.614Z",
+ "fileStem": "2026-09-27_19-13-13_conquest-vs-normal_won",
+ "opponent": "normal",
+ "result": "won",
+ "durationSec": 557.4,
+ "totals": {
+  "player": {
+   "goldEarned": {
+    "conquest": 2960,
+    "mine": 11769,
+    "kill": 4127.700000000002,
+    "market": 7749
+   },
+   "goldSpent": 26356,
+   "spawned": {
+    "renaissance-cuirassier": 4,
+    "renaissance-alchemist": 2,
+    "renaissance-musketeer": 2
+   },
+   "kills": {
+    "stone-clubber": 1,
+    "renaissance-musketeer": 16,
+    "renaissance-pikeman": 20
+   },
+   "losses": {
+    "renaissance-alchemist": 1,
+    "renaissance-musketeer": 1
+   }
+  },
+  "enemy": {
+   "goldEarned": {
+    "conquest": 720,
+    "ai-income": 926,
+    "mine": 1591,
+    "market": 1182,
+    "kill": 261
+   },
+   "goldSpent": 4710,
+   "spawned": {
+    "stone-clubber": 1,
+    "renaissance-musketeer": 16,
+    "renaissance-pikeman": 20
+   },
+   "kills": {
+    "renaissance-alchemist": 1,
+    "renaissance-musketeer": 1
+   },
+   "losses": {
+    "stone-clubber": 1,
+    "renaissance-musketeer": 16,
+    "renaissance-pikeman": 20
+   }
+  }
+ },
+ "events": [
+  {
+   "t": 0,
+   "type": "playing"
+  },
+  {
+   "t": 0,
+   "type": "age-up",
+   "side": "player",
+   "detail": 1
+  },
+  {
+   "t": 0,
+   "type": "age-up",
+   "side": "player",
+   "detail": 2
+  },
+  {
+   "t": 0,
+   "type": "age-up",
+   "side": "enemy",
+   "detail": 1
+  },
+  {
+   "t": 0,
+   "type": "age-up",
+   "side": "enemy",
+   "detail": 2
+  },
+  {
+   "t": 0,
+   "type": "building",
+   "side": "player",
+   "detail": "mine:L1"
+  },
+  {
+   "t": 0,
+   "type": "building",
+   "side": "player",
+   "detail": "mine:L2"
+  },
+  {
+   "t": 0,
+   "type": "building",
+   "side": "player",
+   "detail": "mine:L3"
+  },
+  {
+   "t": 0,
+   "type": "building",
+   "side": "player",
+   "detail": "mine:L4"
+  },
+  {
+   "t": 0,
+   "type": "building",
+   "side": "player",
+   "detail": "mine:L5"
+  },
+  {
+   "t": 0,
+   "type": "turret-built",
+   "side": "player",
+   "detail": "0:renaissance-musket-nest"
+  },
+  {
+   "t": 0,
+   "type": "turret-upgraded",
+   "side": "player",
+   "detail": "0:L1"
+  },
+  {
+   "t": 1.5,
+   "type": "unit",
+   "side": "enemy",
+   "detail": "stone-clubber"
+  },
+  {
+   "t": 2.4,
+   "type": "building",
+   "side": "enemy",
+   "detail": "mine:L1"
+  },
+  {
+   "t": 3.5,
+   "type": "unit",
+   "side": "enemy",
+   "detail": "renaissance-musketeer"
+  },
+  {
+   "t": 3.6,
+   "type": "building",
+   "side": "enemy",
+   "detail": "forge:L1"
+  },
+  {
+   "t": 4.9,
+   "type": "building",
+   "side": "enemy",
+   "detail": "library:L1"
+  },
+  {
+   "t": 6.1,
+   "type": "building",
+   "side": "enemy",
+   "detail": "barracks:L1"
+  },
+  {
+   "t": 7.3,
+   "type": "building",
+   "side": "enemy",
+   "detail": "shrine:L1"
+  },
+  {
+   "t": 8.5,
+   "type": "building",
+   "side": "enemy",
+   "detail": "market:L1"
+  },
+  {
+   "t": 9.7,
+   "type": "building",
+   "side": "enemy",
+   "detail": "mine:L2"
+  },
+  {
+   "t": 10.9,
+   "type": "building",
+   "side": "enemy",
+   "detail": "forge:L2"
+  },
+  {
+   "t": 12.3,
+   "type": "turret-upgraded",
+   "side": "player",
+   "detail": "0:L2"
+  },
+  {
+   "t": 12.5,
+   "type": "turret-upgraded",
+   "side": "player",
+   "detail": "0:L3"
+  },
+  {
+   "t": 13.2,
+   "type": "slot-unlocked",
+   "side": "player",
+   "detail": 1
+  },
+  {
+   "t": 13.6,
+   "type": "unit",
+   "side": "enemy",
+   "detail": "renaissance-pikeman"
+  },
+  {
+   "t": 14.3,
+   "type": "turret-built",
+   "side": "player",
+   "detail": "1:renaissance-cannon"
+  },
+  {
+   "t": 14.7,
+   "type": "turret-upgraded",
+   "side": "player",
+   "detail": "1:L1"
+  },
+  {
+   "t": 14.9,
+   "type": "turret-upgraded",
+   "side": "player",
+   "detail": "1:L2"
+  },
+  {
+   "t": 15,
+   "type": "unit",
+   "side": "enemy",
+   "detail": "renaissance-pikeman"
+  },
+  {
+   "t": 16.5,
+   "type": "speed",
+   "detail": 2
+  },
+  {
+   "t": 16.9,
+   "type": "speed",
+   "detail": 3
+  },
+  {
+   "t": 17.4,
+   "type": "speed",
+   "detail": 4
+  },
+  {
+   "t": 29.6,
+   "type": "building",
+   "side": "player",
+   "detail": "mine:L6"
+  },
+  {
+   "t": 29.7,
+   "type": "unit",
+   "side": "enemy",
+   "detail": "renaissance-musketeer"
+  },
+  {
+   "t": 30.3,
+   "type": "building",
+   "side": "player",
+   "detail": "mine:L7"
+  },
+  {
+   "t": 31,
+   "type": "building",
+   "side": "player",
+   "detail": "mine:L8"
+  },
+  {
+   "t": 31.5,
+   "type": "building",
+   "side": "player",
+   "detail": "mine:L9"
+  },
+  {
+   "t": 44.9,
+   "type": "unit",
+   "side": "enemy",
+   "detail": "renaissance-pikeman"
+  },
+  {
+   "t": 45.9,
+   "type": "building",
+   "side": "player",
+   "detail": "mine:L10"
+  },
+  {
+   "t": 59.2,
+   "type": "building",
+   "side": "player",
+   "detail": "mine:L11"
+  },
+  {
+   "t": 63.1,
+   "type": "building",
+   "side": "player",
+   "detail": "mine:L12"
+  },
+  {
+   "t": 67.1,
+   "type": "unit",
+   "side": "enemy",
+   "detail": "renaissance-musketeer"
+  },
+  {
+   "t": 73.6,
+   "type": "speed",
+   "detail": 8
+  },
+  {
+   "t": 81.1,
+   "type": "unit",
+   "side": "enemy",
+   "detail": "renaissance-pikeman"
+  },
+  {
+   "t": 86.7,
+   "type": "building",
+   "side": "player",
+   "detail": "mine:L13"
+  },
+  {
+   "t": 104.5,
+   "type": "unit",
+   "side": "enemy",
+   "detail": "renaissance-musketeer"
+  },
+  {
+   "t": 107,
+   "type": "building",
+   "side": "player",
+   "detail": "mine:L14"
+  },
+  {
+   "t": 118.4,
+   "type": "unit",
+   "side": "enemy",
+   "detail": "renaissance-pikeman"
+  },
+  {
+   "t": 118.7,
+   "type": "building",
+   "side": "player",
+   "detail": "mine:L15"
+  },
+  {
+   "t": 141.9,
+   "type": "unit",
+   "side": "enemy",
+   "detail": "renaissance-musketeer"
+  },
+  {
+   "t": 154.7,
+   "type": "unit",
+   "side": "enemy",
+   "detail": "renaissance-pikeman"
+  },
+  {
+   "t": 159.8,
+   "type": "building",
+   "side": "player",
+   "detail": "library:L1"
+  },
+  {
+   "t": 163.2,
+   "type": "building",
+   "side": "player",
+   "detail": "forge:L1"
+  },
+  {
+   "t": 165.9,
+   "type": "building",
+   "side": "player",
+   "detail": "barracks:L1"
+  },
+  {
+   "t": 168.3,
+   "type": "building",
+   "side": "player",
+   "detail": "shrine:L1"
+  },
+  {
+   "t": 169.2,
+   "type": "unit",
+   "side": "enemy",
+   "detail": "renaissance-pikeman"
+  },
+  {
+   "t": 171.6,
+   "type": "building",
+   "side": "player",
+   "detail": "market:L1"
+  },
+  {
+   "t": 177.2,
+   "type": "building",
+   "side": "player",
+   "detail": "market:L2"
+  },
+  {
+   "t": 182.8,
+   "type": "building",
+   "side": "player",
+   "detail": "shrine:L2"
+  },
+  {
+   "t": 184.8,
+   "type": "building",
+   "side": "player",
+   "detail": "barracks:L2"
+  },
+  {
+   "t": 187.9,
+   "type": "building",
+   "side": "player",
+   "detail": "forge:L2"
+  },
+  {
+   "t": 190.3,
+   "type": "building",
+   "side": "player",
+   "detail": "library:L2"
+  },
+  {
+   "t": 192.6,
+   "type": "unit",
+   "side": "enemy",
+   "detail": "renaissance-musketeer"
+  },
+  {
+   "t": 193.4,
+   "type": "building",
+   "side": "player",
+   "detail": "library:L3"
+  },
+  {
+   "t": 196.3,
+   "type": "building",
+   "side": "player",
+   "detail": "library:L4"
+  },
+  {
+   "t": 198.2,
+   "type": "building",
+   "side": "player",
+   "detail": "library:L5"
+  },
+  {
+   "t": 203.5,
+   "type": "building",
+   "side": "player",
+   "detail": "market:L3"
+  },
+  {
+   "t": 204.8,
+   "type": "building",
+   "side": "player",
+   "detail": "market:L4"
+  },
+  {
+   "t": 206,
+   "type": "building",
+   "side": "player",
+   "detail": "market:L5"
+  },
+  {
+   "t": 206.7,
+   "type": "unit",
+   "side": "enemy",
+   "detail": "renaissance-pikeman"
+  },
+  {
+   "t": 226.6,
+   "type": "building",
+   "side": "player",
+   "detail": "library:L6"
+  },
+  {
+   "t": 228,
+   "type": "building",
+   "side": "player",
+   "detail": "library:L7"
+  },
+  {
+   "t": 228.9,
+   "type": "unit",
+   "side": "enemy",
+   "detail": "renaissance-musketeer"
+  },
+  {
+   "t": 229.1,
+   "type": "building",
+   "side": "player",
+   "detail": "library:L8"
+  },
+  {
+   "t": 230.4,
+   "type": "building",
+   "side": "player",
+   "detail": "library:L9"
+  },
+  {
+   "t": 231.9,
+   "type": "building",
+   "side": "player",
+   "detail": "library:L10"
+  },
+  {
+   "t": 243,
+   "type": "unit",
+   "side": "enemy",
+   "detail": "renaissance-pikeman"
+  },
+  {
+   "t": 248.3,
+   "type": "building",
+   "side": "player",
+   "detail": "market:L6"
+  },
+  {
+   "t": 249.5,
+   "type": "building",
+   "side": "player",
+   "detail": "market:L7"
+  },
+  {
+   "t": 251.8,
+   "type": "building",
+   "side": "player",
+   "detail": "market:L8"
+  },
+  {
+   "t": 253.4,
+   "type": "building",
+   "side": "player",
+   "detail": "market:L9"
+  },
+  {
+   "t": 254.6,
+   "type": "building",
+   "side": "player",
+   "detail": "market:L10"
+  },
+  {
+   "t": 264,
+   "type": "building",
+   "side": "player",
+   "detail": "library:L11"
+  },
+  {
+   "t": 265.2,
+   "type": "unit",
+   "side": "enemy",
+   "detail": "renaissance-musketeer"
+  },
+  {
+   "t": 265.5,
+   "type": "building",
+   "side": "player",
+   "detail": "library:L12"
+  },
+  {
+   "t": 266.7,
+   "type": "building",
+   "side": "player",
+   "detail": "library:L13"
+  },
+  {
+   "t": 267.9,
+   "type": "building",
+   "side": "player",
+   "detail": "library:L14"
+  },
+  {
+   "t": 273.9,
+   "type": "building",
+   "side": "player",
+   "detail": "library:L15"
+  },
+  {
+   "t": 279.2,
+   "type": "unit",
+   "side": "enemy",
+   "detail": "renaissance-pikeman"
+  },
+  {
+   "t": 287.1,
+   "type": "building",
+   "side": "player",
+   "detail": "market:L11"
+  },
+  {
+   "t": 289.1,
+   "type": "building",
+   "side": "player",
+   "detail": "market:L12"
+  },
+  {
+   "t": 293.8,
+   "type": "building",
+   "side": "player",
+   "detail": "market:L13"
+  },
+  {
+   "t": 301.4,
+   "type": "unit",
+   "side": "enemy",
+   "detail": "renaissance-musketeer"
+  },
+  {
+   "t": 306.8,
+   "type": "building",
+   "side": "player",
+   "detail": "market:L14"
+  },
+  {
+   "t": 314.2,
+   "type": "unit",
+   "side": "enemy",
+   "detail": "renaissance-pikeman"
+  },
+  {
+   "t": 315.8,
+   "type": "building",
+   "side": "player",
+   "detail": "market:L15"
+  },
+  {
+   "t": 328.7,
+   "type": "unit",
+   "side": "enemy",
+   "detail": "renaissance-pikeman"
+  },
+  {
+   "t": 333.1,
+   "type": "building",
+   "side": "player",
+   "detail": "shrine:L3"
+  },
+  {
+   "t": 334.6,
+   "type": "building",
+   "side": "player",
+   "detail": "shrine:L4"
+  },
+  {
+   "t": 336,
+   "type": "building",
+   "side": "player",
+   "detail": "shrine:L5"
+  },
+  {
+   "t": 338.8,
+   "type": "building",
+   "side": "player",
+   "detail": "barracks:L3"
+  },
+  {
+   "t": 343.1,
+   "type": "building",
+   "side": "player",
+   "detail": "forge:L3"
+  },
+  {
+   "t": 346,
+   "type": "building",
+   "side": "player",
+   "detail": "forge:L4"
+  },
+  {
+   "t": 347.6,
+   "type": "building",
+   "side": "player",
+   "detail": "forge:L5"
+  },
+  {
+   "t": 350.9,
+   "type": "unit",
+   "side": "enemy",
+   "detail": "renaissance-musketeer"
+  },
+  {
+   "t": 364.9,
+   "type": "unit",
+   "side": "enemy",
+   "detail": "renaissance-pikeman"
+  },
+  {
+   "t": 366.8,
+   "type": "building",
+   "side": "player",
+   "detail": "barracks:L4"
+  },
+  {
+   "t": 368.3,
+   "type": "building",
+   "side": "player",
+   "detail": "barracks:L5"
+  },
+  {
+   "t": 387.1,
+   "type": "unit",
+   "side": "enemy",
+   "detail": "renaissance-musketeer"
+  },
+  {
+   "t": 393.2,
+   "type": "research",
+   "side": "player",
+   "detail": "bounty:T1"
+  },
+  {
+   "t": 394.8,
+   "type": "research",
+   "side": "player",
+   "detail": "heavyDamage:T1"
+  },
+  {
+   "t": 396.4,
+   "type": "research",
+   "side": "player",
+   "detail": "heavyArmor:T1"
+  },
+  {
+   "t": 399.9,
+   "type": "unit",
+   "side": "enemy",
+   "detail": "renaissance-pikeman"
+  },
+  {
+   "t": 401.1,
+   "type": "research",
+   "side": "player",
+   "detail": "turretDamage:T1"
+  },
+  {
+   "t": 403.2,
+   "type": "research",
+   "side": "player",
+   "detail": "meleeArmor:T1"
+  },
+  {
+   "t": 405.2,
+   "type": "research",
+   "side": "player",
+   "detail": "meleeDamage:T1"
+  },
+  {
+   "t": 407.2,
+   "type": "research",
+   "side": "player",
+   "detail": "rangedDamage:T1"
+  },
+  {
+   "t": 409.2,
+   "type": "research",
+   "side": "player",
+   "detail": "turretRange:T1"
+  },
+  {
+   "t": 411.1,
+   "type": "research",
+   "side": "player",
+   "detail": "rangedRange:T1"
+  },
+  {
+   "t": 414.3,
+   "type": "unit",
+   "side": "enemy",
+   "detail": "renaissance-pikeman"
+  },
+  {
+   "t": 421.8,
+   "type": "building",
+   "side": "player",
+   "detail": "forge:L6"
+  },
+  {
+   "t": 423.4,
+   "type": "building",
+   "side": "player",
+   "detail": "forge:L7"
+  },
+  {
+   "t": 424.6,
+   "type": "building",
+   "side": "player",
+   "detail": "forge:L8"
+  },
+  {
+   "t": 425.8,
+   "type": "building",
+   "side": "player",
+   "detail": "forge:L9"
+  },
+  {
+   "t": 426.8,
+   "type": "building",
+   "side": "player",
+   "detail": "forge:L10"
+  },
+  {
+   "t": 436.5,
+   "type": "unit",
+   "side": "enemy",
+   "detail": "renaissance-musketeer"
+  },
+  {
+   "t": 442.3,
+   "type": "building",
+   "side": "player",
+   "detail": "forge:L11"
+  },
+  {
+   "t": 443.6,
+   "type": "building",
+   "side": "player",
+   "detail": "forge:L12"
+  },
+  {
+   "t": 445,
+   "type": "building",
+   "side": "player",
+   "detail": "forge:L13"
+  },
+  {
+   "t": 446.2,
+   "type": "building",
+   "side": "player",
+   "detail": "forge:L14"
+  },
+  {
+   "t": 447.6,
+   "type": "building",
+   "side": "player",
+   "detail": "forge:L15"
+  },
+  {
+   "t": 449.3,
+   "type": "unit",
+   "side": "enemy",
+   "detail": "renaissance-pikeman"
+  },
+  {
+   "t": 463.5,
+   "type": "research",
+   "side": "player",
+   "detail": "bounty:T2"
+  },
+  {
+   "t": 464.8,
+   "type": "research",
+   "side": "player",
+   "detail": "bounty:T3"
+  },
+  {
+   "t": 467.4,
+   "type": "research",
+   "side": "player",
+   "detail": "heavyDamage:T2"
+  },
+  {
+   "t": 468.6,
+   "type": "research",
+   "side": "player",
+   "detail": "heavyDamage:T3"
+  },
+  {
+   "t": 470.3,
+   "type": "research",
+   "side": "player",
+   "detail": "heavyArmor:T2"
+  },
+  {
+   "t": 471.5,
+   "type": "unit",
+   "side": "enemy",
+   "detail": "renaissance-musketeer"
+  },
+  {
+   "t": 471.5,
+   "type": "research",
+   "side": "player",
+   "detail": "heavyArmor:T3"
+  },
+  {
+   "t": 473.1,
+   "type": "research",
+   "side": "player",
+   "detail": "meleeDamage:T2"
+  },
+  {
+   "t": 474.6,
+   "type": "research",
+   "side": "player",
+   "detail": "meleeDamage:T3"
+  },
+  {
+   "t": 476.3,
+   "type": "research",
+   "side": "player",
+   "detail": "meleeArmor:T2"
+  },
+  {
+   "t": 477.8,
+   "type": "research",
+   "side": "player",
+   "detail": "meleeArmor:T3"
+  },
+  {
+   "t": 479.5,
+   "type": "research",
+   "side": "player",
+   "detail": "turretDamage:T2"
+  },
+  {
+   "t": 480.7,
+   "type": "research",
+   "side": "player",
+   "detail": "turretDamage:T3"
+  },
+  {
+   "t": 482.4,
+   "type": "research",
+   "side": "player",
+   "detail": "turretRange:T2"
+  },
+  {
+   "t": 483.9,
+   "type": "research",
+   "side": "player",
+   "detail": "turretRange:T3"
+  },
+  {
+   "t": 484.3,
+   "type": "unit",
+   "side": "enemy",
+   "detail": "renaissance-pikeman"
+  },
+  {
+   "t": 489,
+   "type": "research",
+   "side": "player",
+   "detail": "rangedDamage:T2"
+  },
+  {
+   "t": 490.3,
+   "type": "research",
+   "side": "player",
+   "detail": "rangedDamage:T3"
+  },
+  {
+   "t": 492.3,
+   "type": "research",
+   "side": "player",
+   "detail": "rangedRange:T2"
+  },
+  {
+   "t": 493.8,
+   "type": "research",
+   "side": "player",
+   "detail": "rangedRange:T3"
+  },
+  {
+   "t": 506.5,
+   "type": "unit",
+   "side": "enemy",
+   "detail": "renaissance-musketeer"
+  },
+  {
+   "t": 519.3,
+   "type": "unit",
+   "side": "enemy",
+   "detail": "renaissance-pikeman"
+  },
+  {
+   "t": 524.6,
+   "type": "speed",
+   "detail": 1
+  },
+  {
+   "t": 530.1,
+   "type": "unit",
+   "side": "player",
+   "detail": "renaissance-cuirassier"
+  },
+  {
+   "t": 531.5,
+   "type": "speed",
+   "detail": 2
+  },
+  {
+   "t": 532.1,
+   "type": "speed",
+   "detail": 3
+  },
+  {
+   "t": 532.8,
+   "type": "unit",
+   "side": "player",
+   "detail": "renaissance-alchemist"
+  },
+  {
+   "t": 534.6,
+   "type": "unit",
+   "side": "player",
+   "detail": "renaissance-musketeer"
+  },
+  {
+   "t": 536.4,
+   "type": "unit",
+   "side": "player",
+   "detail": "renaissance-musketeer"
+  },
+  {
+   "t": 539.6,
+   "type": "unit",
+   "side": "player",
+   "detail": "renaissance-cuirassier"
+  },
+  {
+   "t": 540.7,
+   "type": "special",
+   "side": "enemy"
+  },
+  {
+   "t": 541.4,
+   "type": "unit",
+   "side": "enemy",
+   "detail": "renaissance-musketeer"
+  },
+  {
+   "t": 544.6,
+   "type": "unit",
+   "side": "enemy",
+   "detail": "renaissance-pikeman"
+  },
+  {
+   "t": 546.1,
+   "type": "unit",
+   "side": "enemy",
+   "detail": "renaissance-pikeman"
+  },
+  {
+   "t": 550,
+   "type": "unit",
+   "side": "player",
+   "detail": "renaissance-cuirassier"
+  },
+  {
+   "t": 550.7,
+   "type": "base-below",
+   "side": "enemy",
+   "detail": 75
+  },
+  {
+   "t": 551.1,
+   "type": "unit",
+   "side": "enemy",
+   "detail": "renaissance-musketeer"
+  },
+  {
+   "t": 553.1,
+   "type": "unit",
+   "side": "player",
+   "detail": "renaissance-cuirassier"
+  },
+  {
+   "t": 553.9,
+   "type": "base-below",
+   "side": "enemy",
+   "detail": 50
+  },
+  {
+   "t": 555.5,
+   "type": "base-below",
+   "side": "enemy",
+   "detail": 25
+  },
+  {
+   "t": 555.8,
+   "type": "unit",
+   "side": "player",
+   "detail": "renaissance-alchemist"
+  }
+ ],
+ "snapshots": [
+  {
+   "t": 0,
+   "front": {
+    "player": null,
+    "enemy": null
+   },
+   "player": {
+    "gold": 2260,
+    "xp": 0,
+    "age": 2,
+    "baseHp": 2100,
+    "units": [
+     0,
+     0,
+     0,
+     0,
+     0
+    ],
+    "armyValue": 0,
+    "queue": 0,
+    "turrets": [
+     "renaissance-musket-nest:L1"
+    ],
+    "buildings": "mine5 lib0 forge0",
+    "researchTiers": 0,
+    "mineGoldPerSec": 5.8,
+    "libraryXpPerSec": 0
+   },
+   "enemy": {
+    "gold": 800,
+    "xp": 0,
+    "age": 2,
+    "baseHp": 2100,
+    "units": [
+     0,
+     0,
+     0,
+     0,
+     0
+    ],
+    "armyValue": 0,
+    "queue": 1,
+    "turrets": [],
+    "buildings": "mine0 lib0 forge0",
+    "researchTiers": 0,
+    "mineGoldPerSec": 0,
+    "libraryXpPerSec": 0
+   }
+  },
+  {
+   "t": 15,
+   "front": {
+    "player": null,
+    "enemy": 491
+   },
+   "player": {
+    "gold": 279,
+    "xp": 6,
+    "age": 2,
+    "baseHp": 2100,
+    "units": [
+     0,
+     0,
+     0,
+     0,
+     0
+    ],
+    "armyValue": 0,
+    "queue": 0,
+    "turrets": [
+     "renaissance-musket-nest:L3",
+     "renaissance-cannon:L2"
+    ],
+    "buildings": "mine5 lib0 forge0",
+    "researchTiers": 0,
+    "mineGoldPerSec": 5.8,
+    "libraryXpPerSec": 0
+   },
+   "enemy": {
+    "gold": 63,
+    "xp": 2,
+    "age": 2,
+    "baseHp": 2100,
+    "units": [
+     1,
+     1,
+     0,
+     0,
+     0
+    ],
+    "armyValue": 240,
+    "queue": 1,
+    "turrets": [],
+    "buildings": "mine2 lib1 forge2",
+    "researchTiers": 0,
+    "mineGoldPerSec": 2.9,
+    "libraryXpPerSec": 1.2
+   }
+  },
+  {
+   "t": 30,
+   "front": {
+    "player": null,
+    "enemy": 296
+   },
+   "player": {
+    "gold": 494,
+    "xp": 78,
+    "age": 2,
+    "baseHp": 2100,
+    "units": [
+     0,
+     0,
+     0,
+     0,
+     0
+    ],
+    "armyValue": 0,
+    "queue": 0,
+    "turrets": [
+     "renaissance-musket-nest:L3",
+     "renaissance-cannon:L2"
+    ],
+    "buildings": "mine6 lib0 forge0",
+    "researchTiers": 0,
+    "mineGoldPerSec": 7.7,
+    "libraryXpPerSec": 0
+   },
+   "enemy": {
+    "gold": 17,
+    "xp": 0,
+    "age": 2,
+    "baseHp": 2100,
+    "units": [
+     1,
+     1,
+     0,
+     0,
+     0
+    ],
+    "armyValue": 240,
+    "queue": 0,
+    "turrets": [],
+    "buildings": "mine2 lib1 forge2",
+    "researchTiers": 0,
+    "mineGoldPerSec": 2.9,
+    "libraryXpPerSec": 1.2
+   }
+  },
+  {
+   "t": 45,
+   "front": {
+    "player": null,
+    "enemy": 1133
+   },
+   "player": {
+    "gold": 397,
+    "xp": 150,
+    "age": 2,
+    "baseHp": 2100,
+    "units": [
+     0,
+     0,
+     0,
+     0,
+     0
+    ],
+    "armyValue": 0,
+    "queue": 0,
+    "turrets": [
+     "renaissance-musket-nest:L3",
+     "renaissance-cannon:L2"
+    ],
+    "buildings": "mine9 lib0 forge0",
+    "researchTiers": 0,
+    "mineGoldPerSec": 11,
+    "libraryXpPerSec": 0
+   },
+   "enemy": {
+    "gold": 19,
+    "xp": 0,
+    "age": 2,
+    "baseHp": 2100,
+    "units": [
+     1,
+     0,
+     0,
+     0,
+     0
+    ],
+    "armyValue": 95,
+    "queue": 0,
+    "turrets": [],
+    "buildings": "mine2 lib1 forge2",
+    "researchTiers": 0,
+    "mineGoldPerSec": 2.9,
+    "libraryXpPerSec": 1.2
+   }
+  },
+  {
+   "t": 60,
+   "front": {
+    "player": null,
+    "enemy": null
+   },
+   "player": {
+    "gold": 242,
+    "xp": 178,
+    "age": 2,
+    "baseHp": 2100,
+    "units": [
+     0,
+     0,
+     0,
+     0,
+     0
+    ],
+    "armyValue": 0,
+    "queue": 0,
+    "turrets": [
+     "renaissance-musket-nest:L3",
+     "renaissance-cannon:L2"
+    ],
+    "buildings": "mine11 lib0 forge0",
+    "researchTiers": 0,
+    "mineGoldPerSec": 15.2,
+    "libraryXpPerSec": 0
+   },
+   "enemy": {
+    "gold": 114,
+    "xp": 0,
+    "age": 2,
+    "baseHp": 2100,
+    "units": [
+     0,
+     0,
+     0,
+     0,
+     0
+    ],
+    "armyValue": 0,
+    "queue": 0,
+    "turrets": [],
+    "buildings": "mine2 lib1 forge2",
+    "researchTiers": 0,
+    "mineGoldPerSec": 2.9,
+    "libraryXpPerSec": 1.2
+   }
+  },
+  {
+   "t": 75,
+   "front": {
+    "player": null,
+    "enemy": 693
+   },
+   "player": {
+    "gold": 221,
+    "xp": 178,
+    "age": 2,
+    "baseHp": 2100,
+    "units": [
+     0,
+     0,
+     0,
+     0,
+     0
+    ],
+    "armyValue": 0,
+    "queue": 0,
+    "turrets": [
+     "renaissance-musket-nest:L3",
+     "renaissance-cannon:L2"
+    ],
+    "buildings": "mine12 lib0 forge0",
+    "researchTiers": 0,
+    "mineGoldPerSec": 16.5,
+    "libraryXpPerSec": 0
+   },
+   "enemy": {
+    "gold": 67,
+    "xp": 0,
+    "age": 2,
+    "baseHp": 2100,
+    "units": [
+     0,
+     1,
+     0,
+     0,
+     0
+    ],
+    "armyValue": 145,
+    "queue": 0,
+    "turrets": [],
+    "buildings": "mine2 lib1 forge2",
+    "researchTiers": 0,
+    "mineGoldPerSec": 2.9,
+    "libraryXpPerSec": 1.2
+   }
+  },
+  {
+   "t": 90,
+   "front": {
+    "player": null,
+    "enemy": 638
+   },
+   "player": {
+    "gold": 268,
+    "xp": 222,
+    "age": 2,
+    "baseHp": 2100,
+    "units": [
+     0,
+     0,
+     0,
+     0,
+     0
+    ],
+    "armyValue": 0,
+    "queue": 0,
+    "turrets": [
+     "renaissance-musket-nest:L3",
+     "renaissance-cannon:L2"
+    ],
+    "buildings": "mine13 lib0 forge0",
+    "researchTiers": 0,
+    "mineGoldPerSec": 17.8,
+    "libraryXpPerSec": 0
+   },
+   "enemy": {
+    "gold": 69,
+    "xp": 0,
+    "age": 2,
+    "baseHp": 2100,
+    "units": [
+     1,
+     0,
+     0,
+     0,
+     0
+    ],
+    "armyValue": 95,
+    "queue": 0,
+    "turrets": [],
+    "buildings": "mine2 lib1 forge2",
+    "researchTiers": 0,
+    "mineGoldPerSec": 2.9,
+    "libraryXpPerSec": 1.2
+   }
+  },
+  {
+   "t": 105,
+   "front": {
+    "player": null,
+    "enemy": 1108
+   },
+   "player": {
+    "gold": 620,
+    "xp": 250,
+    "age": 2,
+    "baseHp": 2100,
+    "units": [
+     0,
+     0,
+     0,
+     0,
+     0
+    ],
+    "armyValue": 0,
+    "queue": 0,
+    "turrets": [
+     "renaissance-musket-nest:L3",
+     "renaissance-cannon:L2"
+    ],
+    "buildings": "mine13 lib0 forge0",
+    "researchTiers": 0,
+    "mineGoldPerSec": 17.8,
+    "libraryXpPerSec": 0
+   },
+   "enemy": {
+    "gold": 21,
+    "xp": 0,
+    "age": 2,
+    "baseHp": 2100,
+    "units": [
+     0,
+     1,
+     0,
+     0,
+     0
+    ],
+    "armyValue": 145,
+    "queue": 0,
+    "turrets": [],
+    "buildings": "mine2 lib1 forge2",
+    "researchTiers": 0,
+    "mineGoldPerSec": 2.9,
+    "libraryXpPerSec": 1.2
+   }
+  },
+  {
+   "t": 120,
+   "front": {
+    "player": null,
+    "enemy": 1049
+   },
+   "player": {
+    "gold": 75,
+    "xp": 294,
+    "age": 2,
+    "baseHp": 2100,
+    "units": [
+     0,
+     0,
+     0,
+     0,
+     0
+    ],
+    "armyValue": 0,
+    "queue": 0,
+    "turrets": [
+     "renaissance-musket-nest:L3",
+     "renaissance-cannon:L2"
+    ],
+    "buildings": "mine15 lib0 forge0",
+    "researchTiers": 0,
+    "mineGoldPerSec": 20.3,
+    "libraryXpPerSec": 0
+   },
+   "enemy": {
+    "gold": 24,
+    "xp": 0,
+    "age": 2,
+    "baseHp": 2100,
+    "units": [
+     1,
+     0,
+     0,
+     0,
+     0
+    ],
+    "armyValue": 95,
+    "queue": 0,
+    "turrets": [],
+    "buildings": "mine2 lib1 forge2",
+    "researchTiers": 0,
+    "mineGoldPerSec": 2.9,
+    "libraryXpPerSec": 1.2
+   }
+  },
+  {
+   "t": 135,
+   "front": {
+    "player": null,
+    "enemy": null
+   },
+   "player": {
+    "gold": 490,
+    "xp": 322,
+    "age": 2,
+    "baseHp": 2100,
+    "units": [
+     0,
+     0,
+     0,
+     0,
+     0
+    ],
+    "armyValue": 0,
+    "queue": 0,
+    "turrets": [
+     "renaissance-musket-nest:L3",
+     "renaissance-cannon:L2"
+    ],
+    "buildings": "mine15 lib0 forge0",
+    "researchTiers": 0,
+    "mineGoldPerSec": 23.4,
+    "libraryXpPerSec": 0
+   },
+   "enemy": {
+    "gold": 122,
+    "xp": 0,
+    "age": 2,
+    "baseHp": 2100,
+    "units": [
+     0,
+     0,
+     0,
+     0,
+     0
+    ],
+    "armyValue": 0,
+    "queue": 0,
+    "turrets": [],
+    "buildings": "mine2 lib1 forge2",
+    "researchTiers": 0,
+    "mineGoldPerSec": 2.9,
+    "libraryXpPerSec": 1.2
+   }
+  },
+  {
+   "t": 150.1,
+   "front": {
+    "player": null,
+    "enemy": 679
+   },
+   "player": {
+    "gold": 841,
+    "xp": 322,
+    "age": 2,
+    "baseHp": 2100,
+    "units": [
+     0,
+     0,
+     0,
+     0,
+     0
+    ],
+    "armyValue": 0,
+    "queue": 0,
+    "turrets": [
+     "renaissance-musket-nest:L3",
+     "renaissance-cannon:L2"
+    ],
+    "buildings": "mine15 lib0 forge0",
+    "researchTiers": 0,
+    "mineGoldPerSec": 23.4,
+    "libraryXpPerSec": 0
+   },
+   "enemy": {
+    "gold": 76,
+    "xp": 0,
+    "age": 2,
+    "baseHp": 2100,
+    "units": [
+     0,
+     1,
+     0,
+     0,
+     0
+    ],
+    "armyValue": 145,
+    "queue": 0,
+    "turrets": [],
+    "buildings": "mine2 lib1 forge2",
+    "researchTiers": 0,
+    "mineGoldPerSec": 2.9,
+    "libraryXpPerSec": 1.2
+   }
+  },
+  {
+   "t": 165.1,
+   "front": {
+    "player": null,
+    "enemy": 556
+   },
+   "player": {
+    "gold": 1211,
+    "xp": 372,
+    "age": 2,
+    "baseHp": 2100,
+    "units": [
+     0,
+     0,
+     0,
+     0,
+     0
+    ],
+    "armyValue": 0,
+    "queue": 0,
+    "turrets": [
+     "renaissance-musket-nest:L3",
+     "renaissance-cannon:L2"
+    ],
+    "buildings": "mine15 lib1 forge1",
+    "researchTiers": 0,
+    "mineGoldPerSec": 23.4,
+    "libraryXpPerSec": 1.2
+   },
+   "enemy": {
+    "gold": 78,
+    "xp": 0,
+    "age": 2,
+    "baseHp": 2100,
+    "units": [
+     1,
+     0,
+     0,
+     0,
+     0
+    ],
+    "armyValue": 95,
+    "queue": 0,
+    "turrets": [],
+    "buildings": "mine2 lib1 forge2",
+    "researchTiers": 0,
+    "mineGoldPerSec": 2.9,
+    "libraryXpPerSec": 1.2
+   }
+  },
+  {
+   "t": 180.1,
+   "front": {
+    "player": null,
+    "enemy": 528
+   },
+   "player": {
+    "gold": 1405,
+    "xp": 400,
+    "age": 2,
+    "baseHp": 2100,
+    "units": [
+     0,
+     0,
+     0,
+     0,
+     0
+    ],
+    "armyValue": 0,
+    "queue": 0,
+    "turrets": [
+     "renaissance-musket-nest:L3",
+     "renaissance-cannon:L2"
+    ],
+    "buildings": "mine15 lib1 forge1",
+    "researchTiers": 0,
+    "mineGoldPerSec": 23.4,
+    "libraryXpPerSec": 1.2
+   },
+   "enemy": {
+    "gold": 82,
+    "xp": 0,
+    "age": 2,
+    "baseHp": 2100,
+    "units": [
+     1,
+     0,
+     0,
+     0,
+     0
+    ],
+    "armyValue": 95,
+    "queue": 0,
+    "turrets": [],
+    "buildings": "mine2 lib1 forge2",
+    "researchTiers": 0,
+    "mineGoldPerSec": 2.9,
+    "libraryXpPerSec": 1.2
+   }
+  },
+  {
+   "t": 195.1,
+   "front": {
+    "player": null,
+    "enemy": 1003
+   },
+   "player": {
+    "gold": 1521,
+    "xp": 406,
+    "age": 2,
+    "baseHp": 2100,
+    "units": [
+     0,
+     0,
+     0,
+     0,
+     0
+    ],
+    "armyValue": 0,
+    "queue": 0,
+    "turrets": [
+     "renaissance-musket-nest:L3",
+     "renaissance-cannon:L2"
+    ],
+    "buildings": "mine15 lib3 forge2",
+    "researchTiers": 0,
+    "mineGoldPerSec": 23.4,
+    "libraryXpPerSec": 2.2
+   },
+   "enemy": {
+    "gold": 35,
+    "xp": 0,
+    "age": 2,
+    "baseHp": 2100,
+    "units": [
+     0,
+     1,
+     0,
+     0,
+     0
+    ],
+    "armyValue": 145,
+    "queue": 0,
+    "turrets": [],
+    "buildings": "mine2 lib1 forge2",
+    "researchTiers": 0,
+    "mineGoldPerSec": 2.9,
+    "libraryXpPerSec": 1.2
+   }
+  },
+  {
+   "t": 210.1,
+   "front": {
+    "player": null,
+    "enemy": 948
+   },
+   "player": {
+    "gold": 1490,
+    "xp": 436,
+    "age": 2,
+    "baseHp": 2100,
+    "units": [
+     0,
+     0,
+     0,
+     0,
+     0
+    ],
+    "armyValue": 0,
+    "queue": 0,
+    "turrets": [
+     "renaissance-musket-nest:L3",
+     "renaissance-cannon:L2"
+    ],
+    "buildings": "mine15 lib5 forge2",
+    "researchTiers": 0,
+    "mineGoldPerSec": 23.4,
+    "libraryXpPerSec": 3.1
+   },
+   "enemy": {
+    "gold": 40,
+    "xp": 0,
+    "age": 2,
+    "baseHp": 2100,
+    "units": [
+     1,
+     0,
+     0,
+     0,
+     0
+    ],
+    "armyValue": 95,
+    "queue": 0,
+    "turrets": [],
+    "buildings": "mine2 lib1 forge2",
+    "researchTiers": 0,
+    "mineGoldPerSec": 2.9,
+    "libraryXpPerSec": 1.2
+   }
+  },
+  {
+   "t": 225.1,
+   "front": {
+    "player": null,
+    "enemy": null
+   },
+   "player": {
+    "gold": 2071,
+    "xp": 416,
+    "age": 2,
+    "baseHp": 2100,
+    "units": [
+     0,
+     0,
+     0,
+     0,
+     0
+    ],
+    "armyValue": 0,
+    "queue": 0,
+    "turrets": [
+     "renaissance-musket-nest:L3",
+     "renaissance-cannon:L2"
+    ],
+    "buildings": "mine15 lib5 forge2",
+    "researchTiers": 0,
+    "mineGoldPerSec": 23.4,
+    "libraryXpPerSec": 3.6
+   },
+   "enemy": {
+    "gold": 138,
+    "xp": 0,
+    "age": 2,
+    "baseHp": 2100,
+    "units": [
+     0,
+     0,
+     0,
+     0,
+     0
+    ],
+    "armyValue": 0,
+    "queue": 0,
+    "turrets": [],
+    "buildings": "mine2 lib1 forge2",
+    "researchTiers": 0,
+    "mineGoldPerSec": 2.9,
+    "libraryXpPerSec": 1.2
+   }
+  },
+  {
+   "t": 240.1,
+   "front": {
+    "player": null,
+    "enemy": 514
+   },
+   "player": {
+    "gold": 1653,
+    "xp": 396,
+    "age": 2,
+    "baseHp": 2100,
+    "units": [
+     0,
+     0,
+     0,
+     0,
+     0
+    ],
+    "armyValue": 0,
+    "queue": 0,
+    "turrets": [
+     "renaissance-musket-nest:L3",
+     "renaissance-cannon:L2"
+    ],
+    "buildings": "mine15 lib10 forge2",
+    "researchTiers": 0,
+    "mineGoldPerSec": 23.4,
+    "libraryXpPerSec": 7.3
+   },
+   "enemy": {
+    "gold": 92,
+    "xp": 0,
+    "age": 2,
+    "baseHp": 2100,
+    "units": [
+     0,
+     1,
+     0,
+     0,
+     0
+    ],
+    "armyValue": 145,
+    "queue": 0,
+    "turrets": [],
+    "buildings": "mine2 lib1 forge2",
+    "researchTiers": 0,
+    "mineGoldPerSec": 2.9,
+    "libraryXpPerSec": 1.2
+   }
+  },
+  {
+   "t": 255.1,
+   "front": {
+    "player": null,
+    "enemy": 459
+   },
+   "player": {
+    "gold": 1189,
+    "xp": 424,
+    "age": 2,
+    "baseHp": 2100,
+    "units": [
+     0,
+     0,
+     0,
+     0,
+     0
+    ],
+    "armyValue": 0,
+    "queue": 0,
+    "turrets": [
+     "renaissance-musket-nest:L3",
+     "renaissance-cannon:L2"
+    ],
+    "buildings": "mine15 lib10 forge2",
+    "researchTiers": 0,
+    "mineGoldPerSec": 23.4,
+    "libraryXpPerSec": 7.3
+   },
+   "enemy": {
+    "gold": 96,
+    "xp": 0,
+    "age": 2,
+    "baseHp": 2100,
+    "units": [
+     1,
+     0,
+     0,
+     0,
+     0
+    ],
+    "armyValue": 95,
+    "queue": 0,
+    "turrets": [],
+    "buildings": "mine2 lib1 forge2",
+    "researchTiers": 0,
+    "mineGoldPerSec": 2.9,
+    "libraryXpPerSec": 1.2
+   }
+  },
+  {
+   "t": 270.1,
+   "front": {
+    "player": null,
+    "enemy": 866
+   },
+   "player": {
+    "gold": 531,
+    "xp": 359,
+    "age": 2,
+    "baseHp": 2100,
+    "units": [
+     0,
+     0,
+     0,
+     0,
+     0
+    ],
+    "armyValue": 0,
+    "queue": 0,
+    "turrets": [
+     "renaissance-musket-nest:L3",
+     "renaissance-cannon:L2"
+    ],
+    "buildings": "mine15 lib14 forge2",
+    "researchTiers": 0,
+    "mineGoldPerSec": 23.4,
+    "libraryXpPerSec": 9.8
+   },
+   "enemy": {
+    "gold": 51,
+    "xp": 0,
+    "age": 2,
+    "baseHp": 2100,
+    "units": [
+     0,
+     1,
+     0,
+     0,
+     0
+    ],
+    "armyValue": 145,
+    "queue": 0,
+    "turrets": [],
+    "buildings": "mine2 lib1 forge2",
+    "researchTiers": 0,
+    "mineGoldPerSec": 2.9,
+    "libraryXpPerSec": 1.2
+   }
+  },
+  {
+   "t": 285.1,
+   "front": {
+    "player": null,
+    "enemy": 810
+   },
+   "player": {
+    "gold": 754,
+    "xp": 335,
+    "age": 2,
+    "baseHp": 2100,
+    "units": [
+     0,
+     0,
+     0,
+     0,
+     0
+    ],
+    "armyValue": 0,
+    "queue": 0,
+    "turrets": [
+     "renaissance-musket-nest:L3",
+     "renaissance-cannon:L2"
+    ],
+    "buildings": "mine15 lib15 forge2",
+    "researchTiers": 0,
+    "mineGoldPerSec": 23.4,
+    "libraryXpPerSec": 12
+   },
+   "enemy": {
+    "gold": 55,
+    "xp": 0,
+    "age": 2,
+    "baseHp": 2100,
+    "units": [
+     1,
+     0,
+     0,
+     0,
+     0
+    ],
+    "armyValue": 95,
+    "queue": 0,
+    "turrets": [],
+    "buildings": "mine2 lib1 forge2",
+    "researchTiers": 0,
+    "mineGoldPerSec": 2.9,
+    "libraryXpPerSec": 1.2
+   }
+  },
+  {
+   "t": 300.1,
+   "front": {
+    "player": null,
+    "enemy": null
+   },
+   "player": {
+    "gold": 440,
+    "xp": 275,
+    "age": 2,
+    "baseHp": 2100,
+    "units": [
+     0,
+     0,
+     0,
+     0,
+     0
+    ],
+    "armyValue": 0,
+    "queue": 0,
+    "turrets": [
+     "renaissance-musket-nest:L3",
+     "renaissance-cannon:L2"
+    ],
+    "buildings": "mine15 lib15 forge2",
+    "researchTiers": 0,
+    "mineGoldPerSec": 23.4,
+    "libraryXpPerSec": 12
+   },
+   "enemy": {
+    "gold": 11,
+    "xp": 0,
+    "age": 2,
+    "baseHp": 2100,
+    "units": [
+     0,
+     0,
+     0,
+     0,
+     0
+    ],
+    "armyValue": 0,
+    "queue": 1,
+    "turrets": [],
+    "buildings": "mine2 lib1 forge2",
+    "researchTiers": 0,
+    "mineGoldPerSec": 2.9,
+    "libraryXpPerSec": 1.2
+   }
+  },
+  {
+   "t": 315.1,
+   "front": {
+    "player": null,
+    "enemy": 1089
+   },
+   "player": {
+    "gold": 773,
+    "xp": 198,
+    "age": 2,
+    "baseHp": 2100,
+    "units": [
+     0,
+     0,
+     0,
+     0,
+     0
+    ],
+    "armyValue": 0,
+    "queue": 0,
+    "turrets": [
+     "renaissance-musket-nest:L3",
+     "renaissance-cannon:L2"
+    ],
+    "buildings": "mine15 lib15 forge2",
+    "researchTiers": 0,
+    "mineGoldPerSec": 23.4,
+    "libraryXpPerSec": 12
+   },
+   "enemy": {
+    "gold": 15,
+    "xp": 0,
+    "age": 2,
+    "baseHp": 2100,
+    "units": [
+     1,
+     0,
+     0,
+     0,
+     0
+    ],
+    "armyValue": 95,
+    "queue": 0,
+    "turrets": [],
+    "buildings": "mine2 lib1 forge2",
+    "researchTiers": 0,
+    "mineGoldPerSec": 2.9,
+    "libraryXpPerSec": 1.2
+   }
+  },
+  {
+   "t": 330.1,
+   "front": {
+    "player": null,
+    "enemy": 1060
+   },
+   "player": {
+    "gold": 1030,
+    "xp": 46,
+    "age": 2,
+    "baseHp": 2100,
+    "units": [
+     0,
+     0,
+     0,
+     0,
+     0
+    ],
+    "armyValue": 0,
+    "queue": 0,
+    "turrets": [
+     "renaissance-musket-nest:L3",
+     "renaissance-cannon:L2"
+    ],
+    "buildings": "mine15 lib15 forge2",
+    "researchTiers": 0,
+    "mineGoldPerSec": 23.4,
+    "libraryXpPerSec": 12
+   },
+   "enemy": {
+    "gold": 20,
+    "xp": 0,
+    "age": 2,
+    "baseHp": 2100,
+    "units": [
+     1,
+     0,
+     0,
+     0,
+     0
+    ],
+    "armyValue": 95,
+    "queue": 0,
+    "turrets": [],
+    "buildings": "mine2 lib1 forge2",
+    "researchTiers": 0,
+    "mineGoldPerSec": 2.9,
+    "libraryXpPerSec": 1.2
+   }
+  },
+  {
+   "t": 345.1,
+   "front": {
+    "player": null,
+    "enemy": null
+   },
+   "player": {
+    "gold": 1239,
+    "xp": 0,
+    "age": 2,
+    "baseHp": 2100,
+    "units": [
+     0,
+     0,
+     0,
+     0,
+     0
+    ],
+    "armyValue": 0,
+    "queue": 0,
+    "turrets": [
+     "renaissance-musket-nest:L3",
+     "renaissance-cannon:L2"
+    ],
+    "buildings": "mine15 lib15 forge3",
+    "researchTiers": 0,
+    "mineGoldPerSec": 23.4,
+    "libraryXpPerSec": 12
+   },
+   "enemy": {
+    "gold": 122,
+    "xp": 0,
+    "age": 2,
+    "baseHp": 2100,
+    "units": [
+     0,
+     0,
+     0,
+     0,
+     0
+    ],
+    "armyValue": 0,
+    "queue": 0,
+    "turrets": [],
+    "buildings": "mine2 lib1 forge2",
+    "researchTiers": 0,
+    "mineGoldPerSec": 2.9,
+    "libraryXpPerSec": 1.2
+   }
+  },
+  {
+   "t": 360.1,
+   "front": {
+    "player": null,
+    "enemy": 622
+   },
+   "player": {
+    "gold": 1592,
+    "xp": 0,
+    "age": 2,
+    "baseHp": 2100,
+    "units": [
+     0,
+     0,
+     0,
+     0,
+     0
+    ],
+    "armyValue": 0,
+    "queue": 0,
+    "turrets": [
+     "renaissance-musket-nest:L3",
+     "renaissance-cannon:L2"
+    ],
+    "buildings": "mine15 lib15 forge5",
+    "researchTiers": 0,
+    "mineGoldPerSec": 23.4,
+    "libraryXpPerSec": 12
+   },
+   "enemy": {
+    "gold": 78,
+    "xp": 0,
+    "age": 2,
+    "baseHp": 2100,
+    "units": [
+     0,
+     1,
+     0,
+     0,
+     0
+    ],
+    "armyValue": 145,
+    "queue": 0,
+    "turrets": [],
+    "buildings": "mine2 lib1 forge2",
+    "researchTiers": 0,
+    "mineGoldPerSec": 2.9,
+    "libraryXpPerSec": 1.2
+   }
+  },
+  {
+   "t": 375.1,
+   "front": {
+    "player": null,
+    "enemy": 565
+   },
+   "player": {
+    "gold": 2137,
+    "xp": 0,
+    "age": 2,
+    "baseHp": 2100,
+    "units": [
+     0,
+     0,
+     0,
+     0,
+     0
+    ],
+    "armyValue": 0,
+    "queue": 0,
+    "turrets": [
+     "renaissance-musket-nest:L3",
+     "renaissance-cannon:L2"
+    ],
+    "buildings": "mine15 lib15 forge5",
+    "researchTiers": 0,
+    "mineGoldPerSec": 23.4,
+    "libraryXpPerSec": 12
+   },
+   "enemy": {
+    "gold": 84,
+    "xp": 0,
+    "age": 2,
+    "baseHp": 2100,
+    "units": [
+     1,
+     0,
+     0,
+     0,
+     0
+    ],
+    "armyValue": 95,
+    "queue": 0,
+    "turrets": [],
+    "buildings": "mine2 lib1 forge2",
+    "researchTiers": 0,
+    "mineGoldPerSec": 2.9,
+    "libraryXpPerSec": 1.2
+   }
+  },
+  {
+   "t": 390.1,
+   "front": {
+    "player": null,
+    "enemy": 971
+   },
+   "player": {
+    "gold": 2888,
+    "xp": 0,
+    "age": 2,
+    "baseHp": 2100,
+    "units": [
+     0,
+     0,
+     0,
+     0,
+     0
+    ],
+    "armyValue": 0,
+    "queue": 0,
+    "turrets": [
+     "renaissance-musket-nest:L3",
+     "renaissance-cannon:L2"
+    ],
+    "buildings": "mine15 lib15 forge5",
+    "researchTiers": 0,
+    "mineGoldPerSec": 23.4,
+    "libraryXpPerSec": 12
+   },
+   "enemy": {
+    "gold": 39,
+    "xp": 0,
+    "age": 2,
+    "baseHp": 2100,
+    "units": [
+     0,
+     1,
+     0,
+     0,
+     0
+    ],
+    "armyValue": 145,
+    "queue": 0,
+    "turrets": [],
+    "buildings": "mine2 lib1 forge2",
+    "researchTiers": 0,
+    "mineGoldPerSec": 2.9,
+    "libraryXpPerSec": 1.2
+   }
+  },
+  {
+   "t": 405.1,
+   "front": {
+    "player": null,
+    "enemy": 847
+   },
+   "player": {
+    "gold": 3408,
+    "xp": 0,
+    "age": 2,
+    "baseHp": 2100,
+    "units": [
+     0,
+     0,
+     0,
+     0,
+     0
+    ],
+    "armyValue": 0,
+    "queue": 0,
+    "turrets": [
+     "renaissance-musket-nest:L3",
+     "renaissance-cannon:L2"
+    ],
+    "buildings": "mine15 lib15 forge5",
+    "researchTiers": 5,
+    "mineGoldPerSec": 23.4,
+    "libraryXpPerSec": 12
+   },
+   "enemy": {
+    "gold": 46,
+    "xp": 0,
+    "age": 2,
+    "baseHp": 2100,
+    "units": [
+     1,
+     0,
+     0,
+     0,
+     0
+    ],
+    "armyValue": 95,
+    "queue": 0,
+    "turrets": [],
+    "buildings": "mine2 lib1 forge2",
+    "researchTiers": 0,
+    "mineGoldPerSec": 2.9,
+    "libraryXpPerSec": 1.2
+   }
+  },
+  {
+   "t": 420.1,
+   "front": {
+    "player": null,
+    "enemy": 817
+   },
+   "player": {
+    "gold": 3956,
+    "xp": 0,
+    "age": 2,
+    "baseHp": 2100,
+    "units": [
+     0,
+     0,
+     0,
+     0,
+     0
+    ],
+    "armyValue": 0,
+    "queue": 0,
+    "turrets": [
+     "renaissance-musket-nest:L3",
+     "renaissance-cannon:L2"
+    ],
+    "buildings": "mine15 lib15 forge5",
+    "researchTiers": 9,
+    "mineGoldPerSec": 23.4,
+    "libraryXpPerSec": 12
+   },
+   "enemy": {
+    "gold": 53,
+    "xp": 0,
+    "age": 2,
+    "baseHp": 2100,
+    "units": [
+     1,
+     0,
+     0,
+     0,
+     0
+    ],
+    "armyValue": 95,
+    "queue": 0,
+    "turrets": [],
+    "buildings": "mine2 lib1 forge2",
+    "researchTiers": 0,
+    "mineGoldPerSec": 2.9,
+    "libraryXpPerSec": 1.2
+   }
+  },
+  {
+   "t": 435.1,
+   "front": {
+    "player": null,
+    "enemy": null
+   },
+   "player": {
+    "gold": 3615,
+    "xp": 0,
+    "age": 2,
+    "baseHp": 2100,
+    "units": [
+     0,
+     0,
+     0,
+     0,
+     0
+    ],
+    "armyValue": 0,
+    "queue": 0,
+    "turrets": [
+     "renaissance-musket-nest:L3",
+     "renaissance-cannon:L2"
+    ],
+    "buildings": "mine15 lib15 forge10",
+    "researchTiers": 9,
+    "mineGoldPerSec": 23.4,
+    "libraryXpPerSec": 12
+   },
+   "enemy": {
+    "gold": 10,
+    "xp": 0,
+    "age": 2,
+    "baseHp": 2100,
+    "units": [
+     0,
+     0,
+     0,
+     0,
+     0
+    ],
+    "armyValue": 0,
+    "queue": 1,
+    "turrets": [],
+    "buildings": "mine2 lib1 forge2",
+    "researchTiers": 0,
+    "mineGoldPerSec": 2.9,
+    "libraryXpPerSec": 1.2
+   }
+  },
+  {
+   "t": 450.1,
+   "front": {
+    "player": null,
+    "enemy": 1095
+   },
+   "player": {
+    "gold": 2045,
+    "xp": 0,
+    "age": 2,
+    "baseHp": 2100,
+    "units": [
+     0,
+     0,
+     0,
+     0,
+     0
+    ],
+    "armyValue": 0,
+    "queue": 0,
+    "turrets": [
+     "renaissance-musket-nest:L3",
+     "renaissance-cannon:L2"
+    ],
+    "buildings": "mine15 lib15 forge15",
+    "researchTiers": 9,
+    "mineGoldPerSec": 23.4,
+    "libraryXpPerSec": 12
+   },
+   "enemy": {
+    "gold": 18,
+    "xp": 0,
+    "age": 2,
+    "baseHp": 2100,
+    "units": [
+     1,
+     0,
+     0,
+     0,
+     0
+    ],
+    "armyValue": 95,
+    "queue": 0,
+    "turrets": [],
+    "buildings": "mine2 lib1 forge2",
+    "researchTiers": 0,
+    "mineGoldPerSec": 2.9,
+    "libraryXpPerSec": 1.2
+   }
+  },
+  {
+   "t": 465.1,
+   "front": {
+    "player": null,
+    "enemy": null
+   },
+   "player": {
+    "gold": 2346,
+    "xp": 0,
+    "age": 2,
+    "baseHp": 2100,
+    "units": [
+     0,
+     0,
+     0,
+     0,
+     0
+    ],
+    "armyValue": 0,
+    "queue": 0,
+    "turrets": [
+     "renaissance-musket-nest:L3",
+     "renaissance-cannon:L2"
+    ],
+    "buildings": "mine15 lib15 forge15",
+    "researchTiers": 11,
+    "mineGoldPerSec": 23.4,
+    "libraryXpPerSec": 12
+   },
+   "enemy": {
+    "gold": 120,
+    "xp": 0,
+    "age": 2,
+    "baseHp": 2100,
+    "units": [
+     0,
+     0,
+     0,
+     0,
+     0
+    ],
+    "armyValue": 0,
+    "queue": 0,
+    "turrets": [],
+    "buildings": "mine2 lib1 forge2",
+    "researchTiers": 0,
+    "mineGoldPerSec": 2.9,
+    "libraryXpPerSec": 1.2
+   }
+  },
+  {
+   "t": 480.1,
+   "front": {
+    "player": null,
+    "enemy": 656
+   },
+   "player": {
+    "gold": 994,
+    "xp": 0,
+    "age": 2,
+    "baseHp": 2095,
+    "units": [
+     0,
+     0,
+     0,
+     0,
+     0
+    ],
+    "armyValue": 0,
+    "queue": 0,
+    "turrets": [
+     "renaissance-musket-nest:L3",
+     "renaissance-cannon:L2"
+    ],
+    "buildings": "mine15 lib15 forge15",
+    "researchTiers": 20,
+    "mineGoldPerSec": 23.4,
+    "libraryXpPerSec": 12
+   },
+   "enemy": {
+    "gold": 76,
+    "xp": 0,
+    "age": 2,
+    "baseHp": 2095,
+    "units": [
+     0,
+     1,
+     0,
+     0,
+     0
+    ],
+    "armyValue": 145,
+    "queue": 0,
+    "turrets": [],
+    "buildings": "mine2 lib1 forge2",
+    "researchTiers": 0,
+    "mineGoldPerSec": 2.9,
+    "libraryXpPerSec": 1.2
+   }
+  },
+  {
+   "t": 495.1,
+   "front": {
+    "player": null,
+    "enemy": 532
+   },
+   "player": {
+    "gold": 301,
+    "xp": 0,
+    "age": 2,
+    "baseHp": 2078,
+    "units": [
+     0,
+     0,
+     0,
+     0,
+     0
+    ],
+    "armyValue": 0,
+    "queue": 0,
+    "turrets": [
+     "renaissance-musket-nest:L3",
+     "renaissance-cannon:L2"
+    ],
+    "buildings": "mine15 lib15 forge15",
+    "researchTiers": 27,
+    "mineGoldPerSec": 23.4,
+    "libraryXpPerSec": 12
+   },
+   "enemy": {
+    "gold": 84,
+    "xp": 0,
+    "age": 2,
+    "baseHp": 2078,
+    "units": [
+     1,
+     0,
+     0,
+     0,
+     0
+    ],
+    "armyValue": 95,
+    "queue": 0,
+    "turrets": [],
+    "buildings": "mine2 lib1 forge2",
+    "researchTiers": 0,
+    "mineGoldPerSec": 2.9,
+    "libraryXpPerSec": 1.2
+   }
+  },
+  {
+   "t": 510.1,
+   "front": {
+    "player": null,
+    "enemy": 938
+   },
+   "player": {
+    "gold": 1077,
+    "xp": 0,
+    "age": 2,
+    "baseHp": 2056,
+    "units": [
+     0,
+     0,
+     0,
+     0,
+     0
+    ],
+    "armyValue": 0,
+    "queue": 0,
+    "turrets": [
+     "renaissance-musket-nest:L3",
+     "renaissance-cannon:L2"
+    ],
+    "buildings": "mine15 lib15 forge15",
+    "researchTiers": 27,
+    "mineGoldPerSec": 23.4,
+    "libraryXpPerSec": 12
+   },
+   "enemy": {
+    "gold": 43,
+    "xp": 0,
+    "age": 2,
+    "baseHp": 2056,
+    "units": [
+     0,
+     1,
+     0,
+     0,
+     0
+    ],
+    "armyValue": 145,
+    "queue": 0,
+    "turrets": [],
+    "buildings": "mine2 lib1 forge2",
+    "researchTiers": 0,
+    "mineGoldPerSec": 2.9,
+    "libraryXpPerSec": 1.2
+   }
+  },
+  {
+   "t": 525.1,
+   "front": {
+    "player": null,
+    "enemy": 811
+   },
+   "player": {
+    "gold": 1933,
+    "xp": 0,
+    "age": 2,
+    "baseHp": 2033,
+    "units": [
+     0,
+     0,
+     0,
+     0,
+     0
+    ],
+    "armyValue": 0,
+    "queue": 0,
+    "turrets": [
+     "renaissance-musket-nest:L3",
+     "renaissance-cannon:L2"
+    ],
+    "buildings": "mine15 lib15 forge15",
+    "researchTiers": 27,
+    "mineGoldPerSec": 23.4,
+    "libraryXpPerSec": 12
+   },
+   "enemy": {
+    "gold": 52,
+    "xp": 0,
+    "age": 2,
+    "baseHp": 2033,
+    "units": [
+     1,
+     0,
+     0,
+     0,
+     0
+    ],
+    "armyValue": 95,
+    "queue": 0,
+    "turrets": [],
+    "buildings": "mine2 lib1 forge2",
+    "researchTiers": 0,
+    "mineGoldPerSec": 2.9,
+    "libraryXpPerSec": 1.2
+   }
+  },
+  {
+   "t": 540.1,
+   "front": {
+    "player": 701,
+    "enemy": null
+   },
+   "player": {
+    "gold": 1359,
+    "xp": 0,
+    "age": 2,
+    "baseHp": 2005,
+    "units": [
+     0,
+     2,
+     2,
+     0,
+     1
+    ],
+    "armyValue": 1350,
+    "queue": 0,
+    "turrets": [
+     "renaissance-musket-nest:L3",
+     "renaissance-cannon:L2"
+    ],
+    "buildings": "mine15 lib15 forge15",
+    "researchTiers": 27,
+    "mineGoldPerSec": 23.4,
+    "libraryXpPerSec": 12
+   },
+   "enemy": {
+    "gold": 9,
+    "xp": 0,
+    "age": 2,
+    "baseHp": 2005,
+    "units": [
+     0,
+     0,
+     0,
+     0,
+     0
+    ],
+    "armyValue": 0,
+    "queue": 1,
+    "turrets": [],
+    "buildings": "mine2 lib1 forge2",
+    "researchTiers": 0,
+    "mineGoldPerSec": 2.9,
+    "libraryXpPerSec": 1.2
+   }
+  },
+  {
+   "t": 555.1,
+   "front": {
+    "player": 1060,
+    "enemy": null
+   },
+   "player": {
+    "gold": 253,
+    "xp": 0,
+    "age": 2,
+    "baseHp": 1972,
+    "units": [
+     0,
+     1,
+     4,
+     0,
+     0
+    ],
+    "armyValue": 1685,
+    "queue": 5,
+    "turrets": [
+     "renaissance-musket-nest:L3",
+     "renaissance-cannon:L2"
+    ],
+    "buildings": "mine15 lib15 forge15",
+    "researchTiers": 27,
+    "mineGoldPerSec": 23.4,
+    "libraryXpPerSec": 12
+   },
+   "enemy": {
+    "gold": 53,
+    "xp": 106,
+    "age": 2,
+    "baseHp": 791,
+    "units": [
+     0,
+     0,
+     0,
+     0,
+     0
+    ],
+    "armyValue": 0,
+    "queue": 0,
+    "turrets": [],
+    "buildings": "mine2 lib1 forge2",
+    "researchTiers": 0,
+    "mineGoldPerSec": 2.9,
+    "libraryXpPerSec": 1.2
+   }
+  },
+  {
+   "t": 557.4,
+   "front": {
+    "player": 1060,
+    "enemy": null
+   },
+   "player": {
+    "gold": 349,
+    "xp": 0,
+    "age": 2,
+    "baseHp": 1961,
+    "units": [
+     0,
+     1,
+     4,
+     0,
+     1
+    ],
+    "armyValue": 1975,
+    "queue": 4,
+    "turrets": [
+     "renaissance-musket-nest:L3",
+     "renaissance-cannon:L2"
+    ],
+    "buildings": "mine15 lib15 forge15",
+    "researchTiers": 27,
+    "mineGoldPerSec": 23.4,
+    "libraryXpPerSec": 12
+   },
+   "enemy": {
+    "gold": 70,
+    "xp": 105,
+    "age": 2,
+    "baseHp": 0,
+    "units": [
+     0,
+     0,
+     0,
+     0,
+     0
+    ],
+    "armyValue": 0,
+    "queue": 0,
+    "turrets": [],
+    "buildings": "mine2 lib1 forge2",
+    "researchTiers": 0,
+    "mineGoldPerSec": 2.9,
+    "libraryXpPerSec": 1.2
+   }
+  }
+ ],
+ "config": {
+  "buildings": {
+   "mine": {
+    "id": "mine",
+    "name": "Mine",
+    "blurb": "Makes gold",
+    "stepCosts": [
+     40,
+     55,
+     70,
+     90,
+     110
+    ],
+    "spriteKey": "building-mine"
+   },
+   "library": {
+    "id": "library",
+    "name": "Library",
+    "blurb": "Makes XP",
+    "stepCosts": [
+     50,
+     65,
+     80,
+     100,
+     125
+    ],
+    "spriteKey": "building-library"
+   },
+   "forge": {
+    "id": "forge",
+    "name": "Forge",
+    "blurb": "Research tiers, unit damage",
+    "stepCosts": [
+     60,
+     75,
+     95,
+     120,
+     150
+    ],
+    "spriteKey": "building-forge"
+   },
+   "barracks": {
+    "id": "barracks",
+    "name": "Barracks",
+    "blurb": "Faster training, tougher recruits",
+    "stepCosts": [
+     60,
+     75,
+     95,
+     120,
+     150
+    ],
+    "spriteKey": "building-barracks",
+    "extra": true
+   },
+   "shrine": {
+    "id": "shrine",
+    "name": "Shrine",
+    "blurb": "Stronger, faster special",
+    "stepCosts": [
+     70,
+     90,
+     110,
+     140,
+     170
+    ],
+    "spriteKey": "building-shrine",
+    "extra": true
+   },
+   "market": {
+    "id": "market",
+    "name": "Market",
+    "blurb": "Sells surplus XP for gold",
+    "stepCosts": [
+     60,
+     80,
+     100,
+     125,
+     150
+    ],
+    "spriteKey": "building-market",
+    "extra": true
+   }
+  },
+  "research": [
+   {
+    "id": "bounty",
+    "name": "Plunder",
+    "short": "Kill gold",
+    "target": {
+     "kind": "bounty"
+    },
+    "perTier": 0.1,
+    "baseCost": 60
+   },
+   {
+    "id": "meleeDamage",
+    "name": "Sharpened weapons",
+    "short": "Melee dmg",
+    "target": {
+     "kind": "unit",
+     "slots": [
+      1
+     ],
+     "stat": "damage"
+    },
+    "perTier": 0.1,
+    "baseCost": 50
+   },
+   {
+    "id": "meleeArmor",
+    "name": "Melee armor",
+    "short": "Melee armor",
+    "target": {
+     "kind": "unit",
+     "slots": [
+      1
+     ],
+     "stat": "damageTaken"
+    },
+    "perTier": -0.06,
+    "baseCost": 50
+   },
+   {
+    "id": "rangedDamage",
+    "name": "Better ammo",
+    "short": "Ranged dmg",
+    "target": {
+     "kind": "unit",
+     "slots": [
+      2
+     ],
+     "stat": "damage"
+    },
+    "perTier": 0.1,
+    "baseCost": 50
+   },
+   {
+    "id": "rangedRange",
+    "name": "Keen eyes",
+    "short": "Ranged range",
+    "target": {
+     "kind": "unit",
+     "slots": [
+      2
+     ],
+     "stat": "range"
+    },
+    "perTier": 0.08,
+    "baseCost": 50
+   },
+   {
+    "id": "heavyDamage",
+    "name": "Heavy weapons",
+    "short": "Heavy dmg",
+    "target": {
+     "kind": "unit",
+     "slots": [
+      3
+     ],
+     "stat": "damage"
+    },
+    "perTier": 0.1,
+    "baseCost": 70
+   },
+   {
+    "id": "heavyArmor",
+    "name": "Heavy plating",
+    "short": "Heavy armor",
+    "target": {
+     "kind": "unit",
+     "slots": [
+      3
+     ],
+     "stat": "damageTaken"
+    },
+    "perTier": -0.06,
+    "baseCost": 70
+   },
+   {
+    "id": "turretDamage",
+    "name": "Turret power",
+    "short": "Turret dmg",
+    "target": {
+     "kind": "turret",
+     "stat": "damage"
+    },
+    "perTier": 0.05,
+    "baseCost": 60
+   },
+   {
+    "id": "turretRange",
+    "name": "Turret sights",
+    "short": "Turret range",
+    "target": {
+     "kind": "turret",
+     "stat": "range"
+    },
+    "perTier": 0.03,
+    "baseCost": 60
+   }
+  ]
+ },
+ "conquest": {
+  "effects": [
+   {
+    "kind": "start-age",
+    "age": 2
+   },
+   {
+    "kind": "gold",
+    "side": "both",
+    "amount": 150
+   },
+   {
+    "kind": "ai-income",
+    "mult": 0.1
+   },
+   {
+    "kind": "kill-gold",
+    "side": "player",
+    "mult": 1.5
+   },
+   {
+    "kind": "unit-stat",
+    "side": "both",
+    "stat": "speed",
+    "mult": 1.25
+   },
+   {
+    "kind": "unit-stat",
+    "side": "player",
+    "stat": "maxHp",
+    "mult": 1.12
+   },
+   {
+    "kind": "building",
+    "side": "player",
+    "buildingId": "mine",
+    "levels": 3
+   },
+   {
+    "kind": "unit-stat",
+    "side": "player",
+    "stat": "maxHp",
+    "mult": 1.5,
+    "slots": [
+     4
+    ]
+   },
+   {
+    "kind": "turrets",
+    "side": "player",
+    "count": 1,
+    "turretKind": "rapid",
+    "level": 1
+   },
+   {
+    "kind": "gold",
+    "side": "player",
+    "amount": 100
+   },
+   {
+    "kind": "gold",
+    "side": "player",
+    "amount": 100
+   },
+   {
+    "kind": "building",
+    "side": "player",
+    "buildingId": "mine",
+    "levels": 2
+   },
+   {
+    "kind": "gold",
+    "side": "player",
+    "amount": 100
+   }
+  ],
+  "label": "Classic · Battle · Renaissance 3/5",
+  "maxAge": 2
+ }
+}

@@ -1,0 +1,4128 @@
+{
+ "version": 2,
+ "startedAt": "2026-09-27T17:36:07.733Z",
+ "fileStem": "2026-09-27_19-36-07_conquest-vs-hard_lost",
+ "opponent": "hard",
+ "result": "lost",
+ "durationSec": 318.8,
+ "totals": {
+  "player": {
+   "goldEarned": {
+    "conquest": 40765,
+    "mine": 73949,
+    "kill": 61293.569999999956,
+    "market": 11058,
+    "economy-unit": 285,
+    "refund": 862
+   },
+   "goldSpent": 183095,
+   "spawned": {
+    "future-blade-trooper": 3,
+    "future-mech": 22,
+    "future-laser-gunner": 15,
+    "future-broker-drone": 1,
+    "future-shield-drone": 4
+   },
+   "kills": {
+    "stone-mammoth-rider": 1,
+    "future-laser-gunner": 46,
+    "future-blade-trooper": 7,
+    "future-mech": 11,
+    "future-shield-drone": 1
+   },
+   "losses": {
+    "future-blade-trooper": 3,
+    "future-mech": 21,
+    "future-laser-gunner": 15,
+    "future-broker-drone": 1,
+    "future-shield-drone": 4
+   }
+  },
+  "enemy": {
+   "goldEarned": {
+    "conquest": 9910,
+    "ai-income": 5986,
+    "mine": 18524,
+    "kill": 47524.06464,
+    "market": 26272.5
+   },
+   "goldSpent": 106965,
+   "spawned": {
+    "stone-mammoth-rider": 1,
+    "future-laser-gunner": 46,
+    "future-blade-trooper": 8,
+    "future-mech": 12,
+    "future-shield-drone": 1
+   },
+   "kills": {
+    "future-blade-trooper": 3,
+    "future-mech": 21,
+    "future-laser-gunner": 15,
+    "future-broker-drone": 1,
+    "future-shield-drone": 4
+   },
+   "losses": {
+    "stone-mammoth-rider": 1,
+    "future-laser-gunner": 46,
+    "future-blade-trooper": 7,
+    "future-mech": 11,
+    "future-shield-drone": 1
+   }
+  }
+ },
+ "events": [
+  {
+   "t": 0,
+   "type": "playing"
+  },
+  {
+   "t": 0,
+   "type": "age-up",
+   "side": "player",
+   "detail": 1
+  },
+  {
+   "t": 0,
+   "type": "age-up",
+   "side": "player",
+   "detail": 2
+  },
+  {
+   "t": 0,
+   "type": "age-up",
+   "side": "player",
+   "detail": 3
+  },
+  {
+   "t": 0,
+   "type": "age-up",
+   "side": "player",
+   "detail": 4
+  },
+  {
+   "t": 0,
+   "type": "age-up",
+   "side": "enemy",
+   "detail": 1
+  },
+  {
+   "t": 0,
+   "type": "age-up",
+   "side": "enemy",
+   "detail": 2
+  },
+  {
+   "t": 0,
+   "type": "age-up",
+   "side": "enemy",
+   "detail": 3
+  },
+  {
+   "t": 0,
+   "type": "age-up",
+   "side": "enemy",
+   "detail": 4
+  },
+  {
+   "t": 0,
+   "type": "building",
+   "side": "player",
+   "detail": "mine:L1"
+  },
+  {
+   "t": 0,
+   "type": "building",
+   "side": "player",
+   "detail": "mine:L2"
+  },
+  {
+   "t": 0,
+   "type": "building",
+   "side": "player",
+   "detail": "mine:L3"
+  },
+  {
+   "t": 0,
+   "type": "building",
+   "side": "player",
+   "detail": "library:L1"
+  },
+  {
+   "t": 0,
+   "type": "building",
+   "side": "player",
+   "detail": "library:L2"
+  },
+  {
+   "t": 0,
+   "type": "building",
+   "side": "player",
+   "detail": "mine:L4"
+  },
+  {
+   "t": 0,
+   "type": "building",
+   "side": "player",
+   "detail": "mine:L5"
+  },
+  {
+   "t": 0,
+   "type": "building",
+   "side": "player",
+   "detail": "mine:L6"
+  },
+  {
+   "t": 0,
+   "type": "building",
+   "side": "player",
+   "detail": "mine:L7"
+  },
+  {
+   "t": 0,
+   "type": "building",
+   "side": "player",
+   "detail": "mine:L8"
+  },
+  {
+   "t": 0,
+   "type": "building",
+   "side": "player",
+   "detail": "mine:L9"
+  },
+  {
+   "t": 0,
+   "type": "building",
+   "side": "player",
+   "detail": "forge:L1"
+  },
+  {
+   "t": 0,
+   "type": "building",
+   "side": "player",
+   "detail": "forge:L2"
+  },
+  {
+   "t": 0,
+   "type": "building",
+   "side": "player",
+   "detail": "forge:L3"
+  },
+  {
+   "t": 0,
+   "type": "building",
+   "side": "player",
+   "detail": "forge:L4"
+  },
+  {
+   "t": 0,
+   "type": "building",
+   "side": "player",
+   "detail": "forge:L5"
+  },
+  {
+   "t": 0,
+   "type": "building",
+   "side": "player",
+   "detail": "forge:L6"
+  },
+  {
+   "t": 0,
+   "type": "turret-built",
+   "side": "enemy",
+   "detail": "0:future-laser-turret"
+  },
+  {
+   "t": 0,
+   "type": "turret-upgraded",
+   "side": "enemy",
+   "detail": "0:L1"
+  },
+  {
+   "t": 0,
+   "type": "turret-upgraded",
+   "side": "enemy",
+   "detail": "0:L2"
+  },
+  {
+   "t": 0,
+   "type": "slot-unlocked",
+   "side": "enemy",
+   "detail": 1
+  },
+  {
+   "t": 0,
+   "type": "turret-built",
+   "side": "enemy",
+   "detail": "1:future-laser-turret"
+  },
+  {
+   "t": 0,
+   "type": "turret-upgraded",
+   "side": "enemy",
+   "detail": "1:L1"
+  },
+  {
+   "t": 0,
+   "type": "turret-upgraded",
+   "side": "enemy",
+   "detail": "1:L2"
+  },
+  {
+   "t": 0,
+   "type": "turret-built",
+   "side": "player",
+   "detail": "0:future-laser-turret"
+  },
+  {
+   "t": 0,
+   "type": "turret-upgraded",
+   "side": "player",
+   "detail": "0:L1"
+  },
+  {
+   "t": 0,
+   "type": "slot-unlocked",
+   "side": "player",
+   "detail": 1
+  },
+  {
+   "t": 0,
+   "type": "turret-built",
+   "side": "player",
+   "detail": "1:future-rail-gun"
+  },
+  {
+   "t": 0,
+   "type": "slot-unlocked",
+   "side": "player",
+   "detail": 2
+  },
+  {
+   "t": 0,
+   "type": "turret-built",
+   "side": "player",
+   "detail": "2:future-rail-gun"
+  },
+  {
+   "t": 0,
+   "type": "slot-unlocked",
+   "side": "player",
+   "detail": 3
+  },
+  {
+   "t": 0,
+   "type": "turret-built",
+   "side": "player",
+   "detail": "3:future-laser-turret"
+  },
+  {
+   "t": 0,
+   "type": "turret-upgraded",
+   "side": "player",
+   "detail": "3:L1"
+  },
+  {
+   "t": 0,
+   "type": "slot-unlocked",
+   "side": "player",
+   "detail": 4
+  },
+  {
+   "t": 0,
+   "type": "turret-built",
+   "side": "player",
+   "detail": "4:future-laser-turret"
+  },
+  {
+   "t": 0,
+   "type": "turret-upgraded",
+   "side": "player",
+   "detail": "4:L1"
+  },
+  {
+   "t": 0.5,
+   "type": "building",
+   "side": "enemy",
+   "detail": "mine:L1"
+  },
+  {
+   "t": 1,
+   "type": "building",
+   "side": "enemy",
+   "detail": "mine:L2"
+  },
+  {
+   "t": 1.5,
+   "type": "building",
+   "side": "enemy",
+   "detail": "mine:L3"
+  },
+  {
+   "t": 1.5,
+   "type": "unit",
+   "side": "player",
+   "detail": "future-blade-trooper"
+  },
+  {
+   "t": 2,
+   "type": "special",
+   "side": "enemy"
+  },
+  {
+   "t": 2.5,
+   "type": "building",
+   "side": "enemy",
+   "detail": "forge:L1"
+  },
+  {
+   "t": 3,
+   "type": "research",
+   "side": "enemy",
+   "detail": "heavyDamage:T1"
+  },
+  {
+   "t": 3.5,
+   "type": "unit",
+   "side": "enemy",
+   "detail": "stone-mammoth-rider"
+  },
+  {
+   "t": 3.5,
+   "type": "research",
+   "side": "enemy",
+   "detail": "heavyArmor:T1"
+  },
+  {
+   "t": 4.1,
+   "type": "research",
+   "side": "enemy",
+   "detail": "rangedDamage:T1"
+  },
+  {
+   "t": 4.6,
+   "type": "research",
+   "side": "enemy",
+   "detail": "rangedRange:T1"
+  },
+  {
+   "t": 5.1,
+   "type": "building",
+   "side": "enemy",
+   "detail": "forge:L2"
+  },
+  {
+   "t": 5.5,
+   "type": "unit",
+   "side": "enemy",
+   "detail": "future-laser-gunner"
+  },
+  {
+   "t": 5.6,
+   "type": "research",
+   "side": "enemy",
+   "detail": "meleeDamage:T1"
+  },
+  {
+   "t": 6.1,
+   "type": "research",
+   "side": "enemy",
+   "detail": "meleeArmor:T1"
+  },
+  {
+   "t": 6.6,
+   "type": "research",
+   "side": "enemy",
+   "detail": "bounty:T1"
+  },
+  {
+   "t": 7.1,
+   "type": "building",
+   "side": "enemy",
+   "detail": "mine:L4"
+  },
+  {
+   "t": 7.6,
+   "type": "building",
+   "side": "enemy",
+   "detail": "mine:L5"
+  },
+  {
+   "t": 8.1,
+   "type": "building",
+   "side": "enemy",
+   "detail": "mine:L6"
+  },
+  {
+   "t": 8.6,
+   "type": "building",
+   "side": "enemy",
+   "detail": "mine:L7"
+  },
+  {
+   "t": 9.1,
+   "type": "building",
+   "side": "enemy",
+   "detail": "mine:L8"
+  },
+  {
+   "t": 9.6,
+   "type": "building",
+   "side": "enemy",
+   "detail": "mine:L9"
+  },
+  {
+   "t": 10.5,
+   "type": "building",
+   "side": "player",
+   "detail": "mine:L10"
+  },
+  {
+   "t": 10.9,
+   "type": "unit",
+   "side": "player",
+   "detail": "future-mech"
+  },
+  {
+   "t": 11.6,
+   "type": "building",
+   "side": "player",
+   "detail": "mine:L11"
+  },
+  {
+   "t": 11.8,
+   "type": "building",
+   "side": "player",
+   "detail": "mine:L12"
+  },
+  {
+   "t": 12,
+   "type": "building",
+   "side": "player",
+   "detail": "mine:L13"
+  },
+  {
+   "t": 12.1,
+   "type": "building",
+   "side": "player",
+   "detail": "mine:L14"
+  },
+  {
+   "t": 12.3,
+   "type": "building",
+   "side": "player",
+   "detail": "mine:L15"
+  },
+  {
+   "t": 13.1,
+   "type": "unit",
+   "side": "enemy",
+   "detail": "future-laser-gunner"
+  },
+  {
+   "t": 13.6,
+   "type": "building",
+   "side": "player",
+   "detail": "mine:L16"
+  },
+  {
+   "t": 13.7,
+   "type": "building",
+   "side": "player",
+   "detail": "mine:L17"
+  },
+  {
+   "t": 13.9,
+   "type": "building",
+   "side": "player",
+   "detail": "mine:L18"
+  },
+  {
+   "t": 14,
+   "type": "building",
+   "side": "player",
+   "detail": "mine:L19"
+  },
+  {
+   "t": 14.2,
+   "type": "building",
+   "side": "player",
+   "detail": "mine:L20"
+  },
+  {
+   "t": 15.1,
+   "type": "unit",
+   "side": "enemy",
+   "detail": "future-laser-gunner"
+  },
+  {
+   "t": 15.4,
+   "type": "building",
+   "side": "player",
+   "detail": "mine:L21"
+  },
+  {
+   "t": 15.5,
+   "type": "building",
+   "side": "player",
+   "detail": "mine:L22"
+  },
+  {
+   "t": 15.7,
+   "type": "building",
+   "side": "player",
+   "detail": "mine:L23"
+  },
+  {
+   "t": 15.8,
+   "type": "building",
+   "side": "player",
+   "detail": "mine:L24"
+  },
+  {
+   "t": 16,
+   "type": "building",
+   "side": "player",
+   "detail": "mine:L25"
+  },
+  {
+   "t": 23.3,
+   "type": "unit",
+   "side": "player",
+   "detail": "future-laser-gunner"
+  },
+  {
+   "t": 25,
+   "type": "special",
+   "side": "player"
+  },
+  {
+   "t": 25.3,
+   "type": "unit",
+   "side": "player",
+   "detail": "future-laser-gunner"
+  },
+  {
+   "t": 26.6,
+   "type": "speed",
+   "detail": 2
+  },
+  {
+   "t": 27.8,
+   "type": "unit",
+   "side": "enemy",
+   "detail": "future-laser-gunner"
+  },
+  {
+   "t": 28.8,
+   "type": "unit",
+   "side": "player",
+   "detail": "future-mech"
+  },
+  {
+   "t": 30.8,
+   "type": "unit",
+   "side": "player",
+   "detail": "future-laser-gunner"
+  },
+  {
+   "t": 32.8,
+   "type": "unit",
+   "side": "player",
+   "detail": "future-laser-gunner"
+  },
+  {
+   "t": 32.9,
+   "type": "unit",
+   "side": "enemy",
+   "detail": "future-blade-trooper"
+  },
+  {
+   "t": 38.4,
+   "type": "unit",
+   "side": "enemy",
+   "detail": "future-mech"
+  },
+  {
+   "t": 40.5,
+   "type": "unit",
+   "side": "enemy",
+   "detail": "future-laser-gunner"
+  },
+  {
+   "t": 45.7,
+   "type": "research",
+   "side": "player",
+   "detail": "bounty:T1"
+  },
+  {
+   "t": 46,
+   "type": "research",
+   "side": "player",
+   "detail": "bounty:T2"
+  },
+  {
+   "t": 46.6,
+   "type": "unit",
+   "side": "enemy",
+   "detail": "future-laser-gunner"
+  },
+  {
+   "t": 51.1,
+   "type": "building",
+   "side": "player",
+   "detail": "market:L1"
+  },
+  {
+   "t": 51.1,
+   "type": "unit",
+   "side": "enemy",
+   "detail": "future-blade-trooper"
+  },
+  {
+   "t": 51.5,
+   "type": "building",
+   "side": "player",
+   "detail": "market:L2"
+  },
+  {
+   "t": 51.8,
+   "type": "building",
+   "side": "player",
+   "detail": "market:L3"
+  },
+  {
+   "t": 52.1,
+   "type": "building",
+   "side": "player",
+   "detail": "market:L4"
+  },
+  {
+   "t": 52.4,
+   "type": "building",
+   "side": "player",
+   "detail": "market:L5"
+  },
+  {
+   "t": 54.7,
+   "type": "unit",
+   "side": "enemy",
+   "detail": "future-laser-gunner"
+  },
+  {
+   "t": 61.3,
+   "type": "unit",
+   "side": "enemy",
+   "detail": "future-laser-gunner"
+  },
+  {
+   "t": 63.3,
+   "type": "unit",
+   "side": "enemy",
+   "detail": "future-laser-gunner"
+  },
+  {
+   "t": 67.4,
+   "type": "building",
+   "side": "enemy",
+   "detail": "market:L1"
+  },
+  {
+   "t": 67.9,
+   "type": "research",
+   "side": "enemy",
+   "detail": "turretDamage:T1"
+  },
+  {
+   "t": 68.1,
+   "type": "unit",
+   "side": "player",
+   "detail": "future-mech"
+  },
+  {
+   "t": 70.1,
+   "type": "unit",
+   "side": "player",
+   "detail": "future-laser-gunner"
+  },
+  {
+   "t": 71.9,
+   "type": "unit",
+   "side": "enemy",
+   "detail": "future-mech"
+  },
+  {
+   "t": 72.1,
+   "type": "unit",
+   "side": "player",
+   "detail": "future-laser-gunner"
+  },
+  {
+   "t": 74.1,
+   "type": "unit",
+   "side": "player",
+   "detail": "future-laser-gunner"
+  },
+  {
+   "t": 76.5,
+   "type": "unit",
+   "side": "enemy",
+   "detail": "future-blade-trooper"
+  },
+  {
+   "t": 77.5,
+   "type": "special",
+   "side": "enemy"
+  },
+  {
+   "t": 79.1,
+   "type": "unit",
+   "side": "player",
+   "detail": "future-broker-drone"
+  },
+  {
+   "t": 80.1,
+   "type": "building",
+   "side": "enemy",
+   "detail": "mine:L10"
+  },
+  {
+   "t": 80.6,
+   "type": "building",
+   "side": "enemy",
+   "detail": "mine:L11"
+  },
+  {
+   "t": 81.1,
+   "type": "building",
+   "side": "enemy",
+   "detail": "market:L2"
+  },
+  {
+   "t": 81.6,
+   "type": "unit",
+   "side": "enemy",
+   "detail": "future-laser-gunner"
+  },
+  {
+   "t": 81.6,
+   "type": "building",
+   "side": "enemy",
+   "detail": "market:L3"
+  },
+  {
+   "t": 82.1,
+   "type": "building",
+   "side": "enemy",
+   "detail": "market:L4"
+  },
+  {
+   "t": 82.6,
+   "type": "building",
+   "side": "enemy",
+   "detail": "market:L5"
+  },
+  {
+   "t": 83.1,
+   "type": "building",
+   "side": "enemy",
+   "detail": "market:L6"
+  },
+  {
+   "t": 83.6,
+   "type": "building",
+   "side": "enemy",
+   "detail": "forge:L3"
+  },
+  {
+   "t": 87.6,
+   "type": "unit",
+   "side": "enemy",
+   "detail": "future-mech"
+  },
+  {
+   "t": 93.2,
+   "type": "unit",
+   "side": "enemy",
+   "detail": "future-laser-gunner"
+  },
+  {
+   "t": 96.8,
+   "type": "building",
+   "side": "enemy",
+   "detail": "shrine:L1"
+  },
+  {
+   "t": 96.9,
+   "type": "unit",
+   "side": "player",
+   "detail": "future-mech"
+  },
+  {
+   "t": 99.3,
+   "type": "unit",
+   "side": "enemy",
+   "detail": "future-laser-gunner"
+  },
+  {
+   "t": 100.4,
+   "type": "unit",
+   "side": "player",
+   "detail": "future-mech"
+  },
+  {
+   "t": 102.1,
+   "type": "special",
+   "side": "player"
+  },
+  {
+   "t": 102.9,
+   "type": "unit",
+   "side": "enemy",
+   "detail": "future-laser-gunner"
+  },
+  {
+   "t": 103.9,
+   "type": "unit",
+   "side": "player",
+   "detail": "future-mech"
+  },
+  {
+   "t": 104.9,
+   "type": "unit",
+   "side": "enemy",
+   "detail": "future-laser-gunner"
+  },
+  {
+   "t": 106.9,
+   "type": "unit",
+   "side": "enemy",
+   "detail": "future-laser-gunner"
+  },
+  {
+   "t": 107.4,
+   "type": "unit",
+   "side": "player",
+   "detail": "future-mech"
+  },
+  {
+   "t": 108,
+   "type": "building",
+   "side": "player",
+   "detail": "forge:L7"
+  },
+  {
+   "t": 108.3,
+   "type": "building",
+   "side": "player",
+   "detail": "forge:L8"
+  },
+  {
+   "t": 108.7,
+   "type": "building",
+   "side": "player",
+   "detail": "forge:L9"
+  },
+  {
+   "t": 108.9,
+   "type": "building",
+   "side": "player",
+   "detail": "forge:L10"
+  },
+  {
+   "t": 109.4,
+   "type": "unit",
+   "side": "enemy",
+   "detail": "future-blade-trooper"
+  },
+  {
+   "t": 110.9,
+   "type": "unit",
+   "side": "player",
+   "detail": "future-mech"
+  },
+  {
+   "t": 111.5,
+   "type": "building",
+   "side": "player",
+   "detail": "forge:L11"
+  },
+  {
+   "t": 111.9,
+   "type": "building",
+   "side": "player",
+   "detail": "forge:L12"
+  },
+  {
+   "t": 112.2,
+   "type": "building",
+   "side": "player",
+   "detail": "forge:L13"
+  },
+  {
+   "t": 112.6,
+   "type": "building",
+   "side": "player",
+   "detail": "forge:L14"
+  },
+  {
+   "t": 112.9,
+   "type": "building",
+   "side": "player",
+   "detail": "forge:L15"
+  },
+  {
+   "t": 115.4,
+   "type": "building",
+   "side": "player",
+   "detail": "forge:L16"
+  },
+  {
+   "t": 115.7,
+   "type": "building",
+   "side": "player",
+   "detail": "forge:L17"
+  },
+  {
+   "t": 116,
+   "type": "building",
+   "side": "player",
+   "detail": "forge:L18"
+  },
+  {
+   "t": 116.4,
+   "type": "building",
+   "side": "player",
+   "detail": "forge:L19"
+  },
+  {
+   "t": 116.7,
+   "type": "building",
+   "side": "player",
+   "detail": "forge:L20"
+  },
+  {
+   "t": 119.3,
+   "type": "building",
+   "side": "player",
+   "detail": "forge:L21"
+  },
+  {
+   "t": 119.5,
+   "type": "unit",
+   "side": "enemy",
+   "detail": "future-laser-gunner"
+  },
+  {
+   "t": 119.7,
+   "type": "building",
+   "side": "player",
+   "detail": "forge:L22"
+  },
+  {
+   "t": 120,
+   "type": "building",
+   "side": "player",
+   "detail": "forge:L23"
+  },
+  {
+   "t": 120.3,
+   "type": "building",
+   "side": "player",
+   "detail": "forge:L24"
+  },
+  {
+   "t": 120.7,
+   "type": "building",
+   "side": "player",
+   "detail": "forge:L25"
+  },
+  {
+   "t": 121.6,
+   "type": "unit",
+   "side": "enemy",
+   "detail": "future-laser-gunner"
+  },
+  {
+   "t": 123.6,
+   "type": "unit",
+   "side": "enemy",
+   "detail": "future-laser-gunner"
+  },
+  {
+   "t": 124.4,
+   "type": "building",
+   "side": "player",
+   "detail": "barracks:L1"
+  },
+  {
+   "t": 124.7,
+   "type": "building",
+   "side": "player",
+   "detail": "barracks:L2"
+  },
+  {
+   "t": 125,
+   "type": "building",
+   "side": "player",
+   "detail": "barracks:L3"
+  },
+  {
+   "t": 125.3,
+   "type": "building",
+   "side": "player",
+   "detail": "barracks:L4"
+  },
+  {
+   "t": 125.6,
+   "type": "unit",
+   "side": "enemy",
+   "detail": "future-laser-gunner"
+  },
+  {
+   "t": 125.6,
+   "type": "building",
+   "side": "player",
+   "detail": "barracks:L5"
+  },
+  {
+   "t": 129,
+   "type": "building",
+   "side": "player",
+   "detail": "barracks:L6"
+  },
+  {
+   "t": 129.3,
+   "type": "building",
+   "side": "player",
+   "detail": "barracks:L7"
+  },
+  {
+   "t": 129.6,
+   "type": "building",
+   "side": "player",
+   "detail": "barracks:L8"
+  },
+  {
+   "t": 129.9,
+   "type": "building",
+   "side": "player",
+   "detail": "barracks:L9"
+  },
+  {
+   "t": 130.3,
+   "type": "building",
+   "side": "player",
+   "detail": "barracks:L10"
+  },
+  {
+   "t": 132.2,
+   "type": "unit",
+   "side": "enemy",
+   "detail": "future-mech"
+  },
+  {
+   "t": 132.9,
+   "type": "building",
+   "side": "player",
+   "detail": "barracks:L11"
+  },
+  {
+   "t": 133.2,
+   "type": "building",
+   "side": "player",
+   "detail": "barracks:L12"
+  },
+  {
+   "t": 133.5,
+   "type": "building",
+   "side": "player",
+   "detail": "barracks:L13"
+  },
+  {
+   "t": 133.8,
+   "type": "building",
+   "side": "player",
+   "detail": "barracks:L14"
+  },
+  {
+   "t": 134.1,
+   "type": "building",
+   "side": "player",
+   "detail": "barracks:L15"
+  },
+  {
+   "t": 134.2,
+   "type": "unit",
+   "side": "enemy",
+   "detail": "future-laser-gunner"
+  },
+  {
+   "t": 136.2,
+   "type": "unit",
+   "side": "enemy",
+   "detail": "future-laser-gunner"
+  },
+  {
+   "t": 137.3,
+   "type": "building",
+   "side": "player",
+   "detail": "barracks:L16"
+  },
+  {
+   "t": 137.6,
+   "type": "building",
+   "side": "player",
+   "detail": "barracks:L17"
+  },
+  {
+   "t": 137.9,
+   "type": "building",
+   "side": "player",
+   "detail": "barracks:L18"
+  },
+  {
+   "t": 138.2,
+   "type": "building",
+   "side": "player",
+   "detail": "barracks:L19"
+  },
+  {
+   "t": 138.3,
+   "type": "unit",
+   "side": "enemy",
+   "detail": "future-laser-gunner"
+  },
+  {
+   "t": 138.5,
+   "type": "building",
+   "side": "player",
+   "detail": "barracks:L20"
+  },
+  {
+   "t": 143.2,
+   "type": "building",
+   "side": "player",
+   "detail": "barracks:L21"
+  },
+  {
+   "t": 143.5,
+   "type": "building",
+   "side": "player",
+   "detail": "barracks:L22"
+  },
+  {
+   "t": 143.8,
+   "type": "building",
+   "side": "player",
+   "detail": "barracks:L23"
+  },
+  {
+   "t": 144.1,
+   "type": "building",
+   "side": "player",
+   "detail": "barracks:L24"
+  },
+  {
+   "t": 144.8,
+   "type": "unit",
+   "side": "enemy",
+   "detail": "future-laser-gunner"
+  },
+  {
+   "t": 145,
+   "type": "research",
+   "side": "enemy",
+   "detail": "turretRange:T1"
+  },
+  {
+   "t": 145.5,
+   "type": "building",
+   "side": "enemy",
+   "detail": "barracks:L1"
+  },
+  {
+   "t": 146,
+   "type": "building",
+   "side": "enemy",
+   "detail": "barracks:L2"
+  },
+  {
+   "t": 147,
+   "type": "building",
+   "side": "enemy",
+   "detail": "forge:L4"
+  },
+  {
+   "t": 148.1,
+   "type": "building",
+   "side": "enemy",
+   "detail": "forge:L5"
+  },
+  {
+   "t": 149.1,
+   "type": "building",
+   "side": "enemy",
+   "detail": "forge:L6"
+  },
+  {
+   "t": 150.6,
+   "type": "research",
+   "side": "enemy",
+   "detail": "heavyDamage:T2"
+  },
+  {
+   "t": 151.1,
+   "type": "research",
+   "side": "enemy",
+   "detail": "heavyArmor:T2"
+  },
+  {
+   "t": 151.2,
+   "type": "unit",
+   "side": "enemy",
+   "detail": "future-laser-gunner"
+  },
+  {
+   "t": 151.6,
+   "type": "research",
+   "side": "enemy",
+   "detail": "rangedDamage:T2"
+  },
+  {
+   "t": 152.1,
+   "type": "research",
+   "side": "enemy",
+   "detail": "rangedRange:T2"
+  },
+  {
+   "t": 152.7,
+   "type": "research",
+   "side": "enemy",
+   "detail": "meleeDamage:T2"
+  },
+  {
+   "t": 153.2,
+   "type": "research",
+   "side": "enemy",
+   "detail": "meleeArmor:T2"
+  },
+  {
+   "t": 153.2,
+   "type": "unit",
+   "side": "enemy",
+   "detail": "future-laser-gunner"
+  },
+  {
+   "t": 153.7,
+   "type": "research",
+   "side": "enemy",
+   "detail": "bounty:T2"
+  },
+  {
+   "t": 154.1,
+   "type": "building",
+   "side": "player",
+   "detail": "barracks:L25"
+  },
+  {
+   "t": 154.2,
+   "type": "building",
+   "side": "enemy",
+   "detail": "market:L7"
+  },
+  {
+   "t": 154.7,
+   "type": "building",
+   "side": "enemy",
+   "detail": "market:L8"
+  },
+  {
+   "t": 155.2,
+   "type": "building",
+   "side": "enemy",
+   "detail": "market:L9"
+  },
+  {
+   "t": 155.7,
+   "type": "building",
+   "side": "enemy",
+   "detail": "market:L10"
+  },
+  {
+   "t": 156.2,
+   "type": "building",
+   "side": "enemy",
+   "detail": "market:L11"
+  },
+  {
+   "t": 156.7,
+   "type": "building",
+   "side": "enemy",
+   "detail": "forge:L7"
+  },
+  {
+   "t": 157.2,
+   "type": "building",
+   "side": "enemy",
+   "detail": "shrine:L2"
+  },
+  {
+   "t": 157.7,
+   "type": "building",
+   "side": "enemy",
+   "detail": "shrine:L3"
+  },
+  {
+   "t": 158.3,
+   "type": "building",
+   "side": "enemy",
+   "detail": "shrine:L4"
+  },
+  {
+   "t": 158.8,
+   "type": "building",
+   "side": "enemy",
+   "detail": "barracks:L3"
+  },
+  {
+   "t": 159.8,
+   "type": "building",
+   "side": "enemy",
+   "detail": "shrine:L5"
+  },
+  {
+   "t": 160,
+   "type": "unit",
+   "side": "player",
+   "detail": "future-mech"
+  },
+  {
+   "t": 160.3,
+   "type": "special",
+   "side": "enemy"
+  },
+  {
+   "t": 160.3,
+   "type": "building",
+   "side": "enemy",
+   "detail": "barracks:L4"
+  },
+  {
+   "t": 161.3,
+   "type": "building",
+   "side": "enemy",
+   "detail": "shrine:L6"
+  },
+  {
+   "t": 161.8,
+   "type": "research",
+   "side": "enemy",
+   "detail": "turretDamage:T2"
+  },
+  {
+   "t": 162.1,
+   "type": "unit",
+   "side": "player",
+   "detail": "future-laser-gunner"
+  },
+  {
+   "t": 162.8,
+   "type": "research",
+   "side": "enemy",
+   "detail": "turretRange:T2"
+  },
+  {
+   "t": 163.5,
+   "type": "unit",
+   "side": "player",
+   "detail": "future-laser-gunner"
+  },
+  {
+   "t": 163.8,
+   "type": "building",
+   "side": "enemy",
+   "detail": "forge:L8"
+  },
+  {
+   "t": 164.8,
+   "type": "building",
+   "side": "enemy",
+   "detail": "shrine:L7"
+  },
+  {
+   "t": 165.4,
+   "type": "building",
+   "side": "enemy",
+   "detail": "market:L12"
+  },
+  {
+   "t": 165.9,
+   "type": "building",
+   "side": "enemy",
+   "detail": "mine:L12"
+  },
+  {
+   "t": 165.9,
+   "type": "unit",
+   "side": "player",
+   "detail": "future-laser-gunner"
+  },
+  {
+   "t": 166.4,
+   "type": "building",
+   "side": "enemy",
+   "detail": "market:L13"
+  },
+  {
+   "t": 166.9,
+   "type": "building",
+   "side": "enemy",
+   "detail": "market:L14"
+  },
+  {
+   "t": 167.4,
+   "type": "building",
+   "side": "enemy",
+   "detail": "mine:L13"
+  },
+  {
+   "t": 168,
+   "type": "unit",
+   "side": "player",
+   "detail": "future-mech"
+  },
+  {
+   "t": 169.3,
+   "type": "unit",
+   "side": "player",
+   "detail": "future-mech"
+  },
+  {
+   "t": 171.1,
+   "type": "unit",
+   "side": "enemy",
+   "detail": "future-mech"
+  },
+  {
+   "t": 173,
+   "type": "unit",
+   "side": "enemy",
+   "detail": "future-laser-gunner"
+  },
+  {
+   "t": 176.7,
+   "type": "unit",
+   "side": "enemy",
+   "detail": "future-mech"
+  },
+  {
+   "t": 177.7,
+   "type": "unit",
+   "side": "player",
+   "detail": "future-shield-drone"
+  },
+  {
+   "t": 180.3,
+   "type": "unit",
+   "side": "enemy",
+   "detail": "future-laser-gunner"
+  },
+  {
+   "t": 182.2,
+   "type": "unit",
+   "side": "enemy",
+   "detail": "future-laser-gunner"
+  },
+  {
+   "t": 183.1,
+   "type": "unit",
+   "side": "player",
+   "detail": "future-mech"
+  },
+  {
+   "t": 184,
+   "type": "unit",
+   "side": "enemy",
+   "detail": "future-laser-gunner"
+  },
+  {
+   "t": 186.1,
+   "type": "unit",
+   "side": "player",
+   "detail": "future-laser-gunner"
+  },
+  {
+   "t": 187.9,
+   "type": "unit",
+   "side": "enemy",
+   "detail": "future-laser-gunner"
+  },
+  {
+   "t": 188.1,
+   "type": "unit",
+   "side": "player",
+   "detail": "future-shield-drone"
+  },
+  {
+   "t": 188.9,
+   "type": "unit",
+   "side": "player",
+   "detail": "future-laser-gunner"
+  },
+  {
+   "t": 189.6,
+   "type": "unit",
+   "side": "player",
+   "detail": "future-laser-gunner"
+  },
+  {
+   "t": 189.8,
+   "type": "unit",
+   "side": "enemy",
+   "detail": "future-laser-gunner"
+  },
+  {
+   "t": 191,
+   "type": "special",
+   "side": "player"
+  },
+  {
+   "t": 191.6,
+   "type": "unit",
+   "side": "enemy",
+   "detail": "future-laser-gunner"
+  },
+  {
+   "t": 194.9,
+   "type": "unit",
+   "side": "enemy",
+   "detail": "future-mech"
+  },
+  {
+   "t": 196.7,
+   "type": "unit",
+   "side": "enemy",
+   "detail": "future-laser-gunner"
+  },
+  {
+   "t": 198.1,
+   "type": "unit",
+   "side": "enemy",
+   "detail": "future-blade-trooper"
+  },
+  {
+   "t": 201.1,
+   "type": "unit",
+   "side": "enemy",
+   "detail": "future-laser-gunner"
+  },
+  {
+   "t": 202.8,
+   "type": "building",
+   "side": "enemy",
+   "detail": "forge:L9"
+  },
+  {
+   "t": 203.3,
+   "type": "building",
+   "side": "enemy",
+   "detail": "shrine:L8"
+  },
+  {
+   "t": 203.7,
+   "type": "unit",
+   "side": "enemy",
+   "detail": "future-blade-trooper"
+  },
+  {
+   "t": 203.8,
+   "type": "building",
+   "side": "enemy",
+   "detail": "barracks:L5"
+  },
+  {
+   "t": 204.3,
+   "type": "building",
+   "side": "enemy",
+   "detail": "market:L15"
+  },
+  {
+   "t": 204.9,
+   "type": "building",
+   "side": "enemy",
+   "detail": "market:L16"
+  },
+  {
+   "t": 205.4,
+   "type": "building",
+   "side": "enemy",
+   "detail": "barracks:L6"
+  },
+  {
+   "t": 208.3,
+   "type": "unit",
+   "side": "enemy",
+   "detail": "future-shield-drone"
+  },
+  {
+   "t": 210.1,
+   "type": "unit",
+   "side": "enemy",
+   "detail": "future-laser-gunner"
+  },
+  {
+   "t": 212.6,
+   "type": "unit",
+   "side": "enemy",
+   "detail": "future-laser-gunner"
+  },
+  {
+   "t": 213.2,
+   "type": "unit",
+   "side": "player",
+   "detail": "future-mech"
+  },
+  {
+   "t": 214.5,
+   "type": "unit",
+   "side": "player",
+   "detail": "future-mech"
+  },
+  {
+   "t": 216.3,
+   "type": "unit",
+   "side": "player",
+   "detail": "future-mech"
+  },
+  {
+   "t": 217.9,
+   "type": "unit",
+   "side": "enemy",
+   "detail": "future-mech"
+  },
+  {
+   "t": 220.8,
+   "type": "unit",
+   "side": "enemy",
+   "detail": "future-mech"
+  },
+  {
+   "t": 222.1,
+   "type": "building",
+   "side": "enemy",
+   "detail": "market:L17"
+  },
+  {
+   "t": 222.5,
+   "type": "unit",
+   "side": "enemy",
+   "detail": "future-laser-gunner"
+  },
+  {
+   "t": 222.6,
+   "type": "building",
+   "side": "enemy",
+   "detail": "forge:L10"
+  },
+  {
+   "t": 223.2,
+   "type": "building",
+   "side": "enemy",
+   "detail": "barracks:L7"
+  },
+  {
+   "t": 224.2,
+   "type": "building",
+   "side": "enemy",
+   "detail": "forge:L11"
+  },
+  {
+   "t": 224.6,
+   "type": "unit",
+   "side": "player",
+   "detail": "future-blade-trooper"
+  },
+  {
+   "t": 224.7,
+   "type": "research",
+   "side": "enemy",
+   "detail": "heavyDamage:T3"
+  },
+  {
+   "t": 225.1,
+   "type": "unit",
+   "side": "player",
+   "detail": "future-blade-trooper"
+  },
+  {
+   "t": 225.2,
+   "type": "research",
+   "side": "enemy",
+   "detail": "heavyArmor:T3"
+  },
+  {
+   "t": 226.2,
+   "type": "research",
+   "side": "enemy",
+   "detail": "meleeDamage:T3"
+  },
+  {
+   "t": 227.2,
+   "type": "research",
+   "side": "enemy",
+   "detail": "meleeArmor:T3"
+  },
+  {
+   "t": 228.2,
+   "type": "research",
+   "side": "enemy",
+   "detail": "bounty:T3"
+  },
+  {
+   "t": 228.7,
+   "type": "research",
+   "side": "enemy",
+   "detail": "rangedDamage:T3"
+  },
+  {
+   "t": 229.2,
+   "type": "research",
+   "side": "enemy",
+   "detail": "rangedRange:T3"
+  },
+  {
+   "t": 229.7,
+   "type": "special",
+   "side": "enemy"
+  },
+  {
+   "t": 229.7,
+   "type": "building",
+   "side": "enemy",
+   "detail": "barracks:L8"
+  },
+  {
+   "t": 231.7,
+   "type": "building",
+   "side": "enemy",
+   "detail": "forge:L12"
+  },
+  {
+   "t": 232.2,
+   "type": "building",
+   "side": "enemy",
+   "detail": "forge:L13"
+  },
+  {
+   "t": 232.8,
+   "type": "unit",
+   "side": "enemy",
+   "detail": "future-laser-gunner"
+  },
+  {
+   "t": 233.3,
+   "type": "building",
+   "side": "enemy",
+   "detail": "market:L18"
+  },
+  {
+   "t": 233.8,
+   "type": "building",
+   "side": "enemy",
+   "detail": "shrine:L9"
+  },
+  {
+   "t": 234.3,
+   "type": "building",
+   "side": "enemy",
+   "detail": "forge:L14"
+  },
+  {
+   "t": 234.8,
+   "type": "building",
+   "side": "enemy",
+   "detail": "shrine:L10"
+  },
+  {
+   "t": 235.3,
+   "type": "building",
+   "side": "enemy",
+   "detail": "shrine:L11"
+  },
+  {
+   "t": 236.3,
+   "type": "building",
+   "side": "enemy",
+   "detail": "market:L19"
+  },
+  {
+   "t": 236.8,
+   "type": "building",
+   "side": "enemy",
+   "detail": "shrine:L12"
+  },
+  {
+   "t": 237.3,
+   "type": "building",
+   "side": "enemy",
+   "detail": "mine:L14"
+  },
+  {
+   "t": 237.8,
+   "type": "research",
+   "side": "enemy",
+   "detail": "turretDamage:T3"
+  },
+  {
+   "t": 238.3,
+   "type": "building",
+   "side": "enemy",
+   "detail": "barracks:L9"
+  },
+  {
+   "t": 240.9,
+   "type": "building",
+   "side": "enemy",
+   "detail": "barracks:L10"
+  },
+  {
+   "t": 242.9,
+   "type": "building",
+   "side": "enemy",
+   "detail": "market:L20"
+  },
+  {
+   "t": 243.4,
+   "type": "building",
+   "side": "enemy",
+   "detail": "forge:L15"
+  },
+  {
+   "t": 243.6,
+   "type": "base-below",
+   "side": "player",
+   "detail": 75
+  },
+  {
+   "t": 243.9,
+   "type": "research",
+   "side": "enemy",
+   "detail": "turretRange:T3"
+  },
+  {
+   "t": 245.9,
+   "type": "building",
+   "side": "enemy",
+   "detail": "barracks:L11"
+  },
+  {
+   "t": 248.6,
+   "type": "paused"
+  },
+  {
+   "t": 248.6,
+   "type": "playing"
+  },
+  {
+   "t": 249.5,
+   "type": "building",
+   "side": "enemy",
+   "detail": "barracks:L12"
+  },
+  {
+   "t": 250.5,
+   "type": "unit",
+   "side": "player",
+   "detail": "future-laser-gunner"
+  },
+  {
+   "t": 252.8,
+   "type": "unit",
+   "side": "player",
+   "detail": "future-mech"
+  },
+  {
+   "t": 254.1,
+   "type": "unit",
+   "side": "player",
+   "detail": "future-mech"
+  },
+  {
+   "t": 254.6,
+   "type": "building",
+   "side": "enemy",
+   "detail": "forge:L16"
+  },
+  {
+   "t": 255.4,
+   "type": "unit",
+   "side": "player",
+   "detail": "future-mech"
+  },
+  {
+   "t": 256.1,
+   "type": "research",
+   "side": "enemy",
+   "detail": "heavyDamage:T4"
+  },
+  {
+   "t": 256.7,
+   "type": "unit",
+   "side": "player",
+   "detail": "future-mech"
+  },
+  {
+   "t": 258,
+   "type": "unit",
+   "side": "player",
+   "detail": "future-mech"
+  },
+  {
+   "t": 259.2,
+   "type": "unit",
+   "side": "player",
+   "detail": "future-shield-drone"
+  },
+  {
+   "t": 265.8,
+   "type": "research",
+   "side": "enemy",
+   "detail": "heavyArmor:T4"
+  },
+  {
+   "t": 267.5,
+   "type": "turret-upgraded",
+   "side": "player",
+   "detail": "1:L1"
+  },
+  {
+   "t": 267.8,
+   "type": "turret-upgraded",
+   "side": "player",
+   "detail": "1:L2"
+  },
+  {
+   "t": 268.2,
+   "type": "turret-upgraded",
+   "side": "player",
+   "detail": "1:L3"
+  },
+  {
+   "t": 268.5,
+   "type": "unit",
+   "side": "player",
+   "detail": "future-mech"
+  },
+  {
+   "t": 268.6,
+   "type": "unit",
+   "side": "enemy",
+   "detail": "future-mech"
+  },
+  {
+   "t": 269.3,
+   "type": "turret-upgraded",
+   "side": "player",
+   "detail": "2:L1"
+  },
+  {
+   "t": 269.7,
+   "type": "turret-upgraded",
+   "side": "player",
+   "detail": "2:L2"
+  },
+  {
+   "t": 270,
+   "type": "turret-upgraded",
+   "side": "player",
+   "detail": "2:L3"
+  },
+  {
+   "t": 270,
+   "type": "unit",
+   "side": "enemy",
+   "detail": "future-laser-gunner"
+  },
+  {
+   "t": 270.9,
+   "type": "turret-upgraded",
+   "side": "player",
+   "detail": "3:L2"
+  },
+  {
+   "t": 271.3,
+   "type": "turret-upgraded",
+   "side": "player",
+   "detail": "3:L3"
+  },
+  {
+   "t": 271.3,
+   "type": "unit",
+   "side": "enemy",
+   "detail": "future-laser-gunner"
+  },
+  {
+   "t": 272,
+   "type": "unit",
+   "side": "player",
+   "detail": "future-shield-drone"
+  },
+  {
+   "t": 272.7,
+   "type": "unit",
+   "side": "enemy",
+   "detail": "future-laser-gunner"
+  },
+  {
+   "t": 272.7,
+   "type": "turret-sold",
+   "side": "player",
+   "detail": "4:+862"
+  },
+  {
+   "t": 273.7,
+   "type": "unit",
+   "side": "player",
+   "detail": "future-laser-gunner"
+  },
+  {
+   "t": 274,
+   "type": "unit",
+   "side": "enemy",
+   "detail": "future-laser-gunner"
+  },
+  {
+   "t": 276.7,
+   "type": "turret-built",
+   "side": "player",
+   "detail": "4:future-rail-gun"
+  },
+  {
+   "t": 277.6,
+   "type": "turret-upgraded",
+   "side": "player",
+   "detail": "4:L1"
+  },
+  {
+   "t": 278,
+   "type": "turret-upgraded",
+   "side": "player",
+   "detail": "4:L2"
+  },
+  {
+   "t": 278.4,
+   "type": "turret-upgraded",
+   "side": "player",
+   "detail": "4:L3"
+  },
+  {
+   "t": 278.8,
+   "type": "unit",
+   "side": "enemy",
+   "detail": "future-laser-gunner"
+  },
+  {
+   "t": 284.8,
+   "type": "unit",
+   "side": "enemy",
+   "detail": "future-mech"
+  },
+  {
+   "t": 286.2,
+   "type": "unit",
+   "side": "enemy",
+   "detail": "future-laser-gunner"
+  },
+  {
+   "t": 286.9,
+   "type": "turret-upgraded",
+   "side": "player",
+   "detail": "0:L2"
+  },
+  {
+   "t": 287.1,
+   "type": "turret-upgraded",
+   "side": "player",
+   "detail": "0:L3"
+  },
+  {
+   "t": 287.5,
+   "type": "unit",
+   "side": "enemy",
+   "detail": "future-laser-gunner"
+  },
+  {
+   "t": 288.8,
+   "type": "special",
+   "side": "player"
+  },
+  {
+   "t": 289.9,
+   "type": "unit",
+   "side": "enemy",
+   "detail": "future-laser-gunner"
+  },
+  {
+   "t": 290.9,
+   "type": "unit",
+   "side": "enemy",
+   "detail": "future-blade-trooper"
+  },
+  {
+   "t": 293.3,
+   "type": "unit",
+   "side": "enemy",
+   "detail": "future-mech"
+  },
+  {
+   "t": 296.2,
+   "type": "special",
+   "side": "enemy"
+  },
+  {
+   "t": 297.2,
+   "type": "research",
+   "side": "enemy",
+   "detail": "meleeDamage:T4"
+  },
+  {
+   "t": 297.7,
+   "type": "research",
+   "side": "enemy",
+   "detail": "meleeArmor:T4"
+  },
+  {
+   "t": 297.7,
+   "type": "unit",
+   "side": "enemy",
+   "detail": "future-blade-trooper"
+  },
+  {
+   "t": 298.2,
+   "type": "research",
+   "side": "enemy",
+   "detail": "bounty:T4"
+  },
+  {
+   "t": 298.4,
+   "type": "building",
+   "side": "player",
+   "detail": "library:L3"
+  },
+  {
+   "t": 298.7,
+   "type": "research",
+   "side": "enemy",
+   "detail": "rangedDamage:T4"
+  },
+  {
+   "t": 298.7,
+   "type": "building",
+   "side": "player",
+   "detail": "library:L4"
+  },
+  {
+   "t": 299,
+   "type": "building",
+   "side": "player",
+   "detail": "library:L5"
+  },
+  {
+   "t": 299.2,
+   "type": "research",
+   "side": "enemy",
+   "detail": "rangedRange:T4"
+  },
+  {
+   "t": 299.7,
+   "type": "building",
+   "side": "enemy",
+   "detail": "market:L21"
+  },
+  {
+   "t": 300.2,
+   "type": "building",
+   "side": "enemy",
+   "detail": "market:L22"
+  },
+  {
+   "t": 300.7,
+   "type": "building",
+   "side": "enemy",
+   "detail": "shrine:L13"
+  },
+  {
+   "t": 301.7,
+   "type": "building",
+   "side": "enemy",
+   "detail": "barracks:L13"
+  },
+  {
+   "t": 303.2,
+   "type": "building",
+   "side": "enemy",
+   "detail": "market:L23"
+  },
+  {
+   "t": 304.1,
+   "type": "building",
+   "side": "player",
+   "detail": "library:L6"
+  },
+  {
+   "t": 304.2,
+   "type": "building",
+   "side": "enemy",
+   "detail": "mine:L15"
+  },
+  {
+   "t": 304.4,
+   "type": "building",
+   "side": "player",
+   "detail": "library:L7"
+  },
+  {
+   "t": 304.7,
+   "type": "building",
+   "side": "player",
+   "detail": "library:L8"
+  },
+  {
+   "t": 305,
+   "type": "building",
+   "side": "player",
+   "detail": "library:L9"
+  },
+  {
+   "t": 305.2,
+   "type": "building",
+   "side": "enemy",
+   "detail": "mine:L16"
+  },
+  {
+   "t": 305.3,
+   "type": "building",
+   "side": "player",
+   "detail": "library:L10"
+  },
+  {
+   "t": 306.7,
+   "type": "building",
+   "side": "enemy",
+   "detail": "shrine:L14"
+  },
+  {
+   "t": 307.4,
+   "type": "building",
+   "side": "player",
+   "detail": "library:L11"
+  },
+  {
+   "t": 307.7,
+   "type": "building",
+   "side": "player",
+   "detail": "library:L12"
+  },
+  {
+   "t": 308,
+   "type": "building",
+   "side": "player",
+   "detail": "library:L13"
+  },
+  {
+   "t": 308.4,
+   "type": "building",
+   "side": "player",
+   "detail": "library:L14"
+  },
+  {
+   "t": 308.7,
+   "type": "building",
+   "side": "player",
+   "detail": "library:L15"
+  },
+  {
+   "t": 311.2,
+   "type": "building",
+   "side": "player",
+   "detail": "library:L16"
+  },
+  {
+   "t": 311.3,
+   "type": "building",
+   "side": "enemy",
+   "detail": "barracks:L14"
+  },
+  {
+   "t": 311.5,
+   "type": "building",
+   "side": "player",
+   "detail": "library:L17"
+  },
+  {
+   "t": 311.8,
+   "type": "building",
+   "side": "player",
+   "detail": "library:L18"
+  },
+  {
+   "t": 312.2,
+   "type": "building",
+   "side": "player",
+   "detail": "library:L19"
+  },
+  {
+   "t": 312.5,
+   "type": "building",
+   "side": "player",
+   "detail": "library:L20"
+  },
+  {
+   "t": 315.6,
+   "type": "base-below",
+   "side": "player",
+   "detail": 50
+  },
+  {
+   "t": 317.2,
+   "type": "base-below",
+   "side": "player",
+   "detail": 25
+  },
+  {
+   "t": 317.4,
+   "type": "building",
+   "side": "enemy",
+   "detail": "mine:L17"
+  },
+  {
+   "t": 317.5,
+   "type": "unit",
+   "side": "player",
+   "detail": "future-mech"
+  }
+ ],
+ "snapshots": [
+  {
+   "t": 0,
+   "front": {
+    "player": null,
+    "enemy": null
+   },
+   "player": {
+    "gold": 17350,
+    "xp": 80,
+    "age": 4,
+    "baseHp": 3600,
+    "units": [
+     0,
+     0,
+     0,
+     0,
+     0
+    ],
+    "armyValue": 0,
+    "queue": 1,
+    "turrets": [
+     "future-laser-turret:L1",
+     "future-rail-gun:L0",
+     "future-rail-gun:L0",
+     "future-laser-turret:L1",
+     "future-laser-turret:L1"
+    ],
+    "buildings": "mine9 lib2 forge6",
+    "researchTiers": 0,
+    "mineGoldPerSec": 46,
+    "libraryXpPerSec": 8
+   },
+   "enemy": {
+    "gold": 3460,
+    "xp": 0,
+    "age": 4,
+    "baseHp": 3600,
+    "units": [
+     0,
+     0,
+     0,
+     0,
+     0
+    ],
+    "armyValue": 0,
+    "queue": 1,
+    "turrets": [
+     "future-laser-turret:L2",
+     "future-laser-turret:L2"
+    ],
+    "buildings": "mine0 lib0 forge0",
+    "researchTiers": 0,
+    "mineGoldPerSec": 0,
+    "libraryXpPerSec": 0
+   }
+  },
+  {
+   "t": 15,
+   "front": {
+    "player": 324,
+    "enemy": 622
+   },
+   "player": {
+    "gold": 10641,
+    "xp": 200,
+    "age": 4,
+    "baseHp": 3600,
+    "units": [
+     0,
+     0,
+     1,
+     0,
+     0
+    ],
+    "armyValue": 1840,
+    "queue": 0,
+    "turrets": [
+     "future-laser-turret:L1",
+     "future-rail-gun:L0",
+     "future-rail-gun:L0",
+     "future-laser-turret:L1",
+     "future-laser-turret:L1"
+    ],
+    "buildings": "mine20 lib2 forge6",
+    "researchTiers": 0,
+    "mineGoldPerSec": 169,
+    "libraryXpPerSec": 8
+   },
+   "enemy": {
+    "gold": 903,
+    "xp": 170,
+    "age": 4,
+    "baseHp": 3600,
+    "units": [
+     0,
+     2,
+     1,
+     0,
+     0
+    ],
+    "armyValue": 1470,
+    "queue": 1,
+    "turrets": [
+     "future-laser-turret:L2",
+     "future-laser-turret:L2"
+    ],
+    "buildings": "mine9 lib0 forge2",
+    "researchTiers": 7,
+    "mineGoldPerSec": 46,
+    "libraryXpPerSec": 0
+   }
+  },
+  {
+   "t": 30,
+   "front": {
+    "player": 819,
+    "enemy": 1052
+   },
+   "player": {
+    "gold": 3103,
+    "xp": 966,
+    "age": 4,
+    "baseHp": 3600,
+    "units": [
+     0,
+     2,
+     2,
+     0,
+     0
+    ],
+    "armyValue": 5060,
+    "queue": 2,
+    "turrets": [
+     "future-laser-turret:L1",
+     "future-rail-gun:L0",
+     "future-rail-gun:L0",
+     "future-laser-turret:L1",
+     "future-laser-turret:L1"
+    ],
+    "buildings": "mine25 lib2 forge6",
+    "researchTiers": 0,
+    "mineGoldPerSec": 240.6,
+    "libraryXpPerSec": 8
+   },
+   "enemy": {
+    "gold": 1165,
+    "xp": 203,
+    "age": 4,
+    "baseHp": 2782,
+    "units": [
+     0,
+     1,
+     0,
+     0,
+     0
+    ],
+    "armyValue": 690,
+    "queue": 0,
+    "turrets": [
+     "future-laser-turret:L2",
+     "future-laser-turret:L2"
+    ],
+    "buildings": "mine9 lib0 forge2",
+    "researchTiers": 7,
+    "mineGoldPerSec": 46,
+    "libraryXpPerSec": 0
+   }
+  },
+  {
+   "t": 45,
+   "front": {
+    "player": 746,
+    "enemy": 842
+   },
+   "player": {
+    "gold": 7746,
+    "xp": 1432,
+    "age": 4,
+    "baseHp": 3600,
+    "units": [
+     0,
+     3,
+     1,
+     0,
+     0
+    ],
+    "armyValue": 3910,
+    "queue": 0,
+    "turrets": [
+     "future-laser-turret:L1",
+     "future-rail-gun:L0",
+     "future-rail-gun:L0",
+     "future-laser-turret:L1",
+     "future-laser-turret:L1"
+    ],
+    "buildings": "mine25 lib2 forge6",
+    "researchTiers": 0,
+    "mineGoldPerSec": 240.6,
+    "libraryXpPerSec": 8
+   },
+   "enemy": {
+    "gold": 242,
+    "xp": 995,
+    "age": 4,
+    "baseHp": 2782,
+    "units": [
+     0,
+     1,
+     1,
+     0,
+     0
+    ],
+    "armyValue": 2530,
+    "queue": 1,
+    "turrets": [
+     "future-laser-turret:L2",
+     "future-laser-turret:L2"
+    ],
+    "buildings": "mine9 lib0 forge2",
+    "researchTiers": 7,
+    "mineGoldPerSec": 46,
+    "libraryXpPerSec": 0
+   }
+  },
+  {
+   "t": 60,
+   "front": {
+    "player": 778,
+    "enemy": 815
+   },
+   "player": {
+    "gold": 14451,
+    "xp": 2289,
+    "age": 4,
+    "baseHp": 3600,
+    "units": [
+     0,
+     2,
+     0,
+     0,
+     0
+    ],
+    "armyValue": 1380,
+    "queue": 0,
+    "turrets": [
+     "future-laser-turret:L1",
+     "future-rail-gun:L0",
+     "future-rail-gun:L0",
+     "future-laser-turret:L1",
+     "future-laser-turret:L1"
+    ],
+    "buildings": "mine25 lib2 forge6",
+    "researchTiers": 2,
+    "mineGoldPerSec": 240.6,
+    "libraryXpPerSec": 8
+   },
+   "enemy": {
+    "gold": 472,
+    "xp": 1787,
+    "age": 4,
+    "baseHp": 2782,
+    "units": [
+     1,
+     1,
+     0,
+     0,
+     0
+    ],
+    "armyValue": 1150,
+    "queue": 2,
+    "turrets": [
+     "future-laser-turret:L2",
+     "future-laser-turret:L2"
+    ],
+    "buildings": "mine9 lib0 forge2",
+    "researchTiers": 7,
+    "mineGoldPerSec": 46,
+    "libraryXpPerSec": 0
+   }
+  },
+  {
+   "t": 75,
+   "front": {
+    "player": 452,
+    "enemy": 608
+   },
+   "player": {
+    "gold": 13713,
+    "xp": 2340,
+    "age": 4,
+    "baseHp": 3600,
+    "units": [
+     0,
+     3,
+     1,
+     0,
+     0
+    ],
+    "armyValue": 3910,
+    "queue": 1,
+    "turrets": [
+     "future-laser-turret:L1",
+     "future-rail-gun:L0",
+     "future-rail-gun:L0",
+     "future-laser-turret:L1",
+     "future-laser-turret:L1"
+    ],
+    "buildings": "mine25 lib2 forge6",
+    "researchTiers": 2,
+    "mineGoldPerSec": 240.6,
+    "libraryXpPerSec": 8
+   },
+   "enemy": {
+    "gold": 99,
+    "xp": 2165,
+    "age": 4,
+    "baseHp": 2782,
+    "units": [
+     0,
+     2,
+     1,
+     0,
+     0
+    ],
+    "armyValue": 3220,
+    "queue": 1,
+    "turrets": [
+     "future-laser-turret:L2",
+     "future-laser-turret:L2"
+    ],
+    "buildings": "mine9 lib0 forge2",
+    "researchTiers": 8,
+    "mineGoldPerSec": 46,
+    "libraryXpPerSec": 0
+   }
+  },
+  {
+   "t": 90,
+   "front": {
+    "player": null,
+    "enemy": 485
+   },
+   "player": {
+    "gold": 19662,
+    "xp": 2461,
+    "age": 4,
+    "baseHp": 3600,
+    "units": [
+     0,
+     0,
+     0,
+     1,
+     0
+    ],
+    "armyValue": 2300,
+    "queue": 0,
+    "turrets": [
+     "future-laser-turret:L1",
+     "future-rail-gun:L0",
+     "future-rail-gun:L0",
+     "future-laser-turret:L1",
+     "future-laser-turret:L1"
+    ],
+    "buildings": "mine25 lib2 forge6",
+    "researchTiers": 2,
+    "mineGoldPerSec": 240.6,
+    "libraryXpPerSec": 8
+   },
+   "enemy": {
+    "gold": 844,
+    "xp": 3006,
+    "age": 4,
+    "baseHp": 2782,
+    "units": [
+     1,
+     1,
+     2,
+     0,
+     0
+    ],
+    "armyValue": 4830,
+    "queue": 0,
+    "turrets": [
+     "future-laser-turret:L2",
+     "future-laser-turret:L2"
+    ],
+    "buildings": "mine11 lib0 forge3",
+    "researchTiers": 8,
+    "mineGoldPerSec": 55.2,
+    "libraryXpPerSec": 0
+   }
+  },
+  {
+   "t": 105,
+   "front": {
+    "player": 413,
+    "enemy": 1133
+   },
+   "player": {
+    "gold": 22895,
+    "xp": 4238,
+    "age": 4,
+    "baseHp": 3445,
+    "units": [
+     0,
+     0,
+     3,
+     0,
+     0
+    ],
+    "armyValue": 5520,
+    "queue": 2,
+    "turrets": [
+     "future-laser-turret:L1",
+     "future-rail-gun:L0",
+     "future-rail-gun:L0",
+     "future-laser-turret:L1",
+     "future-laser-turret:L1"
+    ],
+    "buildings": "mine25 lib2 forge6",
+    "researchTiers": 2,
+    "mineGoldPerSec": 240.6,
+    "libraryXpPerSec": 8
+   },
+   "enemy": {
+    "gold": 181,
+    "xp": 2737,
+    "age": 4,
+    "baseHp": 2782,
+    "units": [
+     0,
+     1,
+     0,
+     0,
+     0
+    ],
+    "armyValue": 690,
+    "queue": 1,
+    "turrets": [
+     "future-laser-turret:L2",
+     "future-laser-turret:L2"
+    ],
+    "buildings": "mine11 lib0 forge3",
+    "researchTiers": 8,
+    "mineGoldPerSec": 55.2,
+    "libraryXpPerSec": 0
+   }
+  },
+  {
+   "t": 120,
+   "front": {
+    "player": 850,
+    "enemy": 910
+   },
+   "player": {
+    "gold": 14700,
+    "xp": 4359,
+    "age": 4,
+    "baseHp": 3445,
+    "units": [
+     0,
+     0,
+     5,
+     0,
+     0
+    ],
+    "armyValue": 9200,
+    "queue": 0,
+    "turrets": [
+     "future-laser-turret:L1",
+     "future-rail-gun:L0",
+     "future-rail-gun:L0",
+     "future-laser-turret:L1",
+     "future-laser-turret:L1"
+    ],
+    "buildings": "mine25 lib2 forge23",
+    "researchTiers": 2,
+    "mineGoldPerSec": 240.6,
+    "libraryXpPerSec": 8
+   },
+   "enemy": {
+    "gold": 314,
+    "xp": 2191,
+    "age": 4,
+    "baseHp": 2782,
+    "units": [
+     1,
+     1,
+     0,
+     0,
+     0
+    ],
+    "armyValue": 1150,
+    "queue": 1,
+    "turrets": [
+     "future-laser-turret:L2",
+     "future-laser-turret:L2"
+    ],
+    "buildings": "mine11 lib0 forge3",
+    "researchTiers": 8,
+    "mineGoldPerSec": 55.2,
+    "libraryXpPerSec": 0
+   }
+  },
+  {
+   "t": 135,
+   "front": {
+    "player": 966,
+    "enemy": 1082
+   },
+   "player": {
+    "gold": 11452,
+    "xp": 4824,
+    "age": 4,
+    "baseHp": 3445,
+    "units": [
+     0,
+     0,
+     3,
+     0,
+     0
+    ],
+    "armyValue": 5520,
+    "queue": 0,
+    "turrets": [
+     "future-laser-turret:L1",
+     "future-rail-gun:L0",
+     "future-rail-gun:L0",
+     "future-laser-turret:L1",
+     "future-laser-turret:L1"
+    ],
+    "buildings": "mine25 lib2 forge25",
+    "researchTiers": 2,
+    "mineGoldPerSec": 240.6,
+    "libraryXpPerSec": 8
+   },
+   "enemy": {
+    "gold": 520,
+    "xp": 2751,
+    "age": 4,
+    "baseHp": 2782,
+    "units": [
+     0,
+     2,
+     1,
+     0,
+     0
+    ],
+    "armyValue": 3220,
+    "queue": 1,
+    "turrets": [
+     "future-laser-turret:L2",
+     "future-laser-turret:L2"
+    ],
+    "buildings": "mine11 lib0 forge3",
+    "researchTiers": 8,
+    "mineGoldPerSec": 55.2,
+    "libraryXpPerSec": 0
+   }
+  },
+  {
+   "t": 150,
+   "front": {
+    "player": 976,
+    "enemy": 1081
+   },
+   "player": {
+    "gold": 3121,
+    "xp": 4738,
+    "age": 4,
+    "baseHp": 3445,
+    "units": [
+     0,
+     0,
+     1,
+     0,
+     0
+    ],
+    "armyValue": 1840,
+    "queue": 0,
+    "turrets": [
+     "future-laser-turret:L1",
+     "future-rail-gun:L0",
+     "future-rail-gun:L0",
+     "future-laser-turret:L1",
+     "future-laser-turret:L1"
+    ],
+    "buildings": "mine25 lib2 forge25",
+    "researchTiers": 2,
+    "mineGoldPerSec": 240.6,
+    "libraryXpPerSec": 8
+   },
+   "enemy": {
+    "gold": 1975,
+    "xp": 3309,
+    "age": 4,
+    "baseHp": 2782,
+    "units": [
+     0,
+     4,
+     1,
+     0,
+     0
+    ],
+    "armyValue": 4600,
+    "queue": 2,
+    "turrets": [
+     "future-laser-turret:L2",
+     "future-laser-turret:L2"
+    ],
+    "buildings": "mine11 lib0 forge6",
+    "researchTiers": 9,
+    "mineGoldPerSec": 55.2,
+    "libraryXpPerSec": 0
+   }
+  },
+  {
+   "t": 165,
+   "front": {
+    "player": 351,
+    "enemy": 502
+   },
+   "player": {
+    "gold": 2668,
+    "xp": 4997,
+    "age": 4,
+    "baseHp": 3125,
+    "units": [
+     0,
+     2,
+     1,
+     0,
+     0
+    ],
+    "armyValue": 3220,
+    "queue": 0,
+    "turrets": [
+     "future-laser-turret:L1",
+     "future-rail-gun:L0",
+     "future-rail-gun:L0",
+     "future-laser-turret:L1",
+     "future-laser-turret:L1"
+    ],
+    "buildings": "mine25 lib2 forge25",
+    "researchTiers": 2,
+    "mineGoldPerSec": 240.6,
+    "libraryXpPerSec": 8
+   },
+   "enemy": {
+    "gold": 1906,
+    "xp": 2930,
+    "age": 4,
+    "baseHp": 2782,
+    "units": [
+     0,
+     6,
+     0,
+     0,
+     0
+    ],
+    "armyValue": 4140,
+    "queue": 0,
+    "turrets": [
+     "future-laser-turret:L2",
+     "future-laser-turret:L2"
+    ],
+    "buildings": "mine11 lib0 forge8",
+    "researchTiers": 18,
+    "mineGoldPerSec": 55.2,
+    "libraryXpPerSec": 0
+   }
+  },
+  {
+   "t": 180,
+   "front": {
+    "player": 539,
+    "enemy": 630
+   },
+   "player": {
+    "gold": 4128,
+    "xp": 5532,
+    "age": 4,
+    "baseHp": 3125,
+    "units": [
+     0,
+     0,
+     2,
+     0,
+     1
+    ],
+    "armyValue": 5060,
+    "queue": 0,
+    "turrets": [
+     "future-laser-turret:L1",
+     "future-rail-gun:L0",
+     "future-rail-gun:L0",
+     "future-laser-turret:L1",
+     "future-laser-turret:L1"
+    ],
+    "buildings": "mine25 lib2 forge25",
+    "researchTiers": 2,
+    "mineGoldPerSec": 240.6,
+    "libraryXpPerSec": 8
+   },
+   "enemy": {
+    "gold": 812,
+    "xp": 2670,
+    "age": 4,
+    "baseHp": 2782,
+    "units": [
+     0,
+     3,
+     2,
+     0,
+     0
+    ],
+    "armyValue": 5750,
+    "queue": 2,
+    "turrets": [
+     "future-laser-turret:L2",
+     "future-laser-turret:L2"
+    ],
+    "buildings": "mine13 lib0 forge8",
+    "researchTiers": 18,
+    "mineGoldPerSec": 64.4,
+    "libraryXpPerSec": 0
+   }
+  },
+  {
+   "t": 195,
+   "front": {
+    "player": 555,
+    "enemy": 660
+   },
+   "player": {
+    "gold": 6793,
+    "xp": 6273,
+    "age": 4,
+    "baseHp": 3125,
+    "units": [
+     0,
+     3,
+     2,
+     0,
+     2
+    ],
+    "armyValue": 8510,
+    "queue": 0,
+    "turrets": [
+     "future-laser-turret:L1",
+     "future-rail-gun:L0",
+     "future-rail-gun:L0",
+     "future-laser-turret:L1",
+     "future-laser-turret:L1"
+    ],
+    "buildings": "mine25 lib2 forge25",
+    "researchTiers": 2,
+    "mineGoldPerSec": 240.6,
+    "libraryXpPerSec": 8
+   },
+   "enemy": {
+    "gold": 94,
+    "xp": 1768,
+    "age": 4,
+    "baseHp": 2782,
+    "units": [
+     0,
+     4,
+     3,
+     0,
+     0
+    ],
+    "armyValue": 8280,
+    "queue": 2,
+    "turrets": [
+     "future-laser-turret:L2",
+     "future-laser-turret:L2"
+    ],
+    "buildings": "mine13 lib0 forge8",
+    "researchTiers": 18,
+    "mineGoldPerSec": 64.4,
+    "libraryXpPerSec": 0
+   }
+  },
+  {
+   "t": 210,
+   "front": {
+    "player": 726,
+    "enemy": 831
+   },
+   "player": {
+    "gold": 17978,
+    "xp": 7912,
+    "age": 4,
+    "baseHp": 3125,
+    "units": [
+     0,
+     3,
+     1,
+     0,
+     1
+    ],
+    "armyValue": 5290,
+    "queue": 0,
+    "turrets": [
+     "future-laser-turret:L1",
+     "future-rail-gun:L0",
+     "future-rail-gun:L0",
+     "future-laser-turret:L1",
+     "future-laser-turret:L1"
+    ],
+    "buildings": "mine25 lib2 forge25",
+    "researchTiers": 2,
+    "mineGoldPerSec": 240.6,
+    "libraryXpPerSec": 8
+   },
+   "enemy": {
+    "gold": 1215,
+    "xp": 1022,
+    "age": 4,
+    "baseHp": 2782,
+    "units": [
+     2,
+     2,
+     1,
+     0,
+     1
+    ],
+    "armyValue": 5520,
+    "queue": 1,
+    "turrets": [
+     "future-laser-turret:L2",
+     "future-laser-turret:L2"
+    ],
+    "buildings": "mine13 lib0 forge9",
+    "researchTiers": 18,
+    "mineGoldPerSec": 64.4,
+    "libraryXpPerSec": 0
+   }
+  },
+  {
+   "t": 225,
+   "front": {
+    "player": 644,
+    "enemy": 802
+   },
+   "player": {
+    "gold": 17755,
+    "xp": 8171,
+    "age": 4,
+    "baseHp": 3125,
+    "units": [
+     1,
+     1,
+     3,
+     0,
+     0
+    ],
+    "armyValue": 6670,
+    "queue": 1,
+    "turrets": [
+     "future-laser-turret:L1",
+     "future-rail-gun:L0",
+     "future-rail-gun:L0",
+     "future-laser-turret:L1",
+     "future-laser-turret:L1"
+    ],
+    "buildings": "mine25 lib2 forge25",
+    "researchTiers": 2,
+    "mineGoldPerSec": 240.6,
+    "libraryXpPerSec": 8
+   },
+   "enemy": {
+    "gold": 2304,
+    "xp": 319,
+    "age": 4,
+    "baseHp": 2782,
+    "units": [
+     2,
+     5,
+     2,
+     0,
+     1
+    ],
+    "armyValue": 9430,
+    "queue": 0,
+    "turrets": [
+     "future-laser-turret:L2",
+     "future-laser-turret:L2"
+    ],
+    "buildings": "mine13 lib0 forge11",
+    "researchTiers": 19,
+    "mineGoldPerSec": 64.4,
+    "libraryXpPerSec": 0
+   }
+  },
+  {
+   "t": 240,
+   "front": {
+    "player": 622,
+    "enemy": 706
+   },
+   "player": {
+    "gold": 23227,
+    "xp": 8223,
+    "age": 4,
+    "baseHp": 3125,
+    "units": [
+     0,
+     0,
+     1,
+     0,
+     0
+    ],
+    "armyValue": 1840,
+    "queue": 0,
+    "turrets": [
+     "future-laser-turret:L1",
+     "future-rail-gun:L0",
+     "future-rail-gun:L0",
+     "future-laser-turret:L1",
+     "future-laser-turret:L1"
+    ],
+    "buildings": "mine25 lib2 forge25",
+    "researchTiers": 2,
+    "mineGoldPerSec": 240.6,
+    "libraryXpPerSec": 8
+   },
+   "enemy": {
+    "gold": 2113,
+    "xp": 1,
+    "age": 4,
+    "baseHp": 2782,
+    "units": [
+     1,
+     5,
+     2,
+     0,
+     1
+    ],
+    "armyValue": 8970,
+    "queue": 0,
+    "turrets": [
+     "future-laser-turret:L2",
+     "future-laser-turret:L2"
+    ],
+    "buildings": "mine14 lib0 forge14",
+    "researchTiers": 26,
+    "mineGoldPerSec": 69,
+    "libraryXpPerSec": 0
+   }
+  },
+  {
+   "t": 255,
+   "front": {
+    "player": 180,
+    "enemy": 405
+   },
+   "player": {
+    "gold": 21043,
+    "xp": 8826,
+    "age": 4,
+    "baseHp": 2698,
+    "units": [
+     0,
+     0,
+     2,
+     0,
+     0
+    ],
+    "armyValue": 3680,
+    "queue": 3,
+    "turrets": [
+     "future-laser-turret:L1",
+     "future-rail-gun:L0",
+     "future-rail-gun:L0",
+     "future-laser-turret:L1",
+     "future-laser-turret:L1"
+    ],
+    "buildings": "mine25 lib2 forge25",
+    "researchTiers": 2,
+    "mineGoldPerSec": 240.6,
+    "libraryXpPerSec": 8
+   },
+   "enemy": {
+    "gold": 2673,
+    "xp": 0,
+    "age": 4,
+    "baseHp": 2782,
+    "units": [
+     0,
+     3,
+     2,
+     0,
+     0
+    ],
+    "armyValue": 5750,
+    "queue": 0,
+    "turrets": [
+     "future-laser-turret:L2",
+     "future-laser-turret:L2"
+    ],
+    "buildings": "mine14 lib0 forge16",
+    "researchTiers": 27,
+    "mineGoldPerSec": 69,
+    "libraryXpPerSec": 0
+   }
+  },
+  {
+   "t": 270,
+   "front": {
+    "player": 267,
+    "enemy": 373
+   },
+   "player": {
+    "gold": 9746,
+    "xp": 9292,
+    "age": 4,
+    "baseHp": 2698,
+    "units": [
+     0,
+     0,
+     5,
+     0,
+     1
+    ],
+    "armyValue": 10580,
+    "queue": 2,
+    "turrets": [
+     "future-laser-turret:L1",
+     "future-rail-gun:L3",
+     "future-rail-gun:L3",
+     "future-laser-turret:L1",
+     "future-laser-turret:L1"
+    ],
+    "buildings": "mine25 lib2 forge25",
+    "researchTiers": 2,
+    "mineGoldPerSec": 240.6,
+    "libraryXpPerSec": 8
+   },
+   "enemy": {
+    "gold": 1522,
+    "xp": 0,
+    "age": 4,
+    "baseHp": 2782,
+    "units": [
+     0,
+     3,
+     2,
+     0,
+     0
+    ],
+    "armyValue": 5750,
+    "queue": 1,
+    "turrets": [
+     "future-laser-turret:L2",
+     "future-laser-turret:L2"
+    ],
+    "buildings": "mine14 lib0 forge16",
+    "researchTiers": 29,
+    "mineGoldPerSec": 69,
+    "libraryXpPerSec": 0
+   }
+  },
+  {
+   "t": 285,
+   "front": {
+    "player": 554,
+    "enemy": 660
+   },
+   "player": {
+    "gold": 6514,
+    "xp": 9965,
+    "age": 4,
+    "baseHp": 2698,
+    "units": [
+     0,
+     1,
+     4,
+     0,
+     2
+    ],
+    "armyValue": 10810,
+    "queue": 0,
+    "turrets": [
+     "future-laser-turret:L1",
+     "future-rail-gun:L3",
+     "future-rail-gun:L3",
+     "future-laser-turret:L3",
+     "future-rail-gun:L3"
+    ],
+    "buildings": "mine25 lib2 forge25",
+    "researchTiers": 2,
+    "mineGoldPerSec": 240.6,
+    "libraryXpPerSec": 8
+   },
+   "enemy": {
+    "gold": 125,
+    "xp": 0,
+    "age": 4,
+    "baseHp": 2782,
+    "units": [
+     0,
+     5,
+     2,
+     0,
+     0
+    ],
+    "armyValue": 7130,
+    "queue": 2,
+    "turrets": [
+     "future-laser-turret:L2",
+     "future-laser-turret:L2"
+    ],
+    "buildings": "mine14 lib0 forge16",
+    "researchTiers": 29,
+    "mineGoldPerSec": 69,
+    "libraryXpPerSec": 0
+   }
+  },
+  {
+   "t": 300,
+   "front": {
+    "player": 515,
+    "enemy": 626
+   },
+   "player": {
+    "gold": 13597,
+    "xp": 11268,
+    "age": 4,
+    "baseHp": 2698,
+    "units": [
+     0,
+     0,
+     1,
+     0,
+     0
+    ],
+    "armyValue": 1840,
+    "queue": 0,
+    "turrets": [
+     "future-laser-turret:L3",
+     "future-rail-gun:L3",
+     "future-rail-gun:L3",
+     "future-laser-turret:L3",
+     "future-rail-gun:L3"
+    ],
+    "buildings": "mine25 lib5 forge25",
+    "researchTiers": 2,
+    "mineGoldPerSec": 240.6,
+    "libraryXpPerSec": 15
+   },
+   "enemy": {
+    "gold": 4029,
+    "xp": 931,
+    "age": 4,
+    "baseHp": 2782,
+    "units": [
+     2,
+     3,
+     2,
+     0,
+     0
+    ],
+    "armyValue": 6670,
+    "queue": 0,
+    "turrets": [
+     "future-laser-turret:L2",
+     "future-laser-turret:L2"
+    ],
+    "buildings": "mine14 lib0 forge16",
+    "researchTiers": 34,
+    "mineGoldPerSec": 69,
+    "libraryXpPerSec": 0
+   }
+  },
+  {
+   "t": 315,
+   "front": {
+    "player": null,
+    "enemy": 264
+   },
+   "player": {
+    "gold": 15191,
+    "xp": 12625,
+    "age": 4,
+    "baseHp": 2430,
+    "units": [
+     0,
+     0,
+     0,
+     0,
+     0
+    ],
+    "armyValue": 0,
+    "queue": 0,
+    "turrets": [
+     "future-laser-turret:L3",
+     "future-rail-gun:L3",
+     "future-rail-gun:L3",
+     "future-laser-turret:L3",
+     "future-rail-gun:L3"
+    ],
+    "buildings": "mine25 lib20 forge25",
+    "researchTiers": 2,
+    "mineGoldPerSec": 240.6,
+    "libraryXpPerSec": 49.5
+   },
+   "enemy": {
+    "gold": 2226,
+    "xp": 0,
+    "age": 4,
+    "baseHp": 2782,
+    "units": [
+     1,
+     0,
+     1,
+     0,
+     0
+    ],
+    "armyValue": 2300,
+    "queue": 0,
+    "turrets": [
+     "future-laser-turret:L2",
+     "future-laser-turret:L2"
+    ],
+    "buildings": "mine16 lib0 forge16",
+    "researchTiers": 34,
+    "mineGoldPerSec": 78.2,
+    "libraryXpPerSec": 0
+   }
+  },
+  {
+   "t": 318.8,
+   "front": {
+    "player": 152,
+    "enemy": 258
+   },
+   "player": {
+    "gold": 5217,
+    "xp": 12708,
+    "age": 4,
+    "baseHp": 0,
+    "units": [
+     0,
+     0,
+     1,
+     0,
+     0
+    ],
+    "armyValue": 1840,
+    "queue": 5,
+    "turrets": [
+     "future-laser-turret:L3",
+     "future-rail-gun:L3",
+     "future-rail-gun:L3",
+     "future-laser-turret:L3",
+     "future-rail-gun:L3"
+    ],
+    "buildings": "mine25 lib20 forge25",
+    "researchTiers": 2,
+    "mineGoldPerSec": 240.6,
+    "libraryXpPerSec": 49.5
+   },
+   "enemy": {
+    "gold": 1351,
+    "xp": 0,
+    "age": 4,
+    "baseHp": 2782,
+    "units": [
+     1,
+     0,
+     1,
+     0,
+     0
+    ],
+    "armyValue": 2300,
+    "queue": 1,
+    "turrets": [
+     "future-laser-turret:L2",
+     "future-laser-turret:L2"
+    ],
+    "buildings": "mine17 lib0 forge16",
+    "researchTiers": 34,
+    "mineGoldPerSec": 82.8,
+    "libraryXpPerSec": 0
+   }
+  }
+ ],
+ "config": {
+  "buildings": {
+   "mine": {
+    "id": "mine",
+    "name": "Mine",
+    "blurb": "Makes gold",
+    "stepCosts": [
+     40,
+     55,
+     70,
+     90,
+     110
+    ],
+    "spriteKey": "building-mine"
+   },
+   "library": {
+    "id": "library",
+    "name": "Library",
+    "blurb": "Makes XP",
+    "stepCosts": [
+     50,
+     65,
+     80,
+     100,
+     125
+    ],
+    "spriteKey": "building-library"
+   },
+   "forge": {
+    "id": "forge",
+    "name": "Forge",
+    "blurb": "Research tiers, unit damage",
+    "stepCosts": [
+     60,
+     75,
+     95,
+     120,
+     150
+    ],
+    "spriteKey": "building-forge"
+   },
+   "barracks": {
+    "id": "barracks",
+    "name": "Barracks",
+    "blurb": "Faster training, tougher recruits",
+    "stepCosts": [
+     60,
+     75,
+     95,
+     120,
+     150
+    ],
+    "spriteKey": "building-barracks",
+    "extra": true
+   },
+   "shrine": {
+    "id": "shrine",
+    "name": "Shrine",
+    "blurb": "Stronger, faster special",
+    "stepCosts": [
+     70,
+     90,
+     110,
+     140,
+     170
+    ],
+    "spriteKey": "building-shrine",
+    "extra": true
+   },
+   "market": {
+    "id": "market",
+    "name": "Market",
+    "blurb": "Sells surplus XP for gold",
+    "stepCosts": [
+     60,
+     80,
+     100,
+     125,
+     150
+    ],
+    "spriteKey": "building-market",
+    "extra": true
+   }
+  },
+  "research": [
+   {
+    "id": "bounty",
+    "name": "Plunder",
+    "short": "Kill gold",
+    "target": {
+     "kind": "bounty"
+    },
+    "perTier": 0.1,
+    "baseCost": 60
+   },
+   {
+    "id": "meleeDamage",
+    "name": "Sharpened weapons",
+    "short": "Melee dmg",
+    "target": {
+     "kind": "unit",
+     "slots": [
+      1
+     ],
+     "stat": "damage"
+    },
+    "perTier": 0.1,
+    "baseCost": 50
+   },
+   {
+    "id": "meleeArmor",
+    "name": "Melee armor",
+    "short": "Melee armor",
+    "target": {
+     "kind": "unit",
+     "slots": [
+      1
+     ],
+     "stat": "damageTaken"
+    },
+    "perTier": -0.06,
+    "baseCost": 50
+   },
+   {
+    "id": "rangedDamage",
+    "name": "Better ammo",
+    "short": "Ranged dmg",
+    "target": {
+     "kind": "unit",
+     "slots": [
+      2
+     ],
+     "stat": "damage"
+    },
+    "perTier": 0.1,
+    "baseCost": 50
+   },
+   {
+    "id": "rangedRange",
+    "name": "Keen eyes",
+    "short": "Ranged range",
+    "target": {
+     "kind": "unit",
+     "slots": [
+      2
+     ],
+     "stat": "range"
+    },
+    "perTier": 0.08,
+    "baseCost": 50
+   },
+   {
+    "id": "heavyDamage",
+    "name": "Heavy weapons",
+    "short": "Heavy dmg",
+    "target": {
+     "kind": "unit",
+     "slots": [
+      3
+     ],
+     "stat": "damage"
+    },
+    "perTier": 0.1,
+    "baseCost": 70
+   },
+   {
+    "id": "heavyArmor",
+    "name": "Heavy plating",
+    "short": "Heavy armor",
+    "target": {
+     "kind": "unit",
+     "slots": [
+      3
+     ],
+     "stat": "damageTaken"
+    },
+    "perTier": -0.06,
+    "baseCost": 70
+   },
+   {
+    "id": "turretDamage",
+    "name": "Turret power",
+    "short": "Turret dmg",
+    "target": {
+     "kind": "turret",
+     "stat": "damage"
+    },
+    "perTier": 0.05,
+    "baseCost": 60
+   },
+   {
+    "id": "turretRange",
+    "name": "Turret sights",
+    "short": "Turret range",
+    "target": {
+     "kind": "turret",
+     "stat": "range"
+    },
+    "perTier": 0.03,
+    "baseCost": 60
+   }
+  ]
+ },
+ "conquest": {
+  "effects": [
+   {
+    "kind": "start-age",
+    "age": 4
+   },
+   {
+    "kind": "gold",
+    "side": "both",
+    "amount": 150
+   },
+   {
+    "kind": "ai-income",
+    "mult": 0.1
+   },
+   {
+    "kind": "kill-gold",
+    "side": "player",
+    "mult": 1.5
+   },
+   {
+    "kind": "unit-stat",
+    "side": "enemy",
+    "stat": "damage",
+    "mult": 1.2
+   },
+   {
+    "kind": "unit-stat",
+    "side": "enemy",
+    "stat": "maxHp",
+    "mult": 1.25
+   },
+   {
+    "kind": "ai-income",
+    "mult": 1.5
+   },
+   {
+    "kind": "turrets",
+    "side": "enemy",
+    "count": 2,
+    "turretKind": "rapid",
+    "level": 2
+   },
+   {
+    "kind": "unit-stat",
+    "side": "player",
+    "stat": "maxHp",
+    "mult": 1.12
+   },
+   {
+    "kind": "building",
+    "side": "player",
+    "buildingId": "mine",
+    "levels": 3
+   },
+   {
+    "kind": "unit-stat",
+    "side": "player",
+    "stat": "maxHp",
+    "mult": 1.5,
+    "slots": [
+     4
+    ]
+   },
+   {
+    "kind": "turrets",
+    "side": "player",
+    "count": 1,
+    "turretKind": "rapid",
+    "level": 1
+   },
+   {
+    "kind": "turrets",
+    "side": "player",
+    "count": 2,
+    "turretKind": "heavy",
+    "level": 0
+   },
+   {
+    "kind": "unit-stat",
+    "side": "player",
+    "stat": "damage",
+    "mult": 1.1
+   },
+   {
+    "kind": "unit-stat",
+    "side": "player",
+    "stat": "damage",
+    "mult": 1.2,
+    "slots": [
+     1
+    ]
+   },
+   {
+    "kind": "building",
+    "side": "player",
+    "buildingId": "library",
+    "levels": 2
+   },
+   {
+    "kind": "xp",
+    "side": "player",
+    "amount": 80
+   },
+   {
+    "kind": "unit-stat",
+    "side": "player",
+    "stat": "damage",
+    "mult": 1.06
+   },
+   {
+    "kind": "unit-stat",
+    "side": "player",
+    "stat": "damage",
+    "mult": 1.06
+   },
+   {
+    "kind": "unit-stat",
+    "side": "player",
+    "stat": "damage",
+    "mult": 1.06
+   },
+   {
+    "kind": "unit-stat",
+    "side": "player",
+    "stat": "damage",
+    "mult": 1.06
+   },
+   {
+    "kind": "unit-stat",
+    "side": "player",
+    "stat": "damage",
+    "mult": 1.06
+   },
+   {
+    "kind": "gold",
+    "side": "player",
+    "amount": 100
+   },
+   {
+    "kind": "gold",
+    "side": "player",
+    "amount": 100
+   },
+   {
+    "kind": "gold",
+    "side": "player",
+    "amount": 100
+   },
+   {
+    "kind": "gold",
+    "side": "player",
+    "amount": 100
+   },
+   {
+    "kind": "gold",
+    "side": "player",
+    "amount": 100
+   },
+   {
+    "kind": "turrets",
+    "side": "player",
+    "count": 1,
+    "turretKind": "rapid",
+    "level": 1
+   },
+   {
+    "kind": "turrets",
+    "side": "player",
+    "count": 1,
+    "turretKind": "rapid",
+    "level": 1
+   },
+   {
+    "kind": "building",
+    "side": "player",
+    "buildingId": "mine",
+    "levels": 2
+   },
+   {
+    "kind": "building",
+    "side": "player",
+    "buildingId": "mine",
+    "levels": 2
+   },
+   {
+    "kind": "building",
+    "side": "player",
+    "buildingId": "mine",
+    "levels": 2
+   },
+   {
+    "kind": "building",
+    "side": "player",
+    "buildingId": "forge",
+    "levels": 3
+   },
+   {
+    "kind": "building",
+    "side": "player",
+    "buildingId": "forge",
+    "levels": 3
+   },
+   {
+    "kind": "units",
+    "side": "player",
+    "slot": 1,
+    "count": 1
+   },
+   {
+    "kind": "unit-stat",
+    "side": "player",
+    "stat": "damage",
+    "mult": 1.08
+   },
+   {
+    "kind": "gold",
+    "side": "player",
+    "amount": 100
+   },
+   {
+    "kind": "unit-stat",
+    "side": "player",
+    "stat": "maxHp",
+    "mult": 1.05
+   }
+  ],
+  "label": "The Overmind · Future 5/5",
+  "maxAge": 4
+ }
+}
