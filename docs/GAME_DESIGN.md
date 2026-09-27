@@ -557,11 +557,15 @@ just go ahead". Numbers PROPOSED unless tagged.
 - **Catapult crew is two units wide** (footprint 60 px instead of 30; its
   art is centered on it). Any unit can now set its own footprint
   (`UnitDefinition.bodyWidth`).
-- **Heavy unit area damage doesn't hurt bases (LOCKED, owner: "heavy unit
-  AOE shouldn't damage base").** Built as: unit shots with splash (tank
-  shells, mech plasma, catapult boulders) deal no damage to a base they
-  hit (`AREA_SHOT_BASE_DAMAGE_MULT` = 0). Melee blows (including the
-  mammoth's trample hits) and plain shots still hit bases.
+- **Units in the gate are hit before the base (LOCKED, owner).** The
+  owner saw a mammoth trampling units in front of the enemy base damage the
+  base. Cause: units spawn inside their base's gate, and a melee attacker
+  stops at the base's front edge, out of reach of units standing inside,
+  so it struck the wall. Now an attacker that can reach a base hits the
+  enemy units standing in its gate first (the trample hits the next one
+  too); the base takes blows only once the gate is clear. (A first attempt
+  that made area shots harmless to bases misread the request and was
+  reverted the same day: splash never touched bases.)
 - **Money units** (owner: "rarely valuable; make them more useful but not
   always easy money"; switch `moneyUnitRework`, `MONEY_UNIT_REWORK`):
   income starts at 50% and grows to 200% after 60 s alive (a gold bar under

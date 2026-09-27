@@ -11,8 +11,9 @@ import { emit, Events } from '@utils/EventBus';
 
 /**
  * Unit targeting and attacks. Each frame every armed unit looks for the
- * nearest enemy unit within its reach (edge to edge), falling back to the
- * enemy base, and attacks on its cooldown. Units with a target stand still
+ * nearest enemy unit within its reach (edge to edge), then for an enemy
+ * standing in the gate of its base once that base is in reach, falling
+ * back to the base itself, and attacks on its cooldown. Units with a target stand still
  * (`Attacking`); the rest are marked `Walking` for `LaneSystem` to move.
  *
  * Melee units (no `projectileKey`) hit at once; ranged units fire a pooled
@@ -149,6 +150,30 @@ export class CombatSystem {
       if (gap !== null && gap <= reach && gap < bestGap) {
         best = other;
         bestGap = gap;
+      }
+    }
+    return best ?? this.defenderAtGate(unit, reach);
+  }
+
+  /**
+   * An enemy unit standing in its own gate (overlapping its base, where
+   * units spawn) once this unit can reach that base: it is hit before the
+   * wall. Before this, an attacker at the base front couldn't reach
+   * defenders inside the gate and struck the base instead (owner,
+   * 2026-09-27: a mammoth trampling units at the gate damaged the base).
+   */
+  private defenderAtGate(unit: Unit, reach: number): Unit | null {
+    const base = this.enemyBaseInReach(unit, reach);
+    if (!base) return null;
+    let best: Unit | null = null;
+    let bestDistance = Infinity;
+    for (const other of this.units.activeUnits) {
+      if (other.side !== base.side || !other.isAlive) continue;
+      if (Math.abs(other.x - base.x) - other.halfWidth > base.halfWidth) continue;
+      const distance = Math.abs(other.x - unit.x);
+      if (distance < bestDistance) {
+        best = other;
+        bestDistance = distance;
       }
     }
     return best;

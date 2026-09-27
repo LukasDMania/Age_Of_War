@@ -345,7 +345,9 @@ Design in GAME_DESIGN section 14.
 - [x] Mammoth, knight and cuirassier nerfs; veterancy promotions don't heal
   (`statusOps.applyModifier` HP mode `keep`).
 - [x] `UnitDefinition.bodyWidth`; the catapult crew is two units wide.
-- [x] Area shots don't damage bases (`AREA_SHOT_BASE_DAMAGE_MULT`).
+- [x] Melee attackers hit enemies standing in the gate before the base
+  (`CombatSystem.defenderAtGate`). The area-shot rule that first shipped
+  here was reverted (misread request).
 - [x] Money-unit rework (switch `moneyUnitRework`): growing income, loot,
   smaller bounty, income bar.
 - [x] Age catch-up (switch `ageCatchUp`, `systems/ageCatchUp.ts`).
@@ -1407,7 +1409,10 @@ decisions made, anything the owner needs to confirm.
     Measured with equal-gold fights (the mammoth used to beat 90 gold of
     slingers with a third of its HP left). Veterancy no longer heals.
   - Catapult crew footprint 60 px (`bodyWidth`), art centered
-    (`rigArt` anchorX). Area shots deal no damage to bases (owner call).
+    (`rigArt` anchorX). Area shots dealt no damage to bases for a few
+    hours (a misread of the owner's note), then reverted; the real issue
+    was melee hitting the base while defenders stood inside its gate (see
+    below).
   - Money-unit rework and age catch-up behind new switches (see section
     14 for numbers). Catch-up measured: AI follows an early player age-up
     in 60 s (normal) / 35 s (hard), was 180 s / 130 s.
@@ -1429,3 +1434,12 @@ decisions made, anything the owner needs to confirm.
     bases now, so a pure tank army can't finish a base); the catch-up
     numbers; the siege timing; the campaign's numbers (banners, supplies,
     Glory, Legacy costs).
+- 2026-09-27 (later): owner clarified the "heavy AOE" note: a mammoth
+  trampling units in front of the enemy base damaged the base. Reverted the
+  area-shot rule (`AREA_SHOT_BASE_DAMAGE_MULT` removed; shots hit bases in
+  full again). Reproduced the real bug: an enemy unit standing at its spawn
+  point (inside the base's gate) was out of melee reach of an attacker at
+  the base front, which then hit the base: 12 blows on the base, none on
+  the unit. `CombatSystem` now targets enemies in the gate before the base;
+  checked: the same setup lands every blow on the defender (trample on the
+  one behind it) and the base only once both are dead.

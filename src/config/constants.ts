@@ -250,14 +250,6 @@ export const TURRET_DAMAGE_MULT = 0.7;
 
 
 /**
- * Share of an area shot's damage that a base takes when the shot hits it
- * (tank shells, mech plasma, catapult boulders: any unit shot with splash).
- * Owner, 2026-09-27: "heavy unit AOE shouldn't damage base". Direct melee
- * blows and plain shots still hit bases in full.
- */
-export const AREA_SHOT_BASE_DAMAGE_MULT = 0;
-
-/**
  * Catch-up for the side that is behind in age (owner, 2026-09-27: "I often
  * go ahead in age before the enemy, then it's basically over for them").
  * PROPOSED, switch `ageCatchUp`. Per age behind the other side:

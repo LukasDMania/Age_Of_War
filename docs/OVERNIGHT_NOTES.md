@@ -12,7 +12,7 @@ section 14; per-step log: `docs/IMPLEMENTATION_PLAN.md` Phase 18.
 | Veterancy resets HP | Promotions raise max HP but never heal. |
 | Money units rarely valuable | Switch `moneyUnitRework`: income starts at 50% and grows to 200% after a minute alive (gold bar under the unit), kills near your money units pay up to +100% gold, and the enemy's bounty for killing one is halved. |
 | Catapult hidden between units | Two units wide (60 px footprint), art centered on it. |
-| Heavy unit AOE shouldn't damage base | Area shots (tank shells, mech plasma, catapult boulders) deal no damage to bases. Melee blows still do. |
+| Heavy unit AOE shouldn't damage base | (Corrected after your note.) Units standing in their base's gate were out of melee reach, so a mammoth at the gate hit the wall instead. Now attackers hit defenders in the gate first (the trample hits the one behind too), and the base only when the gate is clear. My first attempt (area shots can't hurt bases) is reverted. |
 | Going ahead in age wins the game | Switch `ageCatchUp`: the side behind gets +50% kill XP and +35% turret damage per age behind; a lagging AI catches up in about a minute (it took 2-3 minutes before). |
 | Conquest never reaches the space age; make it a 10 h game | Conquest is now a five-chapter campaign, one chapter per age, from Stone to Future. See below. |
 
@@ -48,12 +48,10 @@ Tactician 19%, Classic 14%. Matches now last 9-10 minutes on average
 
 **Please check / decide:**
 
-1. Area shots no longer hurt bases, so an army of only tanks or mechs can't
-   finish a base. Is that what you meant, or only the catapult?
-2. The catch-up numbers and the siege timing are first guesses.
-3. The campaign's numbers (banners, supplies, Glory, Legacy costs) come from
+1. The catch-up numbers and the siege timing are first guesses.
+2. The campaign's numbers (banners, supplies, Glory, Legacy costs) come from
    simulated runs, not from a person playing hours of it.
-4. Heavies still beat equal gold of pure ranged units in every age. The
+3. Heavies still beat equal gold of pure ranged units in every age. The
    counter triangle would need ranged units to survive longer at the front
    (a design question, so I left it).
 
