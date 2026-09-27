@@ -139,6 +139,9 @@ Stone age, times the age factor later (about 4, 10, 21 and 46 gold/s).
   review: `?age=2`, `?kinds=knight,tank`, `?anims=walk,attack`, `?scale=2`,
   `?bounds` (measured frame boxes), `?turrets`, `?buildings`, `?mechs`
   (Mech designs in every age; `&design=walker,frame,visor,fist,launcher`).
+- `tools/checks/*.mjs`: browser checks and effect screenshots against the
+  dev server (Playwright; see `tools/checks/_lib.mjs`). `/artlab.html?muzzles`
+  measures where ranged units' shots leave their art.
 - `?headless` (dev server) simulates without drawing, for fast automated
   runs; `window.__aowTrain.runMatch(...)` plays a whole match
   (`src/dev/trainHarness.ts`).

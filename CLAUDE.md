@@ -143,6 +143,10 @@ These come from the locked design, so the code must not contradict them:
   live from the page by importing `/src/entities/unitDefinitions.ts` (the dev
   server shares the module instance) to try tuning variants without editing
   files.
+- Browser checks live in `tools/checks/` (Playwright against the dev
+  server): `mech.mjs`, `paths.mjs`, `effects.mjs` (slow-motion effect
+  screenshots), `muzzles.mjs` (re-measure shot origins after changing
+  ranged art). `__aow.fxTimeScale(k)` slows the effects for review.
 - Report honestly what you ran and what you didn't.
 
 ## Repo notes

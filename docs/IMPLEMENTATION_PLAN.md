@@ -3,14 +3,63 @@
 Handoff document. Read `CLAUDE.md` (rules) and `docs/GAME_DESIGN.md` (what
 we're building) first, then work through the phases below **in order**.
 
-**Current status:** Phases 0 to 18 are done (see Session log; 15 and 16
-are log-only). Phase 18 (2026-09-27) is the owner's fifth playtest round
-and the Conquest campaign. Phase 17 was an overnight session on the owner's list
-(art for every age, effects, themed UI, a trained AI, a building rework and
-switchable prototypes including a roguelite mode); its choices to review
-are in the last Session log entry and `docs/OVERNIGHT_NOTES.md`. The repo
-is on git now (the owner's GitHub; work of that session is on the branch
-`claude/gallant-goldberg-kmxnuj`).
+**Current status (2026-09-28):** Phases 0 to 20 are done (15 and 16 are
+log-only). The work is on the branch `claude/youthful-ptolemy-su6zli`
+(pushed; main has everything up to the Conquest balance fix of
+2026-09-27, and the branch contains all of main, so merging it is a
+fast-forward). Nothing is waiting half-built.
+
+### Start here (new agent)
+
+1. Read `CLAUDE.md`, then `docs/GAME_DESIGN.md` (sections 13-15 are the
+   newest: overnight features, playtest round 5 and Conquest, then
+   keyboard, the Mech and archetype paths), then the last three Session
+   log entries at the bottom of this file.
+2. `npm install`, `npm run dev`, and play: the title menu picks a
+   difficulty (1-3, Enter) or Conquest (C); `?ai=normal` skips the menu.
+3. Run the browser checks against the dev server (they need Playwright;
+   see `tools/checks/_lib.mjs`): `node tools/checks/mech.mjs`,
+   `node tools/checks/paths.mjs`, `node tools/checks/effects.mjs` (saves
+   slow-motion screenshots of every effect to `tools/checks/out/`),
+   `node tools/checks/muzzles.mjs` (after changing ranged art).
+4. **Next up: ask the owner.** Phase 20's work is waiting for the owner's
+   playtest. Candidates the owner has mentioned or that are half-planned:
+   a Mech refit on the lane (GAME_DESIGN 15), more Mech parts unlocked
+   through Conquest or research ("we can lock unlocking more parts behind
+   other things"), a Workshop commander, 1v1 multiplayer (DEFERRED, hosting
+   notes in GAME_DESIGN 15). Don't start any of them without asking.
+
+### Where the newest systems live
+
+- **Keyboard**: `config/keybindings.config.ts` (every action and default
+  key), `ui/keymap.ts` (`KeyboardControls`), `ui/ControlsScene.ts`;
+  compositions in `ui/compositions.ts`.
+- **Mech**: parts in `config/mech.config.ts`; a design becomes a unit in
+  `entities/mechDesign.ts` (the unit id spells out the design); art in
+  `art/mechDraw.ts` + `utils/MechArt.ts`; `systems/MechSystem.ts`;
+  `ui/WorkshopPanel.ts`. `/artlab.html?mechs` shows designs per age.
+- **Conquest paths**: `PATHS`, `PATH_LEAN`, relics / camp upgrades with
+  `path` and `keystone` in `config/conquest.config.ts`; offers in
+  `state/conquestState.ts` (`pathCounts`, `rollRelics`, `campOffer`);
+  behaviour rewards become `SideState.traits` (`state/traits.ts`), applied
+  by `ConquestSystem` and read by the owning systems (search for
+  `traits.`).
+- **Shots from the weapon**: `attack.muzzle` on ranged units (px from the
+  unit), `systems/shotLine.ts`; measured with `rigKit.markShot` and
+  `/artlab.html?muzzles`.
+- **Effects**: `entities/ImpactEffects.ts` (particles, streaks, flashes,
+  slashes, explosions), tunables in `config/effects.config.ts`, textures in
+  `art/fxDraw.ts`. `__aow.fxTimeScale(0.1)` slows them down for review.
+
+### Dev tools
+
+- `window.__aow` (dev builds, `utils/debug.ts`): state, bus, spawn, step,
+  restart (`{ ai, playerAi, conquest }`), cheats, `fxTimeScale`.
+- `?headless` simulates without drawing; `window.__aowTrain.runMatch(...)`
+  plays a whole match (AI-vs-AI balance runs, `tools/train-ai.mjs`).
+- `/artlab.html`: rig art per age (`?age=2`, `?bounds`), `?turrets`,
+  `?buildings`, `?mechs`, `?muzzles`. `?gallery` on the game URL: every
+  texture.
 
 ## How to work
 
@@ -397,6 +446,29 @@ with the owner before each.
   Juggernauts, Bastion, Guild and Workshop (`state/traits.ts`,
   `config/conquest.config.ts` `PATHS` / `PATH_LEAN`, `conquestState`
   `pathCounts` / `rollRelics` / `campOffer`).
+
+---
+
+## Phase 20: Owner's list of 2026-09-28 (done)
+
+Owner (before going to sleep): "Yes continue, also for the mech make sure
+there are at least 3 options for each body part ... Finish all the current
+tasks. Then make sure in the turrets tab the icons for the turrets
+correspond to the actual art ... Then make sure rangers projectiles come
+out from where their model shoots it ... Then after that do a rehaul of the
+effects ... Do all of em without my input ... Add to the docs so new agent
+can pick up easily".
+
+- [x] Mech: every slot has three or more open parts (Striders, Armory, War
+  siren added, drawn in five ages) plus a Forge part.
+- [x] Conquest archetype paths (the last Phase 19 item, ticked there).
+- [x] Turrets tab icons drawn from the turrets' own art
+  (`TurretArt.ensureTurretIcon`).
+- [x] Ranged shots leave the weapon on the art (`attack.muzzle`,
+  `systems/shotLine.ts`, `/artlab.html?muzzles`).
+- [x] Effects rehaul (streaks, glows, muzzle flashes, slashes, sparkles,
+  layered explosions, deaths, sky flash, ricochets, age-up).
+- [x] Handoff: this file's "Start here", `tools/checks/`, session log.
 
 ---
 
@@ -1723,3 +1795,53 @@ decisions made, anything the owner needs to confirm.
     Workshop path; the AI doesn't react to a Mech in any special way.
     Not checked: a real match played by hand with a Mech, Conquest battles
     with a Mech, touch devices.
+- 2026-09-28 (night, owner asleep; Phase 20): the owner's list, done in
+  order, each its own commit on `claude/youthful-ptolemy-su6zli` (pushed,
+  not merged to main: the owner asks for that).
+  - **Mech parts**: Striders (legs, +200 HP, walks 60% faster), Armory
+    (torso, +500 HP, guns 35% faster), War siren (head, enemies nearby 20%
+    slower) are open to everyone, so every slot has three or more; the
+    Forge parts stay. Art in five ages; Mech frames 4 units taller for the
+    Striders. Headless check (Mech vs an equal-gold stream): the new
+    designs win with 30-70% HP left, like the others; the siren was
+    stronger at 25% and is 20% now.
+  - **Conquest archetype paths** (GAME_DESIGN 15 has the reward table):
+    six paths, tags on relics, camp upgrades, commanders and run-long event
+    rewards; offers lean (weight 1 + owned, max 4), never one path only,
+    one keystone per run and per offer; camps show the general upgrades
+    plus a leaning pick of path upgrades. Behaviour rewards set
+    `SideState.traits` and the owning systems apply them (prices and
+    training, lifesteal, first strike, base damage, piercing shots, marks,
+    ricochets, turret damage and veteran levels, the Mine's growth or
+    closure, money income, the Mech's price, build time and Forge needs).
+    New stat `shotDamageTaken`; side modifiers can target `only` or
+    `exclude` the Mech; `unit-died` names the killing turret; new event
+    `shot-bounced`. **PROPOSED changes from the plan** (section 15 lists
+    them): Colossus priced instead of capped, Momentum instead of Trample,
+    Veteran crews every 15 kills. Checked: `tools/checks/paths.mjs`; the
+    campaign screens (commanders with paths, a camp offer, a keystone
+    offer) in screenshots; a headless AI-vs-AI battle with every trait on.
+  - **Turret icons**: the Turrets tab showed placeholder squares; now the
+    real turret (mount plus head at rest, team colors, level), trimmed to
+    its pixels. Checked in all five ages.
+  - **Shots from the weapon**: shots flew level from the front edge at
+    26 px. Each ranged unit's attack now has a `muzzle` measured from its
+    art (the drawing marks its release point; `/artlab.html?muzzles`), and
+    shots fly from there toward the nearest enemy's middle. The catapult's
+    point is set by hand (its arm is cocked back at the release frame).
+    AI-vs-AI runs after the change: 9 matches, mostly long and even, like
+    before.
+  - **Effects rehaul** (GAME_DESIGN 13, "Art and feel"): streaks and
+    glows on every projectile, muzzle flashes, slashes and sparkles,
+    layered explosions, dust rings on deaths, a sky flash for specials,
+    ricochet streaks, an age-up flare. Colored flashes blend normally
+    (additive washed them to white on bright skies). Checked with
+    slow-motion screenshots (`tools/checks/effects.mjs`) and staged fights
+    in every age. Frame rate in this sandbox's software renderer: the same
+    with and without the new effects (12-14 fps both ways, the renderer's
+    own limit); not measured on real hardware.
+  - Handoff: "Start here" at the top of this file, `tools/checks/` (the
+    browser checks, with a shared Playwright helper), README and CLAUDE.md
+    notes.
+  - Not checked: a match played by hand, touch devices, frame rate on real
+    hardware with many units. Not built: Mech refit, a Workshop commander.

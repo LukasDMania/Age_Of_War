@@ -10,3 +10,6 @@ vite.config.ts.timestamp-*
 training/build/
 training/build-ladder/
 training/*/state.json
+
+# Browser check screenshots (tools/checks)
+tools/checks/out/
