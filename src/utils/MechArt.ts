@@ -15,12 +15,12 @@ import { parseMechId } from '@entities/mechDesign';
 /**
  * Drawn extent over every frame, in rig units: measured with
  * `/artlab.html?mechs&bounds` over the six showcase designs in all ages
- * (live [-28, 67, -109, 5], die [-28, 54, -106, 18]), plus a margin for
- * the other combinations.
+ * (live [-29, 67, -116, 5], die [-28, 54, -114, 18]; Striders stand
+ * tallest), plus a margin for the other combinations.
  */
-const LIVE: RigBox = [-32, 70, -112, 6];
-const DIE: RigBox = [-32, 58, -108, 20];
-const ICON: RigBox = [-32, 46, -112, 6];
+const LIVE: RigBox = [-32, 70, -120, 6];
+const DIE: RigBox = [-32, 58, -118, 20];
+const ICON: RigBox = [-32, 46, -120, 6];
 /** Screen px per rig unit: about 125 px tall, twice a heavy. */
 const PX_PER_UNIT = 1.15;
 

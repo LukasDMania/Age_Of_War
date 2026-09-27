@@ -112,7 +112,7 @@ function armAttack(arm: ArmPart, design: MechDesign, age: number): UnitAttack | 
   const attack: UnitAttack = {
     damage: Math.round(a.damage * getAge(age).scale * (torso.damage ?? 1) * boost),
     range: Math.round(a.range * (a.ranged ? (head.rangedRange ?? 1) : 1)),
-    cooldownMs: Math.round(a.cooldownMs * (torso.cooldown ?? 1)),
+    cooldownMs: Math.round(a.cooldownMs * (torso.cooldown ?? 1) * (a.ranged ? (torso.rangedCooldown ?? 1) : 1)),
     windupMs: rigWindupMs(MECH.attackRate),
   };
   if (a.splashRadius) attack.splashRadius = a.splashRadius;
@@ -157,7 +157,7 @@ export function mechDefinition(design: MechDesign, age: number): UnitDefinition 
     cost,
     trainTimeMs: designBuildMs(design),
     hp: Math.round(hp * scale),
-    speed: 25,
+    speed: Math.round(MECH.speed * (MECH_LEGS[design.legs].speed ?? 1)),
     killGold: Math.round(cost * MECH.killGold),
     killXp: Math.round(cost * MECH.killXp),
     ...(armor < 1 ? { armor: Math.round(armor * 1000) / 1000 } : {}),

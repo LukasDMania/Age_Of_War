@@ -73,7 +73,7 @@ function palette(age: number): Palette {
 }
 
 /** Hip height above the ground per legs. */
-const HIP: Readonly<Record<LegsId, number>> = { walker: 34, stompers: 34, treads: 24 };
+const HIP: Readonly<Record<LegsId, number>> = { walker: 34, stompers: 34, treads: 24, striders: 40 };
 
 /** Everything that moves, for one frame. */
 interface Pose {
@@ -196,6 +196,10 @@ function drawLegs(c: Ctx, legs: LegsId, s: Pose, near: boolean): void {
     if (!near) drawTreads(c, s);
     return;
   }
+  if (legs === 'striders') {
+    drawStrider(c, s, near);
+    return;
+  }
   const heavy = legs === 'stompers';
   const side = near ? 1 : -1;
   const sw = s.walking ? Math.sin(s.p) * side : 0;
@@ -234,6 +238,44 @@ function drawLegs(c: Ctx, legs: LegsId, s: Pose, near: boolean): void {
   if (heavy && s.age >= 1) {
     for (let i = 0; i < 3; i++) dot(c, [ankle[0] - fw * 0.35 + 3 + i * 5, ankle[1] + fh * 0.4], 1.2, s.pal.metal);
   }
+}
+
+/** Long bird-like legs: thigh forward, shin back, a long foot and toes. */
+function drawStrider(c: Ctx, s: Pose, near: boolean): void {
+  const side = near ? 1 : -1;
+  const sw = s.walking ? Math.sin(s.p) * side : 0;
+  const lift = s.walking ? Math.max(0, Math.cos(s.p) * side) : 0;
+  let a = 0.55 + sw * 0.5;
+  let bend = 1.45 + lift * 0.5;
+  if (s.collapse > 0) {
+    a += s.collapse * (near ? 1.0 : 0.6);
+    bend += s.collapse * 0.9;
+  }
+  const hip: P2 = [s.hip[0] + (near ? 3 : -3), s.hip[1]];
+  const knee = pt(hip, a, 15);
+  const hock = pt(knee, a - bend, 16);
+  const foot = pt(hock, a - bend + 1.05 + lift * 0.4, 12);
+  const col = near ? s.pal.main : s.pal.mainB;
+  const colB = near ? s.pal.mainB : s.pal.mainD;
+  poly(c, [hip, knee], 7.5, s.age === 0 ? (near ? s.pal.trim : shade(s.pal.trim, 0.8)) : col);
+  poly(c, [knee, hock], 5.5, colB);
+  poly(c, [hock, foot], 4, s.age === 0 ? C.bone : s.pal.metal);
+  if (s.age === 2) {
+    // A brass piston along the shin.
+    poly(c, [pt(knee, a - bend, 3), pt(knee, a - bend, 12)], 1.6, s.pal.trim);
+  }
+  if (s.age === 4) poly(c, [pt(knee, a - bend, 3), pt(knee, a - bend, 13)], 1.1, s.team);
+  if (s.age === 3 && near) {
+    const m = pt(knee, a - bend, 8);
+    hazard(c, m[0] - 2.5, m[1] - 1.5, 5, 3);
+  }
+  dot(c, knee, 3.4, s.pal.metal);
+  dot(c, hock, 2.4, s.pal.metal);
+  // Toes: two forward, one back.
+  const toe = near ? s.pal.mainD : shade(s.pal.mainD, 0.85);
+  poly(c, [foot, [foot[0] + 7, foot[1] + 0.5]], 2.6, toe);
+  poly(c, [foot, [foot[0] + 5, foot[1] - 1.5]], 2.2, toe);
+  poly(c, [foot, [foot[0] - 4, foot[1] + 0.3]], 2.2, toe);
 }
 
 function drawTreads(c: Ctx, s: Pose): void {
@@ -315,6 +357,23 @@ function drawTorso(c: Ctx, torso: TorsoId, s: Pose): void {
       }
       return;
     }
+    case 'armory': {
+      // A gun torso: a magazine on the back feeding a belt to the shoulder.
+      const feed = s.anim === 'attack' ? s.u * 3 : s.walking ? s.u : 0;
+      plate(c, -15, -40, 30, 38, 7, pal.main, s);
+      rrect(c, -11, -34, 20, 11, 3, pal.mainB, 1.2);
+      drawMagazine(c, [-15, -20], s);
+      // The belt: rounds from the magazine up to the gun shoulder.
+      const beltCol = s.age === 4 ? s.team : s.age <= 1 ? pal.trim : '#d8b04a';
+      for (let i = 0; i < 6; i++) {
+        const k = ((i + feed) % 6) / 6;
+        const p: P2 = [lerp(-8, 8, k), lerp(-16, -32, k)];
+        rrect(c, p[0] - 1.6, p[1] - 1.3, 3.2, 2.6, 0.8, beltCol, 0.8);
+      }
+      emblem(c, [4, -12], 3, s);
+      if (s.age === 3) hazard(c, -12, -8, 24, 4);
+      return;
+    }
     case 'reactor': {
       plate(c, -16, -40, 32, 38, 8, pal.main, s);
       // Vents and pipes.
@@ -334,6 +393,51 @@ function drawTorso(c: Ctx, torso: TorsoId, s: Pose): void {
       }
       emblem(c, [-9, -8], 2.8, s);
       return;
+    }
+  }
+}
+
+/** The Armory's magazine per age: a basket of stones, a bolt rack, powder kegs, an ammo drum, a power cell. */
+function drawMagazine(c: Ctx, p: P2, s: Pose): void {
+  const pal = s.pal;
+  switch (s.age) {
+    case 0:
+      ellipse(c, p[0], p[1], 9, 11, 0, '#b08452');
+      c.strokeStyle = rgba(OUT, 0.6);
+      c.lineWidth = 0.8;
+      for (let i = -2; i <= 2; i++) {
+        c.beginPath();
+        c.moveTo(p[0] - 8, p[1] + i * 4);
+        c.lineTo(p[0] + 8, p[1] + i * 4);
+        c.stroke();
+      }
+      for (let i = 0; i < 3; i++) dot(c, [p[0] - 4 + i * 4, p[1] - 10], 2.4, C.stone);
+      return;
+    case 1:
+      rrect(c, p[0] - 7, p[1] - 12, 11, 24, 2, pal.trim);
+      for (let i = 0; i < 4; i++) {
+        poly(c, [[p[0] - 5 + i * 2.6, p[1] - 16], [p[0] - 5 + i * 2.6, p[1] + 8]], 1, pal.metal);
+        shape(c, [[p[0] - 6.2 + i * 2.6, p[1] - 16], [p[0] - 5 + i * 2.6, p[1] - 19], [p[0] - 3.8 + i * 2.6, p[1] - 16]], pal.accent, 0.6);
+      }
+      return;
+    case 2:
+      for (let i = 0; i < 2; i++) {
+        rrect(c, p[0] - 7, p[1] - 12 + i * 12, 12, 11, 4, pal.trim);
+        poly(c, [[p[0] - 7, p[1] - 9 + i * 12], [p[0] + 5, p[1] - 9 + i * 12]], 1.2, pal.mainD);
+        poly(c, [[p[0] - 7, p[1] - 4 + i * 12], [p[0] + 5, p[1] - 4 + i * 12]], 1.2, pal.mainD);
+      }
+      return;
+    case 3:
+      dot(c, p, 10, pal.mainB);
+      dot(c, p, 6.5, pal.metal);
+      hazard(c, p[0] - 6, p[1] + 5, 12, 3);
+      star(c, p, 3, s.team);
+      return;
+    default: {
+      rrect(c, p[0] - 6, p[1] - 13, 12, 26, 4, pal.mainB);
+      const charge = 0.5 + 0.5 * Math.sin(s.u * Math.PI * 4);
+      for (let i = 0; i < 4; i++) rrect(c, p[0] - 3.5, p[1] - 10 + i * 6, 7, 3.5, 1, rgba(s.team, i < 1 + charge * 3 ? 0.95 : 0.25), 0.6);
+      glow(c, p, 12, s.team, 0.3 + 0.2 * charge);
     }
   }
 }
@@ -448,11 +552,83 @@ function drawHead(c: Ctx, head: HeadId, s: Pose): void {
     case 'crest':
       drawCrest(c, s);
       break;
+    case 'siren':
+      drawSiren(c, s);
+      break;
     case 'beacon':
       drawBeacon(c, s);
       break;
   }
   c.restore();
+}
+
+/** War siren: a horn, a bell, a brass horn, a loudspeaker or an emitter dish, with sound rings. */
+function drawSiren(c: Ctx, s: Pose): void {
+  const pal = s.pal;
+  // Rings travel out every half cycle.
+  const ring = (at: P2, col: string): void => {
+    for (let i = 0; i < 2; i++) {
+      const k = (s.u * 2 + i * 0.5) % 1;
+      c.strokeStyle = rgba(col, 0.7 * (1 - k));
+      c.lineWidth = 1.2;
+      c.beginPath();
+      c.arc(at[0], at[1], 3 + k * 9, -0.9, 0.9);
+      c.stroke();
+    }
+  };
+  switch (s.age) {
+    case 0: {
+      // A curled war horn.
+      c.beginPath();
+      c.moveTo(-6, -14);
+      c.quadraticCurveTo(-10, -26, 2, -26);
+      c.lineTo(9, -30);
+      c.lineTo(9, -21);
+      c.quadraticCurveTo(1, -21, -2, -14);
+      c.closePath();
+      c.fillStyle = C.bone;
+      c.fill();
+      c.lineWidth = 1.2;
+      c.strokeStyle = OUT;
+      c.stroke();
+      poly(c, [[-3, -22], [-1, -19]], 0.8, '#b8ad9a');
+      ring([11, -25.5], '#fff3c8');
+      return;
+    }
+    case 1:
+      // A bell in a small frame.
+      poly(c, [[-6, -14], [-6, -27], [6, -27], [6, -14]], 1.6, pal.trim);
+      shape(c, [[-3.5, -25], [3.5, -25], [5, -17], [-5, -17]], C.gold);
+      dot(c, [0, -16.5], 1.4, pal.metal);
+      ring([7, -21], '#fff3c8');
+      return;
+    case 2:
+      // A brass horn.
+      poly(c, [[-2, -14], [-2, -20]], 1.4, pal.metal);
+      shape(c, [[-2, -22], [7, -25], [11, -29], [11, -15], [7, -19], [-2, -20]], pal.main);
+      ellipse(c, 11, -22, 1.8, 7, 0, pal.mainD, 1);
+      ring([13, -22], '#fff3c8');
+      return;
+    case 3:
+      // A loudspeaker on a post.
+      poly(c, [[-3, -14], [-3, -21]], 1.4, C.iron);
+      shape(c, [[-5, -24], [-1, -24], [9, -29], [9, -15], [-1, -20], [-5, -20]], '#8a8f7a');
+      ellipse(c, 9, -22, 1.6, 7, 0, '#2a2622', 1);
+      ring([11, -22], '#fff3c8');
+      return;
+    default:
+      // An emitter dish.
+      poly(c, [[-2, -14], [-2, -19]], 1.4, pal.metal);
+      c.beginPath();
+      c.arc(2, -22, 7, -1.9, 1.9);
+      c.fillStyle = pal.mainB;
+      c.fill();
+      c.lineWidth = 1.2;
+      c.strokeStyle = OUT;
+      c.stroke();
+      glow(c, [6, -22], 6, s.team, 0.7);
+      ring([8, -22], s.team);
+  }
 }
 
 function drawCrest(c: Ctx, s: Pose): void {

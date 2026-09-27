@@ -179,18 +179,18 @@ if (params.has('buildings')) {
  */
 if (params.has('mechs')) {
   void import('@/art/mechDraw').then(({ drawMechDesign }) => {
-    type Design = { legs: 'walker' | 'treads' | 'stompers'; torso: 'frame' | 'hull' | 'reactor'; head: 'visor' | 'crest' | 'beacon'; left: 'fist' | 'blade' | 'launcher' | 'shield' | 'drill'; right: 'fist' | 'blade' | 'launcher' | 'shield' | 'drill' };
+    type Design = import('@config/mech.config').MechDesign;
     const showcase: Design[] = [
       { legs: 'walker', torso: 'frame', head: 'visor', left: 'fist', right: 'launcher' },
       { legs: 'treads', torso: 'hull', head: 'crest', left: 'shield', right: 'blade' },
       { legs: 'stompers', torso: 'reactor', head: 'beacon', left: 'drill', right: 'fist' },
-      { legs: 'walker', torso: 'hull', head: 'visor', left: 'launcher', right: 'launcher' },
-      { legs: 'treads', torso: 'reactor', head: 'crest', left: 'blade', right: 'blade' },
-      { legs: 'stompers', torso: 'frame', head: 'beacon', left: 'shield', right: 'drill' },
+      { legs: 'striders', torso: 'armory', head: 'siren', left: 'launcher', right: 'launcher' },
+      { legs: 'treads', torso: 'armory', head: 'crest', left: 'blade', right: 'blade' },
+      { legs: 'striders', torso: 'frame', head: 'siren', left: 'shield', right: 'drill' },
     ];
     const one = params.get('design');
     const designs: Design[] = one
-      ? [Object.fromEntries(['legs', 'torso', 'head', 'left', 'right'].map((k, i) => [k, one.split(',')[i]])) as Design]
+      ? [Object.fromEntries(['legs', 'torso', 'head', 'left', 'right'].map((k, i) => [k, one.split(',')[i]])) as unknown as Design]
       : showcase;
     const ms = Number(params.get('scale') ?? 1.6);
     const cw = 110 * ms;

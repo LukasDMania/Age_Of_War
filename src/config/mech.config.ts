@@ -26,9 +26,9 @@ export const MECH_SLOT_NAMES: Readonly<Record<MechSlot, string>> = {
   right: 'Right arm',
 };
 
-export type LegsId = 'walker' | 'treads' | 'stompers';
-export type TorsoId = 'frame' | 'hull' | 'reactor';
-export type HeadId = 'visor' | 'crest' | 'beacon';
+export type LegsId = 'walker' | 'treads' | 'striders' | 'stompers';
+export type TorsoId = 'frame' | 'hull' | 'armory' | 'reactor';
+export type HeadId = 'visor' | 'crest' | 'siren' | 'beacon';
 export type ArmId = 'fist' | 'blade' | 'launcher' | 'shield' | 'drill';
 
 export interface MechDesign {
@@ -59,12 +59,16 @@ interface PartBase {
 export interface LegsPart extends PartBase {
   /** Melee arms' damage x this (heavy stomping legs). */
   meleeDamage?: number;
+  /** Walking speed x this. */
+  speed?: number;
 }
 
 export interface TorsoPart extends PartBase {
   /** Every arm's damage x this, and its cooldown x `cooldown`. */
   damage?: number;
   cooldown?: number;
+  /** Ranged arms only: cooldown x this. */
+  rangedCooldown?: number;
 }
 
 export interface HeadPart extends PartBase {
@@ -72,7 +76,10 @@ export interface HeadPart extends PartBase {
   rangedRange?: number;
   rangedDamage?: number;
   /** An aura, as a unit's utility effect (Stone-age numbers). */
-  aura?: { kind: 'buff'; radius: number; damageMult: number } | { kind: 'heal'; radius: number; amount: number; intervalMs: number };
+  aura?:
+    | { kind: 'buff'; radius: number; damageMult: number }
+    | { kind: 'heal'; radius: number; amount: number; intervalMs: number }
+    | { kind: 'slow'; range: number; mult: number; durationMs: number };
 }
 
 export interface ArmPart extends PartBase {
@@ -83,18 +90,21 @@ export interface ArmPart extends PartBase {
 export const MECH_LEGS: Readonly<Record<LegsId, LegsPart>> = {
   walker: { name: 'Walker', about: '+300 HP', tier: 1, cost: 75, hp: 300 },
   treads: { name: 'Treads', about: '+800 HP, armor', tier: 2, cost: 165, hp: 800, armor: 0.9 },
+  striders: { name: 'Striders', about: '+200 HP, walks 60% faster', tier: 2, cost: 120, hp: 200, speed: 1.6 },
   stompers: { name: 'Stompers', about: '+500 HP, melee +30%', tier: 3, cost: 240, hp: 500, meleeDamage: 1.3, forge: 6 },
 };
 
 export const MECH_TORSOS: Readonly<Record<TorsoId, TorsoPart>> = {
   frame: { name: 'Frame', about: '+500 HP', tier: 1, cost: 90, hp: 500 },
   hull: { name: 'Armored hull', about: '+1100 HP, armor', tier: 2, cost: 210, hp: 1100, armor: 0.9 },
+  armory: { name: 'Armory', about: '+500 HP, guns fire 35% faster', tier: 2, cost: 190, hp: 500, rangedCooldown: 0.65 },
   reactor: { name: 'Reactor', about: '+700 HP, weapons +35% and faster', tier: 3, cost: 300, hp: 700, damage: 1.35, cooldown: 0.85, forge: 6 },
 };
 
 export const MECH_HEADS: Readonly<Record<HeadId, HeadPart>> = {
   visor: { name: 'Visor', about: 'Guns reach +25%, +10% damage', tier: 1, cost: 45, rangedRange: 1.25, rangedDamage: 1.1 },
   crest: { name: 'Command crest', about: 'Allies nearby +15% damage', tier: 2, cost: 120, aura: { kind: 'buff', radius: 180, damageMult: 1.15 } },
+  siren: { name: 'War siren', about: 'Enemies nearby 20% slower', tier: 2, cost: 120, aura: { kind: 'slow', range: 150, mult: 0.8, durationMs: 1500 } },
   beacon: { name: 'Repair beacon', about: 'Heals itself and allies nearby', tier: 3, cost: 195, aura: { kind: 'heal', radius: 160, amount: 15, intervalMs: 1500 }, forge: 11 },
 };
 
@@ -137,6 +147,8 @@ export const MECH = {
   killGold: 1.2,
   killXp: 0.4,
   attackRate: 14,
+  /** Walking speed, px/s (a heavy's pace; Striders x1.6). */
+  speed: 25,
   /** Footprint on the lane, px: two units wide, twice a heavy's height. */
   bodyWidth: 64,
   bodyHeight: 112,

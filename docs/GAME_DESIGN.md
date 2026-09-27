@@ -752,6 +752,11 @@ built; archetype runs are not).
   torso and a head. Each arm has its own function, so two arms can dual
   wield, pair a melee arm with a gun, and so on. The first draft's parts
   were left to Claude ("I'll leave ur creativity for the first draft").
+- **LOCKED (owner, 2026-09-28):** at least three parts per body part that
+  anyone can build, "so that it really is custom"; more parts come later
+  and can be unlocked through other things (Forge levels now; Conquest
+  rewards, research and so on later). Built: every slot has three or more
+  open parts (Striders, Armory and War siren added), plus one Forge part.
 - **Built 2026-09-27 (first draft, all numbers PROPOSED;
   `config/mech.config.ts`):**
   - A **Workshop** tab (key B): a preview of the design in the player's
@@ -765,12 +770,15 @@ built; archetype runs are not).
     |---|---|---|---|---|---|
     | Legs | Walker | 1 | 75 | +300 HP | |
     | Legs | Treads | 2 | 165 | +800 HP, armor (x0.9 damage taken) | |
+    | Legs | Striders | 2 | 120 | +200 HP, walks 60% faster | |
     | Legs | Stompers | 3 | 240 | +500 HP, melee arms +30% | Forge 6 |
     | Torso | Frame | 1 | 90 | +500 HP | |
     | Torso | Armored hull | 2 | 210 | +1100 HP, armor x0.9 | |
+    | Torso | Armory | 2 | 190 | +500 HP, guns fire 35% faster | |
     | Torso | Reactor | 3 | 300 | +700 HP, weapons +35%, 15% faster | Forge 6 |
     | Head | Visor | 1 | 45 | guns reach +25%, +10% damage | |
     | Head | Command crest | 2 | 120 | allies nearby +15% damage | |
+    | Head | War siren | 2 | 120 | enemies nearby 20% slower (move and attack) | |
     | Head | Repair beacon | 3 | 195 | heals itself and allies nearby | Forge 11 |
     | Arm | Fist | 1 | 90 | heavy blows that splash | |
     | Arm | Blade | 2 | 150 | fast cuts | |
