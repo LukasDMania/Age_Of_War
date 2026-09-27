@@ -182,7 +182,7 @@ export class MenuScene extends Phaser.Scene {
         cx,
         650,
         [
-          `Slot keys ${keyHint('slot-1')}-${keyHint('slot-5')} act on the open tab  ·  Tabs ${(['tab-units', 'tab-turrets', 'tab-buildings', 'tab-research'] as const).map((id) => keyHint(id)).join(' ')}  ·  Armies ${keyHint('army-1')}-${keyHint('army-8')}  ·  Special ${keyHint('special')}  ·  Age up ${keyHint('age-up')}  ·  Pause ${bindingsLabel('pause')}`,
+          `Slot keys ${keyHint('slot-1')}-${keyHint('slot-5')} act on the open tab  ·  Tabs ${(['tab-units', 'tab-turrets', 'tab-buildings', 'tab-research', 'tab-workshop'] as const).map((id) => keyHint(id)).join(' ')}  ·  Armies ${keyHint('army-1')}-${keyHint('army-8')}  ·  Special ${keyHint('special')}  ·  Age up ${keyHint('age-up')}  ·  Pause ${bindingsLabel('pause')}`,
           `Destroy the enemy base, keep yours standing.  Menu: 1-3 difficulty, Q/E AI profile, Enter to play${feature('conquest') ? ', C Conquest' : ''}, K Controls`,
         ],
         { fontFamily: UI_FONT, fontSize: '15px', color: UiTextColors.parchment, align: 'center', lineSpacing: 8 },

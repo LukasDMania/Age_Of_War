@@ -83,7 +83,7 @@ export class UtilitySystem {
           }
         }
         this.pulse(unit, 'heal', effect.radius);
-        unit.playAttack(); // visual: the shaman raises its staff
+        this.gesture(unit); // visual: the shaman raises its staff
         return;
       }
       case 'shield': {
@@ -96,7 +96,7 @@ export class UtilitySystem {
           grantShield(ally, effect.absorb, effect.absorb * ally.getStat('shield'));
         }
         this.pulse(unit, 'shield', effect.radius);
-        unit.playAttack();
+        this.gesture(unit);
         return;
       }
       case 'aoe': {
@@ -170,6 +170,15 @@ export class UtilitySystem {
     if (nowMs < unit.auraPulseAt) return;
     unit.auraPulseAt = nowMs + UTILITY_AURA_PULSE_MS;
     this.pulse(unit, kind, radius);
-    unit.playAttack(); // visual: the alchemist lifts its flask, the officer gives orders
+    this.gesture(unit); // visual: the alchemist lifts its flask, the officer gives orders
+  }
+
+  /**
+   * A utility unit acts out its effect with its attack animation. A combat
+   * unit with an aura (the Mech's head) doesn't: its attack animation is
+   * its weapons'.
+   */
+  private gesture(unit: Unit): void {
+    if (unit.definition.role === 'utility') unit.playAttack();
   }
 }

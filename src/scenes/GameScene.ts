@@ -50,6 +50,7 @@ import { LaneSystem } from '@systems/LaneSystem';
 import { MatchLogger } from '@systems/MatchLogger';
 import { MatchSystem } from '@systems/MatchSystem';
 import { ProjectileSystem } from '@systems/ProjectileSystem';
+import { MechSystem } from '@systems/MechSystem';
 import { SpawnSystem } from '@systems/SpawnSystem';
 import { SpecialSystem } from '@systems/SpecialSystem';
 import { StatsSystem } from '@systems/StatsSystem';
@@ -75,7 +76,7 @@ import {
   type DebugSnapshot,
 } from '@utils/debug';
 import { emit, eventBus, Events, on } from '@utils/EventBus';
-import { ensureRigArtForAge, releaseRigArtOutside, rigArtBytes } from '@utils/RigArt';
+import { ensureRigArt, ensureRigArtForAge, releaseMechArt, releaseRigArtOutside, rigArtBytes } from '@utils/RigArt';
 import { HEADLESS_SIM } from '@utils/runtimeFlags';
 
 /** Options for starting (or restarting) a match. */
@@ -147,6 +148,7 @@ export class GameScene extends Phaser.Scene {
   private lane!: LaneSystem;
   private economy!: EconomySystem;
   private spawn!: SpawnSystem;
+  private mech!: MechSystem;
   private turrets!: TurretSystem;
   private special!: SpecialSystem;
   private status!: StatusSystem;
@@ -226,6 +228,9 @@ export class GameScene extends Phaser.Scene {
     this.spawn = new SpawnSystem(this.state, this.units, (unitId, side) =>
       this.lane.isSpawnPointClear(side, this.units.spriteWidth(unitId, side)),
     );
+    this.mech = new MechSystem(this.state, this.units, (unitId, side) =>
+      this.lane.isSpawnPointClear(side, this.units.spriteWidth(unitId, side)),
+    );
     this.turrets = new TurretSystem(this, this.state, this.bases, this.units, this.projectiles);
     this.special = new SpecialSystem(this.state, this.units, this.projectiles, () => this.match.elapsedMs);
     this.status = new StatusSystem(this.state, this.units);
@@ -280,6 +285,13 @@ export class GameScene extends Phaser.Scene {
         this.showPerkBadges();
       }),
       on(Events.BuildingPerkChosen, () => this.showPerkBadges()),
+      // A Mech's sheets are drawn when its build starts (not the frame it
+      // walks out), and older designs no longer on the lane are freed.
+      on(Events.MechChanged, ({ side, build }) => {
+        if (!build || build.remainingMs < build.totalMs) return;
+        releaseMechArt(this, this.rigArtInUse());
+        ensureRigArt(this, build.unitId, side);
+      }),
       on(Events.GameSpeedRequested, ({ multiplier }) => this.setSimSpeed(multiplier)),
       on(Events.CameraFocusRequested, ({ target }) => this.panCamera(target)),
       on(Events.BackgroundCycleRequested, () => this.cycleBackground()),
@@ -365,6 +377,7 @@ export class GameScene extends Phaser.Scene {
     this.ai?.update(now);
     this.playerAi?.update(now);
     this.spawn.update(dt);
+    this.mech.update(dt);
     this.status.update(now);
     this.combat.update(now);
     this.turrets.update(now);
@@ -446,7 +459,7 @@ export class GameScene extends Phaser.Scene {
     return BACKGROUNDS[this.backgroundIndex] ?? BACKGROUNDS[0]!;
   }
 
-  /** Playtest: next background option (HUD button or the B key). */
+  /** Playtest: next background option (HUD button or its key, Y by default). */
   private cycleBackground(): void {
     this.backgroundIndex = (this.backgroundIndex + 1) % BACKGROUNDS.length;
     try {
@@ -505,10 +518,18 @@ export class GameScene extends Phaser.Scene {
       const lo = Math.min(this.state.player.age, this.state.enemy.age);
       const hi = Math.max(this.state.player.age, this.state.enemy.age);
       if (hi + 1 < AGE_COUNT) ensureRigArtForAge(this, hi + 1);
-      const inUse = new Set([...this.units.activeUnits].map((u) => u.definition.id));
-      for (const queued of [...this.state.player.trainingQueue, ...this.state.enemy.trainingQueue]) inUse.add(queued.unitId);
-      releaseRigArtOutside(this, lo - 1, hi + 1, inUse);
+      releaseRigArtOutside(this, lo - 1, hi + 1, this.rigArtInUse());
     });
+  }
+
+  /** Units whose sheets must stay: on the lane (or dying), queued, or a Mech being built. */
+  private rigArtInUse(): Set<string> {
+    const inUse = new Set([...this.units.activeUnits].map((u) => u.definition.id));
+    for (const side of [this.state.player, this.state.enemy]) {
+      for (const queued of side.trainingQueue) inUse.add(queued.unitId);
+      if (side.mech.build) inUse.add(side.mech.build.unitId);
+    }
+    return inUse;
   }
 
   /** Dev only: tops XP up to the threshold and asks for an age-up. */
@@ -754,6 +775,7 @@ export class GameScene extends Phaser.Scene {
     this.status.destroy();
     this.special.destroy();
     this.turrets.destroy();
+    this.mech.destroy();
     this.spawn.destroy();
     this.economy.destroy();
     this.match.destroy();

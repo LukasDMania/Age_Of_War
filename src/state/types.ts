@@ -24,6 +24,14 @@ export interface QueuedUnit {
   remainingMs: number;
 }
 
+/** A side's Mech (the Mech workshop): the one being built, and whether one is on the lane. */
+export interface MechState {
+  /** Being built: its unit id (the design and age) and the build time left. */
+  build: { unitId: string; remainingMs: number; totalMs: number } | null;
+  /** A Mech of this side is alive (only one at a time). */
+  alive: boolean;
+}
+
 /** Match state machine. See `MatchSystem` (Phase 2). */
 export type MatchPhase = 'pre-game' | 'playing' | 'paused' | 'gameover';
 

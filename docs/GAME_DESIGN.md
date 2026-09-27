@@ -655,8 +655,9 @@ the space age". Replaces the five-battle run of section 13.
 
 ## 15. Next features (owner, 2026-09-27 night)
 
-Discussed after the first full Conquest run. Not built yet; build order in
-`IMPLEMENTATION_PLAN.md` Phase 19.
+Discussed after the first full Conquest run. Build order in
+`IMPLEMENTATION_PLAN.md` Phase 19 (keyboard, compositions and the Mech are
+built; archetype runs are not).
 
 ### Conquest archetype runs
 
@@ -711,12 +712,13 @@ Discussed after the first full Conquest run. Not built yet; build order in
   (`config/keybindings.config.ts`, changes kept per browser) for every
   battle action. **Number keys act on the open tab**: buy a unit (Units),
   choose a turret slot (Turrets), upgrade a building (Buildings), research
-  a track (Research); Shift / Ctrl pass on for multi-buys. Tabs Z X C V
-  (Tab / Shift+Tab cycle); on Turrets, Q E R build the age's three turrets
-  in the chosen slot, U upgrades or unlocks, Del sells. A age up, S
-  special, W War Cry, P / Esc pause, F speed, B background, arrows scroll
-  (A/D no longer scroll: A ages up). Popup choices (doctrines, building
-  perks) 7 8 9. Dev cheats G / H / N (the XP cheat moved off X, now the
+  a track (Research), choose a part (Workshop); Shift / Ctrl pass on for
+  multi-buys. Tabs Z X C V B (Tab / Shift+Tab cycle); on Turrets, Q E R
+  build the age's three turrets in the chosen slot, U upgrades or unlocks,
+  Del sells; on the Workshop, Q / E switch the chosen part and R builds. A
+  age up, S special, W War Cry, P / Esc pause, F speed, Y background (B
+  until the Workshop took it), arrows scroll (A/D no longer scroll: A ages
+  up). Popup choices (doctrines, building perks) 7 8 9. Dev cheats G / H / N (the XP cheat moved off X, now the
   Turrets tab). A hint line next to the tabs shows the open tab's keys.
 - Controls screen (title screen, K, or the pause panel): every action by
   group with its keys; click (or Enter) and press a key to rebind, Shift
@@ -746,26 +748,61 @@ Discussed after the first full Conquest run. Not built yet; build order in
   unlocked beyond that. You really build a visible thing: the parts you
   pick are what you see. Parts come in five versions, one per age, and
   change look with the age.
-- PROPOSED:
-  - A Workshop tab with four part slots: chassis (legs, treads, hover:
-    speed, HP), weapon (hammer, cannon, flamer, artillery: damage, range,
-    splash), armour (HP, damage taken) and a module (repair aura, shield
-    projector, siege drill...). Two options per slot at first; more from
-    Forge research and, in Conquest, the Workshop path.
-  - Cost is the parts' prices times a multiplier that grows with the
-    build's total tier, so a light utility Mech is affordable early and a
-    maxed one is the late-game gold sink (the Kessler stalemate had 5-34k
-    gold with nothing to buy). Long build time; one Mech alive at a time;
-    rebuilt at full price when it falls.
-  - Across ages: the design (which parts) is kept. After an age-up new
-    builds use the new age's version of every part; a Mech on the lane can
-    be refitted at its base for the difference in price.
-  - Built as data: a design becomes a `UnitDefinition` (still one `Unit`
-    class), a MechArt module layers the parts' art per age like the rig
-    art, and a new MechSystem checks `build-mech-requested` and the
-    one-alive rule. The AI doesn't build Mechs (an exception to "the AI
-    plays by the same rules", like its own income); Conquest bosses could
-    get their own later.
+- **LOCKED (owner, 2026-09-27):** five pieces: legs, left arm, right arm,
+  torso and a head. Each arm has its own function, so two arms can dual
+  wield, pair a melee arm with a gun, and so on. The first draft's parts
+  were left to Claude ("I'll leave ur creativity for the first draft").
+- **Built 2026-09-27 (first draft, all numbers PROPOSED;
+  `config/mech.config.ts`):**
+  - A **Workshop** tab (key B): a preview of the design in the player's
+    age, one card per slot with arrows to switch its part (1-5 choose a
+    card, Q / E switch, R builds), and the cost, HP, damage and build
+    time. The design is kept per browser. The background key moved from B
+    to Y.
+  - Parts (Stone-age numbers; tier 1 light, 2 standard, 3 advanced):
+
+    | Slot | Part | Tier | Gold | What it does | Needs |
+    |---|---|---|---|---|---|
+    | Legs | Walker | 1 | 75 | +300 HP | |
+    | Legs | Treads | 2 | 165 | +800 HP, armor (x0.9 damage taken) | |
+    | Legs | Stompers | 3 | 240 | +500 HP, melee arms +30% | Forge 6 |
+    | Torso | Frame | 1 | 90 | +500 HP | |
+    | Torso | Armored hull | 2 | 210 | +1100 HP, armor x0.9 | |
+    | Torso | Reactor | 3 | 300 | +700 HP, weapons +35%, 15% faster | Forge 6 |
+    | Head | Visor | 1 | 45 | guns reach +25%, +10% damage | |
+    | Head | Command crest | 2 | 120 | allies nearby +15% damage | |
+    | Head | Repair beacon | 3 | 195 | heals itself and allies nearby | Forge 11 |
+    | Arm | Fist | 1 | 90 | heavy blows that splash | |
+    | Arm | Blade | 2 | 150 | fast cuts | |
+    | Arm | Launcher | 2 | 165 | shells that splash, fire on the move | |
+    | Arm | Shield | 1 | 90 | +500 HP, armor x0.9, no weapon | |
+    | Arm | Siege drill | 3 | 225 | x3 damage to bases | Forge 6 |
+
+  - A core of 400 HP. Cost is the parts' prices x (1 + 0.12 x (total tier
+    - 5)), times the age's factor like every unit: the default design
+    (Walker, Frame, Visor, Fist, Launcher) is 520 gold in the Stone age and
+    about 12k in the Future; a maxed one is the late-game gold sink. Build
+    time 15 s plus 2.5 s per tier above 5, beside the unit queue (not in
+    it); the Mech walks out when the build is done and the gate is clear.
+    One Mech at a time, building or alive; rebuilt at full price when it
+    falls. Kill rewards like any unit (1.2x its cost in gold).
+  - Arms: the shorter-reach weapon is the Mech's main attack (it decides
+    where the Mech stops); the other fires on its own cooldown at anything
+    in its reach, even while walking. A Mech counts as a heavy (slot 3) for
+    research and counters.
+  - Across ages: the design is kept; a Mech is built in the age you are in
+    when you press Build, and every part has five looks, one per age (stone
+    golem, iron, brass, olive drab, white and glowing). **Refit** of a Mech
+    already on the lane is not built yet.
+  - Balance check (headless, Mech vs an equal-gold stream of the same
+    age's melee, ranged and heavy units, no turrets): the Mech wins with
+    about 20-55% HP left; the same gold in normal units about breaks even.
+    Tank builds (treads, hull, shield) are the strongest and reach the
+    enemy gate. Before the price change (parts 2/3 of these prices, 600
+    core HP) it won with 55-80% left.
+  - Only the player builds Mechs (`MECH.sides`); the AI doesn't (an
+    exception to "the AI plays by the same rules", like its own income).
+    Conquest bosses and the Workshop path come later.
 
 ### 1v1 multiplayer (DEFERRED, notes for later)
 

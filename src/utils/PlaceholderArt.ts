@@ -25,6 +25,8 @@ import {
   UNIT_DEFINITIONS,
   type UnitDefinition,
 } from '@entities/unitDefinitions';
+import { DEFAULT_MECH_DESIGN } from '@config/mech.config';
+import { mechDefinition } from '@entities/mechDesign';
 import { SIDES, type Side } from '@state/types';
 
 /** Sprite key of a side's base in a given age (before the side suffix). */
@@ -72,10 +74,10 @@ const UNIT_SIZE: Record<UnitDefinition['slot'], { w: number; h: number }> = {
   5: { w: 30, h: 46 },
 };
 
-/** A unit's footprint: its slot's size, or its own width if it sets one. */
+/** A unit's footprint: its slot's size, or its own width and height if it sets them. */
 function unitSize(def: UnitDefinition): { w: number; h: number } {
   const size = UNIT_SIZE[def.slot];
-  return def.bodyWidth ? { w: def.bodyWidth, h: size.h } : size;
+  return { w: def.bodyWidth ?? size.w, h: def.bodyHeight ?? size.h };
 }
 
 interface ProjectileStyle {
@@ -405,7 +407,8 @@ export function generatePlaceholderTextures(scene: Phaser.Scene): void {
   for (const side of SIDES) {
     const palette = SIDE_PALETTE[side];
 
-    for (const def of UNIT_DEFINITIONS) {
+    // Every Mech design shares one footprint texture (its art is drawn per design).
+    for (const def of [...UNIT_DEFINITIONS, mechDefinition(DEFAULT_MECH_DESIGN, 0)]) {
       const { w, h } = unitSize(def);
       build(textureKeyFor(def.spriteKey, side), w, h, () =>
         drawUnit(g, def, palette),

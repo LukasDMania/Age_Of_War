@@ -2,7 +2,7 @@
  * Background options to try while playtesting (owner, 2026-09-26). Art from
  * the owner's `art/` folder, resized to 720 px high into
  * `public/assets/backgrounds/<id>/` (back layer first). Cycle them in game
- * with the HUD's background button or the B key; the owner will pick one.
+ * with the HUD's background button or its key (Y); the owner will pick one.
  *
  * Each layer scrolls at `scroll` x the camera (0 = fixed sky, 1 = moves with
  * the lane) for parallax when the camera pans to the buildings, and cloud

@@ -23,6 +23,7 @@
  */
 
 import type { UnitRole } from '@state/types';
+import { mechDefinitionFromId } from '@entities/mechDesign';
 
 export type { UnitRole };
 
@@ -71,6 +72,8 @@ export interface UnitAttack {
    * 2026-09-26). 0 or absent: at once.
    */
   windupMs?: number;
+  /** Melee blows on a base deal this many times their damage (the Mech's siege drill). */
+  baseDamageMult?: number;
 }
 
 export interface UnitDefinition {
@@ -87,6 +90,8 @@ export interface UnitDefinition {
    * default doesn't fit the art (2026-09-27: the catapult crew is two wide).
    */
   bodyWidth?: number;
+  /** Footprint height in px, when the slot's default doesn't fit (the Mech). */
+  bodyHeight?: number;
   cost: number;
   trainTimeMs: number;
   hp: number;
@@ -95,6 +100,14 @@ export interface UnitDefinition {
   killXp: number;
   /** Combat units, and utility units that also fight. */
   attack?: UnitAttack;
+  /**
+   * A second weapon with its own reach and cooldown (the Mech's other arm).
+   * It fires whenever an enemy is in its reach, even while the unit walks;
+   * `attack` alone decides when the unit stops.
+   */
+  secondaryAttack?: UnitAttack;
+  /** Damage taken x this (base of the `damageTaken` stat; default 1). */
+  armor?: number;
   /** Economy units. */
   income?: { goldPerSecond: number };
   /** Economy units: penalty applied to the owner's other units. */
@@ -545,9 +558,9 @@ const UNITS_BY_ID: ReadonlyMap<string, UnitDefinition> = new Map(
   UNIT_DEFINITIONS.map((def) => [def.id, def]),
 );
 
-/** Looks up a unit definition, failing loudly on an unknown id. */
+/** Looks up a unit definition, failing loudly on an unknown id. Mech ids are built from the design they spell out. */
 export function getUnitDefinition(id: string): UnitDefinition {
-  const def = UNITS_BY_ID.get(id);
+  const def = findUnitDefinition(id);
   if (!def) throw new Error(`Unknown unit id: "${id}"`);
   return def;
 }
@@ -555,5 +568,5 @@ export function getUnitDefinition(id: string): UnitDefinition {
 /** Like `getUnitDefinition`, but returns undefined for an unknown id. For
  * validating requests that come from outside (UI, AI, console). */
 export function findUnitDefinition(id: string): UnitDefinition | undefined {
-  return UNITS_BY_ID.get(id);
+  return UNITS_BY_ID.get(id) ?? mechDefinitionFromId(id);
 }

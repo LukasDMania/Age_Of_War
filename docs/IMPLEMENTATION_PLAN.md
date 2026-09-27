@@ -371,7 +371,7 @@ state machine finish without getting stuck; AI-vs-AI chapter battles in
 every age end within about 15 minutes; screens checked in headless
 Chromium.
 
-## Phase 19: Keyboard, compositions, the Mech, archetype runs (planned)
+## Phase 19: Keyboard, compositions, the Mech, archetype runs
 
 Design in GAME_DESIGN section 15. Proposed order, smallest first; confirm
 with the owner before each.
@@ -386,9 +386,12 @@ with the owner before each.
 - [x] Compositions by slot: F1-F8 to queue, Ctrl+Shift+F1-F8 to save the
   current queue, an editor (Controls, Armies page); stop at the first
   unaffordable unit or a full queue (`ui/compositions.ts`).
-- [ ] Mech workshop: part data (4 slots, 2 options each, 5 age versions),
-  MechArt, Workshop tab, MechSystem (`build-mech-requested`, one alive,
-  refit), new events in Appendix A.
+- [x] Mech workshop (first draft): five slots (legs, torso, head, left and
+  right arm) with 3-5 parts each and five age looks
+  (`config/mech.config.ts`, `entities/mechDesign.ts`, `art/mechDraw.ts`,
+  `utils/MechArt.ts`), Workshop tab (`ui/WorkshopPanel.ts`), MechSystem
+  (`build-mech-requested`, `mech-changed`, one at a time). Refit of a Mech
+  on the lane not built yet.
 - [ ] Conquest archetype paths: tags on every reward, leaning offers, new
   behaviour effects, a first reward set for Vanguard, Marksmen,
   Juggernauts, Bastion and Guild; Workshop after the Mech.
@@ -433,6 +436,7 @@ validates and acts):
 | `choose-doctrine-requested` | `{ side, doctrineId }` | DoctrineSystem (prototype `ageDoctrines`; HUD popup, DoctrineAi) |
 | `war-cry-requested` | `{ side }` | WarCrySystem (prototype `warCry`; HUD button or W, WarCryAi) |
 | `conquest-continue-requested` | `{}` | GameScene (prototype `conquest`; game-over Continue or pause Retreat: records a retreat as a loss, returns to the campaign screen) |
+| `build-mech-requested` | `{ side, design }` (`design` a `MechDesign`: legs, torso, head, left, right) | MechSystem (Workshop tab Build or R; pays and starts the build in the side's age) |
 
 **Notifications** (emitted by systems; anyone may listen):
 
@@ -475,6 +479,7 @@ validates and acts):
 | `war-cry-used` | `{ side, durationMs, positions }` (x of every rallied unit) | WarCrySystem (prototype) |
 | `war-cry-cooldown-changed` | `{ side, remainingMs, totalMs }` | WarCrySystem (prototype; in 100 ms steps) |
 | `siege-changed` | `{ mult }` (every unit's siege damage multiplier) | ConquestSystem (prototype; each minute of siege in a Conquest battle) |
+| `mech-changed` | `{ side, alive, build }` (`build` `{ unitId, remainingMs, totalMs }` or null) | MechSystem (build started, every frame while building, walked out, fell) |
 
 ## Appendix B: Data shape sketches
 
@@ -1651,3 +1656,67 @@ decisions made, anything the owner needs to confirm.
     F7 caret browsing) are fully stopped: bound keys call preventDefault,
     but headless tests can't show browser UI. Touch devices.
 
+- 2026-09-27 (night, Mech): owner: "Go 5 pieces legs arm arm (arms can
+  have 2 functions one each (dual wield, one meelee one range, etc) torso,
+  weapon and maybe head? ... I'll leave ur creativity for the firs draft".
+  Built the Mech workshop's first draft (GAME_DESIGN section 15 has the
+  parts table; all numbers PROPOSED).
+  - Data: `config/mech.config.ts` (five slots; 3 legs, 3 torsos, 3 heads,
+    5 arms; tiers, costs, Forge locks), `entities/mechDesign.ts` (a design
+    becomes a `UnitDefinition`; the unit id spells out the design and age,
+    `mech:<age>:<legs>:<torso>:<head>:<left>:<right>`, so
+    `getUnitDefinition` rebuilds it anywhere). Still one `Unit` class; new
+    optional data on `UnitDefinition`: `armor` (base damage taken),
+    `bodyHeight`, `secondaryAttack` (the second arm, fires on its own
+    cooldown at anything in reach, even while walking; `CombatSystem`) and
+    `baseDamageMult` on an attack (the drill).
+  - Art: `art/mechDraw.ts` draws every part in five age looks (stone
+    golem, castle iron, renaissance brass, modern olive, future white with
+    a team glow) with walk, attack (per arm: smash, thrust, recoil, brace)
+    and a collapse; `utils/MechArt.ts` makes rig sheets per design (drawn
+    when a build starts, only for the side that builds, freed when no
+    longer used) and the Workshop preview. `/artlab.html?mechs` shows
+    designs in every age.
+  - `systems/MechSystem.ts`: listens for `build-mech-requested` and
+    `unit-died`, emits `mech-changed` and `unit-spawned`. Pays up front,
+    builds beside the unit queue, walks the Mech out when the gate is
+    clear; one Mech per side building or alive; player only
+    (`MECH.sides`). Two new events in Appendix A.
+  - `ui/WorkshopPanel.ts`: the fifth HUD tab (tabs narrowed to 92 px):
+    preview, one card per part with arrows, cost / HP / damage / build
+    time, a Build button that shows why it can't build, then the build's
+    progress, then "Mech in battle". Keys: B opens it, 1-5 choose a card,
+    Q / E switch the part, R builds. **Changed default:** the background
+    key moved from B to Y.
+  - Fix on the way: freeing rig sheets (age-ups, and now Mechs) could
+    remove a texture a death animation was still showing (WebGL
+    "glTexture" error, seen when a new Mech build started right after the
+    old one fell). Sheets still shown on screen are now kept until the
+    next release. And aura pulses play the attack animation only for
+    utility units (a Mech's head aura would have swung its arms).
+  - **PROPOSED values changed while tuning:** core HP 600 -> 400, every
+    part's price x1.5 (listed in section 15), armor of the hull and shield
+    0.85 -> 0.9. Why: headless check, Mech vs an equal-gold stream of the
+    same age's melee, ranged and heavy units (no turrets): before, it won
+    with 55-80% HP left in every age; now about 20-55% (tank builds, with
+    treads, hull and shield, reach the enemy gate). The same gold in
+    normal units about breaks even in that test.
+  - Checked in the browser (dev server, Playwright): B, 5, E switch the
+    right arm and the design is kept; R with no gold does nothing; R
+    builds (345 then, 520 now at default); a second R is refused while
+    building; the Mech walks out, fights a Stone-age pack, falls, and the
+    Workshop frees up. With the Normal AI: a build carries on through an
+    age-up (the HUD rebuilds on the Workshop tab), a Modern
+    Stompers/Reactor/Beacon/Drill/Launcher Mech with Forge 20 builds,
+    walks to the enemy gate and drills the base (2100 -> 957). No page
+    errors after the fix. Screenshots of the Workshop tab (Stone and
+    Modern), the lane and the Controls screen checked for layout.
+    Typecheck and build pass. Headless AI-vs-AI runs still play through,
+    and a Mech builds and fights in headless mode.
+  - Noted for the owner: the Repair beacon heals the Mech itself only
+    about 10 HP/s in the Stone age (15 per 1.5 s, times the age factor);
+    small next to its HP, meant more for the army around it.
+  - Not built: refit of a Mech on the lane (section 15's plan); Conquest's
+    Workshop path; the AI doesn't react to a Mech in any special way.
+    Not checked: a real match played by hand with a Mech, Conquest battles
+    with a Mech, touch devices.

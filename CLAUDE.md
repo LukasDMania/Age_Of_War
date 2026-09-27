@@ -149,7 +149,7 @@ These come from the locked design, so the code must not contradict them:
 
 - `src/main.ts` exists as of Phase 0. `?gallery` on the dev URL opens a
   dev-only viewer of all placeholder textures; `/artlab.html` shows the rig
-  art (units, `?turrets`, `?buildings`).
+  art (units, `?turrets`, `?buildings`, `?mechs`).
 - The project is a git repository now (the owner's GitHub). Commit and push
   only when the owner asks, to the branch you are given.
 - Art is drawn in code (`src/art/`); `utils/RigArt.ts`, `TurretArt.ts`,

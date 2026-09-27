@@ -14,7 +14,7 @@ import {
   type ResearchId,
 } from '@config/buildings.config';
 import { AGE_COUNT } from '@config/ages.config';
-import type { MatchPhase, QueuedUnit, SideModifier } from '@state/types';
+import type { MatchPhase, MechState, QueuedUnit, SideModifier } from '@state/types';
 
 export type { MatchPhase, QueuedUnit, Side } from '@state/types';
 
@@ -58,6 +58,8 @@ export interface SideState {
   research: Record<ResearchId, number>;
   /** Perks picked per building, in order (prototype, owned by BuildingSystem). */
   buildingPerks: Record<BuildingId, PerkChoice[]>;
+  /** The Mech being built or on the lane (owned by MechSystem). */
+  mech: MechState;
 }
 
 export interface MatchState {
@@ -81,6 +83,7 @@ export function createSideState(): SideState {
     buildings: emptyBuildings(),
     research: emptyResearch(),
     buildingPerks: emptyPerks(),
+    mech: { build: null, alive: false },
   };
 }
 

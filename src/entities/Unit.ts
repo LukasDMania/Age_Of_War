@@ -62,6 +62,8 @@ export class Unit extends Phaser.GameObjects.Sprite {
   unitState: UnitState = UnitState.Dead;
   /** Sim time (ms) at which the next attack is allowed. */
   attackReadyAt = 0;
+  /** Sim time at which the `secondaryAttack` (a Mech's other arm) may fire again. */
+  secondaryReadyAt = 0;
   /** Utility units: sim time of the next effect use, and of the next aura pulse. */
   utilityReadyAt = 0;
   auraPulseAt = 0;
@@ -130,7 +132,7 @@ export class Unit extends Phaser.GameObjects.Sprite {
     this.art = HEADLESS_SIM ? null : (unitArtFor(definition.id) ?? null);
     this.anims.stop();
     if (this.art) {
-      ensureRigArt(this.scene, definition.id);
+      ensureRigArt(this.scene, definition.id, side);
       this.setTexture(unitArtKey(definition.id, 'walk', side), this.art.standFrame);
       this.setScale(this.art.scale).setOrigin(flipOriginX(this.art.originX ?? 0.5, side === 'enemy'), this.art.footY);
       this.baseTint = side === 'enemy' ? (this.art.enemyTint ?? null) : null;
@@ -145,6 +147,7 @@ export class Unit extends Phaser.GameObjects.Sprite {
     this.setPosition(x, LANE_Y);
     this.hp = this.getStat('maxHp');
     this.attackReadyAt = 0;
+    this.secondaryReadyAt = 0;
     this.utilityReadyAt = 0;
     this.auraPulseAt = 0;
     this.healLockUntil = 0;
@@ -314,7 +317,7 @@ export class Unit extends Phaser.GameObjects.Sprite {
       case 'range':
         return this.definition.attack?.range ?? 0;
       case 'damageTaken':
-        return 1;
+        return this.definition.armor ?? 1;
     }
   }
 

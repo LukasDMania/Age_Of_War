@@ -64,6 +64,11 @@ Stone age, times the age factor later (about 4, 10, 21 and 46 gold/s).
   card with that number. Shift+click (or Shift+number) buys a building's
   levels up to the end of its stage, Ctrl+click as many as you can afford;
   Shift on research buys every tier the Forge allows.
+- **Workshop** (`B`): design and build your own Mech from five parts (legs,
+  torso, head, left arm, right arm; each arm is its own weapon or tool).
+  `1`-`5` choose a part, `Q`/`E` switch it, `R` builds. One Mech at a time;
+  it is expensive and takes a while to build, and the better parts need a
+  Forge level. The design is kept between matches.
 - **Special** (button on the right, or `S`): a shower of strikes over the
   enemy army (meteors in the Stone age), then a 45 second cooldown.
 - **Age up** (button next to the XP bar, or `A`): spend the XP shown to move
@@ -132,7 +137,8 @@ Stone age, times the age factor later (about 4, 10, 21 and 46 gold/s).
 - `npm run typecheck` and `npm run build` must pass before a phase counts as done.
 - `http://localhost:5173/artlab.html` (dev server) draws the rig art for
   review: `?age=2`, `?kinds=knight,tank`, `?anims=walk,attack`, `?scale=2`,
-  `?bounds` (measured frame boxes), `?turrets`, `?buildings`.
+  `?bounds` (measured frame boxes), `?turrets`, `?buildings`, `?mechs`
+  (Mech designs in every age; `&design=walker,frame,visor,fist,launcher`).
 - `?headless` (dev server) simulates without drawing, for fast automated
   runs; `window.__aowTrain.runMatch(...)` plays a whole match
   (`src/dev/trainHarness.ts`).

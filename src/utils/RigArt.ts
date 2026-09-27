@@ -10,6 +10,7 @@ import {
   type UnitArtAnim,
 } from '@config/unitArt.config';
 import { findUnitDefinition, UNIT_DEFINITIONS } from '@entities/unitDefinitions';
+import { mechUnitArt } from '@utils/MechArt';
 import { SIDES, type Side } from '@state/types';
 import { HEADLESS_SIM } from '@utils/runtimeFlags';
 
@@ -39,11 +40,18 @@ export function ensureRigArtForAge(scene: Phaser.Scene, age: number): void {
   for (const def of UNIT_DEFINITIONS) if (def.age === age) ensureRigArt(scene, def.id);
 }
 
-/** Draws and registers a rig unit's sheets (both sides) if they don't exist yet. */
-export function ensureRigArt(scene: Phaser.Scene, unitId: string): void {
-  const art = UNIT_ART[unitId];
+/**
+ * Draws and registers a rig unit's sheets (both sides) if they don't exist
+ * yet. Mechs too: one set per design and age, and only for the side asked
+ * (a design is big and only the player builds them).
+ */
+export function ensureRigArt(scene: Phaser.Scene, unitId: string, side?: Side): void {
+  const mech = UNIT_ART[unitId] ? undefined : mechUnitArt(unitId);
+  const art = UNIT_ART[unitId] ?? mech;
   if (!art?.rig || HEADLESS_SIM) return;
-  for (const side of SIDES) {
+  const sides: readonly Side[] = mech && side ? [side] : SIDES;
+  if (mech) drawnMechs.add(unitId);
+  for (const side of sides) {
     for (const anim of ANIMS) {
       if (!art[anim]) continue;
       const key = unitArtKey(unitId, anim, side);
@@ -78,21 +86,46 @@ export function releaseRigArtOutside(scene: Phaser.Scene, minAge: number, maxAge
     if (!art?.rig || inUse.has(unitId)) continue;
     const age = findUnitDefinition(unitId)?.age ?? 0;
     if (age >= minAge && age <= maxAge) continue;
-    for (const side of SIDES) {
-      for (const anim of ANIMS) {
-        const key = unitArtKey(unitId, anim, side);
-        if (scene.anims.exists(key)) scene.anims.remove(key);
-        if (scene.textures.exists(key)) scene.textures.remove(key);
-      }
-    }
+    releaseSheets(scene, unitId);
   }
+  releaseMechArt(scene, inUse);
+}
+
+/** Mech designs whose sheets are drawn now. */
+const drawnMechs = new Set<string>();
+
+/** Frees the sheets of every Mech design not listed in `inUse` (whatever its age). */
+export function releaseMechArt(scene: Phaser.Scene, inUse: ReadonlySet<string>): void {
+  for (const unitId of drawnMechs) {
+    if (inUse.has(unitId)) continue;
+    if (releaseSheets(scene, unitId)) drawnMechs.delete(unitId);
+  }
+}
+
+/**
+ * Removes a unit's sheets and animations, unless something on screen still
+ * shows one (a death animation plays on after the unit is gone, in real
+ * time): then nothing is removed now and it returns false (next time).
+ */
+function releaseSheets(scene: Phaser.Scene, unitId: string): boolean {
+  const keys = SIDES.flatMap((side) => ANIMS.map((anim) => unitArtKey(unitId, anim, side)));
+  const shown = new Set<string>();
+  for (const object of scene.children.list) {
+    if (object instanceof Phaser.GameObjects.Sprite && object.visible) shown.add(object.texture.key);
+  }
+  if (keys.some((key) => shown.has(key))) return false;
+  for (const key of keys) {
+    if (scene.anims.exists(key)) scene.anims.remove(key);
+    if (scene.textures.exists(key)) scene.textures.remove(key);
+  }
+  return true;
 }
 
 /** Texture memory the rig sheets currently use, in bytes (debug handle). */
 export function rigArtBytes(scene: Phaser.Scene): number {
   let bytes = 0;
-  for (const [unitId, art] of Object.entries(UNIT_ART)) {
-    if (!art?.rig) continue;
+  const ids = [...Object.entries(UNIT_ART)].filter(([, art]) => art?.rig).map(([unitId]) => unitId);
+  for (const unitId of [...ids, ...drawnMechs]) {
     for (const side of SIDES) {
       for (const anim of ANIMS) {
         const key = unitArtKey(unitId, anim, side);
@@ -137,7 +170,8 @@ function addSheet(scene: Phaser.Scene, key: string, art: UnitArt, anim: UnitArtA
     ctx.clip();
     ctx.translate(fx - box[0] * scale, fy - box[2] * scale);
     ctx.scale(scale, scale);
-    drawRig(ctx, rig.kind, TEAM_COLORS[side], rigAnim, u);
+    if (rig.draw) rig.draw(ctx, TEAM_COLORS[side], rigAnim, u);
+    else drawRig(ctx, rig.kind, TEAM_COLORS[side], rigAnim, u);
     ctx.restore();
   }
   const texture = scene.textures.addCanvas(key, canvas);

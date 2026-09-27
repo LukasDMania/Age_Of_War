@@ -1,4 +1,5 @@
-import type { RigKind } from '@/art/rigDraw';
+import type { RigAnim, RigKind } from '@/art/rigDraw';
+import { MECH_ID_PREFIX } from '@config/mech.config';
 import type { Side } from '@state/types';
 import { RENDER_SCALE } from '@utils/renderScale';
 /**
@@ -61,6 +62,8 @@ export type RigBox = readonly [number, number, number, number];
 /** How a rig unit's sheets are drawn. Sizes are in rig units (see art/rigDraw.ts). */
 export interface RigSpec {
   kind: RigKind;
+  /** Draws a frame instead of `kind` (the player's Mech, drawn from its parts). */
+  draw?: (c: CanvasRenderingContext2D, team: string, anim: RigAnim, u: number) => void;
   /** Box of the stand, walk and attack frames. */
   live: RigBox;
   /** Box of the die frames. */
@@ -100,7 +103,7 @@ export function rigWindupMs(attackRate: number): number {
  * `anchorX` is the rig x that stands on the unit's position (0: the figure's
  * feet; wide machines use their middle so the art sits over the footprint).
  */
-function rigArt(
+export function rigArt(
   kind: RigKind,
   live: RigBox,
   die: RigBox,
@@ -234,7 +237,7 @@ export type UnitArtAnim = 'walk' | 'attack' | 'die';
 /** Texture/animation key of a unit's sheet; rig units have one per side. */
 export function unitArtKey(unitId: string, anim: UnitArtAnim, side?: Side): string {
   const base = `unit-art-${unitId}-${anim}`;
-  return side && UNIT_ART[unitId]?.rig ? `${base}@${side}` : base;
+  return side && (UNIT_ART[unitId]?.rig || unitId.startsWith(MECH_ID_PREFIX)) ? `${base}@${side}` : base;
 }
 
 /** Name of the icon frame added to a unit's walk texture. */

@@ -11,6 +11,7 @@ import type { UnitDefinition } from '@entities/unitDefinitions';
 import type { Side } from '@state/types';
 import { textureKeyFor } from '@utils/PlaceholderArt';
 import { ensureRigArt } from '@utils/RigArt';
+import { mechUnitArt } from '@utils/MechArt';
 
 const ANIMS: readonly UnitArtAnim[] = ['walk', 'attack', 'die'];
 
@@ -66,13 +67,13 @@ export function registerUnitArt(scene: Phaser.Scene): void {
 }
 
 export function unitArtFor(unitId: string): UnitArt | undefined {
-  return UNIT_ART[unitId];
+  return UNIT_ART[unitId] ?? mechUnitArt(unitId);
 }
 
 /** Texture and frame for a unit's icon (buy buttons, training queue); draws rig art if needed. */
 export function unitIcon(scene: Phaser.Scene, definition: UnitDefinition, side: Side): { key: string; frame?: string } {
   if (unitArtFor(definition.id)) {
-    ensureRigArt(scene, definition.id);
+    ensureRigArt(scene, definition.id, side);
     return { key: unitArtKey(definition.id, 'walk', side), frame: UNIT_ART_ICON_FRAME };
   }
   return { key: textureKeyFor(definition.spriteKey, side) };

@@ -5,10 +5,11 @@
  * and their choices are kept per browser (`ui/keymap.ts`). Keys only press
  * the same buttons, so they emit the same `*-requested` events as clicks.
  *
- * Defaults keep the old keys (1-5, Tab, A, S, W, F, P, Esc, B, R, M,
+ * Defaults keep the old keys (1-5, Tab, A, S, W, F, P, Esc, R, M,
  * Enter). Number keys act on the open tab. The camera no longer scrolls
  * with A/D (A also ages up): arrows only. The dev XP cheat moved from X
- * (now the Turrets tab) to H. All PROPOSED.
+ * (now the Turrets tab) to H, and the background from B (now the Workshop
+ * tab, 2026-09-27) to Y. All PROPOSED.
  */
 
 /** A key and the modifiers it needs. `code` is `KeyboardEvent.code` (the key's place, not its letter). */
@@ -24,7 +25,7 @@ export interface KeyCombo {
  * open (it wins over the rest); `always`: the game scene (pause, speed,
  * camera, even while paused); `overlay`: the pause and game-over panel.
  */
-export type KeyContext = 'always' | 'battle' | 'units' | 'turrets' | 'buildings' | 'research' | 'popup' | 'overlay';
+export type KeyContext = 'always' | 'battle' | 'units' | 'turrets' | 'buildings' | 'research' | 'workshop' | 'popup' | 'overlay';
 
 const SLOT_KEYS = ['Digit1', 'Digit2', 'Digit3', 'Digit4', 'Digit5', 'Digit6', 'Digit7', 'Digit8', 'Digit9', 'Digit0'] as const;
 const ARMY_KEYS = ['F1', 'F2', 'F3', 'F4', 'F5', 'F6', 'F7', 'F8'] as const;
@@ -39,12 +40,16 @@ export const KEY_ACTION_IDS = [
   'tab-turrets',
   'tab-buildings',
   'tab-research',
+  'tab-workshop',
   ...SLOT_KEYS.map((_, i) => `slot-${i + 1}` as const),
   'turret-build-1',
   'turret-build-2',
   'turret-build-3',
   'turret-upgrade',
   'turret-sell',
+  'mech-prev',
+  'mech-next',
+  'mech-build',
   'age-up',
   'special',
   'war-cry',
@@ -95,6 +100,7 @@ export const KEY_ACTIONS: readonly KeyAction[] = [
   { id: 'tab-turrets', label: 'Turrets tab', group: 'Tabs', context: 'battle', defaults: [key('KeyX')] },
   { id: 'tab-buildings', label: 'Buildings tab', group: 'Tabs', context: 'battle', defaults: [key('KeyC')] },
   { id: 'tab-research', label: 'Research tab', group: 'Tabs', context: 'battle', defaults: [key('KeyV')] },
+  { id: 'tab-workshop', label: 'Workshop tab (Mech)', group: 'Tabs', context: 'battle', defaults: [key('KeyB')] },
   ...SLOT_KEYS.map(
     (code, i): KeyAction => ({
       id: `slot-${i + 1}`,
@@ -110,6 +116,10 @@ export const KEY_ACTIONS: readonly KeyAction[] = [
   { id: 'turret-build-3', label: 'Build 3rd turret', group: 'Turrets (chosen slot)', context: 'turrets', defaults: [key('KeyR')] },
   { id: 'turret-upgrade', label: 'Upgrade / unlock', group: 'Turrets (chosen slot)', context: 'turrets', defaults: [key('KeyU')] },
   { id: 'turret-sell', label: 'Sell', group: 'Turrets (chosen slot)', context: 'turrets', defaults: [key('Delete'), key('Backspace')] },
+  // Workshop: 1-5 pick the part slot (legs, torso, head, left arm, right arm).
+  { id: 'mech-prev', label: 'Previous part', group: 'Workshop (chosen part)', context: 'workshop', defaults: [key('KeyQ')] },
+  { id: 'mech-next', label: 'Next part', group: 'Workshop (chosen part)', context: 'workshop', defaults: [key('KeyE')] },
+  { id: 'mech-build', label: 'Build the Mech', group: 'Workshop (chosen part)', context: 'workshop', defaults: [key('KeyR')] },
   { id: 'age-up', label: 'Age up', group: 'Abilities', context: 'battle', defaults: [key('KeyA')] },
   { id: 'special', label: 'Special', group: 'Abilities', context: 'battle', defaults: [key('KeyS')] },
   { id: 'war-cry', label: 'War Cry', group: 'Abilities', context: 'battle', defaults: [key('KeyW')] },
@@ -131,7 +141,7 @@ export const KEY_ACTIONS: readonly KeyAction[] = [
   { id: 'choice-3', label: 'Popup choice 3', group: 'Popups', context: 'popup', defaults: [key('Digit9')] },
   { id: 'pause', label: 'Pause / resume', group: 'Game', context: 'always', defaults: [key('KeyP'), key('Escape')] },
   { id: 'speed', label: 'Game speed', group: 'Game', context: 'always', defaults: [key('KeyF')] },
-  { id: 'background', label: 'Next background', group: 'Game', context: 'always', defaults: [key('KeyB')] },
+  { id: 'background', label: 'Next background', group: 'Game', context: 'always', defaults: [key('KeyY')] },
   { id: 'camera-left', label: 'Scroll left', group: 'Game', context: 'always', defaults: [key('ArrowLeft')], held: true },
   { id: 'camera-right', label: 'Scroll right', group: 'Game', context: 'always', defaults: [key('ArrowRight')], held: true },
   { id: 'overlay-resume', label: 'Resume / play again', group: 'Pause and game over', context: 'overlay', defaults: [key('Enter')] },

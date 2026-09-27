@@ -11,12 +11,14 @@
  * there, an entry in `Events`, and an entry in `EventPayloads`.
  */
 import Phaser from 'phaser';
+import type { MechDesign } from '@config/mech.config';
 import type { BuildingId, PerkChoice, ResearchId } from '@config/buildings.config';
 import type { MatchPhase, ModifiableStat, QueuedUnit, Side } from '@state/types';
 
 export const Events = {
   // Requests
   BuyUnitRequested: 'buy-unit-requested',
+  BuildMechRequested: 'build-mech-requested',
   BuySlotRequested: 'buy-slot-requested',
   BuyTurretRequested: 'buy-turret-requested',
   UpgradeTurretRequested: 'upgrade-turret-requested',
@@ -40,6 +42,7 @@ export const Events = {
   XpChanged: 'xp-changed',
   UnitSpawned: 'unit-spawned',
   UnitQueueChanged: 'unit-queue-changed',
+  MechChanged: 'mech-changed',
   UnitDied: 'unit-died',
   UnitDamaged: 'unit-damaged',
   AreaHit: 'area-hit',
@@ -100,6 +103,8 @@ export type QueuedUnitInfo = QueuedUnit;
 
 export interface EventPayloads {
   [Events.BuyUnitRequested]: { side: Side; unitId: string };
+  /** The Mech workshop: build this design (in the side's current age). */
+  [Events.BuildMechRequested]: { side: Side; design: MechDesign };
   [Events.BuySlotRequested]: { side: Side };
   [Events.BuyTurretRequested]: {
     side: Side;
@@ -136,6 +141,8 @@ export interface EventPayloads {
   [Events.XpChanged]: { side: Side; xp: number; xpToNext: number | null };
   [Events.UnitSpawned]: { side: Side; unitId: string; instanceId: number };
   [Events.UnitQueueChanged]: { side: Side; queue: readonly QueuedUnitInfo[] };
+  /** A side's Mech: building (every frame while it builds), spawned, or fallen. */
+  [Events.MechChanged]: { side: Side; alive: boolean; build: { unitId: string; remainingMs: number; totalMs: number } | null };
   /** `side` is the side of the unit that died; `killerSide` scored it. */
   [Events.UnitDied]: {
     side: Side;

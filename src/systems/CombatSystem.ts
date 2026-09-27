@@ -24,6 +24,11 @@ import { emit, Events } from '@utils/EventBus';
  * also hurts every other enemy unit that close to the hit, and the enemy
  * base when the splash reaches its body.
  *
+ * A unit with a `secondaryAttack` (a Mech's other arm) also fires that at
+ * whatever is in its reach, on its own cooldown, walking or not; only the
+ * main attack makes it stop. `baseDamageMult` multiplies melee blows on a
+ * base (the siege drill).
+ *
  * Damage goes through `damageOps`; deaths are reported by `CasualtySystem`,
  * and gold/XP rewards come from `unit-died` (EconomySystem).
  *
@@ -45,6 +50,7 @@ export class CombatSystem {
   update(nowMs: number): void {
     for (const unit of this.units.activeUnits) {
       if (!unit.isAlive) continue;
+      this.fireSecondary(unit, nowMs);
 
       const attack = unit.attack;
       if (!attack) {
@@ -119,8 +125,31 @@ export class CombatSystem {
         dealSplashDamage(this.units.activeUnits, targetUnit.x, attack.splashRadius, damage, unit.side, targetUnit, base);
       }
     } else if (targetBase) {
-      dealBaseDamage(targetBase, damage);
+      dealBaseDamage(targetBase, damage * (attack.baseDamageMult ?? 1));
     }
+  }
+
+  /** The second weapon: at anything in its reach, on its own cooldown, without stopping or winding up. */
+  private fireSecondary(unit: Unit, nowMs: number): void {
+    const attack = unit.definition.secondaryAttack;
+    if (!attack || nowMs < unit.secondaryReadyAt) return;
+    const range = attack.range * unit.statMultiplier('range');
+    const targetUnit = this.nearestEnemyInReach(unit, range);
+    const targetBase = targetUnit ? null : this.enemyBaseInReach(unit, range);
+    if (!targetUnit && !targetBase) return;
+    unit.secondaryReadyAt = nowMs + Math.max(1, attack.cooldownMs * unit.statMultiplier('attackCooldown'));
+    const damage = attack.damage * unit.statMultiplier('damage');
+    emit(Events.UnitStruck, {
+      side: unit.side,
+      instanceId: unit.instanceId,
+      unitId: unit.definition.id,
+      slot: unit.definition.slot,
+      x: unit.x,
+      frontX: unit.x + laneDir(unit.side) * unit.halfWidth,
+      ranged: attack.projectileKey !== undefined,
+    });
+    if (attack.projectileKey) this.shoot(unit, attack, attack.projectileKey, damage);
+    else this.strike(unit, attack, damage, targetUnit, targetBase);
   }
 
   /**

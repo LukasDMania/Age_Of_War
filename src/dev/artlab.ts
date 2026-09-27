@@ -49,7 +49,7 @@ kinds.forEach((kind, row) => {
     }
   }
 });
-if (!params.has('turrets') && !params.has('buildings')) (window as unknown as { __labReady: boolean }).__labReady = true;
+if (!params.has('turrets') && !params.has('buildings') && !params.has('mechs')) (window as unknown as { __labReady: boolean }).__labReady = true;
 
 /** `?bounds`: the drawn extent of each kind over all frames, in rig units. */
 if (params.has('bounds')) {
@@ -169,3 +169,101 @@ if (params.has('buildings')) {
     (window as unknown as { __labReady: boolean }).__labReady = true;
   });
 }
+
+/**
+ * `?mechs`: the player's Mech (the Mech workshop). By default six designs
+ * that between them use every part, standing, one row per age. With
+ * `&design=legs,torso,head,left,right` one design's frames per age
+ * (`&anims=walk,attack,die`). With `&bounds` the drawn extent over those
+ * designs and all their frames, in rig units (`window.__mechBounds`).
+ */
+if (params.has('mechs')) {
+  void import('@/art/mechDraw').then(({ drawMechDesign }) => {
+    type Design = { legs: 'walker' | 'treads' | 'stompers'; torso: 'frame' | 'hull' | 'reactor'; head: 'visor' | 'crest' | 'beacon'; left: 'fist' | 'blade' | 'launcher' | 'shield' | 'drill'; right: 'fist' | 'blade' | 'launcher' | 'shield' | 'drill' };
+    const showcase: Design[] = [
+      { legs: 'walker', torso: 'frame', head: 'visor', left: 'fist', right: 'launcher' },
+      { legs: 'treads', torso: 'hull', head: 'crest', left: 'shield', right: 'blade' },
+      { legs: 'stompers', torso: 'reactor', head: 'beacon', left: 'drill', right: 'fist' },
+      { legs: 'walker', torso: 'hull', head: 'visor', left: 'launcher', right: 'launcher' },
+      { legs: 'treads', torso: 'reactor', head: 'crest', left: 'blade', right: 'blade' },
+      { legs: 'stompers', torso: 'frame', head: 'beacon', left: 'shield', right: 'drill' },
+    ];
+    const one = params.get('design');
+    const designs: Design[] = one
+      ? [Object.fromEntries(['legs', 'torso', 'head', 'left', 'right'].map((k, i) => [k, one.split(',')[i]])) as Design]
+      : showcase;
+    const ms = Number(params.get('scale') ?? 1.6);
+    const cw = 110 * ms;
+    const ch = 124 * ms;
+    const frames: { anim: RigAnim; u: number }[] = one
+      ? anims.flatMap((anim) => Array.from({ length: Math.ceil(FRAMES[anim] / step) }, (_, i) => ({ anim, u: FRAMES[anim] === 1 ? 0 : (i * step) / FRAMES[anim] })))
+      : [{ anim: 'stand' as RigAnim, u: 0 }];
+    const columns = one ? frames.length : designs.length;
+    canvas.width = Math.min(8000, cw * columns + 10);
+    canvas.height = ch * 5 + 10;
+    const g = canvas.getContext('2d')!;
+    for (let age = 0; age < 5; age++) {
+      for (let col = 0; col < columns; col++) {
+        const design = one ? designs[0]! : designs[col]!;
+        const frame = one ? frames[col]! : frames[0]!;
+        const x = 5 + col * cw;
+        const y = 5 + age * ch;
+        g.fillStyle = (age + col) % 2 ? '#3a4150' : '#353b48';
+        g.fillRect(x, y, cw, ch);
+        g.save();
+        g.beginPath();
+        g.rect(x, y, cw, ch);
+        g.clip();
+        g.translate(x + cw * 0.38, y + ch - 8 * ms);
+        g.scale(ms, ms);
+        drawMechDesign(g, { ...design, age }, team, frame.anim, frame.u);
+        g.restore();
+        g.fillStyle = '#9aa';
+        g.fillText(one ? `age ${age} ${frame.anim}` : `age ${age}: ${design.legs} ${design.torso} ${design.head} ${design.left}/${design.right}`, x + 3, y + 11);
+      }
+    }
+    if (params.has('bounds')) {
+      const S = 3;
+      const W = 160 * S;
+      const H = 150 * S;
+      const off = document.createElement('canvas');
+      off.width = W;
+      off.height = H;
+      const o = off.getContext('2d', { willReadFrequently: true })!;
+      const measure = (list: RigAnim[]): number[] => {
+        const b = [Infinity, -Infinity, Infinity, -Infinity];
+        for (let age = 0; age < 5; age++) {
+          for (const design of showcase) {
+            for (const anim of list) {
+              for (let i = 0; i < FRAMES[anim]; i++) {
+                o.clearRect(0, 0, W, H);
+                o.save();
+                o.translate(W * 0.4, H * 0.85);
+                o.scale(S, S);
+                drawMechDesign(o, { ...design, age }, team, anim, FRAMES[anim] === 1 ? 0 : i / FRAMES[anim]);
+                o.restore();
+                const data = o.getImageData(0, 0, W, H).data;
+                for (let yy = 0; yy < H; yy++) {
+                  for (let xx = 0; xx < W; xx++) {
+                    if (data[(yy * W + xx) * 4 + 3]! > 24) {
+                      const rx = (xx - W * 0.4) / S;
+                      const ry = (yy - H * 0.85) / S;
+                      b[0] = Math.min(b[0]!, rx);
+                      b[1] = Math.max(b[1]!, rx);
+                      b[2] = Math.min(b[2]!, ry);
+                      b[3] = Math.max(b[3]!, ry);
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+        return [Math.floor(b[0]!), Math.ceil(b[1]!), Math.floor(b[2]!), Math.ceil(b[3]!)];
+      };
+      (window as unknown as { __mechBounds: unknown }).__mechBounds = { live: measure(['stand', 'walk', 'attack']), die: measure(['die']) };
+    }
+    (window as unknown as { __labReady: boolean }).__labReady = true;
+  });
+}
+
