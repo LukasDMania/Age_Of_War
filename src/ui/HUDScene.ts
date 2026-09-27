@@ -1,7 +1,7 @@
 import Phaser from 'phaser';
 import { getAge } from '@config/ages.config';
 import type { AiDifficultyName } from '@config/ai.config';
-import { AGE_BANNER_MS, baseMaxHp, GAME_HEIGHT, GAME_SPEEDS, GAME_WIDTH, SCENE_KEYS } from '@config/constants';
+import { AGE_BANNER_MS, AGE_CATCH_UP, baseMaxHp, GAME_HEIGHT, GAME_SPEEDS, GAME_WIDTH, SCENE_KEYS } from '@config/constants';
 import { xpToNextAge } from '@state/economyOps';
 import type { MatchState } from '@state/GameState';
 import type { Side } from '@state/types';
@@ -27,6 +27,7 @@ import { TurretPanel } from '@ui/TurretPanel';
 import { UiButton } from '@ui/UiButton';
 import { UnitBuyPanel } from '@ui/UnitBuyPanel';
 import { emit, Events, on } from '@utils/EventBus';
+import { ageGap } from '@systems/ageCatchUp';
 
 /** Data handed over by `GameScene` when it launches the HUD. */
 export interface HudSceneData {
@@ -109,6 +110,8 @@ export class HUDScene extends Phaser.Scene {
   private enemyAgeText!: Phaser.GameObjects.Text;
   /** Who plays the enemy (difficulty, profile), right of the enemy's age. */
   private enemyControllerText!: Phaser.GameObjects.Text;
+  /** Catch-up notices (switch `ageCatchUp`) under the two top panels. */
+  private catchUpTexts!: Record<Side, Phaser.GameObjects.Text>;
   private enemyController: AiDifficultyName | 'off' = 'off';
   private goldText!: Phaser.GameObjects.Text;
   private incomeText!: Phaser.GameObjects.Text;
@@ -155,6 +158,7 @@ export class HUDScene extends Phaser.Scene {
     // The HUD wears the player's age (palette, pattern, trim).
     applyUiTheme(own.age);
     this.baseBars = { player: this.buildTopLeft(), enemy: this.buildTopRight() };
+    this.buildCatchUpNotices();
     this.ageUpButton = new AgeUpButton(
       this,
       HUD_SIDE,
@@ -270,6 +274,7 @@ export class HUDScene extends Phaser.Scene {
         this.showBaseHp(side, this.state[side].baseHp, baseMaxHp(age));
         if (side !== HUD_SIDE) {
           this.showEnemyAge(age);
+          this.showCatchUp();
           this.announceEnemyAge(age);
           return;
         }
@@ -509,6 +514,34 @@ export class HUDScene extends Phaser.Scene {
 
   private showAge(age: number): void {
     this.ageText.setText(`${getAge(age).name} Age`);
+  }
+
+  /** Small ribbons under the top panels while a side is behind in age (catch-up rules). */
+  private buildCatchUpNotices(): void {
+    const style = (color: string): Phaser.Types.GameObjects.Text.TextStyle => ({
+      fontFamily: UI_FONT,
+      fontSize: '13px',
+      fontStyle: '600',
+      color,
+      stroke: UiTextColors.stroke,
+      strokeThickness: 3,
+    });
+    this.catchUpTexts = {
+      player: this.add.text(MARGIN + 12, 12 + TOP_LEFT_HEIGHT + 8, '', style('#ffd27a')),
+      enemy: this.add.text(GAME_WIDTH - MARGIN - 12, 12 + 74 + 8, '', style(UiTextColors.dim)).setOrigin(1, 0),
+    };
+    this.showCatchUp();
+  }
+
+  private showCatchUp(): void {
+    const player = ageGap(this.state, 'player');
+    const enemy = ageGap(this.state, 'enemy');
+    this.catchUpTexts.player.setText(
+      player > 0
+        ? `Behind in age: +${Math.round(AGE_CATCH_UP.killXpPerAge * player * 100)}% kill XP, turrets +${Math.round(AGE_CATCH_UP.turretDamagePerAge * player * 100)}%`
+        : '',
+    );
+    this.catchUpTexts.enemy.setText(enemy > 0 ? 'Behind in age: catching up' : '');
   }
 
   private showEnemyAge(age: number): void {

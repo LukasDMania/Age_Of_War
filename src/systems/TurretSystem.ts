@@ -1,6 +1,6 @@
 import Phaser from 'phaser';
 import { getAge } from '@config/ages.config';
-import { MAX_TURRET_SLOTS } from '@config/constants';
+import { AGE_CATCH_UP, MAX_TURRET_SLOTS } from '@config/constants';
 import type { Base } from '@entities/Base';
 import type { ProjectileFactory } from '@entities/ProjectileFactory';
 import { Turret } from '@entities/Turret';
@@ -15,6 +15,7 @@ import type { UnitFactory } from '@entities/UnitFactory';
 import { addGold, trySpendGold } from '@state/economyOps';
 import type { MatchState } from '@state/GameState';
 import { laneDir, otherSide, SIDES, type Side } from '@state/types';
+import { ageGap } from '@systems/ageCatchUp';
 import { dealSplashDamage, dealUnitDamage } from '@systems/damageOps';
 import { emit, Events, on, type EventPayloads } from '@utils/EventBus';
 
@@ -246,7 +247,8 @@ export class TurretSystem {
 
   private fire(turret: Turret, target: Unit): void {
     const definition = turret.definition;
-    const damage = turret.getStat('damage');
+    // Catch-up: a side behind in age defends harder (AGE_CATCH_UP).
+    const damage = turret.getStat('damage') * (1 + AGE_CATCH_UP.turretDamagePerAge * ageGap(this.state, turret.side));
     const splash = definition.splashRadius ?? 0;
     turret.playFire();
     emit(Events.TurretFired, {

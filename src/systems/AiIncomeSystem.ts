@@ -1,8 +1,9 @@
-import { AI_INCOME, openingIncomeMult, type AiDifficulty } from '@config/ai.config';
+import { AI_CATCH_UP_MS, AI_INCOME, openingIncomeMult, type AiDifficulty } from '@config/ai.config';
 import { getAge } from '@config/ages.config';
 import { addGold, addXp } from '@state/economyOps';
 import type { MatchState } from '@state/GameState';
 import type { Side } from '@state/types';
+import { ageGap } from '@systems/ageCatchUp';
 
 /**
  * The AI's own income (Phase 15, owner's "option C"): an AI-played side earns
@@ -40,6 +41,12 @@ export class AiIncomeSystem {
     const factor = this.factor(nowMs);
     this.goldCarry += (AI_INCOME.goldPerSec * factor * deltaMs) / 1000;
     this.xpCarry += (AI_INCOME.xpPerSec * factor * deltaMs) / 1000;
+    // Catch-up: behind in age, it earns enough XP of its own to reach its
+    // next age within AI_CATCH_UP_MS.
+    const xpToNext = getAge(this.state[this.side].age).xpToNext;
+    if (xpToNext !== null && ageGap(this.state, this.side) > 0) {
+      this.xpCarry += (xpToNext * deltaMs) / AI_CATCH_UP_MS[this.difficulty.name];
+    }
     const gold = Math.floor(this.goldCarry);
     if (gold > 0) {
       this.goldCarry -= gold;

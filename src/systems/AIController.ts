@@ -27,6 +27,7 @@ import type { UnitFactory } from '@entities/UnitFactory';
 import { getUnitDefinition } from '@entities/unitDefinitions';
 import type { MatchState, SideState } from '@state/GameState';
 import type { Side } from '@state/types';
+import { ageGap } from '@systems/ageCatchUp';
 import { buildingRejection, researchPrice, researchRejection } from '@systems/BuildingSystem';
 import { emit, Events } from '@utils/EventBus';
 
@@ -191,7 +192,8 @@ export class AIController {
       return;
     }
     if (this.ageUpReadySince === null) this.ageUpReadySince = nowMs;
-    if (nowMs - this.ageUpReadySince >= this.difficulty.ageUpDelayMs) {
+    // Behind in age (catch-up): no waiting.
+    if (ageGap(this.state, this.side) > 0 || nowMs - this.ageUpReadySince >= this.difficulty.ageUpDelayMs) {
       emit(Events.AgeUpRequested, { side: this.side });
       this.ageUpReadySince = null;
     }

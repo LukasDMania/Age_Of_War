@@ -132,6 +132,18 @@ export function openingArmyCap(opening: AiOpening, nowMs: number, threatened: bo
  */
 export const AI_UNIT_MIX: Readonly<Record<1 | 2 | 3, number>> = { 1: 1, 2: 0.65, 3: 0.33 };
 
+/**
+ * Catch-up (switch `ageCatchUp`, 2026-09-27): while an AI-played side is
+ * behind the other side in age, it earns extra XP of its own so that it
+ * reaches its next age within about this long (easy / normal / hard), and it
+ * ages up as soon as it can. PROPOSED.
+ */
+export const AI_CATCH_UP_MS: Readonly<Record<AiDifficultyName, number>> = {
+  easy: 150_000,
+  normal: 100_000,
+  hard: 70_000,
+};
+
 export const AI_INCOME = {
   goldPerSec: 2,
   // Was 0.5 (Phase 15 first pass): AIs reached the Future age in ~8 min.

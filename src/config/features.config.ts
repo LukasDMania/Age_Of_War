@@ -17,7 +17,8 @@ export type FeatureId =
   | 'ageDoctrines'
   | 'warCry'
   | 'conquest'
-  | 'moneyUnitRework';
+  | 'moneyUnitRework'
+  | 'ageCatchUp';
 
 export interface FeatureInfo {
   label: string;
@@ -54,6 +55,11 @@ export const FEATURES_INFO: Readonly<Record<FeatureId, FeatureInfo>> = {
   moneyUnitRework: {
     label: 'Money units: growing income, loot',
     about: 'Money units earn more the longer they live (50% up to 200%), loot extra gold from nearby kills, and pay the enemy less when killed.',
+    default: true,
+  },
+  ageCatchUp: {
+    label: 'Age catch-up',
+    about: 'The side behind in age gets +50% kill XP and +35% turret damage per age behind; a lagging AI follows within about 1-2 minutes.',
     default: true,
   },
   conquest: {

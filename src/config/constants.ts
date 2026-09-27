@@ -256,3 +256,14 @@ export const TURRET_DAMAGE_MULT = 0.7;
  * blows and plain shots still hit bases in full.
  */
 export const AREA_SHOT_BASE_DAMAGE_MULT = 0;
+
+/**
+ * Catch-up for the side that is behind in age (owner, 2026-09-27: "I often
+ * go ahead in age before the enemy, then it's basically over for them").
+ * PROPOSED, switch `ageCatchUp`. Per age behind the other side:
+ * - `killXpPerAge`: XP from kills +this share (both sides);
+ * - `turretDamagePerAge`: turret damage +this share (both sides), so the
+ *   base can hold while the side catches up.
+ * The AI part (its catch-up XP, no age-up delay) is in `ai.config.ts`.
+ */
+export const AGE_CATCH_UP = { killXpPerAge: 0.5, turretDamagePerAge: 0.35 } as const;

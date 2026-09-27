@@ -1,6 +1,7 @@
 import { researchMult } from '@config/buildings.config';
 import { buildingEffects } from '@systems/BuildingSystem';
 import {
+  AGE_CATCH_UP,
   ECONOMY_KILL_BOUNTY_MULT,
   ECONOMY_PENALTY_FLOOR,
   KILL_GOLD_MULT,
@@ -13,6 +14,7 @@ import { getUnitDefinition } from '@entities/unitDefinitions';
 import { addGold, addXp } from '@state/economyOps';
 import type { MatchState } from '@state/GameState';
 import { SIDES, type Side } from '@state/types';
+import { ageGap } from '@systems/ageCatchUp';
 import { clearSideModifier, setSideModifier } from '@systems/statusOps';
 import { emit, Events, on, type EventPayloads } from '@utils/EventBus';
 
@@ -159,7 +161,9 @@ export class EconomySystem {
     const loot = this.rework ? 1 + this.lootBonus(killerSide, x) : 1;
     this.bornAt.delete(instanceId);
     addGold(this.state, killerSide, definition.killGold * bounty * plunder * perks * loot * KILL_GOLD_MULT, 'kill');
-    addXp(this.state, killerSide, definition.killXp * KILL_XP_MULT);
+    // Catch-up: a side behind in age learns faster from its kills.
+    const catchUp = 1 + AGE_CATCH_UP.killXpPerAge * ageGap(this.state, killerSide);
+    addXp(this.state, killerSide, definition.killXp * KILL_XP_MULT * catchUp);
     if (definition.income) this.recompute(side);
   }
 
