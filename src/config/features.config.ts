@@ -16,7 +16,8 @@ export type FeatureId =
   | 'veterancy'
   | 'ageDoctrines'
   | 'warCry'
-  | 'conquest';
+  | 'conquest'
+  | 'moneyUnitRework';
 
 export interface FeatureInfo {
   label: string;
@@ -48,6 +49,11 @@ export const FEATURES_INFO: Readonly<Record<FeatureId, FeatureInfo>> = {
   warCry: {
     label: 'War Cry',
     about: 'A second, free cooldown ability (W): your army charges with extra speed and damage for a few seconds.',
+    default: true,
+  },
+  moneyUnitRework: {
+    label: 'Money units: growing income, loot',
+    about: 'Money units earn more the longer they live (50% up to 200%), loot extra gold from nearby kills, and pay the enemy less when killed.',
     default: true,
   },
   conquest: {

@@ -118,9 +118,32 @@ export const ECONOMY_PENALTY_FLOOR = 0.5;
 /**
  * Multiplier on the kill gold for killing a money unit, so the enemy is
  * tempted to hunt them. 1 = no bonus (their kill gold is already 1.2x their
- * high price). PROPOSED.
+ * high price). PROPOSED. With the money-unit rework switched on
+ * (`features.config` `moneyUnitRework`) `MONEY_UNIT_REWORK.bountyMult` is
+ * used instead.
  */
 export const ECONOMY_KILL_BOUNTY_MULT = 1;
+
+/**
+ * Money-unit rework (owner, 2026-09-27: "money units rarely are valuable?
+ * make them more useful but not always easy money"). PROPOSED, switchable.
+ *
+ * - `ramp`: a money unit's income starts at `startMult` x its
+ *   `goldPerSecond` and grows evenly to `maxMult` x after `fullAtMs` alive.
+ *   A trader that dies early earns little; one kept alive a minute pays
+ *   back its price and then earns double.
+ * - `loot`: an enemy that dies within `radius` px of a living friendly money
+ *   unit pays `bonusPerUnit` more kill gold per such money unit (at most
+ *   `maxBonus`): they haggle over the spoils, so they are worth keeping
+ *   close behind a strong line.
+ * - `bountyMult`: the enemy's reward for killing one (was 1: their kill
+ *   gold is 1.2x their price, a double loss).
+ */
+export const MONEY_UNIT_REWORK = {
+  ramp: { startMult: 0.5, maxMult: 2, fullAtMs: 60_000 },
+  loot: { radius: 170, bonusPerUnit: 0.35, maxBonus: 1 },
+  bountyMult: 0.5,
+} as const;
 
 /**
  * Utility auras (Phase 10): how often slow and buff auras refresh their

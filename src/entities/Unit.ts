@@ -88,6 +88,11 @@ export class Unit extends Phaser.GameObjects.Sprite {
   /** Veterancy (prototype): kills credited to this unit and its rank (0 = recruit). */
   kills = 0;
   rank = 0;
+  /**
+   * Money units with the rework on (EconomySystem): how far their income has
+   * grown, 0..1, shown as a gold bar under the HP bar; -1 hides it.
+   */
+  incomeRamp = -1;
   /** Footprint on the lane: the placeholder's size, whatever art is shown. */
   bodyWidth = 0;
   bodyHeight = 0;
@@ -150,6 +155,7 @@ export class Unit extends Phaser.GameObjects.Sprite {
     this.killerSide = null;
     this.kills = 0;
     this.rank = 0;
+    this.incomeRamp = -1;
     this.flashUntil = 0;
     this.restoreTint();
     this.unitState = UnitState.Idle;
@@ -317,18 +323,27 @@ export class Unit extends Phaser.GameObjects.Sprite {
     this.hpBarDirty = true;
   }
 
+  /** Money units (rework): their income growth, 0..1; redraws the bar when it visibly changes. */
+  setIncomeRamp(ramp: number): void {
+    if (Math.abs(ramp - this.incomeRamp) < 0.02 && !(ramp >= 1 && this.incomeRamp < 1)) return;
+    this.incomeRamp = ramp;
+    this.hpBarDirty = true;
+  }
+
   /**
    * Keeps the HP bar over the unit. It shows once the unit is hurt or has a
    * shield; the shield is a thin cyan bar just above the HP bar, scaled
-   * against max HP.
+   * against max HP. Money units (rework) always show it, with a gold income
+   * bar underneath.
    */
   private syncBar(): void {
     const maxHp = this.getStat('maxHp');
     const hurt = this.hp < maxHp;
     const shielded = this.shield > 0;
     const ranked = this.rank > 0;
-    this.hpBar.setVisible(this.active && (hurt || shielded || ranked));
-    if (!hurt && !shielded && !ranked) return;
+    const earning = this.incomeRamp >= 0;
+    this.hpBar.setVisible(this.active && (hurt || shielded || ranked || earning));
+    if (!hurt && !shielded && !ranked && !earning) return;
 
     const width = Math.max(MIN_BAR_WIDTH, this.bodyWidth);
     this.hpBar.setPosition(this.x, this.topY - BAR_GAP_ABOVE_HEAD);
@@ -347,6 +362,13 @@ export class Unit extends Phaser.GameObjects.Sprite {
         this.hpBar.fillStyle(0x000000, 0.7).fillTriangle(cx - 4, -5, cx, -10, cx + 4, -5);
         this.hpBar.fillStyle(0xf2c744, 1).fillTriangle(cx - 3, -5.5, cx, -9, cx + 3, -5.5);
       }
+    }
+    if (earning) {
+      // Income growth: a thin gold bar under the HP bar, bright when full.
+      this.hpBar.fillStyle(0x000000, 0.65);
+      this.hpBar.fillRect(-width / 2, BAR_HEIGHT, width, 3);
+      this.hpBar.fillStyle(this.incomeRamp >= 1 ? 0xffe27a : 0xc9a13a, 1);
+      this.hpBar.fillRect(-width / 2, BAR_HEIGHT, width * this.incomeRamp, 3);
     }
     if (shielded) {
       const shieldRatio = Phaser.Math.Clamp(this.shield / maxHp, 0, 1);
