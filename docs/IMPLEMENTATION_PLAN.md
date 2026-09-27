@@ -1504,3 +1504,46 @@ decisions made, anything the owner needs to confirm.
     lopsided. Side effect: whatever multiplies the AI's income (the War
     economy mutator, the Sunstone relic's drawback, ascension's +10% a
     level) now multiplies a much smaller number, so those matter less.
+- 2026-09-27 (night): the owner's first full Conquest run (ascension 0,
+  cleared; logs 18:56-19:39) and one skirmish on hard (Balanced, lost).
+  Owner: "in general it was good"; asked about the strategies that won, a
+  Stone-age first unit in later ages, the hard skirmish, and a stalemate
+  with "infinite gold".
+  - Bug fixed: in later-age Conquest battles the AI's first unit was a
+    Stone-age one (8 of 15 later-age battles in the logs). On the first tick
+    the AI decided before ConquestSystem applied the battle's age, so it
+    spent its starting gold in the Stone age. ConquestSystem now has its own
+    field in GameScene and ticks before the AIs. Checked (hard AI, ages 1-4,
+    five profiles, first 20 s): 16 of 20 battles spawned a wrong-age unit
+    before, 0 of 20 after.
+  - The run (analysis, nothing changed): 15 won, 3 lost (the first tries at
+    the Iron Admiral, General Kessler and the Overmind; each won on the
+    retry). The player's head start grew every chapter: starting gold 1.1-2.6x
+    the AI's in chapter 1, 2.8x in chapter 2, up to 5x in chapters 3-5
+    (Treasury and the other +gold effects scale with the age factor); five
+    turrets from chapter 3 (Masons, Watchtower, Siege works) against none;
+    income 3-6x the AI's from chapter 3 (camp and relic Mine levels, Market).
+    Regular battles got shorter (197-634 s in chapters 1-2, 73-80 s in 4-5);
+    four wins took 141 s or less (the Overmind retry 45 s), by spending the
+    starting gold on an army at once.
+  - Stalemate (Kessler retry, 800 s, won on base HP 147 to 0): gold was not
+    the limit (the player held 5-34k for the last five minutes); both sides
+    trained as fast as they could. The AI stayed in it on kill gold (58.9k,
+    42% of its income, from the player's losses) and its Market (46.8k: in
+    an age-locked battle all XP is surplus). The fight sat in front of the
+    AI's gate for about six minutes (lane control 0.70 during the siege; 0 =
+    player's base, 1 = AI's), but the AI's base took no unit damage apart
+    from one breakthrough: attackers hit defenders in the gate before the
+    base, and the AI kept spawning into its gate. Same in the first Iron
+    Admiral try: the player's army stood at the AI's gate for 75 s (540-615)
+    and the AI's base lost only what the siege guns took; the player held
+    more of the lane (0.59) and lost to one AI push (621 base HP in 15 s).
+  - Hard skirmish (703 s, lost): the player reached every age first and the
+    AI followed within 4-14 s; the AI's own income (12.4k) was more than
+    everything the player earned (11.5k); it ended with an AI push and its
+    special while the player spent on Forge and research after the Modern
+    age-up. Owner: hard but not impossible; left as is.
+  - Open for the owner: the run's snowball and t=0 all-ins; how a stalemate
+    should end (siege guns for the side holding the lane, a gold sink for
+    faster training, the Market in age-locked battles).
+

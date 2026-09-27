@@ -162,6 +162,12 @@ export class GameScene extends Phaser.Scene {
    * here, ticked after the core systems, torn down with the match.
    */
   private experiments: { update?(nowMs: number): void; destroy(): void }[] = [];
+  /**
+   * A Conquest battle's setup and siege (prototype). Ticked before the AIs,
+   * so the battle's age and starting gold are in place before the AI's
+   * first purchase (it used to buy a Stone-age unit on the first tick).
+   */
+  private conquest: ConquestSystem | null = null;
   /** The AI's own income, one per AI-played side (Phase 15). */
   private aiIncome: AiIncomeSystem[] = [];
   /** Dev builds, human player only: records the match to playtest-logs/. */
@@ -338,7 +344,8 @@ export class GameScene extends Phaser.Scene {
   }
 
   /**
-   * One simulation step. Order matters: the AI decides first (its requests
+   * One simulation step. Order matters: a Conquest battle's setup first,
+   * then the AI decides (its requests
    * are handled at once, like the player's clicks), then spawning, expiring
    * modifiers, then
    * every damage source (units, turrets, special strikes, utility effects,
@@ -349,6 +356,7 @@ export class GameScene extends Phaser.Scene {
   private tick(dt: number): void {
     this.match.update(dt);
     const now = this.match.elapsedMs;
+    this.conquest?.update(now);
     this.ai?.update(now);
     this.playerAi?.update(now);
     this.spawn.update(dt);
@@ -391,7 +399,9 @@ export class GameScene extends Phaser.Scene {
     if (this.aiSetting !== 'off') aiSides.push('enemy');
     if (this.playerAiSetting) aiSides.push('player');
     if (feature('veterancy')) this.experiments.push(new VeterancySystem(this.units));
-    if (this.sceneData.conquest) this.experiments.push(new ConquestSystem(this.state, this.units, this.bases, this.sceneData.conquest.effects));
+    this.conquest = this.sceneData.conquest
+      ? new ConquestSystem(this.state, this.units, this.bases, this.sceneData.conquest.effects)
+      : null;
     if (feature('ageDoctrines')) {
       this.experiments.push(new DoctrineSystem(this.state, this.units, () => this.match.elapsedMs));
       for (const side of aiSides) this.experiments.push(new DoctrineAi(side, this.units));
@@ -736,6 +746,8 @@ export class GameScene extends Phaser.Scene {
     this.buildingSystem.destroy();
     for (const experiment of this.experiments) experiment.destroy();
     this.experiments = [];
+    this.conquest?.destroy();
+    this.conquest = null;
     this.logger?.finish('quit');
     this.logger?.destroy();
     this.logger = null;
