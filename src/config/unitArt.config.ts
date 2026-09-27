@@ -97,8 +97,18 @@ export function rigWindupMs(attackRate: number): number {
  * (`rigWindupMs`). Die strip: 8 frames, played once where it fell. `live`
  * and `die` are the measured drawn extents (see `/artlab.html?bounds`).
  * `attackRate` 0 means the unit never attacks (money units): no attack strip.
+ * `anchorX` is the rig x that stands on the unit's position (0: the figure's
+ * feet; wide machines use their middle so the art sits over the footprint).
  */
-function rigArt(kind: RigKind, live: RigBox, die: RigBox, pxPerUnit: number, attackRate: number, iconBox?: RigBox): UnitArt {
+function rigArt(
+  kind: RigKind,
+  live: RigBox,
+  die: RigBox,
+  pxPerUnit: number,
+  attackRate: number,
+  iconBox?: RigBox,
+  anchorX = 0,
+): UnitArt {
   const k = pxPerUnit * RIG_SUPERSAMPLE;
   const pad = (b: RigBox): RigBox => [b[0] - RIG_BOX_PAD, b[1] + RIG_BOX_PAD, b[2] - RIG_BOX_PAD, b[3] + RIG_BOX_PAD];
   const L = pad(live);
@@ -111,7 +121,7 @@ function rigArt(kind: RigKind, live: RigBox, die: RigBox, pxPerUnit: number, att
     frameWidth,
     frameHeight,
     footY: -L[2] / (L[3] - L[2]),
-    originX: -L[0] / (L[1] - L[0]),
+    originX: (anchorX - L[0]) / (L[1] - L[0]),
     scale: 1 / RIG_SUPERSAMPLE,
     walk: { file: '', frames: RIG_WALK_FRAMES + 1, start: 1, end: RIG_WALK_FRAMES, frameRate: 14, repeat: -1 },
     ...(attackRate > 0 ? { attack: { file: '', frames: RIG_ATTACK_FRAMES, frameRate: attackRate, repeat: 0 } } : {}),
@@ -119,7 +129,7 @@ function rigArt(kind: RigKind, live: RigBox, die: RigBox, pxPerUnit: number, att
     dieBox: {
       frameWidth: Math.round((D[1] - D[0]) * k),
       frameHeight: Math.round((D[3] - D[2]) * k),
-      originX: -D[0] / (D[1] - D[0]),
+      originX: (anchorX - D[0]) / (D[1] - D[0]),
       originY: -D[2] / (D[3] - D[2]),
     },
     standFrame: 0,
@@ -180,7 +190,8 @@ export const UNIT_ART: Readonly<Partial<Record<string, UnitArt>>> = {
   'castle-archer': rigArt('archer', [-17, 35, -56, 3], [-51, 13, -55, 6], 1.4, rate('castle-archer')),
   'castle-knight': rigArt('knight', [-38, 60, -90, 6], [-55, 41, -92, 9], 1.1, rate('castle-knight'), [-34, 38, -90, 6]),
   'castle-merchant': rigArt('merchant', [-17, 22, -58, 3], [-56, 21, -57, 6], 1.4, 0),
-  'castle-catapult-crew': rigArt('catapult-crew', [-30, 42, -55, 6], [-60, 56, -54, 10], 1.25, rate('castle-catapult-crew')),
+  // Two units wide (bodyWidth 60), drawn centered on its footprint.
+  'castle-catapult-crew': rigArt('catapult-crew', [-30, 42, -55, 6], [-60, 56, -54, 10], 1.25, rate('castle-catapult-crew'), undefined, 6),
   // Renaissance.
   'renaissance-pikeman': rigArt('pikeman', [-23, 55, -68, 3], [-64, 14, -68, 6], 1.4, rate('renaissance-pikeman'), [-20, 22, -68, 3]),
   'renaissance-musketeer': rigArt('musketeer', [-17, 36, -60, 3], [-56, 20, -58, 6], 1.4, rate('renaissance-musketeer')),

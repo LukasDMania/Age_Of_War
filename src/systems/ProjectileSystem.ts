@@ -1,4 +1,4 @@
-import { GAME_HEIGHT, GAME_WIDTH, LANE_Y } from '@config/constants';
+import { AREA_SHOT_BASE_DAMAGE_MULT, GAME_HEIGHT, GAME_WIDTH, LANE_Y } from '@config/constants';
 import { PROJECTILE_MAX_LIFETIME_MS } from '@config/projectiles.config';
 import type { Base } from '@entities/Base';
 import type { Projectile } from '@entities/Projectile';
@@ -163,7 +163,11 @@ export class ProjectileSystem {
       target: unit ? 'unit' : projectile.impactBase ? 'base' : 'ground',
     });
     if (unit) dealUnitDamage(unit, projectile.damage, projectile.side);
-    else if (projectile.impactBase) dealBaseDamage(projectile.impactBase, projectile.damage);
+    else if (projectile.impactBase) {
+      // Area shots (splash) don't hurt bases (AREA_SHOT_BASE_DAMAGE_MULT, owner 2026-09-27).
+      const mult = projectile.splashRadius > 0 ? AREA_SHOT_BASE_DAMAGE_MULT : 1;
+      if (mult > 0) dealBaseDamage(projectile.impactBase, projectile.damage * mult);
+    }
     if (projectile.splashRadius > 0) {
       dealSplashDamage(
         this.units.activeUnits,

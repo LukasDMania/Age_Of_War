@@ -72,6 +72,12 @@ const UNIT_SIZE: Record<UnitDefinition['slot'], { w: number; h: number }> = {
   5: { w: 30, h: 46 },
 };
 
+/** A unit's footprint: its slot's size, or its own width if it sets one. */
+function unitSize(def: UnitDefinition): { w: number; h: number } {
+  const size = UNIT_SIZE[def.slot];
+  return def.bodyWidth ? { w: def.bodyWidth, h: size.h } : size;
+}
+
 interface ProjectileStyle {
   w: number;
   h: number;
@@ -179,7 +185,7 @@ function drawUnit(
   def: UnitDefinition,
   palette: SidePalette,
 ): void {
-  const { w, h } = UNIT_SIZE[def.slot];
+  const { w, h } = unitSize(def);
   g.fillStyle(palette.main, 1);
   g.lineStyle(3, palette.dark, 1);
 
@@ -400,7 +406,7 @@ export function generatePlaceholderTextures(scene: Phaser.Scene): void {
     const palette = SIDE_PALETTE[side];
 
     for (const def of UNIT_DEFINITIONS) {
-      const { w, h } = UNIT_SIZE[def.slot];
+      const { w, h } = unitSize(def);
       build(textureKeyFor(def.spriteKey, side), w, h, () =>
         drawUnit(g, def, palette),
       );

@@ -225,3 +225,11 @@ export const SPAWN_STACK_MAX = 4;
 /** All turret damage x this (owner, 2026-09-26: turrets still too strong). PROPOSED. */
 export const TURRET_DAMAGE_MULT = 0.7;
 
+
+/**
+ * Share of an area shot's damage that a base takes when the shot hits it
+ * (tank shells, mech plasma, catapult boulders: any unit shot with splash).
+ * Owner, 2026-09-27: "heavy unit AOE shouldn't damage base". Direct melee
+ * blows and plain shots still hit bases in full.
+ */
+export const AREA_SHOT_BASE_DAMAGE_MULT = 0;

@@ -82,6 +82,11 @@ export interface UnitDefinition {
   slot: 1 | 2 | 3 | 4 | 5;
   role: UnitRole;
   spriteKey: string;
+  /**
+   * Footprint width in px (blocking, spacing, reach), when the slot's
+   * default doesn't fit the art (2026-09-27: the catapult crew is two wide).
+   */
+  bodyWidth?: number;
   cost: number;
   trainTimeMs: number;
   hp: number;
@@ -264,6 +269,7 @@ const CASTLE_UNITS: readonly UnitDefinition[] = [
     slot: 5,
     role: 'utility',
     spriteKey: 'unit-castle-catapult-crew',
+    bodyWidth: 60,
     cost: 130,
     trainTimeMs: 3000,
     hp: 120,
