@@ -3,6 +3,7 @@ import { getAge } from '@config/ages.config';
 import type { Side } from '@state/types';
 import { fitImage, UI_FONT, UiColors, UiTextColors } from '@ui/kenneyUi';
 import { UiButton } from '@ui/UiButton';
+import { keyHint } from '@ui/keymap';
 import { emit, Events } from '@utils/EventBus';
 
 /**
@@ -12,7 +13,6 @@ import { emit, Events } from '@utils/EventBus';
  * decides. Updated by `HUDScene` from `special-cooldown-changed`.
  */
 export class SpecialButton {
-  private readonly scene: Phaser.Scene;
   private readonly side: Side;
   private readonly size: number;
   private readonly button: UiButton;
@@ -20,13 +20,11 @@ export class SpecialButton {
   private readonly name: Phaser.GameObjects.Text;
   private readonly overlay: Phaser.GameObjects.Graphics;
   private readonly seconds: Phaser.GameObjects.Text;
-  private readonly onKey = (): void => this.button.press();
   private coolingDown = false;
   private locked = false;
 
   /** (x, y) is the button's center; it is `size` px square. */
   constructor(scene: Phaser.Scene, side: Side, x: number, y: number, size: number, age: number) {
-    this.scene = scene;
     this.side = side;
     this.size = size;
     const half = size / 2;
@@ -38,7 +36,7 @@ export class SpecialButton {
     const title = scene.add
       .text(-half + 8, -half + 6, 'Special', { fontFamily: UI_FONT, fontSize: '12px', color: UiTextColors.dim });
     const key = scene.add
-      .text(half - 8, -half + 6, 'S', { fontFamily: UI_FONT, fontSize: '12px', color: UiTextColors.dim })
+      .text(half - 8, -half + 6, keyHint('special'), { fontFamily: UI_FONT, fontSize: '12px', color: UiTextColors.dim })
       .setOrigin(1, 0);
     this.icon = scene.add.image(0, -4, '__DEFAULT').setRotation(Math.PI / 4);
     this.name = scene.add
@@ -57,7 +55,6 @@ export class SpecialButton {
     this.button.add(title, key, this.icon, this.name, this.overlay, this.seconds);
     this.setAge(age);
     this.setCooldown(0, 1);
-    scene.input.keyboard?.on('keydown-S', this.onKey);
   }
 
   /** Shows the special of the given age. */
@@ -88,8 +85,12 @@ export class SpecialButton {
     this.refresh();
   }
 
+  /** Presses the button as a click would (keyboard). */
+  press(): void {
+    this.button.press();
+  }
+
   destroy(): void {
-    this.scene.input.keyboard?.off('keydown-S', this.onKey);
   }
 
   private refresh(): void {

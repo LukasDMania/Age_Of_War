@@ -707,20 +707,36 @@ Discussed after the first full Conquest run. Not built yet; build order in
   in every age), any counts. Queued in list order; at the first unit that
   can't be afforded, or when the training queue is full, it **stops**: the
   rest isn't queued.
-- PROPOSED: one keymap (`config/keybindings.config.ts`) with an action for
-  everything the HUD can do (tabs, slots 1-5, turret slot, build, upgrade,
-  sell, age up, special, War Cry, speed, pause); defaults keep today's
-  keys; changes saved per browser; a Controls screen (menu and pause) to
-  rebind by pressing a key, with conflicts shown. Eight compositions, F1-F8
-  to queue, Ctrl+F1-F8 to save the current training queue as one, plus an
-  editor. Keys only emit the same `*-requested` events as clicks.
+- Built 2026-09-27 (defaults PROPOSED, all rebindable): one keymap
+  (`config/keybindings.config.ts`, changes kept per browser) for every
+  battle action. **Number keys act on the open tab**: buy a unit (Units),
+  choose a turret slot (Turrets), upgrade a building (Buildings), research
+  a track (Research); Shift / Ctrl pass on for multi-buys. Tabs Z X C V
+  (Tab / Shift+Tab cycle); on Turrets, Q E R build the age's three turrets
+  in the chosen slot, U upgrades or unlocks, Del sells. A age up, S
+  special, W War Cry, P / Esc pause, F speed, B background, arrows scroll
+  (A/D no longer scroll: A ages up). Popup choices (doctrines, building
+  perks) 7 8 9. Dev cheats G / H / N (the XP cheat moved off X, now the
+  Turrets tab). A hint line next to the tabs shows the open tab's keys.
+- Controls screen (title screen, K, or the pause panel): every action by
+  group with its keys; click (or Enter) and press a key to rebind, Shift
+  adds a second key, conflicts show in red. Armies page: eight
+  compositions (Army 1-3 start as Melee x2 + Ranged, Melee + Ranged x2,
+  Heavy + Melee x2), built by adding units by slot in any order and
+  amount, with Undo and Clear. F1-F8 queue them, Ctrl+Shift+F1-F8 save the
+  current training queue as one (Ctrl+F4 would close the browser tab).
+  Keys only press the same buttons as clicks, so they emit the same
+  `*-requested` events. The title menu and Conquest screens keep their own
+  fixed keys.
 
-### Buying several building levels (PROPOSED)
+### Buying several building levels (PROPOSED, built 2026-09-27)
 
 - Owner: "i got tired spam clicking in new games". Shift+click (or Shift and
   the key) buys levels up to the next stage (five) as far as the gold
   goes; Ctrl+click buys as many as it can up to the age's cap. The same for
-  research tiers. Each level is still its own request, checked as today.
+  research tiers (Shift or Ctrl: every tier the Forge allows). Each level is
+  still its own request, checked as today; a multi-buy also stops at a
+  building perk waiting to be picked.
 
 ### The Mech workshop
 

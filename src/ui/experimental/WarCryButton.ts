@@ -3,6 +3,7 @@ import { WAR_CRY } from '@config/experiments.config';
 import type { Side } from '@state/types';
 import { UI_FONT, UI_TITLE_FONT, UiColors, UiTextColors } from '@ui/kenneyUi';
 import { UiButton } from '@ui/UiButton';
+import { keyHint } from '@ui/keymap';
 import { emit, Events, on } from '@utils/EventBus';
 
 /**
@@ -11,16 +12,13 @@ import { emit, Events, on } from '@utils/EventBus';
  * emit `war-cry-requested`; listens for `war-cry-cooldown-changed`.
  */
 export class WarCryButton {
-  private readonly scene: Phaser.Scene;
   private readonly button: UiButton;
   private readonly overlay: Phaser.GameObjects.Graphics;
   private readonly seconds: Phaser.GameObjects.Text;
   private readonly size: number;
   private readonly cleanups: (() => void)[];
-  private readonly onKey = (): void => this.button.press();
 
   constructor(scene: Phaser.Scene, side: Side, x: number, y: number, size: number) {
-    this.scene = scene;
     this.size = size;
     const half = size / 2;
     this.button = new UiButton(scene, x, y, size, size, {
@@ -46,13 +44,12 @@ export class WarCryButton {
       .text(0, -6, '', { fontFamily: UI_TITLE_FONT, fontSize: '22px', color: '#ffffff', stroke: '#000000', strokeThickness: 4 })
       .setOrigin(0.5);
     this.button.add(
-      scene.add.text(-half + 6, -half + 4, 'W', { fontFamily: UI_FONT, fontSize: '11px', color: UiTextColors.dim }),
+      scene.add.text(-half + 6, -half + 4, keyHint('war-cry'), { fontFamily: UI_FONT, fontSize: '11px', color: UiTextColors.dim }),
       horn,
       scene.add.text(0, half - 14, 'War Cry', { fontFamily: UI_FONT, fontSize: '12px', fontStyle: '600', color: UiTextColors.parchment }).setOrigin(0.5),
       this.overlay,
       this.seconds,
     );
-    scene.input.keyboard?.on('keydown-W', this.onKey);
     this.cleanups = [
       on(Events.WarCryCooldownChanged, ({ side: s, remainingMs, totalMs }) => {
         if (s === side) this.setCooldown(remainingMs, totalMs);
@@ -65,9 +62,13 @@ export class WarCryButton {
     this.button.setEnabled(!locked);
   }
 
+  /** Presses the button as a click would (keyboard). */
+  press(): void {
+    this.button.press();
+  }
+
   destroy(): void {
     for (const off of this.cleanups) off();
-    this.scene.input.keyboard?.off('keydown-W', this.onKey);
     this.button.destroy();
   }
 

@@ -49,16 +49,21 @@ Left/Right / `1`-`3`) and press Play (or Enter). You are blue, on the left,
 with 100 gold. Both sides also earn passive income: 2 gold per second in the
 Stone age, times the age factor later (about 4, 10, 21 and 46 gold/s).
 
-- **Units tab** (bottom panel, keys `1`-`5`): units are paid for when queued,
+- **Units tab** (bottom panel, `Z`; keys `1`-`5`): units are paid for when queued,
   train one at a time (up to 5 in the queue) and walk out of your base.
   Clubbers beat massed slingers, mammoth riders trample massed clubbers, and a
   mix beats any single type.
-- **Turrets tab** (click it or press `Tab`): unlock more slots (100, 200, 350,
+- **Turrets tab** (click it, `X`, or `Tab` to cycle): unlock more slots (100, 200, 350,
   550), build one of your age's three turrets in an empty slot (Stone: Spear
   Thrower, Boulder Thrower, Fire Pot Lobber), upgrade it up to three times,
   or sell it for half its price plus a quarter of what you spent upgrading.
   Turrets shoot the enemy closest to your base, and keep their stats (and
-  their upgrades) when you age up.
+  their upgrades) when you age up. By keyboard: `1`-`5` choose a slot,
+  `Q`/`E`/`R` build, `U` upgrades (or unlocks), `Del` sells.
+- **Buildings** (`C`) and **Research** (`V`): the number keys upgrade the
+  card with that number. Shift+click (or Shift+number) buys a building's
+  levels up to the end of its stage, Ctrl+click as many as you can afford;
+  Shift on research buys every tier the Forge allows.
 - **Special** (button on the right, or `S`): a shower of strikes over the
   enemy army (meteors in the Stone age), then a 45 second cooldown.
 - **Age up** (button next to the XP bar, or `A`): spend the XP shown to move
@@ -89,12 +94,18 @@ Stone age, times the age factor later (about 4, 10, 21 and 46 gold/s).
   off for your browser. **Conquest** (title screen, or `C`) opens the
   roguelite campaign.
 
+- **Armies**: `F1`-`F8` queue a saved unit composition (by slot, so it
+  works in every age); queuing stops at the first unit you can't afford or
+  when the queue is full. `Ctrl+Shift+F1`-`F8` saves what is training now.
+- **Controls** (title screen, `K`, or the pause panel): rebind every key
+  and edit the eight armies. Kept per browser.
 - `P`, `Esc` or the `II` button at the top pauses. The pause panel has
-  Resume, Restart and Main menu (keys Enter, `R`, `M`). When a base falls,
+  Resume, Restart, Controls and Main menu (keys Enter, `R`, `M`). When a base falls,
   a Victory/Defeat panel shows the match stats with Play again and Main menu.
 - `F` cycles the speed: 1x, 2x, 4x, 8x (dev server only).
-- `G` adds 100 gold, `X` adds 100 XP and `N` ages up at once (dev server
+- `G` adds 100 gold, `H` adds 100 XP and `N` ages up at once (dev server
   only).
+- The arrow keys scroll the view (A/D no longer do: `A` is age up).
 - `http://localhost:5173/?gallery` shows every generated placeholder texture,
   age by age, plus the bases of every age.
 - The browser console has `window.__aow` (dev server only). A few highlights

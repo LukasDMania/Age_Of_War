@@ -22,6 +22,8 @@ import {
   UiTextColors,
 } from '@ui/kenneyUi';
 import { UiButton } from '@ui/UiButton';
+import { bindingsLabel, keyHint } from '@ui/keymap';
+import type { ControlsSceneData } from '@ui/ControlsScene';
 import { ExperimentsPanel } from '@ui/experimental/ExperimentsPanel';
 import { feature } from '@config/features.config';
 import { baseArtKey, BASE_SUPERSAMPLE, ensureBaseArt } from '@utils/BaseArt';
@@ -180,8 +182,8 @@ export class MenuScene extends Phaser.Scene {
         cx,
         650,
         [
-          'Buy units 1-5  ·  Tab switches panels  ·  Special: S  ·  Age up: A  ·  Pause: P or Esc',
-          `Destroy the enemy base, keep yours standing.  Menu: 1-3 difficulty, Q/E AI profile, Enter to play${feature('conquest') ? ', C Conquest' : ''}`,
+          `Slot keys ${keyHint('slot-1')}-${keyHint('slot-5')} act on the open tab  ·  Tabs ${(['tab-units', 'tab-turrets', 'tab-buildings', 'tab-research'] as const).map((id) => keyHint(id)).join(' ')}  ·  Armies ${keyHint('army-1')}-${keyHint('army-8')}  ·  Special ${keyHint('special')}  ·  Age up ${keyHint('age-up')}  ·  Pause ${bindingsLabel('pause')}`,
+          `Destroy the enemy base, keep yours standing.  Menu: 1-3 difficulty, Q/E AI profile, Enter to play${feature('conquest') ? ', C Conquest' : ''}, K Controls`,
         ],
         { fontFamily: UI_FONT, fontSize: '15px', color: UiTextColors.parchment, align: 'center', lineSpacing: 8 },
       )
@@ -191,6 +193,10 @@ export class MenuScene extends Phaser.Scene {
     this.experiments = new ExperimentsPanel(this);
     const labs = new UiButton(this, GAME_WIDTH - 100, 40, 170, 44, { onPress: () => this.experiments?.toggle(), framed: true });
     labs.add(this.add.text(0, 0, 'Experiments', { fontFamily: UI_TITLE_FONT, fontSize: '19px', color: UiTextColors.parchment }).setOrigin(0.5));
+    // Key bindings and unit compositions (2026-09-27); the menu pauses while they're open.
+    const controls = new UiButton(this, GAME_WIDTH - 280, 40, 170, 44, { onPress: () => this.openControls(), framed: true });
+    controls.add(this.add.text(0, 0, 'Controls', { fontFamily: UI_TITLE_FONT, fontSize: '19px', color: UiTextColors.parchment }).setOrigin(0.5));
+    this.input.keyboard?.on('keydown-K', () => this.openControls());
     // Conquest campaign (prototype, feature `conquest`).
     if (feature('conquest')) {
       const conquest = new UiButton(this, cx + 300, 486, 200, 56, { onPress: () => this.openConquest(), tint: UiColors.panelDark, framed: true });
@@ -282,6 +288,12 @@ export class MenuScene extends Phaser.Scene {
     const profile = findAiProfile(this.profileId);
     this.profileText.setText(`Enemy AI: ${profile?.label ?? 'Classic'}`);
     this.profileAbout.setText(profile?.description ?? '');
+  }
+
+  private openControls(): void {
+    if (this.scene.isActive(SCENE_KEYS.controls)) return;
+    this.scene.launch(SCENE_KEYS.controls, { from: SCENE_KEYS.menu } satisfies ControlsSceneData);
+    this.scene.pause();
   }
 
   private openConquest(): void {

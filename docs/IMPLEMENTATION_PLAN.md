@@ -376,12 +376,16 @@ Chromium.
 Design in GAME_DESIGN section 15. Proposed order, smallest first; confirm
 with the owner before each.
 
-- [ ] Buy several building levels and research tiers at once
-  (Shift / Ctrl + click or key).
-- [ ] Keymap with every HUD action, full keyboard play, Controls screen
-  to rebind (saved per browser).
-- [ ] Compositions by slot: F1-F8 to queue, save from the current queue,
-  an editor; stop at the first unaffordable unit or a full queue.
+- [x] Buy several building levels and research tiers at once
+  (Shift / Ctrl + click or key; `BuildingPanel.buyLevels`,
+  `ResearchPanel.buyTiers`, press modifiers in `UiButton`).
+- [x] Keymap with every battle action, full keyboard play, Controls screen
+  to rebind (saved per browser): `config/keybindings.config.ts`,
+  `ui/keymap.ts` (`KeyboardControls`), `ui/ControlsScene.ts`; event
+  `keybindings-changed`.
+- [x] Compositions by slot: F1-F8 to queue, Ctrl+Shift+F1-F8 to save the
+  current queue, an editor (Controls, Armies page); stop at the first
+  unaffordable unit or a full queue (`ui/compositions.ts`).
 - [ ] Mech workshop: part data (4 slots, 2 options each, 5 age versions),
   MechArt, Workshop tab, MechSystem (`build-mech-requested`, one alive,
   refit), new events in Appendix A.
@@ -460,6 +464,7 @@ validates and acts):
 | `research-completed` | `{ side, researchId, tier }` | BuildingSystem |
 | `game-speed-changed` | `{ multiplier }` | GameScene |
 | `background-changed` | `{ id, name }` | GameScene |
+| `keybindings-changed` | `{}` | ControlsScene (closed after keys or armies changed; the HUD redraws its key labels) |
 | `projectile-impact` | `{ side, key, x, y, radius, target }` (`target` `'unit' \| 'base' \| 'ground'`) | ProjectileSystem (feedback: impact effects) |
 | `unit-struck` | `{ side, instanceId, unitId, slot, x, frontX, ranged }` | CombatSystem (feedback: a blow landed or a shot left; heavies thump the camera) |
 | `turret-fired` | `{ side, slotIndex, turretId, x, y }` (muzzle position) | TurretSystem (feedback: muzzle effects) |
@@ -1613,4 +1618,36 @@ decisions made, anything the owner needs to confirm.
   (checked 2026-09-27: Fly.io has no free tier any more; Cloudflare Workers
   with Durable Objects is free up to 100k requests a day, incoming
   WebSocket messages counted 20 to 1). Nothing built.
+- 2026-09-27 (night, build): owner said "Go" on Phase 19; built its first
+  three items (each its own commit), stopped before the Mech.
+  - Multi-buy: Shift+click on a building buys to its stage end, Ctrl (Cmd)
+    as many as allowed; Shift/Ctrl on research buys every open tier. One
+    request per level; stops at a refusal or a perk to pick. Checked:
+    Mine 1 -> 5 (perk), after the perk Ctrl -> 10, -> 15 (Renaissance
+    cap); research tiers 0 -> 3 with Forge 11.
+  - Keyboard: every battle action goes through the keymap; the old
+    per-button listeners (1-5, Tab, A, S, W, 7-9, P, Esc, F, B, G, X, N,
+    arrows, A/D) are gone. Changed defaults (PROPOSED): number keys act on
+    the open tab (they used to buy units from any tab); tabs Z X C V;
+    turret keys Q E R / U / Del on a chosen slot; camera arrows only (A
+    both scrolled and aged up); the dev XP cheat moved from X to H. The
+    building-perk popup had no keys; popup choices 7 8 9 now pick doctrines
+    and perks. `KeyboardControls` listens on the window so it can stop the
+    browser's own Tab and F-keys, only while its scene runs, and never
+    while the Controls screen is open.
+  - Armies: eight compositions by slot, three starting ones (PROPOSED).
+  - Checked in the browser, keyboard only: 1 buys; X 1 Q builds, U
+    upgrades, 2 U unlocks, 1 Del sells; C 1 Mine, Shift+2 Library to 5, 2
+    and 7 pick its perk; V 1 researches; A ages up; S fires; F1 queues
+    Melee x2 + Ranged, F2 stops at a full queue, Ctrl+Shift+F4 saves the
+    queue, F1 with 50 gold in the Castle age queues one swordsman and
+    stops; P pauses, Controls opens from the pause panel, Down Down Enter J
+    rebinds the Units tab, Esc closes (still paused), P resumes, J opens
+    Units. From the title menu: K opens Controls, Tab, Down, 3 3 2 edit
+    Army 2, Esc closes, and the menu's own keys work again. No page
+    errors. Screenshots of the HUD tabs, the pause panel and both Controls
+    pages checked for layout. A headless AI-vs-AI run still plays through.
+  - Not checked: whether browsers' own F-key actions (F1 help, F5 reload,
+    F7 caret browsing) are fully stopped: bound keys call preventDefault,
+    but headless tests can't show browser UI. Touch devices.
 

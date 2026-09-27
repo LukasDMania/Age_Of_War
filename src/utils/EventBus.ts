@@ -63,6 +63,7 @@ export const Events = {
   BuildingPerkChosen: 'building-perk-chosen',
   GameSpeedChanged: 'game-speed-changed',
   BackgroundChanged: 'background-changed',
+  KeybindingsChanged: 'keybindings-changed',
   ProjectileImpact: 'projectile-impact',
   UnitStruck: 'unit-struck',
   TurretFired: 'turret-fired',
@@ -207,6 +208,8 @@ export interface EventPayloads {
   [Events.BuildingPerkChosen]: { side: Side; buildingId: BuildingId; choice: PerkChoice; picks: number };
   [Events.GameSpeedChanged]: { multiplier: number };
   [Events.BackgroundChanged]: { id: string; name: string };
+  /** The Controls screen closed after keys or armies changed (UI redraws its key labels). */
+  [Events.KeybindingsChanged]: Record<string, never>;
   /**
    * A projectile landed (feedback only): what it hit, where, its key (for the
    * look) and its splash radius. `side` fired it.

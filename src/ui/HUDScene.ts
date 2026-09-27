@@ -1,7 +1,9 @@
 import Phaser from 'phaser';
 import { getAge } from '@config/ages.config';
 import type { AiDifficultyName } from '@config/ai.config';
+import { activeBuildingIds, RESEARCH } from '@config/buildings.config';
 import { AGE_BANNER_MS, AGE_CATCH_UP, baseMaxHp, GAME_HEIGHT, GAME_SPEEDS, GAME_WIDTH, SCENE_KEYS } from '@config/constants';
+import { ARMY_COUNT, type KeyActionId, type KeyContext } from '@config/keybindings.config';
 import { xpToNextAge } from '@state/economyOps';
 import type { MatchState } from '@state/GameState';
 import type { Side } from '@state/types';
@@ -28,6 +30,9 @@ import { UiButton } from '@ui/UiButton';
 import { UnitBuyPanel } from '@ui/UnitBuyPanel';
 import { emit, Events, on } from '@utils/EventBus';
 import { ageGap } from '@systems/ageCatchUp';
+import { armyFromQueue, armyLabel, getArmy, queueArmy, setArmy } from '@ui/compositions';
+import { keyHint, KeyboardControls } from '@ui/keymap';
+import type { PressModifiers } from '@ui/UiButton';
 
 /** Data handed over by `GameScene` when it launches the HUD. */
 export interface HudSceneData {
@@ -51,8 +56,8 @@ export interface HudRestore {
   speed: number;
   economy: { units: number; incomePerSec: number; damageMult: number; speedMult: number };
   special: { remainingMs: number; totalMs: number };
-  /** Show the age-up banner for this age once rebuilt. */
-  announceAge: number;
+  /** Show the age-up banner for this age once rebuilt (not after a keybinding change). */
+  announceAge?: number;
 }
 
 function capitalize(text: string): string {
@@ -88,7 +93,15 @@ const TAB_ORDER: readonly TabKey[] = ['units', 'turrets', 'buildings', 'research
  * bar, the age-up button and both base HP bars at the top; at the bottom a panel with a Units
  * tab (buy units, training queue) and a Turrets tab (unlock slots, build and
  * sell turrets), plus the special attack button on its right. Click a tab or
- * press Tab to switch.
+ * use its key to switch.
+ *
+ * Keyboard (owner, 2026-09-27: fully playable by keyboard, every key
+ * rebindable): a `KeyboardControls` turns the keymap's battle actions into
+ * button presses. Slot keys act on the open tab (buy a unit, choose a
+ * turret slot, upgrade a building, research a track; Shift / Ctrl pass on
+ * for multi-buys), the army keys queue a saved composition, and a hint line
+ * next to the tabs shows the open tab's keys. Keys do nothing while the
+ * match isn't being played.
  *
  * It reads the match state once when it starts; after that every change
  * arrives as an event, so it never polls the state per frame. (On
@@ -98,7 +111,8 @@ const TAB_ORDER: readonly TabKey[] = ['units', 'turrets', 'buildings', 'research
  * `unit-queue-changed`, `age-changed`, `slot-unlocked`, `turret-built`,
  * `turret-upgraded`, `turret-sold`, `special-cooldown-changed`, `economy-changed` (filtered to
  * the relevant side)
- * and `match-state-changed` (buttons lock unless the match is playing).
+ * `match-state-changed` (buttons lock unless the match is playing) and
+ * `keybindings-changed` (rebuilds with the new key labels).
  * Emits (through its panels and buttons): `buy-unit-requested`,
  * `buy-slot-requested`, `buy-turret-requested`, `upgrade-turret-requested`,
  * `sell-turret-requested`, `special-requested`, `age-up-requested`.
@@ -138,6 +152,11 @@ export class HUDScene extends Phaser.Scene {
   private doctrinePopup: DoctrinePopup | null = null;
   private tabs!: Record<TabKey, UiButton>;
   private activeTab: TabKey = 'units';
+  private keys!: KeyboardControls;
+  private locked = false;
+  /** The open tab's keys, next to the tabs; army results flash here too. */
+  private tabHint!: Phaser.GameObjects.Text;
+  private hintFlash: Phaser.Time.TimerEvent | null = null;
   private data0!: HudSceneData;
   private lastSpecial = { remainingMs: 0, totalMs: 1 };
 
@@ -205,6 +224,16 @@ export class HUDScene extends Phaser.Scene {
       buildings: this.buildTab(2, 'Buildings', 'buildings'),
       research: this.buildTab(3, 'Research', 'research'),
     };
+    this.tabHint = this.add
+      .text(PANEL_LEFT + 12 + TAB_ORDER.length * (TAB_WIDTH + 6) + 6, PANEL_TOP - TAB_HEIGHT / 2 + 2, '', {
+        fontFamily: UI_FONT,
+        fontSize: '12px',
+        fontStyle: '600',
+        color: UiTextColors.parchment,
+        stroke: UiTextColors.stroke,
+        strokeThickness: 3,
+      })
+      .setOrigin(0, 0.5);
     this.showTab(this.activeTab, false);
     this.pauseButton = new UiButton(this, GAME_WIDTH / 2, 34, 44, 40, {
       onPress: () => emit(Events.PauseRequested, {}),
@@ -236,10 +265,8 @@ export class HUDScene extends Phaser.Scene {
       .setOrigin(0.5);
     backgroundButton.add(this.backgroundText);
     this.showBackgroundName(this.backgroundName);
-    this.input.keyboard?.addCapture('TAB');
-    this.input.keyboard?.on('keydown-TAB', () =>
-      this.showTab(TAB_ORDER[(TAB_ORDER.indexOf(this.activeTab) + 1) % TAB_ORDER.length] ?? 'units'),
-    );
+    this.keys = new KeyboardControls(this, () => this.keyContexts());
+    this.bindKeys();
     this.setLocked(this.state.phase !== 'playing');
 
     // Carried over a re-skin: speed, money-unit economy, special cooldown.
@@ -249,7 +276,7 @@ export class HUDScene extends Phaser.Scene {
       this.speedText.setText(`${restore.speed}x`).setColor(restore.speed === 1 ? UiTextColors.parchment : UiTextColors.gold);
       this.lastEconomy = { ...restore.economy };
       this.refreshIncome();
-      this.announceAge(restore.announceAge);
+      if (restore.announceAge !== undefined) this.announceAge(restore.announceAge);
     }
     this.specialButton.setCooldown(this.lastSpecial.remainingMs, this.lastSpecial.totalMs);
 
@@ -286,13 +313,7 @@ export class HUDScene extends Phaser.Scene {
         this.scene.restart({
           ...this.data0,
           backgroundName: this.backgroundName,
-          restore: {
-            tab: this.activeTab,
-            speed: this.speed,
-            economy: { ...this.lastEconomy },
-            special: { ...this.lastSpecial },
-            announceAge: age,
-          },
+          restore: { ...this.restoreState(), announceAge: age },
         } satisfies HudSceneData);
       }),
       on(Events.SiegeChanged, ({ mult }) => this.showSiege(mult)),
@@ -342,8 +363,123 @@ export class HUDScene extends Phaser.Scene {
         this.speedText.setText(`${multiplier}x`).setColor(multiplier === 1 ? UiTextColors.parchment : UiTextColors.gold);
       }),
       on(Events.MatchStateChanged, ({ to }) => this.setLocked(to !== 'playing')),
+      on(Events.KeybindingsChanged, () => this.scene.restart({ ...this.data0, backgroundName: this.backgroundName, restore: this.restoreState() })),
     );
     this.events.once(Phaser.Scenes.Events.SHUTDOWN, () => this.teardown());
+  }
+
+  /** What a rebuilt HUD can't read back from the match state. */
+  private restoreState(): HudRestore {
+    return { tab: this.activeTab, speed: this.speed, economy: { ...this.lastEconomy }, special: { ...this.lastSpecial } };
+  }
+
+  /** Live key contexts, most important first; none while the match isn't being played. */
+  private keyContexts(): readonly KeyContext[] {
+    if (this.locked) return [];
+    const popup = this.buildingPanel.perkChoiceOpen || (this.doctrinePopup?.isOpen ?? false);
+    return popup ? ['popup', this.activeTab, 'battle'] : [this.activeTab, 'battle'];
+  }
+
+  private bindKeys(): void {
+    const k = this.keys;
+    const step = (by: number): TabKey => TAB_ORDER[(TAB_ORDER.indexOf(this.activeTab) + by + TAB_ORDER.length) % TAB_ORDER.length] ?? 'units';
+    k.on('tab-next', () => this.showTab(step(1)));
+    k.on('tab-prev', () => this.showTab(step(-1)));
+    k.on('tab-units', () => this.showTab('units'));
+    k.on('tab-turrets', () => this.showTab('turrets'));
+    k.on('tab-buildings', () => this.showTab('buildings'));
+    k.on('tab-research', () => this.showTab('research'));
+    for (let n = 1; n <= 10; n++) k.on(`slot-${n}`, (modifiers) => this.pressSlot(n, modifiers));
+    k.on('turret-build-1', () => this.turretPanel.build(0));
+    k.on('turret-build-2', () => this.turretPanel.build(1));
+    k.on('turret-build-3', () => this.turretPanel.build(2));
+    k.on('turret-upgrade', () => this.turretPanel.upgrade());
+    k.on('turret-sell', () => this.turretPanel.sell());
+    k.on('age-up', () => this.ageUpButton.press());
+    k.on('special', () => this.specialButton.press());
+    k.on('war-cry', () => (this.warCryButton ? this.warCryButton.press() : false));
+    for (let n = 1; n <= ARMY_COUNT; n++) {
+      k.on(`army-${n}`, () => this.queueArmy(n - 1));
+      k.on(`army-save-${n}`, () => this.saveArmy(n - 1));
+    }
+    (['choice-1', 'choice-2', 'choice-3'] as const).forEach((id, i) =>
+      k.on(id, () => (this.buildingPanel.perkChoiceOpen ? this.buildingPanel.pickPerk(i) : (this.doctrinePopup?.pick(i) ?? false))),
+    );
+  }
+
+  /** A slot key on the open tab. False when the tab has no such slot (the key stays free). */
+  private pressSlot(slot: number, modifiers: PressModifiers): boolean {
+    switch (this.activeTab) {
+      case 'units':
+        return this.unitPanel.pressSlot(slot, modifiers);
+      case 'turrets':
+        return this.turretPanel.select(slot - 1);
+      case 'buildings': {
+        const id = activeBuildingIds()[slot - 1];
+        if (!id) return false;
+        this.buildingPanel.press(id, modifiers);
+        return true;
+      }
+      case 'research': {
+        const track = RESEARCH[slot - 1];
+        if (!track) return false;
+        this.researchPanel.press(track.id, modifiers);
+        return true;
+      }
+    }
+  }
+
+  /** Queues army `index` (stops at the first unit it can't afford or a full queue) and says how it went. */
+  private queueArmy(index: number): void {
+    const army = getArmy(index);
+    if (army.length === 0) {
+      this.flashHint(`Army ${index + 1} is empty: set it up under Controls (pause menu)`, '#f0c080');
+      return;
+    }
+    const result = queueArmy(HUD_SIDE, this.state[HUD_SIDE], army);
+    const why = result.stoppedBy === 'gold' ? ' (not enough gold)' : result.stoppedBy === 'queue' ? ' (queue full)' : '';
+    this.flashHint(`Army ${index + 1}: ${result.queued} of ${result.wanted} queued${why}`, result.stoppedBy ? '#f0c080' : '#8fe08f');
+  }
+
+  /** Saves what is training now as army `index`. */
+  private saveArmy(index: number): void {
+    const army = armyFromQueue(this.state[HUD_SIDE]);
+    if (army.length === 0) {
+      this.flashHint('Nothing in training to save', '#f0c080');
+      return;
+    }
+    setArmy(index, army);
+    this.flashHint(`Army ${index + 1} saved: ${armyLabel(army)}`, '#8fe08f');
+  }
+
+  /** The open tab's keys, from the keymap. */
+  private tabKeysText(tab: TabKey): string {
+    const range = (from: KeyActionId, to: KeyActionId): string => {
+      const a = keyHint(from);
+      const b = keyHint(to);
+      return a && b ? `${a}-${b}` : a || b;
+    };
+    const armies = range('army-1', `army-${ARMY_COUNT}`);
+    switch (tab) {
+      case 'units':
+        return `${range('slot-1', 'slot-5')} buy  ·  ${armies} armies`;
+      case 'turrets':
+        return `${range('slot-1', 'slot-5')} choose slot  ·  ${[keyHint('turret-build-1'), keyHint('turret-build-2'), keyHint('turret-build-3')].join(' ')} build  ·  ${keyHint('turret-upgrade')} upgrade  ·  ${keyHint('turret-sell')} sell`;
+      case 'buildings':
+        return `${range('slot-1', `slot-${Math.min(10, activeBuildingIds().length)}`)} upgrade  ·  Shift: to stage end  ·  Ctrl: max`;
+      case 'research':
+        return `${range('slot-1', `slot-${Math.min(10, RESEARCH.length)}`)} research  ·  Shift: every open tier`;
+    }
+  }
+
+  /** Shows a message on the hint line for a moment, then the tab's keys again. */
+  private flashHint(text: string, color: string): void {
+    this.hintFlash?.remove();
+    this.tabHint.setText(text).setColor(color);
+    this.hintFlash = this.time.delayedCall(2600, () => {
+      this.hintFlash = null;
+      this.tabHint.setText(this.tabKeysText(this.activeTab)).setColor(UiTextColors.parchment);
+    });
   }
 
   /** Age, gold, XP and the player's base HP. Returns the base HP bar. */
@@ -428,7 +564,12 @@ export class HUDScene extends Phaser.Scene {
       tint: UiColors.panelDark,
       hoverTint: UiColors.panelHover,
     });
-    tab.add(this.add.text(0, 0, text, { fontFamily: UI_FONT, fontSize: '14px', fontStyle: '600', color: UiTextColors.parchment }).setOrigin(0.5));
+    tab.add(
+      this.add.text(0, 0, text, { fontFamily: UI_FONT, fontSize: '14px', fontStyle: '600', color: UiTextColors.parchment }).setOrigin(0.5),
+      this.add
+        .text(TAB_WIDTH / 2 - 6, 0, keyHint(`tab-${key}`), { fontFamily: UI_FONT, fontSize: '10px', color: UiTextColors.dim })
+        .setOrigin(1, 0.5),
+    );
     return tab;
   }
 
@@ -439,6 +580,7 @@ export class HUDScene extends Phaser.Scene {
     this.buildingPanel.setVisible(key === 'buildings');
     this.researchPanel.setVisible(key === 'research');
     for (const tab of TAB_ORDER) this.tabs[tab].setSelected(key === tab);
+    if (!this.hintFlash) this.tabHint.setText(this.tabKeysText(key)).setColor(UiTextColors.parchment);
     // The buildings stand behind the base: show them while their tab is open.
     if (!moveCamera) return;
     if (key === 'buildings') emit(Events.CameraFocusRequested, { target: 'buildings' });
@@ -497,6 +639,7 @@ export class HUDScene extends Phaser.Scene {
   }
 
   private setLocked(locked: boolean): void {
+    this.locked = locked;
     this.unitPanel.setLocked(locked);
     this.turretPanel.setLocked(locked);
     this.buildingPanel.setLocked(locked);

@@ -11,6 +11,7 @@ import type { SideState } from '@state/GameState';
 import type { Side } from '@state/types';
 import { researchPrice, researchRejection } from '@systems/BuildingSystem';
 import { UI_FONT, UiColors, UiTextColors } from '@ui/kenneyUi';
+import { keyHint } from '@ui/keymap';
 import { UiButton, type PressModifiers } from '@ui/UiButton';
 import { UnitBuyPanel } from '@ui/UnitBuyPanel';
 import { emit, Events } from '@utils/EventBus';
@@ -143,8 +144,10 @@ export class ResearchPanel {
     else if (rejection === 'forge-level')
       bottom = this.scene.add.text(left, 8, `Forge ${forgeLevelForTier(tier + 1)} · ${cost}`, textStyle(11, UiTextColors.dim)).setOrigin(0, 0.5);
     else bottom = this.priceRow(left, 8, cost, tier > 0 ? bonusText(def, tier) : '');
+    const hint = this.scene.add.text(left, -10, keyHint(`slot-${index + 1}`), textStyle(11, UiTextColors.dim)).setOrigin(0, 0.5);
     button.add(
-      this.scene.add.text(left, -10, def.short, textStyle(12, UiTextColors.parchment)).setOrigin(0, 0.5),
+      hint,
+      this.scene.add.text(left + (hint.width > 0 ? hint.width + 5 : 0), -10, def.short, textStyle(12, UiTextColors.parchment)).setOrigin(0, 0.5),
       this.scene.add.text(right, -10, `${tier}/${MAX_RESEARCH_TIER}`, textStyle(11, UiTextColors.dim)).setOrigin(1, 0.5),
       bottom,
     );

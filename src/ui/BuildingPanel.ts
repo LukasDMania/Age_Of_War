@@ -22,6 +22,7 @@ import {
   mineGoldPerSec,
 } from '@systems/BuildingSystem';
 import { addPanel, addThemedPanel, UI_FONT, UI_TITLE_FONT, UiColors, UiTextColors, UiTextures } from '@ui/kenneyUi';
+import { keyHint } from '@ui/keymap';
 import { UiButton, type PressModifiers } from '@ui/UiButton';
 import { UnitBuyPanel } from '@ui/UnitBuyPanel';
 import { emit, Events } from '@utils/EventBus';
@@ -63,6 +64,8 @@ export class BuildingPanel {
   private readonly top: number;
   private readonly cards = new Map<BuildingId, Card>();
   private popup: Phaser.GameObjects.Container | null = null;
+  /** The open perk choice's two buttons (keyboard). */
+  private perkPicks: UiButton[] = [];
   private locked = false;
 
   constructor(scene: Phaser.Scene, side: Side, sideState: SideState, left: number, top: number) {
@@ -125,6 +128,7 @@ export class BuildingPanel {
         .text(width - 7, 6, level > 0 ? `L${level}/${maxBuildingLevel(me.age)}` : '', textStyle(11, UiTextColors.dim, '600'))
         .setOrigin(1, 0),
       pips,
+      this.scene.add.text(width - 7, 22, keyHint(`slot-${index + 1}`), textStyle(11, UiTextColors.dim, '600')).setOrigin(1, 0),
       this.scene.add
         .text(7, 38, this.effectText(id, level), {
           ...textStyle(11, level > 0 ? UiTextColors.gold : UiTextColors.dim, '600'),
@@ -156,6 +160,18 @@ export class BuildingPanel {
     }
     container.add(button.container);
     this.cards.set(id, { container, button, perk: pending });
+  }
+
+  get perkChoiceOpen(): boolean {
+    return this.popup !== null;
+  }
+
+  /** Keyboard: picks perk `index` (0 or 1) in the open perk choice; false when none is open. */
+  pickPerk(index: number): boolean {
+    const pick = this.perkPicks[index];
+    if (!this.popup || !pick) return false;
+    pick.press();
+    return true;
   }
 
   /** Presses a building's card as a click with these modifiers would (keyboard). */
@@ -238,7 +254,9 @@ export class BuildingPanel {
         },
         framed: true,
       });
+      this.perkPicks.push(button);
       button.add(
+        this.scene.add.text(-110, -32, keyHint(i === 0 ? 'choice-1' : 'choice-2'), textStyle(11, UiTextColors.dim)),
         this.scene.add
           .text(0, -16, perk.name, { fontFamily: UI_TITLE_FONT, fontSize: '18px', color: UiTextColors.parchment })
           .setOrigin(0.5),
@@ -256,5 +274,6 @@ export class BuildingPanel {
   private closePopup(): void {
     this.popup?.destroy();
     this.popup = null;
+    this.perkPicks = [];
   }
 }

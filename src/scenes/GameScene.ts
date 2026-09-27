@@ -68,6 +68,7 @@ import { createGameState, type MatchState } from '@state/GameState';
 import { otherSide, type Side } from '@state/types';
 import type { HudSceneData } from '@ui/HUDScene';
 import type { OverlaySceneData } from '@ui/OverlayScene';
+import { KeyboardControls } from '@ui/keymap';
 import {
   installDebugHandle,
   removeDebugHandle,
@@ -154,7 +155,8 @@ export class GameScene extends Phaser.Scene {
   private stats!: StatsSystem;
   private buildingSystem!: BuildingSystem;
   private buildingViews!: Record<Side, Partial<Record<BuildingId, Building>>>;
-  private scrollKeys: Phaser.Input.Keyboard.Key[][] = [];
+  /** Pause, speed, background, camera and dev keys (the keymap's `always` actions). */
+  private keys: KeyboardControls | null = null;
   private ai: AiBrain | null = null;
   private playerAi: AiBrain | null = null;
   /**
@@ -293,21 +295,24 @@ export class GameScene extends Phaser.Scene {
         this.scene.start(SCENE_KEYS.conquest);
       }),
     );
-    this.input.keyboard?.on('keydown-B', () => this.cycleBackground());
-    this.input.keyboard?.on('keydown-P', () => this.match.togglePause());
-    this.input.keyboard?.on('keydown-ESC', () => this.match.togglePause());
-
-    // F cycles the game speed (1x, 2x, 3x, 4x, 8x) for playtesting, like the HUD button.
-    this.input.keyboard?.on('keydown-F', () => {
-      const next = GAME_SPEEDS[(GAME_SPEEDS.indexOf(this.simSpeed) + 1) % GAME_SPEEDS.length] ?? 1;
-      this.setSimSpeed(next);
-    });
+    // Keymap (config/keybindings.config.ts): pause, speed (cycles 1x-8x for
+    // playtesting, like the HUD button), background, camera, and in dev
+    // builds the cheats (gold and XP for the player, an instant age-up).
+    this.keys = new KeyboardControls(this, () => ['always'])
+      .on('pause', () => this.match.togglePause())
+      .on('speed', () => {
+        const next = GAME_SPEEDS[(GAME_SPEEDS.indexOf(this.simSpeed) + 1) % GAME_SPEEDS.length] ?? 1;
+        this.setSimSpeed(next);
+      })
+      .on('background', () => this.cycleBackground());
     if (import.meta.env.DEV) {
       this.installDebug();
-      // Dev shortcuts: G adds gold and X adds XP to the player, N ages the player up at once.
-      this.input.keyboard?.on('keydown-G', () => addGold(this.state, 'player', DEBUG_CHEATS.gold, 'cheat'));
-      this.input.keyboard?.on('keydown-X', () => addXp(this.state, 'player', DEBUG_CHEATS.xp));
-      this.input.keyboard?.on('keydown-N', () => this.debugAgeUp('player'));
+      this.keys
+        .on('dev-gold', () => addGold(this.state, 'player', DEBUG_CHEATS.gold, 'cheat'))
+        .on('dev-xp', () => addXp(this.state, 'player', DEBUG_CHEATS.xp))
+        .on('dev-age', () => {
+          this.debugAgeUp('player');
+        });
     }
 
     this.refreshRigArt();
@@ -584,14 +589,6 @@ export class GameScene extends Phaser.Scene {
     // a camera zoomed around its center; ours zooms from the top-left, see
     // utils/renderScale).
     camera.setScroll(0, 0);
-    const keyboard = this.input.keyboard;
-    if (keyboard) {
-      const K = Phaser.Input.Keyboard.KeyCodes;
-      this.scrollKeys = [
-        [keyboard.addKey(K.LEFT), keyboard.addKey(K.A)],
-        [keyboard.addKey(K.RIGHT), keyboard.addKey(K.D)],
-      ];
-    }
     this.input.on('pointermove', (pointer: Phaser.Input.Pointer) => {
       if (!pointer.isDown) return;
       camera.scrollX -= (pointer.x - pointer.prevPosition.x) / camera.zoom;
@@ -609,8 +606,9 @@ export class GameScene extends Phaser.Scene {
   }
 
   private scrollCameraByKeys(deltaMs: number): void {
-    const [left, right] = this.scrollKeys;
-    const dir = (right?.some((k) => k.isDown) ? 1 : 0) - (left?.some((k) => k.isDown) ? 1 : 0);
+    const keys = this.keys;
+    if (!keys) return;
+    const dir = (keys.isHeld('camera-right') ? 1 : 0) - (keys.isHeld('camera-left') ? 1 : 0);
     if (dir !== 0) this.cameras.main.scrollX += (dir * CAMERA_KEY_SCROLL * deltaMs) / 1000;
   }
 
@@ -751,6 +749,7 @@ export class GameScene extends Phaser.Scene {
     this.logger?.finish('quit');
     this.logger?.destroy();
     this.logger = null;
+    this.keys = null;
     this.ages.destroy();
     this.status.destroy();
     this.special.destroy();

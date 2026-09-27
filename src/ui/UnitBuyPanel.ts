@@ -4,7 +4,8 @@ import { UNIT_QUEUE_LIMIT } from '@config/constants';
 import { getUnitDefinition, type UnitDefinition } from '@entities/unitDefinitions';
 import type { QueuedUnit, Side } from '@state/types';
 import { addPanel, fitImage, UI_FONT, UiColors, UiTextColors, UiTextures } from '@ui/kenneyUi';
-import { UiButton } from '@ui/UiButton';
+import { keyHint } from '@ui/keymap';
+import { UiButton, type PressModifiers } from '@ui/UiButton';
 import { emit, Events } from '@utils/EventBus';
 import { unitIcon } from '@entities/unitArt';
 
@@ -38,7 +39,8 @@ interface QueueSlot {
  * The Units tab of the bottom panel: one button per slot of the current age
  * (cost, greyed out when unaffordable, when the queue is full, or while the
  * match is not being played) plus the training queue with a progress bar for
- * the unit in front. Keys 1-5 press the matching button, on any tab.
+ * the unit in front. The slot keys (1-5 by default) press the matching
+ * button while this tab is open (HUDScene's keymap calls `pressSlot`).
  *
  * It never touches game state: `HUDScene` tells it about gold, age and queue
  * changes (from the event bus) and it asks for purchases by emitting
@@ -64,7 +66,6 @@ export class UnitBuyPanel {
   private queueLength: number;
   /** True while the match is not being played (paused, over): nothing can be bought. */
   private locked = false;
-  private readonly onKeyDown = (event: KeyboardEvent): void => this.handleKey(event);
 
   /** `left`/`top` are the outer top-left corner of the bottom panel. */
   constructor(scene: Phaser.Scene, side: Side, left: number, top: number, initial: UnitBuyPanelInitial) {
@@ -104,7 +105,6 @@ export class UnitBuyPanel {
 
     this.buildButtons(initial.age);
     this.setQueue(initial.queue);
-    scene.input.keyboard?.on('keydown', this.onKeyDown);
   }
 
   setVisible(visible: boolean): void {
@@ -162,7 +162,15 @@ export class UnitBuyPanel {
   }
 
   destroy(): void {
-    this.scene.input.keyboard?.off('keydown', this.onKeyDown);
+    // Nothing to release: the buttons go with the scene.
+  }
+
+  /** Presses slot `slot` (1-5) as a click would; false when there is no such slot. */
+  pressSlot(slot: number, modifiers: PressModifiers): boolean {
+    const entry = this.buttons[slot - 1];
+    if (!entry) return false;
+    entry.button.press(modifiers);
+    return true;
   }
 
   private buildButtons(age: number): void {
@@ -182,7 +190,7 @@ export class UnitBuyPanel {
     const button = new UiButton(scene, x, y, BUTTON_SIZE, BUTTON_SIZE, {
       onPress: () => emit(Events.BuyUnitRequested, { side: this.side, unitId: definition.id }),
     });
-    const key = scene.add.text(-half + 7, -half + 5, String(hotkey), {
+    const key = scene.add.text(-half + 7, -half + 5, keyHint(`slot-${hotkey}`), {
       fontFamily: UI_FONT,
       fontSize: '12px',
       color: UiTextColors.dim,
@@ -207,11 +215,5 @@ export class UnitBuyPanel {
     for (const { definition, button } of this.buttons) {
       button.setEnabled(!this.locked && !queueFull && this.gold >= definition.cost);
     }
-  }
-
-  private handleKey(event: KeyboardEvent): void {
-    const slot = Number(event.key);
-    if (!Number.isInteger(slot) || slot < 1 || slot > this.buttons.length) return;
-    this.buttons[slot - 1]?.button.press();
   }
 }

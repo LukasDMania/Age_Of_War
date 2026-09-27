@@ -3,6 +3,7 @@ import { getAge, isFinalAge } from '@config/ages.config';
 import type { Side } from '@state/types';
 import { UI_FONT, UiColors, UiTextColors } from '@ui/kenneyUi';
 import { UiButton } from '@ui/UiButton';
+import { keyHint } from '@ui/keymap';
 import { emit, Events } from '@utils/EventBus';
 
 /**
@@ -12,12 +13,10 @@ import { emit, Events } from '@utils/EventBus';
  * `HUDScene`.
  */
 export class AgeUpButton {
-  private readonly scene: Phaser.Scene;
   private readonly side: Side;
   private readonly button: UiButton;
   private readonly next: Phaser.GameObjects.Text;
   private readonly price: Phaser.GameObjects.Text;
-  private readonly onKey = (): void => this.button.press();
   private age = 0;
   private xp = 0;
   private locked = false;
@@ -36,7 +35,6 @@ export class AgeUpButton {
     xp: number,
     maxAge = Infinity,
   ) {
-    this.scene = scene;
     this.side = side;
     this.button = new UiButton(scene, x, y, width, height, {
       onPress: () => emit(Events.AgeUpRequested, { side: this.side }),
@@ -48,7 +46,7 @@ export class AgeUpButton {
     const halfH = height / 2;
     const title = scene.add.text(-halfW + 10, -halfH + 8, 'Age up', { fontFamily: UI_FONT, fontSize: '13px', color: UiTextColors.dim });
     const key = scene.add
-      .text(halfW - 10, -halfH + 8, 'A', { fontFamily: UI_FONT, fontSize: '12px', color: UiTextColors.dim })
+      .text(halfW - 10, -halfH + 8, keyHint('age-up'), { fontFamily: UI_FONT, fontSize: '12px', color: UiTextColors.dim })
       .setOrigin(1, 0);
     this.next = scene.add
       .text(0, -2, '', { fontFamily: UI_FONT, fontSize: '15px', color: UiTextColors.parchment })
@@ -61,7 +59,6 @@ export class AgeUpButton {
     this.xp = xp;
     this.maxAge = maxAge;
     this.refresh();
-    scene.input.keyboard?.on('keydown-A', this.onKey);
   }
 
   setAge(age: number): void {
@@ -79,8 +76,12 @@ export class AgeUpButton {
     this.refresh();
   }
 
+  /** Presses the button as a click would (keyboard). */
+  press(): void {
+    this.button.press();
+  }
+
   destroy(): void {
-    this.scene.input.keyboard?.off('keydown-A', this.onKey);
   }
 
   private refresh(): void {

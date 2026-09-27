@@ -154,7 +154,7 @@ export const UTILITY_AURA_TICK_MS = 250;
 export const UTILITY_BUFF_LINGER_MS = 600;
 export const UTILITY_AURA_PULSE_MS = 1500;
 
-/** Dev-only cheat amounts (`window.__aow`, and the G / X keys). */
+/** Dev-only cheat amounts (`window.__aow`, and the dev cheat keys, G / H by default). */
 export const DEBUG_CHEATS = {
   gold: 100,
   xp: 100,
@@ -205,6 +205,8 @@ export const SCENE_KEYS = {
   overlay: 'OverlayScene',
   /** Conquest campaign screen (prototype, feature `conquest`). */
   conquest: 'ConquestScene',
+  /** Key bindings and unit compositions, on top of the menu or the pause panel. */
+  controls: 'ControlsScene',
   /** Dev-only texture viewer, reachable with `?gallery` in the URL. */
   gallery: 'TextureGalleryScene',
 } as const;

@@ -37,6 +37,11 @@ interface PricedButton {
 interface SlotCard {
   container: Phaser.GameObjects.Container;
   buttons: PricedButton[];
+  /** The buttons the turret keys press, by what they do. */
+  unlock?: UiButton;
+  build: UiButton[];
+  upgrade?: UiButton;
+  sell?: UiButton;
 }
 
 function textStyle(size: number, color: string): Phaser.Types.GameObjects.Text.TextStyle {
@@ -53,6 +58,10 @@ function textStyle(size: number, color: string): Phaser.Types.GameObjects.Text.T
  * - A built turret shows its name, its upgrade level (dots), an Upgrade
  *   button with the next level's price (Phase 11) and a Sell button with the
  *   refund.
+ *
+ * One card is chosen (outlined) for the keyboard: the slot keys choose it,
+ * and the turret keys build, upgrade or unlock, and sell there (HUDScene's
+ * keymap calls `select`, `build`, `upgrade`, `sell`).
  *
  * Like the Units tab it never touches state: `HUDScene` forwards the
  * relevant events and the cards emit `buy-slot-requested`,
@@ -71,6 +80,9 @@ export class TurretPanel {
   private unlockedSlots: number;
   private readonly turrets: (TurretState | null)[];
   private locked = false;
+  /** The card the turret keys act on. */
+  private selected = 0;
+  private readonly selection: Phaser.GameObjects.Graphics;
 
   /** `left`/`top` are the outer top-left corner of the bottom panel. */
   constructor(scene: Phaser.Scene, side: Side, left: number, top: number, initial: TurretPanelInitial) {
@@ -83,7 +95,49 @@ export class TurretPanel {
     this.unlockedSlots = initial.unlockedSlots;
     this.turrets = initial.turrets.map((t) => (t ? { ...t } : null));
     this.root = scene.add.container(0, 0);
+    this.selection = scene.add.graphics();
+    this.root.add(this.selection);
     this.rebuildAll();
+  }
+
+  /** Keyboard: chooses the card the turret keys act on. False when there's no such slot. */
+  select(slotIndex: number): boolean {
+    if (slotIndex < 0 || slotIndex >= MAX_TURRET_SLOTS) return false;
+    this.selected = slotIndex;
+    this.drawSelection();
+    return true;
+  }
+
+  /** Keyboard: builds the age's `kind`-th turret (0-2) in the chosen slot. */
+  build(kind: number): boolean {
+    return this.pressOnSelected((card) => card.build[kind]);
+  }
+
+  /** Keyboard: upgrades the chosen slot's turret, or unlocks the slot when it is the next locked one. */
+  upgrade(): boolean {
+    return this.pressOnSelected((card) => card.upgrade ?? card.unlock);
+  }
+
+  /** Keyboard: sells the chosen slot's turret. */
+  sell(): boolean {
+    return this.pressOnSelected((card) => card.sell);
+  }
+
+  private pressOnSelected(pick: (card: SlotCard) => UiButton | undefined): boolean {
+    const card = this.cards[this.selected];
+    const button = card ? pick(card) : undefined;
+    if (!button) return false;
+    button.press();
+    return true;
+  }
+
+  private drawSelection(): void {
+    const x0 = this.left + PADDING + this.selected * (CARD_WIDTH + CARD_GAP);
+    const y0 = this.top + PADDING;
+    this.selection.clear();
+    this.selection.lineStyle(2, UiColors.gold, 0.9);
+    this.selection.strokeRoundedRect(x0 - 3, y0 - 3, CARD_WIDTH + 6, CARD_HEIGHT + 6, 6);
+    this.root.bringToTop(this.selection);
   }
 
   setVisible(visible: boolean): void {
@@ -125,7 +179,7 @@ export class TurretPanel {
     const x0 = this.left + PADDING + slotIndex * (CARD_WIDTH + CARD_GAP);
     const y0 = this.top + PADDING;
     const container = this.scene.add.container(x0, y0);
-    const card: SlotCard = { container, buttons: [] };
+    const card: SlotCard = { container, buttons: [], build: [] };
     this.cards[slotIndex] = card;
     this.root.add(container);
 
@@ -139,6 +193,7 @@ export class TurretPanel {
     else if (turret) this.fillBuilt(card, slotIndex, turret);
     else this.fillEmpty(card, slotIndex);
     this.refreshButtons();
+    this.drawSelection();
   }
 
   private fillLocked(card: SlotCard, slotIndex: number): void {
@@ -158,6 +213,7 @@ export class TurretPanel {
     button.add(this.scene.add.text(-30, 0, 'Unlock', textStyle(12, UiTextColors.parchment)).setOrigin(0.5), this.priceLabel(28, 0, cost, 13));
     card.container.add(button.container);
     card.buttons.push({ button, cost });
+    card.unlock = button;
   }
 
   private fillEmpty(card: SlotCard, slotIndex: number): void {
@@ -176,6 +232,7 @@ export class TurretPanel {
       button.add(icon, this.priceLabel(0, 22, definition.cost, 11));
       card.container.add(button.container);
       card.buttons.push({ button, cost: definition.cost });
+      card.build.push(button);
     });
   }
 
@@ -224,6 +281,8 @@ export class TurretPanel {
     card.buttons.push({ button: upgrade, cost: next ? next.cost : Infinity });
     // Selling costs nothing, so it only depends on the lock, not on gold.
     card.buttons.push({ button: sell, cost: 0 });
+    card.upgrade = upgrade;
+    card.sell = sell;
   }
 
 

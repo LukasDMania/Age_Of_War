@@ -3,13 +3,18 @@ import { GAME_WIDTH } from '@config/constants';
 import type { Side } from '@state/types';
 import { findDoctrine } from '@systems/experimental/DoctrineSystem';
 import { addThemedPanel, UI_FONT, UI_TITLE_FONT, UiTextColors } from '@ui/kenneyUi';
+import { keyHint } from '@ui/keymap';
 import { UiButton } from '@ui/UiButton';
 import { emit, Events, on } from '@utils/EventBus';
+
+const CHOICE_KEYS = ['choice-1', 'choice-2', 'choice-3'] as const;
 
 /**
  * Doctrine choice (prototype, feature `ageDoctrines`): after the player ages
  * up, three doctrine cards appear under the top panels; pick one (click or
- * keys 7 / 8 / 9). Emits `choose-doctrine-requested`; closes on
+ * the popup choice keys, 7 / 8 / 9 by default, through HUDScene's keymap, where
+ * they win over the slot keys while the popup is open). Emits
+ * `choose-doctrine-requested`; closes on
  * `doctrine-chosen`. The match keeps running meanwhile.
  */
 export class DoctrinePopup {
@@ -18,14 +23,10 @@ export class DoctrinePopup {
   private panel: Phaser.GameObjects.Container | null = null;
   private options: readonly string[] = [];
   private readonly cleanups: (() => void)[];
-  private readonly keys = ['SEVEN', 'EIGHT', 'NINE'] as const;
-  private readonly keyHandlers: (() => void)[];
 
   constructor(scene: Phaser.Scene, side: Side) {
     this.scene = scene;
     this.side = side;
-    this.keyHandlers = this.keys.map((_, i) => () => this.pick(i));
-    this.keys.forEach((key, i) => scene.input.keyboard?.on(`keydown-${key}`, this.keyHandlers[i]!));
     this.cleanups = [
       on(Events.DoctrineOffered, ({ side: s, options }) => {
         if (s === this.side) this.show(options);
@@ -38,13 +39,19 @@ export class DoctrinePopup {
 
   destroy(): void {
     for (const off of this.cleanups) off();
-    this.keys.forEach((key, i) => this.scene.input.keyboard?.off(`keydown-${key}`, this.keyHandlers[i]!));
     this.close();
   }
 
-  private pick(index: number): void {
+  get isOpen(): boolean {
+    return this.panel !== null;
+  }
+
+  /** Picks card `index` (0-2); false when there's no such choice open. */
+  pick(index: number): boolean {
     const id = this.options[index];
-    if (this.panel && id) emit(Events.ChooseDoctrineRequested, { side: this.side, doctrineId: id });
+    if (!this.panel || !id) return false;
+    emit(Events.ChooseDoctrineRequested, { side: this.side, doctrineId: id });
+    return true;
   }
 
   private show(options: readonly string[]): void {
@@ -77,7 +84,7 @@ export class DoctrinePopup {
         framed: true,
       });
       button.add(
-        this.scene.add.text(-width / 2 + 8, -34, String(7 + i), { fontFamily: UI_FONT, fontSize: '11px', color: UiTextColors.dim }),
+        this.scene.add.text(-width / 2 + 8, -34, keyHint(CHOICE_KEYS[i] ?? 'choice-1'), { fontFamily: UI_FONT, fontSize: '11px', color: UiTextColors.dim }),
         this.scene.add.text(0, -14, d.name, { fontFamily: UI_TITLE_FONT, fontSize: '20px', color: UiTextColors.parchment }).setOrigin(0.5),
         this.scene.add
           .text(0, 14, d.about, { fontFamily: UI_FONT, fontSize: '13px', fontStyle: '600', color: UiTextColors.gold, align: 'center', wordWrap: { width: width - 16 } })
