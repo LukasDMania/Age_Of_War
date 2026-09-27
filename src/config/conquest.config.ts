@@ -627,6 +627,28 @@ export const LEGACY: readonly LegacyUnlock[] = [
   { id: 'legend-status', name: 'Living legend', about: 'Your units +8% damage and HP in every battle', cost: 160, tier: 4, battle: [{ kind: 'unit-stat', side: 'player', stat: 'damage', mult: 1.08 }, { kind: 'unit-stat', side: 'player', stat: 'maxHp', mult: 1.08 }] },
 ];
 
+/* ---- Siege --------------------------------------------------------------------------------- */
+
+/**
+ * Siege (2026-09-27): battles are locked to one age, so nothing breaks a
+ * stalemate the way an age-up does (AI-vs-AI chapter battles stalled for 20
+ * minutes). From `startMs` on, every unit of both sides deals `perMinute`
+ * more damage each minute (at most `maxMult`); turrets don't grow. From
+ * `wallsFromMs`, siege guns hit both bases every `wallsEveryMs`: in the
+ * first minute `wallsFirst` of their max HP per minute, `wallsGrowth` more
+ * each minute after, so a battle ends by about minute 15 and the side that
+ * kept its base in better shape wins a stalemate.
+ */
+export const SIEGE = {
+  startMs: 5 * 60_000,
+  perMinute: 0.2,
+  maxMult: 3,
+  wallsFromMs: 8 * 60_000,
+  wallsEveryMs: 4000,
+  wallsFirst: 0.04,
+  wallsGrowth: 0.04,
+} as const;
+
 /* ---- Ascension ---------------------------------------------------------------------------- */
 
 /**

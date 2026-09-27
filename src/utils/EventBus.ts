@@ -73,6 +73,8 @@ export const Events = {
   WarCryRequested: 'war-cry-requested',
   WarCryUsed: 'war-cry-used',
   WarCryCooldownChanged: 'war-cry-cooldown-changed',
+  /** Conquest (prototype): the siege rule raised every unit's damage. */
+  SiegeChanged: 'siege-changed',
 } as const;
 
 /** The utility effect kinds (see `UtilityEffect` in unitDefinitions). */
@@ -243,6 +245,8 @@ export interface EventPayloads {
   /** `positions` are the x of every unit it rallied (for the effect). */
   [Events.WarCryUsed]: { side: Side; durationMs: number; positions: readonly number[] };
   [Events.WarCryCooldownChanged]: { side: Side; remainingMs: number; totalMs: number };
+  /** `mult` is the damage multiplier every unit now has (1 = none yet). */
+  [Events.SiegeChanged]: { mult: number };
 }
 
 export type EventName = keyof EventPayloads;

@@ -110,6 +110,8 @@ export class HUDScene extends Phaser.Scene {
   private enemyAgeText!: Phaser.GameObjects.Text;
   /** Who plays the enemy (difficulty, profile), right of the enemy's age. */
   private enemyControllerText!: Phaser.GameObjects.Text;
+  /** Conquest siege notice (created on the first `siege-changed`). */
+  private siegeText: Phaser.GameObjects.Text | null = null;
   /** Catch-up notices (switch `ageCatchUp`) under the two top panels. */
   private catchUpTexts!: Record<Side, Phaser.GameObjects.Text>;
   private enemyController: AiDifficultyName | 'off' = 'off';
@@ -293,6 +295,7 @@ export class HUDScene extends Phaser.Scene {
           },
         } satisfies HudSceneData);
       }),
+      on(Events.SiegeChanged, ({ mult }) => this.showSiege(mult)),
       on(Events.SpecialCooldownChanged, ({ side, remainingMs, totalMs }) => {
         if (side !== HUD_SIDE) return;
         this.lastSpecial = { remainingMs, totalMs };
@@ -515,6 +518,25 @@ export class HUDScene extends Phaser.Scene {
 
   private showAge(age: number): void {
     this.ageText.setText(`${getAge(age).name} Age`);
+  }
+
+  /** Conquest siege: a red line under the top buttons once units hit harder. */
+  private showSiege(mult: number): void {
+    const text = `Siege! All units +${Math.round((mult - 1) * 100)}% damage`;
+    if (!this.siegeText || !this.siegeText.active) {
+      this.siegeText = this.add
+        .text(GAME_WIDTH / 2, 70, '', {
+          fontFamily: UI_FONT,
+          fontSize: '15px',
+          fontStyle: '600',
+          color: '#ff9a7a',
+          stroke: UiTextColors.stroke,
+          strokeThickness: 4,
+        })
+        .setOrigin(0.5, 0);
+    }
+    this.siegeText.setText(text);
+    this.tweens.add({ targets: this.siegeText, scale: { from: 1.3, to: 1 }, duration: 300, ease: 'Back.easeOut' });
   }
 
   /** Small ribbons under the top panels while a side is behind in age (catch-up rules). */

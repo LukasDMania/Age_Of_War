@@ -1,13 +1,15 @@
 import { getAge } from '@config/ages.config';
 import { buildingUpgradeCost } from '@config/buildings.config';
-import type { ConquestEffect } from '@config/conquest.config';
+import { SIEGE, type ConquestEffect } from '@config/conquest.config';
 import { getTurretDefinition, slotUnlockCost } from '@entities/turretDefinitions';
 import { getUnitDefinition } from '@entities/unitDefinitions';
+import type { Base } from '@entities/Base';
 import type { UnitFactory } from '@entities/UnitFactory';
 import { addGold, addXp } from '@state/economyOps';
 import type { MatchState } from '@state/GameState';
 import { SIDES, type Side } from '@state/types';
 import { buildingRejection, researchPrice, researchRejection } from '@systems/BuildingSystem';
+import { dealBaseDamage } from '@systems/damageOps';
 import { setSideModifier } from '@systems/statusOps';
 import { emit, Events } from '@utils/EventBus';
 
@@ -32,7 +34,11 @@ const sidesOf = (side: Side | 'both'): readonly Side[] => (side === 'both' ? SID
  * `buy-unit-requested`, so they queue and train like any purchase (the
  * queue holds five; more are dropped by SpawnSystem).
  *
- * Listens for nothing. Emits: `age-up-requested`, `buy-unit-requested`,
+ * Siege (`SIEGE`): from minute five, a side-wide damage modifier on both
+ * sides that grows every minute (announced with `siege-changed`); from
+ * minute eight, siege guns hit both bases (through `damageOps`).
+ *
+ * Listens for nothing. Emits: `siege-changed`, `age-up-requested`, `buy-unit-requested`,
  * `upgrade-building-requested`, `research-requested`, `buy-slot-requested`,
  * `buy-turret-requested`, `upgrade-turret-requested`; `gold-changed` /
  * `xp-changed` through economyOps.
@@ -41,16 +47,23 @@ export class ConquestSystem {
   private readonly state: MatchState;
   private readonly units: UnitFactory;
   private readonly effects: readonly ConquestEffect[];
+  private readonly bases: Record<Side, Base>;
   private applied = false;
+  /** Minutes of siege applied so far, and when the siege guns fire next. */
+  private siegeMinutes = 0;
+  private nextVolleyAt: number = SIEGE.wallsFromMs;
 
-  constructor(state: MatchState, units: UnitFactory, effects: readonly ConquestEffect[]) {
+  constructor(state: MatchState, units: UnitFactory, bases: Record<Side, Base>, effects: readonly ConquestEffect[]) {
     this.state = state;
     this.units = units;
+    this.bases = bases;
     this.effects = effects;
   }
 
-  update(): void {
-    if (this.applied || this.state.phase !== 'playing') return;
+  update(nowMs = 0): void {
+    if (this.state.phase !== 'playing') return;
+    this.updateSiege(nowMs);
+    if (this.applied) return;
     this.applied = true;
     const order: ConquestEffect['kind'][] = ['start-age', 'building', 'research', 'turrets', 'unit-stat', 'units', 'gold', 'xp'];
     for (const kind of order) {
@@ -62,6 +75,27 @@ export class ConquestSystem {
 
   destroy(): void {
     // Nothing to release: the effects live in the match state.
+  }
+
+  /** Siege: every full minute past `SIEGE.startMs`, all units hit harder; later the walls take fire. */
+  private updateSiege(nowMs: number): void {
+    if (nowMs >= this.nextVolleyAt) {
+      this.nextVolleyAt += SIEGE.wallsEveryMs;
+      const minutes = (nowMs - SIEGE.wallsFromMs) / 60_000;
+      const perMinute = SIEGE.wallsFirst + SIEGE.wallsGrowth * Math.floor(minutes);
+      for (const side of SIDES) {
+        const base = this.bases[side];
+        dealBaseDamage(base, (base.maxHp * perMinute * SIEGE.wallsEveryMs) / 60_000);
+      }
+    }
+    const minutes = nowMs < SIEGE.startMs ? 0 : Math.floor((nowMs - SIEGE.startMs) / 60_000) + 1;
+    if (minutes <= this.siegeMinutes) return;
+    this.siegeMinutes = minutes;
+    const mult = Math.min(SIEGE.maxMult, 1 + SIEGE.perMinute * minutes);
+    for (const side of SIDES) {
+      setSideModifier(this.state, this.units.activeUnits, side, { id: 'conquest-siege', source: 'conquest', stat: 'damage', mult });
+    }
+    emit(Events.SiegeChanged, { mult });
   }
 
   private grant(side: Side, gold: number): void {

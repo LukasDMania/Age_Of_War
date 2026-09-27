@@ -385,7 +385,7 @@ export class GameScene extends Phaser.Scene {
     if (this.aiSetting !== 'off') aiSides.push('enemy');
     if (this.playerAiSetting) aiSides.push('player');
     if (feature('veterancy')) this.experiments.push(new VeterancySystem(this.units));
-    if (this.sceneData.conquest) this.experiments.push(new ConquestSystem(this.state, this.units, this.sceneData.conquest.effects));
+    if (this.sceneData.conquest) this.experiments.push(new ConquestSystem(this.state, this.units, this.bases, this.sceneData.conquest.effects));
     if (feature('ageDoctrines')) {
       this.experiments.push(new DoctrineSystem(this.state, this.units, () => this.match.elapsedMs));
       for (const side of aiSides) this.experiments.push(new DoctrineAi(side, this.units));
