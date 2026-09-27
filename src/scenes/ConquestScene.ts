@@ -18,8 +18,11 @@ import {
   MUTATORS,
   NODE_INFO,
   NODE_REWARDS,
+  PATH_IDS,
+  PATHS,
   RELICS,
   START_LIMITS,
+  type Relic,
 } from '@config/conquest.config';
 import { GAME_HEIGHT, GAME_WIDTH, SCENE_KEYS } from '@config/constants';
 import { unitArtKey } from '@config/unitArt.config';
@@ -32,6 +35,7 @@ import {
   battleSetup,
   buyCampUpgrade,
   buyUnlock,
+  campOffer,
   campUpgradeCost,
   chooseEventOption,
   chooseNode,
@@ -42,6 +46,7 @@ import {
   legacyTierOpen,
   loadMeta,
   loadRun,
+  pathCounts,
   reachableRows,
   rerollRelics,
   restAtCamp,
@@ -66,6 +71,17 @@ import { ensureRigArt } from '@utils/RigArt';
 import { flipOriginX } from '@utils/spriteOrigin';
 
 const CX = GAME_WIDTH / 2;
+
+/** A relic's gem color: its own, else its path's, else gold. */
+function relicColor(relic: Relic | undefined, id: string): number {
+  return RELIC_COLORS[id] ?? (relic?.path ? PATHS[relic.path].color : UiColors.gold);
+}
+
+/** "Vanguard · keystone" style label of a relic's path and rarity. */
+function relicTag(relic: Relic): string {
+  const path = relic.path ? PATHS[relic.path].name : 'General';
+  return relic.keystone ? `${path} · KEYSTONE` : relic.rare ? `${path} · rare` : path;
+}
 const MAP_X = [150, 360, 570, 800] as const;
 const MAP_Y = [300, 405, 510] as const;
 const NODE_R = 30;
@@ -230,7 +246,27 @@ export class ConquestScene extends Phaser.Scene {
     });
   }
 
+  /** The run's archetype paths so far (offers lean toward them), above the relic bar. */
+  private drawPathSummary(run: ConquestRun): void {
+    const counts = pathCounts(run);
+    const owned = PATH_IDS.filter((p) => counts[p] > 0).sort((a, b) => counts[b] - counts[a]);
+    if (owned.length === 0) return;
+    const y = GAME_HEIGHT - 56;
+    const parts = owned.map((p) => this.add2(this.add.text(0, y, `${PATHS[p].name} ${counts[p]}`, title(14, PATHS[p].text)).setOrigin(0, 0.5)));
+    const label = this.add2(this.add.text(0, y, 'Paths', body(13, UiTextColors.dim)).setOrigin(0, 0.5));
+    const gap = 16;
+    const width = label.width + gap + parts.reduce((sum, t) => sum + t.width + gap, -gap);
+    let x = CX - width / 2;
+    label.setX(x);
+    x += label.width + gap;
+    for (const t of parts) {
+      t.setX(x);
+      x += t.width + gap;
+    }
+  }
+
   private drawRelicBar(run: ConquestRun): void {
+    this.drawPathSummary(run);
     const y = GAME_HEIGHT - 28;
     const upgrades = CAMP_UPGRADES.filter((u) => (run.upgrades[u.id] ?? 0) > 0)
       .map((u) => `${u.name} ${run.upgrades[u.id]}`)
@@ -241,11 +277,11 @@ export class ConquestScene extends Phaser.Scene {
     if (run.relics.length > 0) this.add2(this.add.text(x - 8, y, 'Relics', title(16)).setOrigin(1, 0.5));
     for (const id of run.relics) {
       const relic = RELICS.find((r) => r.id === id);
-      drawGem(g, x + 14, y, 11, RELIC_COLORS[id] ?? UiColors.gold);
+      drawGem(g, x + 14, y, 11, relicColor(relic, id));
       const hit = this.add2(this.add.zone(x + 14, y, 28, 28).setInteractive());
       const tip = this.add2(
         this.add
-          .text(x + 14, y - 26, relic ? `${relic.name}: ${relic.about}` : id, body(13, UiTextColors.parchment, { backgroundColor: '#1c1826', padding: { x: 8, y: 4 } }))
+          .text(x + 14, y - 26, relic ? `${relic.name} (${relicTag(relic)}): ${relic.about}` : id, body(13, UiTextColors.parchment, { backgroundColor: '#1c1826', padding: { x: 8, y: 4 } }))
           .setOrigin(0.5, 1)
           .setVisible(false)
           .setDepth(30),
@@ -296,6 +332,9 @@ export class ConquestScene extends Phaser.Scene {
         this.add
           .text(0, -40, unlocked ? c.about : `Locked: ${lockText}`, body(12, unlocked ? UiTextColors.parchment : UiTextColors.dim, { align: 'center', wordWrap: { width: w - 18 } }))
           .setOrigin(0.5, 0),
+        this.add
+          .text(0, 72, c.path ? `Leans ${PATHS[c.path].name}` : 'No path', title(12, c.path ? PATHS[c.path].text : UiTextColors.dim))
+          .setOrigin(0.5),
       );
       if (!unlocked) card.container.setAlpha(0.6);
       this.add2(card.container);
@@ -573,12 +612,16 @@ export class ConquestScene extends Phaser.Scene {
       this.hotkeys[i] = take;
       const card = new UiButton(this, x0 + i * (width + gap), y, width, 170, { onPress: take, framed: true, tint: UiColors.panelDark, hoverTint: UiColors.panelMid });
       const gem = this.add.graphics();
-      drawGem(gem, 0, -48, 20, RELIC_COLORS[id] ?? UiColors.gold);
+      drawGem(gem, 0, -52, 18, relicColor(relic, id));
+      if (relic.keystone) {
+        gem.lineStyle(2, 0xfff6de, 0.9).strokeCircle(0, -52, 26);
+      }
       card.add(
         gem,
         this.add.text(-width / 2 + 10, -76, `${i + 1}`, title(16, UiTextColors.dim)),
-        this.add.text(0, -8, relic.name, title(19, relic.rare ? '#ffb86a' : UiTextColors.gold)).setOrigin(0.5),
-        this.add.text(0, 14, relic.about, body(13, UiTextColors.parchment, { align: 'center', wordWrap: { width: width - 24 } })).setOrigin(0.5, 0),
+        this.add.text(0, -18, relic.name, title(19, relic.keystone ? '#ff9ae0' : relic.rare ? '#ffb86a' : UiTextColors.gold)).setOrigin(0.5),
+        this.add.text(0, 2, relicTag(relic), title(12, relic.path ? PATHS[relic.path].text : UiTextColors.dim)).setOrigin(0.5),
+        this.add.text(0, 16, relic.about, body(12, UiTextColors.parchment, { align: 'center', wordWrap: { width: width - 22 } })).setOrigin(0.5, 0),
       );
       this.add2(card.container);
     });
@@ -616,18 +659,19 @@ export class ConquestScene extends Phaser.Scene {
         .setOrigin(0.5),
     );
     const colW = 420;
-    CAMP_UPGRADES.forEach((u, i) => {
+    campOffer(run).forEach((u, i) => {
       const col = i % 2;
       const row = Math.floor(i / 2);
       const x = CX - colW / 2 - 10 + col * (colW + 20);
       const y = top + 118 + row * 64;
       const level = run.upgrades[u.id] ?? 0;
       const cost = campUpgradeCost(run, u.id);
-      this.add2(this.add.text(x - colW / 2, y - 12, u.name, title(17, level > 0 ? '#8fe08f' : UiTextColors.gold)).setOrigin(0, 0.5));
+      const name = this.add2(this.add.text(x - colW / 2, y - 12, u.name, title(17, level > 0 ? '#8fe08f' : UiTextColors.gold)).setOrigin(0, 0.5));
+      if (u.path) this.add2(this.add.text(name.x + name.width + 8, y - 11, PATHS[u.path].name, title(12, PATHS[u.path].text)).setOrigin(0, 0.5));
       this.add2(this.add.text(x - colW / 2, y + 11, u.about, body(12, UiTextColors.parchment)).setOrigin(0, 0.5));
       const pips = this.add2(this.add.graphics());
       for (let p = 0; p < u.maxLevel; p++) {
-        pips.fillStyle(p < level ? UiColors.gold : 0x000000, p < level ? 1 : 0.5).fillCircle(x + 30 + p * 11, y - 12, 4);
+        pips.fillStyle(p < level ? UiColors.gold : 0x000000, p < level ? 1 : 0.5).fillCircle(x + 70 - (u.maxLevel - p) * 11, y - 12, 4);
       }
       if (cost === null) {
         const label = level >= u.maxLevel ? 'Max' : 'Capped';

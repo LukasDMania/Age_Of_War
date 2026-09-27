@@ -15,6 +15,7 @@ import {
 } from '@config/buildings.config';
 import { AGE_COUNT } from '@config/ages.config';
 import type { MatchPhase, MechState, QueuedUnit, SideModifier } from '@state/types';
+import { defaultTraits, type SideTraits } from '@state/traits';
 
 export type { MatchPhase, QueuedUnit, Side } from '@state/types';
 
@@ -23,6 +24,8 @@ export interface TurretState {
   turretId: string;
   level: number;
   spent: number;
+  /** Units it killed this match (Conquest's Veteran crews trait levels it up with them). */
+  kills?: number;
 }
 
 /**
@@ -60,6 +63,8 @@ export interface SideState {
   buildingPerks: Record<BuildingId, PerkChoice[]>;
   /** The Mech being built or on the lane (owned by MechSystem). */
   mech: MechState;
+  /** Rule changes from Conquest rewards (`state/traits.ts`); neutral otherwise. Set at battle setup. */
+  traits: SideTraits;
 }
 
 export interface MatchState {
@@ -84,6 +89,7 @@ export function createSideState(): SideState {
     research: emptyResearch(),
     buildingPerks: emptyPerks(),
     mech: { build: null, alive: false },
+    traits: defaultTraits(),
   };
 }
 

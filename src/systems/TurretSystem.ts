@@ -16,7 +16,7 @@ import { addGold, trySpendGold } from '@state/economyOps';
 import type { MatchState } from '@state/GameState';
 import { laneDir, otherSide, SIDES, type Side } from '@state/types';
 import { ageGap } from '@systems/ageCatchUp';
-import { dealSplashDamage, dealUnitDamage } from '@systems/damageOps';
+import { dealBounceDamage, dealSplashDamage, dealUnitDamage } from '@systems/damageOps';
 import { emit, Events, on, type EventPayloads } from '@utils/EventBus';
 
 /** Why a turret request was turned down. */
@@ -49,8 +49,14 @@ export type TurretRejection =
  * first enemy on that line, or the ground), otherwise instant (hitscan); both
  * apply `splashRadius` if set. Turrets never shoot bases.
  *
+ * Side traits (Conquest rewards): turret damage x `turretDamage`; a kind's
+ * shots can ricochet (`turretBounce`); with `turretKillsPerLevel` a turret
+ * counts its kills (`TurretState.kills`, from `unit-died`'s
+ * `killerTurret`) and gains a free level every that many.
+ *
  * Listens for: `buy-slot-requested`, `buy-turret-requested`,
- * `upgrade-turret-requested`, `sell-turret-requested`.
+ * `upgrade-turret-requested`, `sell-turret-requested`, `unit-died` (turret
+ * kills).
  * Emits: `slot-unlocked`, `turret-built`, `turret-upgraded`, `turret-sold`,
  * `turret-fired` (feedback);
  * `gold-changed`
@@ -92,6 +98,9 @@ export class TurretSystem {
       on(Events.BuyTurretRequested, (payload) => this.onBuyTurret(payload)),
       on(Events.SellTurretRequested, ({ side, slotIndex }) => this.onSell(side, slotIndex)),
       on(Events.UpgradeTurretRequested, ({ side, slotIndex }) => this.onUpgrade(side, slotIndex)),
+      on(Events.UnitDied, ({ killerSide, killerTurret }) => {
+        if (killerTurret !== undefined) this.onTurretKill(killerSide, killerTurret);
+      }),
     ];
   }
 
@@ -208,6 +217,19 @@ export class TurretSystem {
     emit(Events.TurretUpgraded, { side, slotIndex, level: turretState.level });
   }
 
+  /** A turret's kill: counted, and every `turretKillsPerLevel` kills a free level (trait). */
+  private onTurretKill(side: Side, slotIndex: number): void {
+    const turretState = this.state[side].turrets[slotIndex];
+    if (!turretState) return;
+    turretState.kills = (turretState.kills ?? 0) + 1;
+    const every = this.state[side].traits.turretKillsPerLevel;
+    if (every <= 0 || turretState.kills % every !== 0) return;
+    if (!getTurretDefinition(turretState.turretId).upgrades[turretState.level]) return;
+    turretState.level += 1;
+    this.turrets[side][slotIndex]?.showLevel();
+    emit(Events.TurretUpgraded, { side, slotIndex, level: turretState.level });
+  }
+
   private onSell(side: Side, slotIndex: number): void {
     if (this.sellRejection(side, slotIndex) !== null) return;
     const turretState = this.state[side].turrets[slotIndex];
@@ -248,7 +270,9 @@ export class TurretSystem {
   private fire(turret: Turret, target: Unit): void {
     const definition = turret.definition;
     // Catch-up: a side behind in age defends harder (AGE_CATCH_UP).
-    const damage = turret.getStat('damage') * (1 + AGE_CATCH_UP.turretDamagePerAge * ageGap(this.state, turret.side));
+    const traits = this.state[turret.side].traits;
+    const damage =
+      turret.getStat('damage') * (1 + AGE_CATCH_UP.turretDamagePerAge * ageGap(this.state, turret.side)) * traits.turretDamage;
     const splash = definition.splashRadius ?? 0;
     turret.playFire();
     emit(Events.TurretFired, {
@@ -261,12 +285,17 @@ export class TurretSystem {
     if (definition.projectileKey) {
       // Straight at the target's middle; it hits the first enemy on that line
       // (usually the target) or the ground.
-      this.projectiles
-        .launch(definition.projectileKey, turret.side, turret.muzzleX, turret.muzzleY, damage, splash)
-        .aimAt(target.x, target.centerY);
+      const projectile = this.projectiles.launch(definition.projectileKey, turret.side, turret.muzzleX, turret.muzzleY, damage, splash);
+      projectile.aimAt(target.x, target.centerY);
+      projectile.turretSlot = turret.slotIndex;
+      projectile.turretKind = definition.kind;
       return;
     }
-    dealUnitDamage(target, damage, turret.side);
-    if (splash > 0) dealSplashDamage(this.units.activeUnits, target.x, splash, damage, turret.side, target);
+    dealUnitDamage(target, damage, turret.side, true, turret.slotIndex);
+    if (splash > 0) {
+      dealSplashDamage(this.units.activeUnits, target.x, splash, damage, turret.side, target, null, { shot: true, turretSlot: turret.slotIndex });
+    }
+    const bounce = traits.turretBounce[definition.kind];
+    if (bounce) dealBounceDamage(this.units.activeUnits, target, damage * bounce, turret.side, 110, turret.slotIndex);
   }
 }

@@ -52,7 +52,9 @@ export type ModifiableStat =
   /** Attack reach in px (Phase 14 research). Base: `attack.range`. */
   | 'range'
   /** Multiplier on damage the unit takes; base 1, below 1 is armor (Phase 14). */
-  | 'damageTaken';
+  | 'damageTaken'
+  /** Multiplier on damage from shots (projectiles) on top of `damageTaken`; base 1 (Conquest's Shield wall). */
+  | 'shotDamageTaken';
 
 /** What a unit is for; decided by its slot (see `UnitDefinition.role`). */
 export type UnitRole = 'combat' | 'economy' | 'utility';
@@ -71,4 +73,6 @@ export interface SideModifier {
   exemptRoles?: readonly UnitRole[];
   /** If set, only units in these slots are affected (Forge research, Phase 14). */
   onlySlots?: readonly number[];
+  /** `only`: just the side's Mech; `exclude`: everything but the Mech. */
+  mech?: 'only' | 'exclude';
 }

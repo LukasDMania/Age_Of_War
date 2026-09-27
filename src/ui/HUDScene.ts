@@ -201,6 +201,7 @@ export class HUDScene extends Phaser.Scene {
       gold: own.gold,
       age: own.age,
       queue: own.trainingQueue,
+      traits: own.traits,
     });
     this.turretPanel = new TurretPanel(this, HUD_SIDE, PANEL_LEFT, PANEL_TOP, {
       gold: own.gold,

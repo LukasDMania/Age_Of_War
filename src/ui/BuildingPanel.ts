@@ -150,6 +150,8 @@ export class BuildingPanel {
       this.scene.tweens.add({ targets: t, scale: 1.1, duration: 450, yoyo: true, repeat: -1 });
     } else if (cost === null) {
       button.add(this.scene.add.text(0, 0, 'Max level', textStyle(11, UiTextColors.dim)).setOrigin(0.5));
+    } else if (rejection === 'closed') {
+      button.add(this.scene.add.text(0, 0, 'Closed', textStyle(11, '#f08a80')).setOrigin(0.5));
     } else if (rejection === 'age-locked') {
       button.add(this.scene.add.text(0, 0, `${AGE_NAMES[me.age + 1] ?? ''} Age`, textStyle(11, UiTextColors.dim)).setOrigin(0.5));
     } else {

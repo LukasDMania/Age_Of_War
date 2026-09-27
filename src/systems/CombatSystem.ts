@@ -5,6 +5,7 @@ import type { UnitAttack } from '@entities/unitDefinitions';
 import { UnitState, type Unit } from '@entities/Unit';
 import type { ProjectileFactory } from '@entities/ProjectileFactory';
 import type { UnitFactory } from '@entities/UnitFactory';
+import type { MatchState } from '@state/GameState';
 import { laneDir, otherSide, type Side } from '@state/types';
 import { dealBaseDamage, dealSplashDamage, dealUnitDamage } from '@systems/damageOps';
 import { emit, Events } from '@utils/EventBus';
@@ -29,18 +30,25 @@ import { emit, Events } from '@utils/EventBus';
  * main attack makes it stop. `baseDamageMult` multiplies melee blows on a
  * base (the siege drill).
  *
+ * Side traits (Conquest rewards, `SideState.traits`): a unit's first attack
+ * can hit harder, blows can heal the attacker, a slot's attacks can hurt
+ * bases more, and every nth shot of a slot can pierce.
+ *
  * Damage goes through `damageOps`; deaths are reported by `CasualtySystem`,
  * and gold/XP rewards come from `unit-died` (EconomySystem).
  *
- * Emits: `unit-struck` (feedback, each blow or shot); through damageOps
- * `unit-damaged`, `area-hit`, `base-damaged`, `base-destroyed`.
+ * Emits: `unit-struck` (feedback, each blow or shot), `unit-healed`
+ * (lifesteal); through damageOps `unit-damaged`, `area-hit`,
+ * `base-damaged`, `base-destroyed`.
  */
 export class CombatSystem {
+  private readonly state: MatchState;
   private readonly units: UnitFactory;
   private readonly bases: Record<Side, Base>;
   private readonly projectiles: ProjectileFactory;
 
-  constructor(units: UnitFactory, bases: Record<Side, Base>, projectiles: ProjectileFactory) {
+  constructor(state: MatchState, units: UnitFactory, bases: Record<Side, Base>, projectiles: ProjectileFactory) {
+    this.state = state;
     this.units = units;
     this.bases = bases;
     this.projectiles = projectiles;
@@ -90,7 +98,10 @@ export class CombatSystem {
 
   /** The hit (melee) or the release (ranged) of an attack. */
   private resolve(unit: Unit, attack: UnitAttack, targetUnit?: Unit | null, targetBase?: Base | null): void {
-    const damage = unit.getStat('damage');
+    // First strike (trait): the unit's first attack hits harder.
+    const first = unit.attacksMade === 0 ? (this.state[unit.side].traits.firstStrike[unit.definition.slot] ?? 1) : 1;
+    unit.attacksMade++;
+    const damage = unit.getStat('damage') * first;
     emit(Events.UnitStruck, {
       side: unit.side,
       instanceId: unit.instanceId,
@@ -118,14 +129,21 @@ export class CombatSystem {
     targetUnit: Unit | null,
     targetBase: Base | null,
   ): void {
+    const traits = this.state[unit.side].traits;
+    const baseMult = traits.baseDamage[unit.definition.slot] ?? 1;
     if (targetUnit) {
-      dealUnitDamage(targetUnit, damage, unit.side);
+      const dealt = dealUnitDamage(targetUnit, damage, unit.side);
+      const steal = traits.lifesteal[unit.definition.slot];
+      if (steal && dealt > 0) {
+        const healed = unit.heal(dealt * steal);
+        if (healed > 0) emit(Events.UnitHealed, { side: unit.side, instanceId: unit.instanceId, amount: healed, x: unit.x, topY: unit.topY });
+      }
       if (attack.splashRadius) {
         const base = this.bases[otherSide(unit.side)];
-        dealSplashDamage(this.units.activeUnits, targetUnit.x, attack.splashRadius, damage, unit.side, targetUnit, base);
+        dealSplashDamage(this.units.activeUnits, targetUnit.x, attack.splashRadius, damage, unit.side, targetUnit, base, { baseMult });
       }
     } else if (targetBase) {
-      dealBaseDamage(targetBase, damage * (attack.baseDamageMult ?? 1));
+      dealBaseDamage(targetBase, damage * (attack.baseDamageMult ?? 1) * baseMult);
     }
   }
 
@@ -161,9 +179,13 @@ export class CombatSystem {
     const dir = laneDir(unit.side);
     const x = unit.x + dir * unit.halfWidth;
     const y = LANE_Y - UNIT_SHOT_HEIGHT;
-    this.projectiles
-      .launch(projectileKey, unit.side, x, y, damage, attack.splashRadius ?? 0)
-      .aimAt(x + dir, y, true);
+    const projectile = this.projectiles.launch(projectileKey, unit.side, x, y, damage, attack.splashRadius ?? 0);
+    projectile.aimAt(x + dir, y, true);
+    projectile.sourceSlot = unit.definition.slot;
+    // Every nth shot pierces (trait).
+    unit.shotsFired++;
+    const every = this.state[unit.side].traits.pierceEvery[unit.definition.slot];
+    if (every && unit.shotsFired % every === 0) projectile.pierceLeft = 1;
   }
 
   /** Edge-to-edge distance from `unit` to `other`, or null if `other` is behind. */

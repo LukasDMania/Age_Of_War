@@ -2,13 +2,28 @@ import { MECH, type MechDesign } from '@config/mech.config';
 import type { UnitFactory } from '@entities/UnitFactory';
 import { designCost, isMechUnitId, isValidDesign, lockedSlot, mechDefinition } from '@entities/mechDesign';
 import { trySpendGold } from '@state/economyOps';
-import type { MatchState } from '@state/GameState';
+import type { MatchState, SideState } from '@state/GameState';
 import { SIDES, type Side } from '@state/types';
 import type { SpawnPointCheck } from '@systems/SpawnSystem';
 import { emit, Events, on, type EventPayloads } from '@utils/EventBus';
 
 /** Why a Mech can't be built right now. */
 export type MechRejection = 'not-playing' | 'player-only' | 'invalid' | 'locked' | 'building' | 'alive' | 'cannot-afford';
+
+/** What a design costs a side now (its age; Conquest traits can change it). */
+export function mechPrice(side: SideState, design: MechDesign): number {
+  return Math.round((designCost(design, side.age) * side.traits.mechCost) / 5) * 5;
+}
+
+/** How long a design takes a side to build, ms. */
+export function mechBuildMs(side: SideState, design: MechDesign): number {
+  return Math.round(mechDefinition(design, side.age).trainTimeMs * side.traits.mechBuildTime);
+}
+
+/** The Forge level the side's parts count as (Conquest's Blueprints lower their needs). */
+export function mechForgeLevel(side: SideState): number {
+  return side.buildings.forge + side.traits.mechForgeBonus;
+}
 
 /**
  * Why `side` can't build `design` now, or null if it can. Shared by the
@@ -19,10 +34,10 @@ export function mechRejection(state: MatchState, side: Side, design: MechDesign)
   if (!(MECH.sides as readonly Side[]).includes(side)) return 'player-only';
   if (!isValidDesign(design)) return 'invalid';
   const me = state[side];
-  if (lockedSlot(design, me.buildings.forge) !== null) return 'locked';
+  if (lockedSlot(design, mechForgeLevel(me)) !== null) return 'locked';
   if (me.mech.build) return 'building';
   if (me.mech.alive) return 'alive';
-  if (me.gold < designCost(design, me.age)) return 'cannot-afford';
+  if (me.gold < mechPrice(me, design)) return 'cannot-afford';
   return null;
 }
 
@@ -83,8 +98,9 @@ export class MechSystem {
     if (mechRejection(this.state, side, design) !== null) return;
     const me = this.state[side];
     const definition = mechDefinition(design, me.age);
-    if (!trySpendGold(this.state, side, definition.cost, 'purchase')) return;
-    me.mech.build = { unitId: definition.id, remainingMs: definition.trainTimeMs, totalMs: definition.trainTimeMs };
+    if (!trySpendGold(this.state, side, mechPrice(me, design), 'purchase')) return;
+    const buildMs = mechBuildMs(me, design);
+    me.mech.build = { unitId: definition.id, remainingMs: buildMs, totalMs: buildMs };
     this.announce(side);
   }
 

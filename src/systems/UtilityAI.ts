@@ -402,7 +402,7 @@ export class UtilityAI {
     const level = me.buildings[id];
     if (level >= aiBuildingCap(this.difficulty, me.age)) return null;
     const rejection = buildingRejection(me, id);
-    if (rejection === 'max-level' || rejection === 'age-locked') return null;
+    if (rejection === 'max-level' || rejection === 'age-locked' || rejection === 'closed') return null;
     const cost = buildingUpgradeCost(id, level);
     if (cost === null) return null;
     switch (id) {

@@ -5,6 +5,7 @@ import type { UnitFactory } from '@entities/UnitFactory';
 import { findUnitDefinition } from '@entities/unitDefinitions';
 import { trySpendGold } from '@state/economyOps';
 import type { MatchState } from '@state/GameState';
+import { unitPrice } from '@state/traits';
 import { SIDES, type Side } from '@state/types';
 import { emit, Events, on, type EventPayloads } from '@utils/EventBus';
 
@@ -25,6 +26,9 @@ export type BuyRejection =
  * `UNIT_QUEUE_LIMIT` long). The unit at the front trains for its
  * `trainTimeMs`, then appears at the spawn point as soon as that is clear;
  * the rest wait their turn. Units are built through `UnitFactory`.
+ *
+ * Prices and training times follow the side's traits (Conquest rewards:
+ * `unitPrice`, `traits.trainTime`), neutral outside Conquest.
  *
  * The spawn point check is passed in as a function so this system does not
  * hold a reference to `LaneSystem`.
@@ -63,7 +67,7 @@ export class SpawnSystem {
     const sideState = this.state[side];
     if (!getAge(sideState.age).unitIds.includes(unitId)) return 'wrong-age';
     if (sideState.trainingQueue.length >= UNIT_QUEUE_LIMIT) return 'queue-full';
-    if (sideState.gold < definition.cost) return 'cannot-afford';
+    if (sideState.gold < unitPrice(sideState.traits, definition)) return 'cannot-afford';
     return null;
   }
 
@@ -86,9 +90,10 @@ export class SpawnSystem {
   private onBuyRequested({ side, unitId }: EventPayloads[typeof Events.BuyUnitRequested]): void {
     if (this.rejectionFor(side, unitId) !== null) return;
     const definition = findUnitDefinition(unitId);
-    if (!definition || !trySpendGold(this.state, side, definition.cost, 'purchase')) return;
-    // Barracks levels and perks train faster (2026-09-26).
-    const trainMs = definition.trainTimeMs * buildingEffects(this.state[side]).trainTime;
+    const me = this.state[side];
+    if (!definition || !trySpendGold(this.state, side, unitPrice(me.traits, definition), 'purchase')) return;
+    // Barracks levels and perks train faster (2026-09-26); so can traits.
+    const trainMs = definition.trainTimeMs * buildingEffects(me).trainTime * me.traits.trainTime[definition.slot];
     this.state[side].trainingQueue.push({ unitId, remainingMs: trainMs });
     this.emitQueue(side);
   }

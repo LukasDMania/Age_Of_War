@@ -37,15 +37,19 @@ import {
   MUTATORS,
   NODE_INFO,
   NODE_REWARDS,
+  PATH_IDS,
+  PATH_LEAN,
   RELIC_CHOICES,
   RELICS,
   START_LIMITS,
+  type CampUpgrade,
   type Commander,
   type ConquestEffect,
   type ConquestEvent,
   type ConquestStats,
   type EventOutcome,
   type NodeType,
+  type PathId,
   type Relic,
   type RunPerks,
 } from '@config/conquest.config';
@@ -67,6 +71,8 @@ export interface MapNode {
   row: number;
   battle?: BattleSpec;
   eventId?: string;
+  /** A camp's upgrades on offer (rolled when the camp is entered). */
+  campOffer?: string[];
 }
 
 export type RunStatus = 'map' | 'battle' | 'result' | 'camp' | 'event' | 'treasure' | 'won' | 'lost';
@@ -107,6 +113,8 @@ export interface ConquestRun {
   /** Event effects for every battle of the run, and for the next battle only. */
   runEffects: ConquestEffect[];
   nextBattle: ConquestEffect[];
+  /** Paths of the run-long event rewards taken (they count toward a path's offers). Missing in older saves. */
+  eventPaths?: PathId[];
   glory: number;
   wins: number;
   lastResult: BattleResult | null;
@@ -393,19 +401,117 @@ function capStartingBonuses(effects: readonly ConquestEffect[]): ConquestEffect[
   return capped;
 }
 
-/** Relics the run can be offered: not owned, unlocked, and not only adding capped starting gold or turrets. */
+/**
+ * Relics the run can be offered: not owned, unlocked, not only adding capped
+ * starting gold or turrets; rares and keystones only where `rare`, and no
+ * second keystone.
+ */
 function relicPool(run: RunLoadout, rare: boolean): Relic[] {
   const filled = capsFilled(loadoutEffects(run));
+  const hasKeystone = run.relics.some((id) => RELICS.find((r) => r.id === id)?.keystone);
   return RELICS.filter(
-    (r) => !run.relics.includes(r.id) && (!r.unlock || hasUnlock(r.unlock)) && (rare || !r.rare) && !onlyCapped(r.effects, filled),
+    (r) =>
+      !run.relics.includes(r.id) &&
+      (!r.unlock || hasUnlock(r.unlock)) &&
+      (rare || !(r.rare || r.keystone)) &&
+      !(r.keystone && hasKeystone) &&
+      !onlyCapped(r.effects, filled),
   );
 }
 
-function rollRelics(run: RunLoadout, rare = true): string[] {
+/**
+ * How many rewards of each path a run owns: its relics, camp upgrade levels
+ * and event rewards, plus its commander as one (archetype paths).
+ */
+export function pathCounts(run: RunLoadout & Partial<Pick<ConquestRun, 'eventPaths'>>): Record<PathId, number> {
+  const counts = Object.fromEntries(PATH_IDS.map((p) => [p, 0])) as Record<PathId, number>;
+  const commander = COMMANDERS.find((c) => c.id === run.commander);
+  if (commander?.path) counts[commander.path]++;
+  for (const id of run.relics) {
+    const path = RELICS.find((r) => r.id === id)?.path;
+    if (path) counts[path]++;
+  }
+  for (const upgrade of CAMP_UPGRADES) if (upgrade.path) counts[upgrade.path] += run.upgrades[upgrade.id] ?? 0;
+  for (const path of run.eventPaths ?? []) counts[path]++;
+  return counts;
+}
+
+/** A reward's offer weight: leaning toward the paths the run owns (`PATH_LEAN`). */
+function pathWeight(counts: Record<PathId, number>, path: PathId | undefined): number {
+  if (!path) return 1;
+  return Math.min(PATH_LEAN.maxWeight, 1 + PATH_LEAN.perOwned * counts[path]);
+}
+
+/** Picks `count` distinct items by weight. */
+function weightedSample<T>(items: readonly T[], weight: (item: T) => number, count: number): T[] {
+  const pool = [...items];
+  const out: T[] = [];
+  while (out.length < count && pool.length > 0) {
+    const total = pool.reduce((sum, item) => sum + weight(item), 0);
+    let roll = Math.random() * total;
+    let index = pool.length - 1;
+    for (let i = 0; i < pool.length; i++) {
+      roll -= weight(pool[i]!);
+      if (roll <= 0) {
+        index = i;
+        break;
+      }
+    }
+    out.push(pool.splice(index, 1)[0]!);
+  }
+  return out;
+}
+
+/**
+ * A relic offer: weighted toward the run's paths, never all one path (the
+ * last pick is swapped for another path or a general relic when needed).
+ */
+export function rollRelics(run: RunLoadout & Partial<Pick<ConquestRun, 'eventPaths'>>, rare = true): string[] {
   const count = RELIC_CHOICES + runPerks().relicChoices;
-  return shuffled(relicPool(run, rare))
-    .slice(0, count)
-    .map((r) => r.id);
+  const counts = pathCounts(run);
+  const pool = relicPool(run, rare);
+  const weight = (r: Relic): number => pathWeight(counts, r.path) * (r.keystone ? PATH_LEAN.keystoneWeight : 1);
+  // One pick at a time, so an offer never shows two keystones.
+  const picks: Relic[] = [];
+  while (picks.length < count) {
+    const keystoneShown = picks.some((r) => r.keystone);
+    const next = weightedSample(pool.filter((r) => !picks.includes(r) && !(keystoneShown && r.keystone)), weight, 1)[0];
+    if (!next) break;
+    picks.push(next);
+  }
+  const first = picks[0]?.path;
+  if (picks.length > 1 && first && picks.every((r) => r.path === first)) {
+    const keystoneKept = picks.slice(0, -1).some((r) => r.keystone);
+    const others = pool.filter((r) => r.path !== first && !picks.includes(r) && !(keystoneKept && r.keystone));
+    const swap = weightedSample(others, weight, 1)[0];
+    if (swap) picks[picks.length - 1] = swap;
+  }
+  return shuffled(picks).map((r) => r.id);
+}
+
+/**
+ * A camp's upgrades: every general one, plus path upgrades: the ones the run
+ * already has levels in (to keep leveling them) and a leaning pick of others,
+ * `PATH_LEAN.campPathOffers` path upgrades or more (at most six).
+ */
+function rollCampOffer(run: ConquestRun): string[] {
+  const general = CAMP_UPGRADES.filter((u) => !u.path);
+  const pathUpgrades = CAMP_UPGRADES.filter((u) => u.path);
+  const owned = pathUpgrades.filter((u) => (run.upgrades[u.id] ?? 0) > 0 && (run.upgrades[u.id] ?? 0) < u.maxLevel);
+  const counts = pathCounts(run);
+  const want = Math.min(6, Math.max(PATH_LEAN.campPathOffers, owned.length + 1));
+  const rest = weightedSample(
+    pathUpgrades.filter((u) => !owned.includes(u) && (run.upgrades[u.id] ?? 0) < u.maxLevel),
+    (u: CampUpgrade) => pathWeight(counts, u.path),
+    Math.max(0, want - owned.length),
+  );
+  return [...general, ...owned.slice(0, 6), ...rest].map((u) => u.id);
+}
+
+/** The upgrades a camp shows: its rolled offer (older saves: all of them). */
+export function campOffer(run: ConquestRun): CampUpgrade[] {
+  const ids = run.current?.campOffer;
+  return ids ? CAMP_UPGRADES.filter((u) => ids.includes(u.id)) : [...CAMP_UPGRADES];
 }
 
 /* ---- Run flow ------------------------------------------------------------------------------ */
@@ -439,6 +545,7 @@ export function startRun(commanderId: string, ascension: number): ConquestRun {
     upgrades: {},
     runEffects: [],
     nextBattle: [],
+    eventPaths: [],
     glory: 0,
     wins: 0,
     lastResult: null,
@@ -472,8 +579,9 @@ export function chooseNode(row: number): MapNode | null {
   const offer = node.type === 'treasure' ? rollRelics(run) : [];
   const path = run.step >= MAP_COLUMNS ? run.path : [...run.path, row];
   if (node.type === 'event') bumpStats((s) => ({ eventsSeen: s.eventsSeen + 1 }));
-  saveRun({ ...run, status, current: node, offer, path, eventOutcome: null, lastResult: null });
-  return node;
+  const current: MapNode = node.type === 'camp' ? { ...node, campOffer: rollCampOffer(run) } : node;
+  saveRun({ ...run, status, current, offer, path, eventOutcome: null, lastResult: null });
+  return current;
 }
 
 /** Everything that shapes the current battle, for GameScene. */
@@ -630,7 +738,7 @@ export function buyCampUpgrade(id: string): boolean {
   const run = loadRun();
   if (!run || run.status !== 'camp') return false;
   const cost = campUpgradeCost(run, id);
-  if (cost === null || run.supplies < cost) return false;
+  if (cost === null || run.supplies < cost || !campOffer(run).some((u) => u.id === id)) return false;
   saveRun({ ...run, supplies: run.supplies - cost, upgrades: { ...run.upgrades, [id]: (run.upgrades[id] ?? 0) + 1 } });
   return true;
 }
@@ -662,6 +770,7 @@ export function chooseEventOption(index: number): boolean {
   if (outcome.banners) next.banners = Math.min(next.maxBanners, next.banners + outcome.banners);
   if (outcome.nextBattle) next.nextBattle = [...next.nextBattle, ...outcome.nextBattle];
   if (outcome.runEffects) next.runEffects = [...next.runEffects, ...outcome.runEffects];
+  if (outcome.path) next.eventPaths = [...(next.eventPaths ?? []), outcome.path];
   if (outcome.relic) {
     const relic = relicPool(next, false);
     if (relic.length > 0) next = { ...next, relics: [...next.relics, pick(relic).id] };

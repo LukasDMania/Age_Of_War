@@ -2,14 +2,19 @@ import { GAME_HEIGHT, GAME_WIDTH, LANE_Y } from '@config/constants';
 import { PROJECTILE_MAX_LIFETIME_MS } from '@config/projectiles.config';
 import type { Base } from '@entities/Base';
 import type { Projectile } from '@entities/Projectile';
+import type { Unit } from '@entities/Unit';
 import type { ProjectileFactory } from '@entities/ProjectileFactory';
 import type { UnitFactory } from '@entities/UnitFactory';
+import type { MatchState } from '@state/GameState';
 import { otherSide, type Side } from '@state/types';
-import { dealBaseDamage, dealSplashDamage, dealUnitDamage } from '@systems/damageOps';
+import { dealBaseDamage, dealBounceDamage, dealSplashDamage, dealUnitDamage } from '@systems/damageOps';
+import { applyModifier } from '@systems/statusOps';
 import { emit, Events } from '@utils/EventBus';
 
 /** How far past the screen edges a projectile may go before it is dropped. */
 const OFFSCREEN_MARGIN = 60;
+/** How far behind its target a ricochet can reach (Conquest's Ricochet trait), px. */
+const BOUNCE_REACH = 110;
 
 /**
  * Where a segment from (x0, y0) moving by (dx, dy) first enters a box, as a
@@ -59,30 +64,48 @@ function entryFraction(
  * hits its own side. The hit takes the shot's damage; splash, if any, is
  * centered where it hit.
  *
+ * Side traits (Conquest rewards, `SideState.traits`) of the side that fired
+ * it: a piercing shot flies on through its first unit; a unit's shot can
+ * mark what it hits (a timed `damageTaken` modifier); a turret's shot can
+ * ricochet to the next enemy; a slot's shots can hurt bases more.
+ *
  * Emits: `projectile-impact` (feedback); through damageOps `unit-damaged`,
- * `area-hit`, `base-damaged`, `base-destroyed`.
+ * `area-hit`, `base-damaged`, `base-destroyed`, `shot-bounced`; through
+ * statusOps `modifier-applied`.
  */
 export class ProjectileSystem {
+  private readonly state: MatchState;
   private readonly projectiles: ProjectileFactory;
   private readonly units: UnitFactory;
   private readonly bases: Record<Side, Base>;
   /** Reused between frames so resolving impacts allocates nothing. */
   private readonly landed: Projectile[] = [];
   private readonly expired: Projectile[] = [];
+  private nowMs = 0;
 
-  constructor(projectiles: ProjectileFactory, units: UnitFactory, bases: Record<Side, Base>) {
+  constructor(state: MatchState, projectiles: ProjectileFactory, units: UnitFactory, bases: Record<Side, Base>) {
+    this.state = state;
     this.projectiles = projectiles;
     this.units = units;
     this.bases = bases;
   }
 
-  update(deltaMs: number): void {
+  /** `deltaMs` is simulation time; `nowMs` the simulation clock (for timed marks). */
+  update(deltaMs: number, nowMs = 0): void {
+    this.nowMs = nowMs;
     for (const projectile of this.projectiles.activeProjectiles) {
       projectile.ageMs += deltaMs;
       if (this.fly(projectile, deltaMs)) this.landed.push(projectile);
       else if (this.isLost(projectile)) this.expired.push(projectile);
     }
     for (const projectile of this.landed) {
+      // A piercing shot goes on through its first unit.
+      if (projectile.impactUnit && projectile.pierceLeft > 0) {
+        projectile.pierceLeft--;
+        projectile.ignoreUnit = projectile.impactUnit;
+        this.land(projectile);
+        continue;
+      }
       this.land(projectile);
       this.projectiles.release(projectile);
     }
@@ -107,7 +130,7 @@ export class ProjectileSystem {
     projectile.impactUnit = null;
     projectile.impactBase = null;
     for (const unit of this.units.activeUnits) {
-      if (unit.side !== enemy || !unit.isAlive) continue;
+      if (unit.side !== enemy || !unit.isAlive || unit === projectile.ignoreUnit) continue;
       const t = entryFraction(x0, y0, dx, dy, unit.x - unit.halfWidth, unit.topY, unit.x + unit.halfWidth, unit.y);
       if (t >= 0 && t < hitAt) {
         hitAt = t;
@@ -162,8 +185,15 @@ export class ProjectileSystem {
       radius: projectile.splashRadius,
       target: unit ? 'unit' : projectile.impactBase ? 'base' : 'ground',
     });
-    if (unit) dealUnitDamage(unit, projectile.damage, projectile.side);
-    else if (projectile.impactBase) dealBaseDamage(projectile.impactBase, projectile.damage);
+    const traits = this.state[projectile.side].traits;
+    const slot = projectile.sourceSlot;
+    const baseMult = slot > 0 ? (traits.baseDamage[slot as 1] ?? 1) : 1;
+    if (unit) {
+      dealUnitDamage(unit, projectile.damage, projectile.side, true, projectile.turretSlot);
+      this.afterUnitHit(projectile, unit);
+    } else if (projectile.impactBase) {
+      dealBaseDamage(projectile.impactBase, projectile.damage * baseMult);
+    }
     if (projectile.splashRadius > 0) {
       // Units' shots (`hitsBase`) splash onto the enemy base too, unless they
       // already hit it directly; turret and special shots only hurt units.
@@ -176,7 +206,19 @@ export class ProjectileSystem {
         projectile.side,
         unit,
         base,
+        { shot: true, turretSlot: projectile.turretSlot, baseMult },
       );
     }
+  }
+
+  /** Marks and ricochets (side traits) after a shot hit a unit. */
+  private afterUnitHit(projectile: Projectile, unit: Unit): void {
+    const traits = this.state[projectile.side].traits;
+    const mark = projectile.sourceSlot > 0 ? traits.mark[projectile.sourceSlot as 1] : undefined;
+    if (mark && unit.isAlive) {
+      applyModifier(unit, { id: 'trait-mark', source: 'conquest', stat: 'damageTaken', mult: mark.mult, expiresAt: this.nowMs + mark.durationMs });
+    }
+    const bounce = projectile.turretKind ? traits.turretBounce[projectile.turretKind] : undefined;
+    if (bounce) dealBounceDamage(this.units.activeUnits, unit, projectile.damage * bounce, projectile.side, BOUNCE_REACH, projectile.turretSlot);
   }
 }

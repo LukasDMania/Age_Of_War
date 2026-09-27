@@ -7,6 +7,7 @@ import type { Base } from '@entities/Base';
 import type { UnitFactory } from '@entities/UnitFactory';
 import { addGold, addXp } from '@state/economyOps';
 import type { MatchState } from '@state/GameState';
+import { UNIT_SLOTS, unitPrice, type SideTraits } from '@state/traits';
 import { SIDES, type Side } from '@state/types';
 import { buildingRejection, researchPrice, researchRejection } from '@systems/BuildingSystem';
 import { dealBaseDamage } from '@systems/damageOps';
@@ -45,6 +46,12 @@ export function conquestKillGoldMult(effects: readonly ConquestEffect[]): Record
  * `buy-unit-requested`, so they queue and train like any purchase (the
  * queue holds five; more are dropped by SpawnSystem).
  *
+ * Behaviour rewards (archetype paths: `unit-cost`, `lifesteal`, `pierce`,
+ * `turret-bounce`, `mine`, `mech` ...) are written into the side's
+ * `SideState.traits` when the system is built (before the HUD reads prices),
+ * and the systems that own each rule read them there. A growing Mine grows
+ * once a minute here.
+ *
  * Siege (`SIEGE`): from minute five, a side-wide damage modifier on both
  * sides that grows every minute (announced with `siege-changed`); from
  * minute eight, siege guns hit both bases (through `damageOps`).
@@ -69,11 +76,13 @@ export class ConquestSystem {
     this.units = units;
     this.bases = bases;
     this.effects = effects;
+    for (const effect of effects) applyTrait(state, effect);
   }
 
   update(nowMs = 0): void {
     if (this.state.phase !== 'playing') return;
     this.updateSiege(nowMs);
+    this.growMines(nowMs);
     if (this.applied) return;
     this.applied = true;
     const order: ConquestEffect['kind'][] = ['start-age', 'building', 'research', 'turrets', 'unit-stat', 'units', 'gold', 'xp'];
@@ -86,6 +95,15 @@ export class ConquestSystem {
 
   destroy(): void {
     // Nothing to release: the effects live in the match state.
+  }
+
+  /** Compound interest (trait): each full minute of battle, the Mine makes `mineGrowthPerMinute` more. */
+  private growMines(nowMs: number): void {
+    const minutes = Math.floor(nowMs / 60_000);
+    for (const side of SIDES) {
+      const traits = this.state[side].traits;
+      if (traits.mineGrowthPerMinute > 0) traits.mineMult = 1 + traits.mineGrowthPerMinute * minutes;
+    }
   }
 
   /** Siege: every full minute past `SIEGE.startMs`, all units hit harder; later the walls take fire. */
@@ -163,6 +181,7 @@ export class ConquestSystem {
             stat: effect.stat,
             mult: effect.mult,
             ...(effect.slots ? { onlySlots: effect.slots } : {}),
+            ...(effect.mech ? { mech: effect.mech } : {}),
           });
         }
         return;
@@ -170,7 +189,7 @@ export class ConquestSystem {
         for (const side of sidesOf(effect.side)) {
           const unitId = getAge(this.state[side].age).unitIds[effect.slot - 1];
           if (!unitId) continue;
-          const cost = getUnitDefinition(unitId).cost;
+          const cost = unitPrice(this.state[side].traits, getUnitDefinition(unitId));
           for (let i = 0; i < effect.count; i++) {
             this.grant(side, cost);
             emit(Events.BuyUnitRequested, { side, unitId });
@@ -182,6 +201,9 @@ export class ConquestSystem {
         return;
       case 'kill-gold':
         // Read by GameScene when it builds EconomySystem.
+        return;
+      default:
+        // Behaviour rewards: applied to `SideState.traits` in the constructor.
         return;
     }
   }
@@ -221,5 +243,58 @@ export class ConquestSystem {
       this.grant(side, next.cost);
       emit(Events.UpgradeTurretRequested, { side, slotIndex });
     }
+  }
+}
+
+/** Writes a behaviour reward into its side's traits (other effect kinds are ignored here). */
+function applyTrait(state: MatchState, effect: ConquestEffect): void {
+  if (!('side' in effect) || effect.side === 'both') return;
+  const t: SideTraits = state[effect.side].traits;
+  const slotsOf = (slots?: readonly (1 | 2 | 3 | 4 | 5)[]): readonly (1 | 2 | 3 | 4 | 5)[] => slots ?? UNIT_SLOTS;
+  switch (effect.kind) {
+    case 'unit-cost':
+      for (const slot of slotsOf(effect.slots)) t.unitCost[slot] *= effect.mult;
+      return;
+    case 'train-time':
+      for (const slot of slotsOf(effect.slots)) t.trainTime[slot] *= effect.mult;
+      return;
+    case 'lifesteal':
+      for (const slot of effect.slots) t.lifesteal[slot] = (t.lifesteal[slot] ?? 0) + effect.share;
+      return;
+    case 'pierce':
+      for (const slot of effect.slots) t.pierceEvery[slot] = Math.min(t.pierceEvery[slot] ?? Infinity, effect.every);
+      return;
+    case 'mark':
+      for (const slot of effect.slots) t.mark[slot] = { mult: effect.mult, durationMs: effect.durationMs };
+      return;
+    case 'first-strike':
+      for (const slot of effect.slots) t.firstStrike[slot] = (t.firstStrike[slot] ?? 1) * effect.mult;
+      return;
+    case 'base-damage':
+      for (const slot of effect.slots) t.baseDamage[slot] = (t.baseDamage[slot] ?? 1) * effect.mult;
+      return;
+    case 'turret-bounce':
+      for (const kind of effect.kinds) t.turretBounce[kind] = Math.max(t.turretBounce[kind] ?? 0, effect.share);
+      return;
+    case 'turret-veterans':
+      t.turretKillsPerLevel = t.turretKillsPerLevel > 0 ? Math.min(t.turretKillsPerLevel, effect.kills) : effect.kills;
+      return;
+    case 'turret-damage':
+      t.turretDamage *= effect.mult;
+      return;
+    case 'mine':
+      if (effect.closed) t.mineClosed = true;
+      if (effect.perMinute) t.mineGrowthPerMinute += effect.perMinute;
+      return;
+    case 'money-income':
+      t.moneyIncome *= effect.mult;
+      return;
+    case 'mech':
+      t.mechCost *= effect.cost ?? 1;
+      t.mechBuildTime *= effect.buildTime ?? 1;
+      t.mechForgeBonus += effect.forge ?? 0;
+      return;
+    default:
+      return;
   }
 }

@@ -347,7 +347,7 @@ export class AIController {
       const idCap = id === 'mine' || id === 'library' || id === 'forge' ? cap : Math.min(cap, me.age * 5 + 2);
       if (!active.includes(id) || me.buildings[id] >= idCap) continue;
       const rejection = buildingRejection(me, id);
-      if (rejection === 'max-level' || rejection === 'age-locked') continue;
+      if (rejection === 'max-level' || rejection === 'age-locked' || rejection === 'closed') continue;
       if (pick === null || me.buildings[id] < me.buildings[pick]) pick = id;
     }
     if (pick === null) return false;

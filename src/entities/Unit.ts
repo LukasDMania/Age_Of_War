@@ -81,6 +81,11 @@ export class Unit extends Phaser.GameObjects.Sprite {
   shieldLockUntil = 0;
   /** Side credited with the kill once HP reaches 0 (set by `markDead`). */
   killerSide: Side | null = null;
+  /** The killer's turret slot when a turret scored the kill (-1: not a turret). */
+  killerTurret = -1;
+  /** Attacks and shots made (Conquest traits: first strike, every nth shot pierces). */
+  attacksMade = 0;
+  shotsFired = 0;
   /**
    * Absorb pool: damage takes this down before HP (Phase 7). Granted through
    * `statusOps.grantShield`, spent in `damageOps`.
@@ -156,6 +161,9 @@ export class Unit extends Phaser.GameObjects.Sprite {
     this.walkedAt = -Infinity;
     this.shieldLockUntil = 0;
     this.killerSide = null;
+    this.killerTurret = -1;
+    this.attacksMade = 0;
+    this.shotsFired = 0;
     this.kills = 0;
     this.rank = 0;
     this.incomeRamp = -1;
@@ -252,9 +260,10 @@ export class Unit extends Phaser.GameObjects.Sprite {
    * active set (ignored by everyone) until `CasualtySystem` reports and
    * releases it at the end of the frame.
    */
-  markDead(killerSide: Side): void {
+  markDead(killerSide: Side, killerTurret = -1): void {
     this.unitState = UnitState.Dead;
     this.killerSide = killerSide;
+    this.killerTurret = killerTurret;
   }
 
   override preUpdate(time: number, delta: number): void {
@@ -318,6 +327,8 @@ export class Unit extends Phaser.GameObjects.Sprite {
         return this.definition.attack?.range ?? 0;
       case 'damageTaken':
         return this.definition.armor ?? 1;
+      case 'shotDamageTaken':
+        return 1;
     }
   }
 

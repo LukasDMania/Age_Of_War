@@ -30,6 +30,13 @@ export class Projectile extends Phaser.GameObjects.Image {
   key = '';
   impactUnit: Unit | null = null;
   impactBase: Base | null = null;
+  /** Who fired it, for side traits: the unit's slot (0: not a unit), the turret's slot and kind. */
+  sourceSlot: 0 | 1 | 2 | 3 | 4 | 5 = 0;
+  turretSlot = -1;
+  turretKind: 'rapid' | 'heavy' | 'area' | null = null;
+  /** Enemies it may still fly through (Conquest's pierce trait), and the one it just went through. */
+  pierceLeft = 0;
+  ignoreUnit: Unit | null = null;
 
   constructor(scene: Phaser.Scene) {
     super(scene, 0, 0, '__DEFAULT');
@@ -58,6 +65,11 @@ export class Projectile extends Phaser.GameObjects.Image {
     this.hitsBase = false;
     this.impactUnit = null;
     this.impactBase = null;
+    this.sourceSlot = 0;
+    this.turretSlot = -1;
+    this.turretKind = null;
+    this.pierceLeft = 0;
+    this.ignoreUnit = null;
     this.setPosition(x, y).setRotation(0).setFlipX(false);
     this.setActive(true).setVisible(true);
     return this;
@@ -82,6 +94,7 @@ export class Projectile extends Phaser.GameObjects.Image {
   deactivate(): void {
     this.impactUnit = null;
     this.impactBase = null;
+    this.ignoreUnit = null;
     this.setActive(false).setVisible(false);
   }
 }

@@ -657,7 +657,7 @@ the space age". Replaces the five-battle run of section 13.
 
 Discussed after the first full Conquest run. Build order in
 `IMPLEMENTATION_PLAN.md` Phase 19 (keyboard, compositions and the Mech are
-built; archetype runs are not).
+built, archetype runs since 2026-09-28).
 
 ### Conquest archetype runs
 
@@ -698,6 +698,48 @@ built; archetype runs are not).
   marks, lifesteal, cost and training multipliers per slot, alive caps,
   turret bounce, turret kill levels, damage to bases), applied by the
   systems that own those rules.
+- **Built 2026-09-28 (owner: "Yes continue"; all numbers PROPOSED).** Six
+  paths including **Workshop** (the Mech). What changed from the plan
+  above while building:
+  - Colossus is priced instead of capped: heavies x2 HP and damage (not the
+    Mech), cost x2.2, train 60% slower. An alive cap needed the HUD to
+    track units; a price says the same ("fewer, bigger heavies").
+  - Trample isn't built (units walking through each other needs lane
+    rules); Juggernauts got *Momentum* (a heavy's first attack x3) instead.
+  - Veteran crews levels a turret every 15 kills (25 was rarely reached in
+    a battle); Compound interest is 6% a minute; Blood oath 20%; Shield
+    wall 35%. Keystones are one per run, and an offer shows at most one.
+  - Offers: rares and keystones only from elites, bosses and treasure, like
+    rares before; keystones weigh 0.6 of a normal pick.
+  - Camps: the four general upgrades (Drill yard, Armory, Treasury,
+    Smithy) at every camp, plus path upgrades: the ones the run already
+    has levels in and a leaning pick of others, three or more (at most
+    six). Event rewards that last the run carry a path too (Caravan's war
+    chest: Guild, Deserters: Marksmen, Ruins: Bastion).
+  - Commanders lean: Warlord Vanguard, Castellan Bastion, Merchant Guild,
+    Sage Marksmen; Chieftain, Survivor and Conqueror have none.
+- The reward set (relics; K = keystone, R = rare):
+
+  | Path | Relics | Camp upgrades |
+  |---|---|---|
+  | Vanguard | Honed edge, Banner guard, Plate armor, Shield wall (melee take 35% less from shots), R Blood oath (melee heal 20% of damage dealt), K The Horde (melee -40% cost, trains 2x faster, -30% HP) | Recruiting office, Sergeants (melee +8% HP and damage) |
+  | Marksmen | Yew staves, Fine fletching, Bodkin points (every 3rd ranged shot pierces a second enemy), R Hunter's mark (ranged hits: target takes +15% for 3 s), K Ranger lord (ranged -30% cost and +15% damage, melee +50% cost) | Archery range (ranged +10% damage) |
+  | Juggernauts | R Beast tamer, Siege engines (heavies x2 damage to bases), Momentum (a heavy's first attack x3), K Colossus | Stables (heavies +10% HP) |
+  | Bastion | Watchtower, R Siege works, Ricochet (rapid turret shots bounce on for half damage), R Veteran crews (a free turret level per 15 kills), K Citadel (turrets x2 damage, units +25% cost) | Masons, Engineers (turrets +10% damage) |
+  | Guild | War chest, Prospector's map, Merchant's ledger, Trade routes (money units +30% income), R Compound interest (Mine +6% a minute), K Robber baron (kills pay x2, Mine closed) | Surveyors |
+  | Workshop | Blueprints (Mech parts need 6 fewer Forge levels), Assembly line (Mech builds 40% faster, 15% cheaper), R Titan plating (Mech +40% HP), K Iron titan (Mech +50% HP and damage, 30% cheaper; other units +20% cost) | Mech bay (Mech +10% HP and damage) |
+  | General | Whetstone, Thick hides, Old tomes, Heirloom anvil, War drums, Ancestral shield, R War college, R Crown, R Grail, R Sunstone | Drill yard, Armory, Treasury, Smithy |
+
+- How it works in code: behaviour rewards set `SideState.traits`
+  (`state/traits.ts`) at battle setup (`ConquestSystem`); the owning
+  systems read them (SpawnSystem prices and training, CombatSystem first
+  strike, lifesteal, base damage and piercing shots, ProjectileSystem marks
+  and ricochets, TurretSystem damage, ricochets and veteran levels,
+  BuildingSystem the Mine and money income, MechSystem the Mech). Stat
+  rewards stay side modifiers; they can now target `only` or `exclude` the
+  Mech. Checked: offers for a Vanguard run show Vanguard relics about 31%
+  of the time (16% for a fresh run), never one path only, never two
+  keystones; every trait works in a scripted battle.
 
 ### Keyboard play, rebinding and compositions
 

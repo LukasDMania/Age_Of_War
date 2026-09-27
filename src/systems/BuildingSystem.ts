@@ -27,7 +27,8 @@ import { setSideModifier } from '@systems/statusOps';
 import { emit, Events, on } from '@utils/EventBus';
 
 /** Why a building upgrade can't happen right now, or null if it can. */
-export type BuildingRejection = 'inactive' | 'max-level' | 'age-locked' | 'gold';
+/** `closed`: a Conquest reward (Robber baron) closed the Mine. */
+export type BuildingRejection = 'inactive' | 'max-level' | 'age-locked' | 'closed' | 'gold';
 /** Why a research tier can't be bought right now, or null if it can. */
 export type ResearchRejection = 'max-tier' | 'forge-level' | 'gold';
 
@@ -62,12 +63,16 @@ export function buildingEffects(side: SideState): BuildingEffects {
       fx[perk.stat] *= perk.mult;
     }
   }
+  // Conquest traits: the Mine grows or is closed; money units earn more.
+  fx.mineGold *= side.traits.mineClosed ? 0 : side.traits.mineMult;
+  fx.moneyIncome *= side.traits.moneyIncome;
   return fx;
 }
 
 /** Pure checks, shared by the system, the HUD and the AI. */
 export function buildingRejection(side: SideState, id: BuildingId): BuildingRejection | null {
   if (!activeBuildingIds().includes(id)) return 'inactive';
+  if (id === 'mine' && side.traits.mineClosed) return 'closed';
   const level = side.buildings[id];
   const cost = buildingUpgradeCost(id, level);
   if (cost === null) return 'max-level';

@@ -371,7 +371,7 @@ state machine finish without getting stuck; AI-vs-AI chapter battles in
 every age end within about 15 minutes; screens checked in headless
 Chromium.
 
-## Phase 19: Keyboard, compositions, the Mech, archetype runs
+## Phase 19: Keyboard, compositions, the Mech, archetype runs (done)
 
 Design in GAME_DESIGN section 15. Proposed order, smallest first; confirm
 with the owner before each.
@@ -392,9 +392,11 @@ with the owner before each.
   `utils/MechArt.ts`), Workshop tab (`ui/WorkshopPanel.ts`), MechSystem
   (`build-mech-requested`, `mech-changed`, one at a time). Refit of a Mech
   on the lane not built yet.
-- [ ] Conquest archetype paths: tags on every reward, leaning offers, new
+- [x] Conquest archetype paths: tags on every reward, leaning offers, new
   behaviour effects, a first reward set for Vanguard, Marksmen,
-  Juggernauts, Bastion and Guild; Workshop after the Mech.
+  Juggernauts, Bastion, Guild and Workshop (`state/traits.ts`,
+  `config/conquest.config.ts` `PATHS` / `PATH_LEAN`, `conquestState`
+  `pathCounts` / `rollRelics` / `campOffer`).
 
 ---
 
@@ -446,7 +448,7 @@ validates and acts):
 | `xp-changed` | `{ side, xp, xpToNext }` (`xpToNext` is null in the final age) | `state/economyOps` helpers |
 | `unit-spawned` | `{ side, unitId, instanceId }` | SpawnSystem (bought units and debug spawns) |
 | `unit-queue-changed` | `{ side, queue }` | SpawnSystem (on buy, on spawn, and every frame while the front unit trains) |
-| `unit-died` | `{ side, unitId, instanceId, killerSide, x }` | CasualtySystem (end of frame, for every unit `damageOps` marked dead) |
+| `unit-died` | `{ side, unitId, instanceId, killerSide, x, killerTurret? }` (`killerTurret`: the slot of the turret that scored it) | CasualtySystem (end of frame, for every unit `damageOps` marked dead) |
 | `unit-damaged` | `{ side, instanceId, amount, absorbed, x, topY }` | `systems/damageOps` (any damage source) |
 | `area-hit` | `{ side, x, radius }` | `systems/damageOps` (splash landed; `side` dealt it) |
 | `economy-changed` | `{ side, economyUnits, incomePerSec, damageMult, speedMult }` | EconomySystem (a money unit spawned or died) |
@@ -479,6 +481,7 @@ validates and acts):
 | `war-cry-used` | `{ side, durationMs, positions }` (x of every rallied unit) | WarCrySystem (prototype) |
 | `war-cry-cooldown-changed` | `{ side, remainingMs, totalMs }` | WarCrySystem (prototype; in 100 ms steps) |
 | `siege-changed` | `{ mult }` (every unit's siege damage multiplier) | ConquestSystem (prototype; each minute of siege in a Conquest battle) |
+| `shot-bounced` | `{ side, fromX, fromY, toX, toY }` | `systems/damageOps` `dealBounceDamage` (feedback: a turret shot ricocheted; Conquest's Ricochet) |
 | `mech-changed` | `{ side, alive, build }` (`build` `{ unitId, remainingMs, totalMs }` or null) | MechSystem (build started, every frame while building, walked out, fell) |
 
 ## Appendix B: Data shape sketches

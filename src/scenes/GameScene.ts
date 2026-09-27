@@ -220,8 +220,8 @@ export class GameScene extends Phaser.Scene {
     this.effects = new HitEffects(this);
     this.impacts = new ImpactEffects(this);
     this.match = new MatchSystem(this.state);
-    this.combat = new CombatSystem(this.units, this.bases, this.projectiles);
-    this.projectileSystem = new ProjectileSystem(this.projectiles, this.units, this.bases);
+    this.combat = new CombatSystem(this.state, this.units, this.bases, this.projectiles);
+    this.projectileSystem = new ProjectileSystem(this.state, this.projectiles, this.units, this.bases);
     this.casualties = new CasualtySystem(this.units);
     this.lane = new LaneSystem(this.units, this.bases);
     this.economy = new EconomySystem(this.state, this.units, conquestKillGoldMult(this.sceneData.conquest?.effects ?? []));
@@ -383,7 +383,7 @@ export class GameScene extends Phaser.Scene {
     this.turrets.update(now);
     this.special.update(now);
     this.utility.update(now);
-    this.projectileSystem.update(dt);
+    this.projectileSystem.update(dt, now);
     this.casualties.update();
     this.lane.update(dt);
     this.economy.update(dt);

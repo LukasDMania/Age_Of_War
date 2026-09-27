@@ -17,6 +17,7 @@
 import type { StatModifier, Unit } from '@entities/Unit';
 import type { MatchState } from '@state/GameState';
 import type { Side, SideModifier } from '@state/types';
+import { MECH_ID_PREFIX } from '@config/mech.config';
 import { emit, Events } from '@utils/EventBus';
 
 /**
@@ -78,6 +79,10 @@ export function grantShield(unit: Unit, amount: number, cap = unit.getStat('maxH
 /** Whether a side-wide modifier applies to this unit. */
 export function sideModifierApplies(modifier: SideModifier, unit: Unit): boolean {
   if (modifier.exemptRoles?.includes(unit.definition.role)) return false;
+  if (modifier.mech) {
+    const isMech = unit.definition.id.startsWith(MECH_ID_PREFIX);
+    if ((modifier.mech === 'only') !== isMech) return false;
+  }
   return !modifier.onlySlots || modifier.onlySlots.includes(unit.definition.slot);
 }
 

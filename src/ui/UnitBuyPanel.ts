@@ -3,6 +3,7 @@ import { getAge } from '@config/ages.config';
 import { UNIT_QUEUE_LIMIT } from '@config/constants';
 import { getUnitDefinition, type UnitDefinition } from '@entities/unitDefinitions';
 import type { QueuedUnit, Side } from '@state/types';
+import { unitPrice, type SideTraits } from '@state/traits';
 import { addPanel, fitImage, UI_FONT, UiColors, UiTextColors, UiTextures } from '@ui/kenneyUi';
 import { keyHint } from '@ui/keymap';
 import { UiButton, type PressModifiers } from '@ui/UiButton';
@@ -23,6 +24,8 @@ export interface UnitBuyPanelInitial {
   gold: number;
   age: number;
   queue: readonly QueuedUnit[];
+  /** The side's traits (Conquest rewards can change prices); fixed for the match. */
+  traits: SideTraits;
 }
 
 interface BuyButton {
@@ -64,6 +67,7 @@ export class UnitBuyPanel {
   private readonly progressWidth: number;
   private gold: number;
   private queueLength: number;
+  private readonly traits: SideTraits;
   /** True while the match is not being played (paused, over): nothing can be bought. */
   private locked = false;
 
@@ -75,6 +79,7 @@ export class UnitBuyPanel {
     this.top = top;
     this.gold = initial.gold;
     this.queueLength = initial.queue.length;
+    this.traits = initial.traits;
     this.root = scene.add.container(0, 0);
 
     // Training queue section, right of the buttons.
@@ -202,7 +207,12 @@ export class UnitBuyPanel {
       .text(0, 22, definition.name, { fontFamily: UI_FONT, fontSize: '11px', color: UiTextColors.parchment })
       .setOrigin(0.5);
     const cost = scene.add
-      .text(5, 38, String(definition.cost), { fontFamily: UI_FONT, fontSize: '14px', color: UiTextColors.gold })
+      .text(5, 38, String(unitPrice(this.traits, definition)), {
+        fontFamily: UI_FONT,
+        fontSize: '14px',
+        // A price changed by a Conquest reward shows in green (cheaper) or red.
+        color: unitPrice(this.traits, definition) < definition.cost ? '#8fe08f' : unitPrice(this.traits, definition) > definition.cost ? '#f08a80' : UiTextColors.gold,
+      })
       .setOrigin(0.5);
     const coin = scene.add.circle(cost.x - cost.width / 2 - 8, 38, 5, UiColors.gold);
     button.add(key, icon, name, coin, cost);
@@ -213,7 +223,7 @@ export class UnitBuyPanel {
   private refreshButtons(): void {
     const queueFull = this.queueLength >= UNIT_QUEUE_LIMIT;
     for (const { definition, button } of this.buttons) {
-      button.setEnabled(!this.locked && !queueFull && this.gold >= definition.cost);
+      button.setEnabled(!this.locked && !queueFull && this.gold >= unitPrice(this.traits, definition));
     }
   }
 }

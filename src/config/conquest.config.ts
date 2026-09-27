@@ -23,11 +23,45 @@ import type { AiDifficultyName } from '@config/ai.config';
 import type { BuildingId, ResearchId } from '@config/buildings.config';
 import type { ModifiableStat, Side } from '@state/types';
 
+/* ---- Archetype paths ------------------------------------------------------------ */
+
+/**
+ * Archetype paths (2026-09-28, GAME_DESIGN section 15; owner: runs should
+ * build a character like a Slay the Spire deck, "don't lock into 1 path too
+ * hard just because I choose a certain commander"). Relics, camp upgrades,
+ * commanders and some event rewards carry a path; offers lean toward the
+ * paths a run already owns (`PATH_LEAN`) but never lock.
+ */
+export type PathId = 'vanguard' | 'marksmen' | 'juggernauts' | 'bastion' | 'guild' | 'workshop';
+
+export const PATHS: Readonly<Record<PathId, { name: string; about: string; color: number; text: string }>> = {
+  vanguard: { name: 'Vanguard', about: 'Melee units', color: 0xe07a4a, text: '#f0a070' },
+  marksmen: { name: 'Marksmen', about: 'Ranged units', color: 0x6fcf6f, text: '#8fe08f' },
+  juggernauts: { name: 'Juggernauts', about: 'Heavies and sieges', color: 0xb08a5a, text: '#d8b080' },
+  bastion: { name: 'Bastion', about: 'Turrets', color: 0x7a9ad8, text: '#9ab8f0' },
+  guild: { name: 'Guild', about: 'Money units and the Mine', color: 0xe0b85c, text: '#f0cc70' },
+  workshop: { name: 'Workshop', about: 'The Mech', color: 0xb07ad8, text: '#c89af0' },
+};
+
+export const PATH_IDS = Object.keys(PATHS) as PathId[];
+
+/**
+ * How offers lean: a tagged reward's weight is 1 + `perOwned` x the rewards
+ * of its path the run owns (relics, camp upgrade levels, event rewards, and
+ * the commander as one), at most `maxWeight`. Untagged rewards weigh 1. An
+ * offer of several never shows only one path. Keystones (one per run) come
+ * only where rares do. PROPOSED.
+ */
+export const PATH_LEAN = { perOwned: 1, maxWeight: 4, keystoneWeight: 0.6, campPathOffers: 3 } as const;
+
 /* ---- Battle effects ------------------------------------------------------------ */
+
+type Slot = 1 | 2 | 3 | 4 | 5;
 
 /** A change to a battle's starting position or rules for one side. */
 export type ConquestEffect =
-  | { kind: 'unit-stat'; side: Side | 'both'; stat: ModifiableStat; mult: number; slots?: readonly (1 | 2 | 3 | 4 | 5)[] }
+  /** `mech`: `only` the Mech, or `exclude` it (the Mech counts as a heavy otherwise). */
+  | { kind: 'unit-stat'; side: Side | 'both'; stat: ModifiableStat; mult: number; slots?: readonly Slot[]; mech?: 'only' | 'exclude' }
   /** Gold at the start, times the battle's age factor. */
   | { kind: 'gold'; side: Side | 'both'; amount: number }
   | { kind: 'xp'; side: Side | 'both'; amount: number }
@@ -41,7 +75,32 @@ export type ConquestEffect =
   /** Multiplier on the enemy AI's own income. */
   | { kind: 'ai-income'; mult: number }
   /** Multiplier on the gold a side gets for kills. */
-  | { kind: 'kill-gold'; side: Side | 'both'; mult: number };
+  | { kind: 'kill-gold'; side: Side | 'both'; mult: number }
+  /* Behaviour rewards (archetype paths): they set `SideState.traits` (state/traits.ts). */
+  /** Unit prices (and training times) x `mult` in these slots (all slots when omitted). */
+  | { kind: 'unit-cost'; side: Side; mult: number; slots?: readonly Slot[] }
+  | { kind: 'train-time'; side: Side; mult: number; slots?: readonly Slot[] }
+  /** Blows heal the attacker by this share of the damage they deal. */
+  | { kind: 'lifesteal'; side: Side; share: number; slots: readonly Slot[] }
+  /** Every `every`th shot flies on through one more enemy. */
+  | { kind: 'pierce'; side: Side; every: number; slots: readonly Slot[] }
+  /** Shots mark what they hit: it takes `mult` x damage for `durationMs`. */
+  | { kind: 'mark'; side: Side; mult: number; durationMs: number; slots: readonly Slot[] }
+  /** A unit's first attack deals `mult` x damage. */
+  | { kind: 'first-strike'; side: Side; mult: number; slots: readonly Slot[] }
+  /** Attacks of these slots deal `mult` x damage to bases (blows, shots, splash). */
+  | { kind: 'base-damage'; side: Side; mult: number; slots: readonly Slot[] }
+  /** Turret shots of these kinds ricochet to the next enemy for `share` of their damage. */
+  | { kind: 'turret-bounce'; side: Side; share: number; kinds: readonly ('rapid' | 'heavy' | 'area')[] }
+  /** A turret gains a free level every `kills` kills. */
+  | { kind: 'turret-veterans'; side: Side; kills: number }
+  | { kind: 'turret-damage'; side: Side; mult: number }
+  /** The Mine: grows `perMinute` each minute of battle, or is `closed`. */
+  | { kind: 'mine'; side: Side; perMinute?: number; closed?: boolean }
+  /** Money units' income x `mult`. */
+  | { kind: 'money-income'; side: Side; mult: number }
+  /** The Mech: price and build time x, parts need `forge` fewer Forge levels. */
+  | { kind: 'mech'; side: Side; cost?: number; buildTime?: number; forge?: number };
 
 /* ---- Mutators (battlefield rules) -------------------------------------------------- */
 
@@ -132,27 +191,21 @@ export interface Relic {
   unlock?: string;
   /** Rare relics come only from elites, bosses and treasure. */
   rare?: boolean;
+  /** Its archetype path (offers lean toward owned paths); none: a general relic. */
+  path?: PathId;
+  /** A keystone defines a run and always has a price: rare, and one per run. */
+  keystone?: boolean;
 }
 
 export const RELICS: readonly Relic[] = [
+  // General relics (no path).
   { id: 'whetstone', name: 'Whetstone', about: 'Your units +10% damage', effects: [{ kind: 'unit-stat', side: 'player', stat: 'damage', mult: 1.1 }] },
   { id: 'hides', name: 'Thick hides', about: 'Your units +12% HP', effects: [{ kind: 'unit-stat', side: 'player', stat: 'maxHp', mult: 1.12 }] },
-  { id: 'war-chest', name: 'War chest', about: '+100 starting gold', effects: [{ kind: 'gold', side: 'player', amount: 100 }] },
-  { id: 'prospector', name: "Prospector's map", about: 'Start with a Mine at level 3', effects: [{ kind: 'building', side: 'player', buildingId: 'mine', levels: 3 }] },
   { id: 'tomes', name: 'Old tomes', about: 'Start with a Library at level 2 and 80 XP', effects: [{ kind: 'building', side: 'player', buildingId: 'library', levels: 2 }, { kind: 'xp', side: 'player', amount: 80 }] },
   { id: 'anvil', name: 'Heirloom anvil', about: 'Start with a Forge at level 3', effects: [{ kind: 'building', side: 'player', buildingId: 'forge', levels: 3 }] },
-  { id: 'watchtower', name: 'Watchtower', about: 'Start with a rapid turret, upgraded once', effects: [{ kind: 'turrets', side: 'player', count: 1, turretKind: 'rapid', level: 1 }] },
   { id: 'drums', name: 'War drums', about: 'Your units walk 12% faster', effects: [{ kind: 'unit-stat', side: 'player', stat: 'speed', mult: 1.12 }] },
-  { id: 'longbows', name: 'Yew staves', about: 'Your ranged units +15% range', effects: [{ kind: 'unit-stat', side: 'player', stat: 'range', mult: 1.15, slots: [2] }] },
-  { id: 'plate', name: 'Plate armor', about: 'Your melee and heavies take 10% less damage', effects: [{ kind: 'unit-stat', side: 'player', stat: 'damageTaken', mult: 0.9, slots: [1, 3] }] },
-  { id: 'honed-edge', name: 'Honed edge', about: 'Your melee units +20% damage', effects: [{ kind: 'unit-stat', side: 'player', stat: 'damage', mult: 1.2, slots: [1] }] },
-  { id: 'fletching', name: 'Fine fletching', about: 'Your ranged units attack 12% faster', effects: [{ kind: 'unit-stat', side: 'player', stat: 'attackCooldown', mult: 0.88, slots: [2] }] },
-  { id: 'banner-guard', name: 'Banner guard', about: 'Start every battle with two melee units', effects: [{ kind: 'units', side: 'player', slot: 1, count: 2 }] },
-  { id: 'ledger', name: "Merchant's ledger", about: 'Your money units +50% HP', effects: [{ kind: 'unit-stat', side: 'player', stat: 'maxHp', mult: 1.5, slots: [4] }] },
   { id: 'relic-shield', name: 'Ancestral shield', about: 'Your utility units +40% HP and effect strength', effects: [{ kind: 'unit-stat', side: 'player', stat: 'maxHp', mult: 1.4, slots: [5] }, { kind: 'unit-stat', side: 'player', stat: 'shield', mult: 1.4, slots: [5] }] },
-  { id: 'siege-works', name: 'Siege works', about: 'Start with two heavy turrets', rare: true, effects: [{ kind: 'turrets', side: 'player', count: 2, turretKind: 'heavy', level: 0 }] },
   { id: 'war-college', name: 'War college', about: 'Start with melee and ranged damage research', rare: true, effects: [{ kind: 'building', side: 'player', buildingId: 'forge', levels: 1 }, { kind: 'research', side: 'player', researchId: 'meleeDamage', tiers: 1 }, { kind: 'research', side: 'player', researchId: 'rangedDamage', tiers: 1 }] },
-  { id: 'beast-tamer', name: 'Beast tamer', about: 'Your heavies +25% HP', rare: true, effects: [{ kind: 'unit-stat', side: 'player', stat: 'maxHp', mult: 1.25, slots: [3] }] },
   {
     id: 'crown',
     name: 'Crown of kings',
@@ -182,6 +235,114 @@ export const RELICS: readonly Relic[] = [
     unlock: 'royal-relics',
     rare: true,
     effects: [{ kind: 'unit-stat', side: 'player', stat: 'damage', mult: 1.15 }, { kind: 'ai-income', mult: 1.1 }],
+  },
+
+  // Vanguard: melee.
+  { id: 'honed-edge', name: 'Honed edge', path: 'vanguard', about: 'Your melee units +20% damage', effects: [{ kind: 'unit-stat', side: 'player', stat: 'damage', mult: 1.2, slots: [1] }] },
+  { id: 'banner-guard', name: 'Banner guard', path: 'vanguard', about: 'Start every battle with two melee units', effects: [{ kind: 'units', side: 'player', slot: 1, count: 2 }] },
+  { id: 'plate', name: 'Plate armor', path: 'vanguard', about: 'Your melee and heavies take 10% less damage', effects: [{ kind: 'unit-stat', side: 'player', stat: 'damageTaken', mult: 0.9, slots: [1, 3] }] },
+  { id: 'shield-wall', name: 'Shield wall', path: 'vanguard', about: 'Your melee units take 35% less damage from shots', effects: [{ kind: 'unit-stat', side: 'player', stat: 'shotDamageTaken', mult: 0.65, slots: [1] }] },
+  { id: 'blood-oath', name: 'Blood oath', path: 'vanguard', rare: true, about: 'Your melee units heal 20% of the damage they deal', effects: [{ kind: 'lifesteal', side: 'player', share: 0.2, slots: [1] }] },
+  {
+    id: 'horde',
+    name: 'The Horde',
+    path: 'vanguard',
+    keystone: true,
+    about: 'Melee costs 40% less and trains twice as fast, but has 30% less HP',
+    effects: [
+      { kind: 'unit-cost', side: 'player', mult: 0.6, slots: [1] },
+      { kind: 'train-time', side: 'player', mult: 0.5, slots: [1] },
+      { kind: 'unit-stat', side: 'player', stat: 'maxHp', mult: 0.7, slots: [1] },
+    ],
+  },
+
+  // Marksmen: ranged.
+  { id: 'longbows', name: 'Yew staves', path: 'marksmen', about: 'Your ranged units +15% range', effects: [{ kind: 'unit-stat', side: 'player', stat: 'range', mult: 1.15, slots: [2] }] },
+  { id: 'fletching', name: 'Fine fletching', path: 'marksmen', about: 'Your ranged units attack 12% faster', effects: [{ kind: 'unit-stat', side: 'player', stat: 'attackCooldown', mult: 0.88, slots: [2] }] },
+  { id: 'bodkin', name: 'Bodkin points', path: 'marksmen', about: 'Every third shot of your ranged units pierces a second enemy', effects: [{ kind: 'pierce', side: 'player', every: 3, slots: [2] }] },
+  { id: 'hunters-mark', name: "Hunter's mark", path: 'marksmen', rare: true, about: 'Your ranged hits make the target take 15% more damage for 3 s', effects: [{ kind: 'mark', side: 'player', mult: 1.15, durationMs: 3000, slots: [2] }] },
+  {
+    id: 'ranger-lord',
+    name: 'Ranger lord',
+    path: 'marksmen',
+    keystone: true,
+    about: 'Ranged units cost 30% less and deal +15% damage; melee costs 50% more',
+    effects: [
+      { kind: 'unit-cost', side: 'player', mult: 0.7, slots: [2] },
+      { kind: 'unit-stat', side: 'player', stat: 'damage', mult: 1.15, slots: [2] },
+      { kind: 'unit-cost', side: 'player', mult: 1.5, slots: [1] },
+    ],
+  },
+
+  // Juggernauts: heavies (and siege).
+  { id: 'beast-tamer', name: 'Beast tamer', path: 'juggernauts', rare: true, about: 'Your heavies +25% HP', effects: [{ kind: 'unit-stat', side: 'player', stat: 'maxHp', mult: 1.25, slots: [3] }] },
+  { id: 'siege-engines', name: 'Siege engines', path: 'juggernauts', about: 'Your heavies deal double damage to bases', effects: [{ kind: 'base-damage', side: 'player', mult: 2, slots: [3] }] },
+  { id: 'momentum', name: 'Momentum', path: 'juggernauts', about: 'The first attack of each of your heavies deals triple damage', effects: [{ kind: 'first-strike', side: 'player', mult: 3, slots: [3] }] },
+  {
+    id: 'colossus',
+    name: 'Colossus',
+    path: 'juggernauts',
+    keystone: true,
+    about: 'Your heavies have double HP and damage, but cost 2.2x and train 60% slower (not the Mech)',
+    effects: [
+      { kind: 'unit-stat', side: 'player', stat: 'maxHp', mult: 2, slots: [3], mech: 'exclude' },
+      { kind: 'unit-stat', side: 'player', stat: 'damage', mult: 2, slots: [3], mech: 'exclude' },
+      { kind: 'unit-cost', side: 'player', mult: 2.2, slots: [3] },
+      { kind: 'train-time', side: 'player', mult: 1.6, slots: [3] },
+    ],
+  },
+
+  // Bastion: turrets.
+  { id: 'watchtower', name: 'Watchtower', path: 'bastion', about: 'Start with a rapid turret, upgraded once', effects: [{ kind: 'turrets', side: 'player', count: 1, turretKind: 'rapid', level: 1 }] },
+  { id: 'siege-works', name: 'Siege works', path: 'bastion', rare: true, about: 'Start with two heavy turrets', effects: [{ kind: 'turrets', side: 'player', count: 2, turretKind: 'heavy', level: 0 }] },
+  { id: 'ricochet', name: 'Ricochet', path: 'bastion', about: "Your rapid turrets' shots bounce on to a second enemy for half damage", effects: [{ kind: 'turret-bounce', side: 'player', share: 0.5, kinds: ['rapid'] }] },
+  { id: 'veteran-crews', name: 'Veteran crews', path: 'bastion', rare: true, about: 'A turret gains a free level for every 15 kills', effects: [{ kind: 'turret-veterans', side: 'player', kills: 15 }] },
+  {
+    id: 'citadel',
+    name: 'Citadel',
+    path: 'bastion',
+    keystone: true,
+    about: 'Your turrets deal double damage; your units cost 25% more',
+    effects: [
+      { kind: 'turret-damage', side: 'player', mult: 2 },
+      { kind: 'unit-cost', side: 'player', mult: 1.25 },
+    ],
+  },
+
+  // Guild: money units and the Mine.
+  { id: 'war-chest', name: 'War chest', path: 'guild', about: '+100 starting gold', effects: [{ kind: 'gold', side: 'player', amount: 100 }] },
+  { id: 'prospector', name: "Prospector's map", path: 'guild', about: 'Start with a Mine at level 3', effects: [{ kind: 'building', side: 'player', buildingId: 'mine', levels: 3 }] },
+  { id: 'ledger', name: "Merchant's ledger", path: 'guild', about: 'Your money units +50% HP', effects: [{ kind: 'unit-stat', side: 'player', stat: 'maxHp', mult: 1.5, slots: [4] }] },
+  { id: 'trade-routes', name: 'Trade routes', path: 'guild', about: 'Your money units earn 30% more', effects: [{ kind: 'money-income', side: 'player', mult: 1.3 }] },
+  { id: 'compound-interest', name: 'Compound interest', path: 'guild', rare: true, about: 'Your Mine makes 6% more for every minute of battle', effects: [{ kind: 'mine', side: 'player', perMinute: 0.06 }] },
+  {
+    id: 'robber-baron',
+    name: 'Robber baron',
+    path: 'guild',
+    keystone: true,
+    about: 'Your kills pay double; your Mine is closed',
+    effects: [
+      { kind: 'kill-gold', side: 'player', mult: 2 },
+      { kind: 'mine', side: 'player', closed: true },
+    ],
+  },
+
+  // Workshop: the Mech.
+  { id: 'blueprints', name: 'Blueprints', path: 'workshop', about: 'Mech parts need 6 fewer Forge levels', effects: [{ kind: 'mech', side: 'player', forge: 6 }] },
+  { id: 'assembly-line', name: 'Assembly line', path: 'workshop', about: 'Your Mech builds 40% faster and costs 15% less', effects: [{ kind: 'mech', side: 'player', buildTime: 0.6, cost: 0.85 }] },
+  { id: 'titan-plating', name: 'Titan plating', path: 'workshop', rare: true, about: 'Your Mech +40% HP', effects: [{ kind: 'unit-stat', side: 'player', stat: 'maxHp', mult: 1.4, mech: 'only' }] },
+  {
+    id: 'iron-titan',
+    name: 'Iron titan',
+    path: 'workshop',
+    keystone: true,
+    about: 'Your Mech +50% HP and damage and costs 30% less; other units cost 20% more',
+    effects: [
+      { kind: 'unit-stat', side: 'player', stat: 'maxHp', mult: 1.5, mech: 'only' },
+      { kind: 'unit-stat', side: 'player', stat: 'damage', mult: 1.5, mech: 'only' },
+      { kind: 'mech', side: 'player', cost: 0.7 },
+      { kind: 'unit-cost', side: 'player', mult: 1.2 },
+    ],
   },
 ];
 
@@ -308,16 +469,25 @@ export interface CampUpgrade {
   cost: { base: number; step: number };
   /** Applied once per level in every battle for the rest of the run. */
   effects: readonly ConquestEffect[];
+  /** Its archetype path. General upgrades (none) are at every camp; path ones are offered, leaning. */
+  path?: PathId;
 }
 
 export const CAMP_UPGRADES: readonly CampUpgrade[] = [
+  // General: at every camp.
   { id: 'drill', name: 'Drill yard', about: 'Your units +6% HP', maxLevel: 5, cost: { base: 30, step: 20 }, effects: [{ kind: 'unit-stat', side: 'player', stat: 'maxHp', mult: 1.06 }] },
   { id: 'armory', name: 'Armory', about: 'Your units +6% damage', maxLevel: 5, cost: { base: 30, step: 20 }, effects: [{ kind: 'unit-stat', side: 'player', stat: 'damage', mult: 1.06 }] },
   { id: 'treasury', name: 'Treasury', about: '+50 starting gold', maxLevel: 4, cost: { base: 25, step: 15 }, effects: [{ kind: 'gold', side: 'player', amount: 50 }] },
-  { id: 'masons', name: 'Masons', about: 'Start with one more rapid turret (upgraded once)', maxLevel: 2, cost: { base: 40, step: 40 }, effects: [{ kind: 'turrets', side: 'player', count: 1, turretKind: 'rapid', level: 1 }] },
-  { id: 'surveyors', name: 'Surveyors', about: 'Start with the Mine 2 levels higher', maxLevel: 4, cost: { base: 30, step: 20 }, effects: [{ kind: 'building', side: 'player', buildingId: 'mine', levels: 2 }] },
   { id: 'smiths', name: 'Smithy', about: 'Start with the Forge 3 levels higher', maxLevel: 3, cost: { base: 35, step: 25 }, effects: [{ kind: 'building', side: 'player', buildingId: 'forge', levels: 3 }] },
-  { id: 'recruits', name: 'Recruiting office', about: 'Start battles with one more free melee unit', maxLevel: 3, cost: { base: 30, step: 25 }, effects: [{ kind: 'units', side: 'player', slot: 1, count: 1 }] },
+  // Path upgrades: a camp offers a few, leaning toward the run's paths.
+  { id: 'recruits', name: 'Recruiting office', path: 'vanguard', about: 'Start battles with one more free melee unit', maxLevel: 3, cost: { base: 30, step: 25 }, effects: [{ kind: 'units', side: 'player', slot: 1, count: 1 }] },
+  { id: 'sergeants', name: 'Sergeants', path: 'vanguard', about: 'Your melee units +8% HP and damage', maxLevel: 3, cost: { base: 30, step: 20 }, effects: [{ kind: 'unit-stat', side: 'player', stat: 'maxHp', mult: 1.08, slots: [1] }, { kind: 'unit-stat', side: 'player', stat: 'damage', mult: 1.08, slots: [1] }] },
+  { id: 'archery-range', name: 'Archery range', path: 'marksmen', about: 'Your ranged units +10% damage', maxLevel: 3, cost: { base: 30, step: 20 }, effects: [{ kind: 'unit-stat', side: 'player', stat: 'damage', mult: 1.1, slots: [2] }] },
+  { id: 'stables', name: 'Stables', path: 'juggernauts', about: 'Your heavies +10% HP', maxLevel: 3, cost: { base: 30, step: 20 }, effects: [{ kind: 'unit-stat', side: 'player', stat: 'maxHp', mult: 1.1, slots: [3] }] },
+  { id: 'masons', name: 'Masons', path: 'bastion', about: 'Start with one more rapid turret (upgraded once)', maxLevel: 2, cost: { base: 40, step: 40 }, effects: [{ kind: 'turrets', side: 'player', count: 1, turretKind: 'rapid', level: 1 }] },
+  { id: 'engineers', name: 'Engineers', path: 'bastion', about: 'Your turrets +10% damage', maxLevel: 3, cost: { base: 35, step: 20 }, effects: [{ kind: 'turret-damage', side: 'player', mult: 1.1 }] },
+  { id: 'surveyors', name: 'Surveyors', path: 'guild', about: 'Start with the Mine 2 levels higher', maxLevel: 4, cost: { base: 30, step: 20 }, effects: [{ kind: 'building', side: 'player', buildingId: 'mine', levels: 2 }] },
+  { id: 'mech-bay', name: 'Mech bay', path: 'workshop', about: 'Your Mech +10% HP and damage', maxLevel: 3, cost: { base: 35, step: 25 }, effects: [{ kind: 'unit-stat', side: 'player', stat: 'maxHp', mult: 1.1, mech: 'only' }, { kind: 'unit-stat', side: 'player', stat: 'damage', mult: 1.1, mech: 'only' }] },
 ];
 
 /** Resting at a camp: one banner back for this many supplies. */
@@ -326,6 +496,8 @@ export const CAMP_REST_COST = 40;
 /* ---- Events -------------------------------------------------------------------------------- */
 
 export interface EventOutcome {
+  /** A run-long reward that belongs to a path (counts toward it for offers). */
+  path?: PathId;
   supplies?: number;
   banners?: number;
   glory?: number;
@@ -381,7 +553,7 @@ export const EVENTS: readonly ConquestEvent[] = [
     title: 'Trade caravan',
     text: 'Merchants offer to trade supplies for coin.',
     options: [
-      { label: 'Buy a war chest', about: '35 supplies: +100 starting gold for the rest of the run', cost: 35, win: { runEffects: [{ kind: 'gold', side: 'player', amount: 100 }], text: 'Your treasury grows.' } },
+      { label: 'Buy a war chest', about: '35 supplies: +100 starting gold for the rest of the run', cost: 35, win: { path: 'guild', runEffects: [{ kind: 'gold', side: 'player', amount: 100 }], text: 'Your treasury grows.' } },
       { label: 'Sell spare kit', about: '+40 supplies, your units -5% HP next battle', win: { supplies: 40, nextBattle: [{ kind: 'unit-stat', side: 'player', stat: 'maxHp', mult: 0.95 }], text: 'The armor was worth more than you thought.' } },
       { label: 'Ignore them', about: 'Nothing happens', win: { text: 'The caravan rolls on.' } },
     ],
@@ -391,7 +563,7 @@ export const EVENTS: readonly ConquestEvent[] = [
     title: 'Deserters',
     text: 'Enemy deserters beg to join you. They know the enemy camp.',
     options: [
-      { label: 'Take them in', about: 'Two free ranged units every battle; -10 supplies now', cost: 10, win: { runEffects: [{ kind: 'units', side: 'player', slot: 2, count: 2 }], text: 'They know every path through the hills.' } },
+      { label: 'Take them in', about: 'Two free ranged units every battle; -10 supplies now', cost: 10, win: { path: 'marksmen', runEffects: [{ kind: 'units', side: 'player', slot: 2, count: 2 }], text: 'They know every path through the hills.' } },
       { label: 'Question them', about: '+25 supplies', win: { supplies: 25, text: 'They lead you to an enemy cache.' } },
     ],
   },
@@ -446,7 +618,7 @@ export const EVENTS: readonly ConquestEvent[] = [
     title: 'Ruins of an older age',
     text: 'Your engineers find the ruins of a fortress from an earlier age.',
     options: [
-      { label: 'Salvage the stones', about: 'Start every battle with a heavy turret', win: { runEffects: [{ kind: 'turrets', side: 'player', count: 1, turretKind: 'heavy', level: 0 }], text: 'Old stones, new walls.' } },
+      { label: 'Salvage the stones', about: 'Start every battle with a heavy turret', win: { path: 'bastion', runEffects: [{ kind: 'turrets', side: 'player', count: 1, turretKind: 'heavy', level: 0 }], text: 'Old stones, new walls.' } },
       { label: 'Search the vaults', about: '50%: a relic. 50%: nothing', chance: 0.5, win: { relic: true, text: 'Something glitters in the dark.' }, lose: { text: 'Dust and bones.' } },
     ],
   },
@@ -465,6 +637,8 @@ export interface Commander {
   suppliesMult?: number;
   /** Unlocked by this achievement (none: available from the start). */
   unlock?: string;
+  /** The path it leans toward: counts as one owned reward of it, nothing more. */
+  path?: PathId;
 }
 
 export const COMMANDERS: readonly Commander[] = [
@@ -474,6 +648,7 @@ export const COMMANDERS: readonly Commander[] = [
     name: 'The Warlord',
     about: 'Units +15% damage, -10% HP. Bosses fear him.',
     unlock: 'boss-slayer',
+    path: 'vanguard',
     effects: [
       { kind: 'unit-stat', side: 'player', stat: 'damage', mult: 1.15 },
       { kind: 'unit-stat', side: 'player', stat: 'maxHp', mult: 0.9 },
@@ -484,6 +659,7 @@ export const COMMANDERS: readonly Commander[] = [
     name: 'The Castellan',
     about: 'Starts every battle with two turrets; units -8% damage.',
     unlock: 'renaissance',
+    path: 'bastion',
     effects: [
       { kind: 'turrets', side: 'player', count: 2, turretKind: 'rapid', level: 1 },
       { kind: 'unit-stat', side: 'player', stat: 'damage', mult: 0.92 },
@@ -494,6 +670,7 @@ export const COMMANDERS: readonly Commander[] = [
     name: 'The Merchant Prince',
     about: '+200 starting gold and a Mine at level 5; supplies x1.25; units -8% HP.',
     unlock: 'hoarder',
+    path: 'guild',
     suppliesMult: 1.25,
     effects: [
       { kind: 'gold', side: 'player', amount: 200 },
@@ -506,6 +683,7 @@ export const COMMANDERS: readonly Commander[] = [
     name: 'The Sage',
     about: 'Starts every battle with a Forge at level 6 and two research tiers.',
     unlock: 'stargazer',
+    path: 'marksmen',
     effects: [
       { kind: 'building', side: 'player', buildingId: 'forge', levels: 6 },
       { kind: 'research', side: 'player', researchId: 'rangedDamage', tiers: 2 },

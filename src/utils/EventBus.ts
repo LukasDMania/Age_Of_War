@@ -68,6 +68,7 @@ export const Events = {
   BackgroundChanged: 'background-changed',
   KeybindingsChanged: 'keybindings-changed',
   ProjectileImpact: 'projectile-impact',
+  ShotBounced: 'shot-bounced',
   UnitStruck: 'unit-struck',
   TurretFired: 'turret-fired',
   UnitPromoted: 'unit-promoted',
@@ -150,6 +151,8 @@ export interface EventPayloads {
     instanceId: number;
     killerSide: Side;
     x: number;
+    /** Set when a turret scored the kill: its slot. */
+    killerTurret?: number;
   };
   /**
    * A unit lost HP. `amount` is the HP lost; `absorbed` is what a shield
@@ -229,6 +232,8 @@ export interface EventPayloads {
     radius: number;
     target: 'unit' | 'base' | 'ground';
   };
+  /** A shot ricocheted from one unit to another (feedback; Conquest's Ricochet). `side` fired it. */
+  [Events.ShotBounced]: { side: Side; fromX: number; fromY: number; toX: number; toY: number };
   /**
    * A unit's attack happened (feedback only): a melee blow landed or a shot
    * left. `frontX` is the unit's leading edge; `slot` 3 is a heavy.

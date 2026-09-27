@@ -10,7 +10,7 @@ import {
 import { designSummary, isValidDesign, lockedSlot, mechPart } from '@entities/mechDesign';
 import type { MatchState } from '@state/GameState';
 import type { MechState, Side } from '@state/types';
-import { mechRejection, type MechRejection } from '@systems/MechSystem';
+import { mechBuildMs, mechForgeLevel, mechPrice, mechRejection, type MechRejection } from '@systems/MechSystem';
 import { addPanel, UI_FONT, UI_TITLE_FONT, UiColors, UiTextColors, UiTextures } from '@ui/kenneyUi';
 import { keyHint } from '@ui/keymap';
 import { UiButton } from '@ui/UiButton';
@@ -257,8 +257,9 @@ export class WorkshopPanel {
     card.name.setText(part.name).setScale(1);
     if (card.name.width > CARD_WIDTH - 8) card.name.setScale((CARD_WIDTH - 8) / card.name.width);
     card.about.setText(part.about);
-    const forge = this.state[this.side].buildings.forge;
-    if ((part.forge ?? 0) > forge) card.foot.setText(`Forge ${part.forge}`).setColor(RED);
+    const me = this.state[this.side];
+    const forge = mechForgeLevel(me);
+    if ((part.forge ?? 0) > forge) card.foot.setText(`Forge ${(part.forge ?? 0) - me.traits.mechForgeBonus}`).setColor(RED);
     else card.foot.setText('●'.repeat(part.tier) + '○'.repeat(3 - part.tier)).setColor(UiTextColors.gold);
   }
 
@@ -272,7 +273,11 @@ export class WorkshopPanel {
     const s = designSummary(this.design, age);
     const tough = s.toughness > s.hp ? ` (${s.toughness.toLocaleString('en-US')} eff.)` : '';
     this.statsText.setText(
-      [`HP ${s.hp.toLocaleString('en-US')}${tough}`, s.armed ? `Damage ${s.dps}/s` : 'No weapon', `Build ${Math.round(s.buildMs / 1000)}s`].join('\n'),
+      [
+        `HP ${s.hp.toLocaleString('en-US')}${tough}`,
+        s.armed ? `Damage ${s.dps}/s` : 'No weapon',
+        `Build ${Math.round(mechBuildMs(this.state[this.side], this.design) / 1000)}s`,
+      ].join('\n'),
     );
     this.refreshBuild();
   }
@@ -280,7 +285,7 @@ export class WorkshopPanel {
   private refreshBuild(): void {
     if (!this.buildButton) return;
     const me = this.state[this.side];
-    const cost = designSummary(this.design, me.age).cost;
+    const cost = mechPrice(me, this.design);
     this.costText.setText(String(cost)).setColor(me.gold >= cost ? UiTextColors.gold : RED);
     const rejection = this.rejection();
     this.buildButton.setEnabled(!this.locked && rejection === null);
@@ -309,7 +314,8 @@ export class WorkshopPanel {
   }
 
   private forgeNeeded(): number {
-    const slot = lockedSlot(this.design, this.state[this.side].buildings.forge);
-    return slot ? (mechPart(this.design, slot).forge ?? 0) : 0;
+    const me = this.state[this.side];
+    const slot = lockedSlot(this.design, mechForgeLevel(me));
+    return slot ? (mechPart(this.design, slot).forge ?? 0) - me.traits.mechForgeBonus : 0;
   }
 }
