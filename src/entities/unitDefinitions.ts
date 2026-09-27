@@ -144,15 +144,17 @@ const STONE_UNITS: readonly UnitDefinition[] = [
     slot: 3,
     role: 'combat',
     spriteKey: 'unit-stone-mammoth-rider',
-    cost: 80,
+    // 2026-09-27 (owner: "mammoth very strong"): was 80 gold, 300 HP, 16 damage;
+    // it beat equal gold of clubbers, slingers and mixed armies.
+    cost: 90,
     trainTimeMs: 3500,
-    hp: 300,
+    hp: 240,
     speed: 22,
     killGold: 95,
     killXp: 40,
     // Tramples: each hit also lands on enemies within 24 px of the target
     // (about the next unit in line), which is what beats cheap melee swarms.
-    attack: { damage: 16, range: 12, cooldownMs: 1600, splashRadius: 24, windupMs: 330 },
+    attack: { damage: 14, range: 12, cooldownMs: 1600, splashRadius: 24, windupMs: 330 },
   },
   {
     // Economy: expensive, no attack, earns gold while alive (Phase 9).
@@ -233,7 +235,7 @@ const CASTLE_UNITS: readonly UnitDefinition[] = [
     spriteKey: 'unit-castle-knight',
     cost: 175,
     trainTimeMs: 3500,
-    hp: 660,
+    hp: 600, // was 660 (2026-09-27, heavies beat equal gold of ranged)
     speed: 30,
     killGold: 210,
     killXp: 88,
@@ -317,7 +319,7 @@ const RENAISSANCE_UNITS: readonly UnitDefinition[] = [
     spriteKey: 'unit-renaissance-cuirassier',
     cost: 385,
     trainTimeMs: 3500,
-    hp: 1440,
+    hp: 1300, // was 1440 (2026-09-27)
     speed: 40,
     killGold: 462,
     killXp: 192,

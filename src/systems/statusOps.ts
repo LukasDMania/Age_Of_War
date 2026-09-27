@@ -19,18 +19,25 @@ import type { MatchState } from '@state/GameState';
 import type { Side, SideModifier } from '@state/types';
 import { emit, Events } from '@utils/EventBus';
 
-function keepHpRatio(unit: Unit, change: () => void): void {
+/**
+ * How a max HP change treats current HP: `ratio` keeps the HP ratio (a 1.5x
+ * buff at half health leaves the unit at half of the new maximum); `keep`
+ * keeps the HP it has (only the maximum grows; it never heals).
+ */
+export type HpMode = 'ratio' | 'keep';
+
+function keepHpRatio(unit: Unit, change: () => void, mode: HpMode = 'ratio'): void {
   const before = unit.getStat('maxHp');
   change();
   const after = unit.getStat('maxHp');
   if (before !== after && before > 0) {
-    unit.hp = Math.min(after, (unit.hp / before) * after);
+    unit.hp = Math.min(after, mode === 'keep' ? unit.hp : (unit.hp / before) * after);
     unit.markBarDirty();
   }
 }
 
 /** Adds a modifier (replacing one with the same id) and emits `modifier-applied`. */
-export function applyModifier(unit: Unit, modifier: StatModifier): void {
+export function applyModifier(unit: Unit, modifier: StatModifier, hpMode: HpMode = 'ratio'): void {
   if (!unit.isAlive) return;
   if (!Number.isFinite(modifier.mult) || modifier.mult < 0) {
     throw new Error(`Invalid modifier multiplier: ${modifier.mult}`);
@@ -39,7 +46,7 @@ export function applyModifier(unit: Unit, modifier: StatModifier): void {
     const existing = unit.modifiers.findIndex((m) => m.id === modifier.id);
     if (existing >= 0) unit.modifiers.splice(existing, 1);
     unit.modifiers.push(modifier);
-  });
+  }, hpMode);
   emit(Events.ModifierApplied, {
     instanceId: unit.instanceId,
     modifierId: modifier.id,

@@ -10,8 +10,9 @@ import { emit, Events, on } from '@utils/EventBus';
  * kills rank up. A kill is credited to the killer side's living combat unit
  * nearest to where the victim fell (the rules don't track who fired a shot,
  * and in a single lane the nearest fighter almost always made the kill).
- * Ranks (`VETERANCY.ranks`) raise max HP and damage through `statusOps` and
- * heal the unit; the unit shows chevrons over its HP bar.
+ * Ranks (`VETERANCY.ranks`) raise max HP and damage through `statusOps`
+ * (current HP is kept: no heal, owner 2026-09-27); the unit shows chevrons
+ * over its HP bar.
  *
  * Listens for: `unit-died`. Emits: `unit-promoted`; `modifier-applied`
  * through statusOps.
@@ -46,9 +47,9 @@ export class VeterancySystem {
     if (rank <= best.rank) return;
     const spec = VETERANCY.ranks[rank - 1]!;
     best.rank = rank;
-    applyModifier(best, { id: 'veteran-hp', source: 'veterancy', stat: 'maxHp', mult: spec.hp });
+    // Owner, 2026-09-27: a promotion raises max HP but never heals.
+    applyModifier(best, { id: 'veteran-hp', source: 'veterancy', stat: 'maxHp', mult: spec.hp }, 'keep');
     applyModifier(best, { id: 'veteran-damage', source: 'veterancy', stat: 'damage', mult: spec.damage });
-    best.heal(best.getStat('maxHp'));
     emit(Events.UnitPromoted, { side: best.side, instanceId: best.instanceId, rank, x: best.x, topY: best.topY });
   }
 }

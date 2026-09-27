@@ -10,7 +10,7 @@ import type { ModifiableStat } from '@state/types';
  * A kill is credited to the killer side's living combat unit nearest to
  * where the victim fell (within `creditRadius` px, edge to edge); units rank
  * up at these kill counts. Each rank sets the unit's max HP and damage
- * multipliers and heals it fully.
+ * multipliers; current HP is kept (no heal).
  */
 export const VETERANCY = {
   creditRadius: 90,
