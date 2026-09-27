@@ -21,9 +21,21 @@ export class AgeUpButton {
   private age = 0;
   private xp = 0;
   private locked = false;
+  /** Highest age allowed this match (Conquest chapters lock it). */
+  private readonly maxAge: number;
 
   /** (x, y) is the center. */
-  constructor(scene: Phaser.Scene, side: Side, x: number, y: number, width: number, height: number, age: number, xp: number) {
+  constructor(
+    scene: Phaser.Scene,
+    side: Side,
+    x: number,
+    y: number,
+    width: number,
+    height: number,
+    age: number,
+    xp: number,
+    maxAge = Infinity,
+  ) {
     this.scene = scene;
     this.side = side;
     this.button = new UiButton(scene, x, y, width, height, {
@@ -47,6 +59,7 @@ export class AgeUpButton {
     this.button.add(title, key, this.next, this.price);
     this.age = age;
     this.xp = xp;
+    this.maxAge = maxAge;
     this.refresh();
     scene.input.keyboard?.on('keydown-A', this.onKey);
   }
@@ -76,6 +89,12 @@ export class AgeUpButton {
     if (final || cost === null) {
       this.next.setText('Final age');
       this.price.setText('');
+      this.button.setEnabled(false).setSelected(false);
+      return;
+    }
+    if (this.age >= this.maxAge) {
+      this.next.setText('Age locked');
+      this.price.setText('this battle');
       this.button.setEnabled(false).setSelected(false);
       return;
     }

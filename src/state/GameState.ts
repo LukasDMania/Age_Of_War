@@ -13,6 +13,7 @@ import {
   type PerkChoice,
   type ResearchId,
 } from '@config/buildings.config';
+import { AGE_COUNT } from '@config/ages.config';
 import type { MatchPhase, QueuedUnit, SideModifier } from '@state/types';
 
 export type { MatchPhase, QueuedUnit, Side } from '@state/types';
@@ -36,6 +37,11 @@ export interface SideState {
   xp: number;
   /** 0-based index into the ages config. */
   age: number;
+  /**
+   * Highest age this side may reach in this match (the last age normally;
+   * Conquest chapters lock battles to their age). Set at match setup.
+   */
+  maxAge: number;
   baseHp: number;
   unlockedSlots: number;
   /** Length is the slot cap; `null` means an empty slot. */
@@ -65,6 +71,7 @@ export function createSideState(): SideState {
     gold: STARTING_GOLD,
     xp: STARTING_XP,
     age: 0,
+    maxAge: AGE_COUNT - 1,
     baseHp: BASE_HP,
     unlockedSlots: STARTING_TURRET_SLOTS,
     turrets: Array.from({ length: MAX_TURRET_SLOTS }, () => null),

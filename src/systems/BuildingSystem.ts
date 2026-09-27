@@ -123,7 +123,8 @@ export function marketXpPerSec(side: SideState): number {
 
 /** XP the side doesn't need for its next age-up (all of it in the final age). */
 export function surplusXp(side: SideState): number {
-  if (isFinalAge(side.age)) return side.xp;
+  // No age-up ahead (the last age, or an age-locked Conquest battle): all XP is surplus.
+  if (isFinalAge(side.age) || side.age >= side.maxAge) return side.xp;
   const toNext = getAge(side.age).xpToNext ?? 0;
   return Math.max(0, side.xp - toNext);
 }

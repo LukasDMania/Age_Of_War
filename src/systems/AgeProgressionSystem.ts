@@ -7,7 +7,7 @@ import type { Side } from '@state/types';
 import { emit, Events, on } from '@utils/EventBus';
 
 /** Why an age-up was turned down. */
-export type AgeUpRejection = 'not-playing' | 'final-age' | 'not-enough-xp';
+export type AgeUpRejection = 'not-playing' | 'final-age' | 'age-capped' | 'not-enough-xp';
 
 /**
  * Advancing through the ages (Phase 8). An age-up costs the current age's
@@ -37,6 +37,7 @@ export class AgeProgressionSystem {
     const sideState = this.state[side];
     const cost = getAge(sideState.age).xpToNext;
     if (cost === null || isFinalAge(sideState.age)) return 'final-age';
+    if (sideState.age >= sideState.maxAge) return 'age-capped';
     if (sideState.xp < cost) return 'not-enough-xp';
     return null;
   }

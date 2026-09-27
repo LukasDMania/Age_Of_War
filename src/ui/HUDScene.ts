@@ -168,6 +168,7 @@ export class HUDScene extends Phaser.Scene {
       TOP_LEFT_HEIGHT,
       own.age,
       own.xp,
+      own.maxAge,
     );
 
     addThemedPanel(this, PANEL_LEFT + PANEL_WIDTH / 2, PANEL_TOP + PANEL_HEIGHT / 2, PANEL_WIDTH, PANEL_HEIGHT, { alpha: 0.96 });

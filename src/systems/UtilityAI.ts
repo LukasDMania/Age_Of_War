@@ -221,7 +221,7 @@ export class UtilityAI {
 
   private tryAgeUp(now: number): void {
     const cost = getAge(this.me.age).xpToNext;
-    if (cost === null || this.me.xp < cost) {
+    if (cost === null || this.me.xp < cost || this.me.age >= this.me.maxAge) {
       this.ageUpReadySince = null;
       return;
     }

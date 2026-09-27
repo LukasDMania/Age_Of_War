@@ -64,7 +64,7 @@ export const FEATURES_INFO: Readonly<Record<FeatureId, FeatureInfo>> = {
   },
   conquest: {
     label: 'Conquest mode',
-    about: 'A roguelite campaign: a map of battles with modifiers, relics between fights, and Glory to unlock perks.',
+    about: 'A roguelite campaign through all five ages: chapter maps, bosses, camps, events, relics, commanders and a Legacy tree.',
     default: true,
   },
 };

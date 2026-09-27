@@ -2,6 +2,7 @@ import { getAge } from '@config/ages.config';
 import { buildingUpgradeCost } from '@config/buildings.config';
 import type { ConquestEffect } from '@config/conquest.config';
 import { getTurretDefinition, slotUnlockCost } from '@entities/turretDefinitions';
+import { getUnitDefinition } from '@entities/unitDefinitions';
 import type { UnitFactory } from '@entities/UnitFactory';
 import { addGold, addXp } from '@state/economyOps';
 import type { MatchState } from '@state/GameState';
@@ -27,7 +28,11 @@ const sidesOf = (side: Side | 'both'): readonly Side[] => (side === 'both' ? SID
  * side modifiers. `ai-income` effects are read by GameScene for
  * AiIncomeSystem (`conquestAiIncomeMult`).
  *
- * Listens for nothing. Emits: `age-up-requested`,
+ * Free units (`units`) are granted their price and bought through
+ * `buy-unit-requested`, so they queue and train like any purchase (the
+ * queue holds five; more are dropped by SpawnSystem).
+ *
+ * Listens for nothing. Emits: `age-up-requested`, `buy-unit-requested`,
  * `upgrade-building-requested`, `research-requested`, `buy-slot-requested`,
  * `buy-turret-requested`, `upgrade-turret-requested`; `gold-changed` /
  * `xp-changed` through economyOps.
@@ -47,7 +52,7 @@ export class ConquestSystem {
   update(): void {
     if (this.applied || this.state.phase !== 'playing') return;
     this.applied = true;
-    const order: ConquestEffect['kind'][] = ['start-age', 'building', 'research', 'turrets', 'gold', 'xp', 'unit-stat'];
+    const order: ConquestEffect['kind'][] = ['start-age', 'building', 'research', 'turrets', 'unit-stat', 'units', 'gold', 'xp'];
     for (const kind of order) {
       this.effects.forEach((effect, index) => {
         if (effect.kind === kind) this.apply(effect, index);
@@ -114,6 +119,17 @@ export class ConquestSystem {
             mult: effect.mult,
             ...(effect.slots ? { onlySlots: effect.slots } : {}),
           });
+        }
+        return;
+      case 'units':
+        for (const side of sidesOf(effect.side)) {
+          const unitId = getAge(this.state[side].age).unitIds[effect.slot - 1];
+          if (!unitId) continue;
+          const cost = getUnitDefinition(unitId).cost;
+          for (let i = 0; i < effect.count; i++) {
+            this.grant(side, cost);
+            emit(Events.BuyUnitRequested, { side, unitId });
+          }
         }
         return;
       case 'ai-income':

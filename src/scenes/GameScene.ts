@@ -12,6 +12,7 @@ import {
 import { DEFAULT_AI_PROFILE, findAiProfile, type AiGenome } from '@config/aiGenome.config';
 import {
   BASE_X,
+  baseMaxHp,
   DEBUG_CHEATS,
   GAME_HEIGHT,
   GAME_OVER_DELAY_MS,
@@ -96,7 +97,12 @@ export interface GameSceneData {
    * Conquest prototype: this match is a campaign battle with these effects
    * (see ConquestSystem); the result goes back to the campaign.
    */
-  conquest?: { effects: ConquestEffect[]; label: string };
+  conquest?: {
+    effects: ConquestEffect[];
+    label: string;
+    /** The chapter's age: both sides are locked to it (no age-ups past it). */
+    maxAge?: number;
+  };
 }
 
 /** Anything that plays a side by emitting requests. */
@@ -182,6 +188,11 @@ export class GameScene extends Phaser.Scene {
 
   create(): void {
     this.state = createGameState();
+    const maxAge = this.sceneData.conquest?.maxAge;
+    if (maxAge !== undefined) {
+      this.state.player.maxAge = maxAge;
+      this.state.enemy.maxAge = maxAge;
+    }
     this.drawBackground();
 
     this.bases = {
@@ -493,7 +504,10 @@ export class GameScene extends Phaser.Scene {
   /** The base crumbles at once; the game-over panel follows a moment later. */
   private onBaseDestroyed(side: Side): void {
     this.logger?.finish(side === 'enemy' ? 'won' : 'lost');
-    if (this.isConquest) finishBattle(side === 'enemy');
+    if (this.isConquest) {
+      const me = this.state.player;
+      finishBattle(side === 'enemy', Math.max(0, me.baseHp) / baseMaxHp(me.age));
+    }
     this.bases[side].setTint(0x4a4a4a);
     this.time.delayedCall(GAME_OVER_DELAY_MS, () => {
       const summary = {
