@@ -54,6 +54,8 @@ export type UtilityEffect =
       projectileKey: string;
       /** Time from the start of the throw animation to the release (rig art). */
       windupMs?: number;
+      /** Where the throw leaves the art (see `UnitAttack.muzzle`). */
+      muzzle?: { x: number; y: number };
     }
   | { kind: 'slow'; range: number; mult: number; durationMs: number }
   | { kind: 'buff'; radius: number; damageMult: number }
@@ -74,6 +76,13 @@ export interface UnitAttack {
   windupMs?: number;
   /** Melee blows on a base deal this many times their damage (the Mech's siege drill). */
   baseDamageMult?: number;
+  /**
+   * Ranged: where the shot leaves the unit's art at the release frame, in px
+   * from the unit's position (x forward, y up is negative). Measured from
+   * the art with `/artlab.html?muzzles` (2026-09-28). Without it, shots
+   * leave the front edge at `UNIT_SHOT_HEIGHT`.
+   */
+  muzzle?: { x: number; y: number };
 }
 
 export interface UnitDefinition {
@@ -151,7 +160,7 @@ const STONE_UNITS: readonly UnitDefinition[] = [
       damage: 9,
       range: 130,
       cooldownMs: 1200,
-      projectileKey: 'proj-stone',
+      projectileKey: 'proj-stone', muzzle: { x: 35, y: -50 },
       windupMs: 330,
     },
   },
@@ -242,7 +251,7 @@ const CASTLE_UNITS: readonly UnitDefinition[] = [
     killGold: 78,
     killXp: 33,
     // Longer reach than the slinger, slower draw.
-    attack: { damage: 21, range: 150, cooldownMs: 1300, projectileKey: 'proj-arrow', windupMs: 345 },
+    attack: { damage: 21, range: 150, cooldownMs: 1300, projectileKey: 'proj-arrow', muzzle: { x: 28, y: -51 }, windupMs: 345 },
   },
   {
     id: 'castle-knight',
@@ -290,7 +299,7 @@ const CASTLE_UNITS: readonly UnitDefinition[] = [
     killGold: 156,
     killXp: 55,
     // Lobs a stone over the front line into the enemy's front ranks.
-    utility: { kind: 'aoe', range: 170, radius: 60, damage: 55, intervalMs: 2500, projectileKey: 'proj-boulder', windupMs: 375 },
+    utility: { kind: 'aoe', range: 170, radius: 60, damage: 55, intervalMs: 2500, projectileKey: 'proj-boulder', muzzle: { x: -4, y: -38 }, windupMs: 375 },
   },
 ];
 
@@ -327,7 +336,7 @@ const RENAISSANCE_UNITS: readonly UnitDefinition[] = [
     killGold: 174,
     killXp: 72,
     // Slow reload, heavy ball.
-    attack: { damage: 65, range: 160, cooldownMs: 1800, projectileKey: 'proj-bullet', windupMs: 375 },
+    attack: { damage: 65, range: 160, cooldownMs: 1800, projectileKey: 'proj-bullet', muzzle: { x: 40, y: -49 }, windupMs: 375 },
   },
   {
     id: 'renaissance-cuirassier',
@@ -411,7 +420,7 @@ const MODERN_UNITS: readonly UnitDefinition[] = [
     killGold: 378,
     killXp: 158,
     // Longest reach of any unit; 15% less damage per second to pay for it.
-    attack: { damage: 147, range: 220, cooldownMs: 2200, projectileKey: 'proj-bullet', windupMs: 410 },
+    attack: { damage: 147, range: 220, cooldownMs: 2200, projectileKey: 'proj-bullet', muzzle: { x: 40, y: -39 }, windupMs: 410 },
   },
   {
     id: 'modern-tank',
@@ -427,7 +436,7 @@ const MODERN_UNITS: readonly UnitDefinition[] = [
     killGold: 1008,
     killXp: 420,
     // A heavy that shoots: short-range shells that splash.
-    attack: { damage: 210, range: 110, cooldownMs: 2000, splashRadius: 28, projectileKey: 'proj-shell', windupMs: 375 },
+    attack: { damage: 210, range: 110, cooldownMs: 2000, splashRadius: 28, projectileKey: 'proj-shell', muzzle: { x: 55, y: -38 }, windupMs: 375 },
   },
   {
     id: 'modern-contractor',
@@ -495,7 +504,7 @@ const FUTURE_UNITS: readonly UnitDefinition[] = [
     killGold: 828,
     killXp: 345,
     // Rapid fire.
-    attack: { damage: 104, range: 170, cooldownMs: 600, projectileKey: 'proj-laser', windupMs: 205 },
+    attack: { damage: 104, range: 170, cooldownMs: 600, projectileKey: 'proj-laser', muzzle: { x: 33, y: -49 }, windupMs: 205 },
   },
   {
     id: 'future-mech',
@@ -511,7 +520,7 @@ const FUTURE_UNITS: readonly UnitDefinition[] = [
     killGold: 2208,
     killXp: 920,
     // Close-range plasma bursts that splash.
-    attack: { damage: 368, range: 50, cooldownMs: 1600, splashRadius: 28, projectileKey: 'proj-plasma', windupMs: 320 },
+    attack: { damage: 368, range: 50, cooldownMs: 1600, splashRadius: 28, projectileKey: 'proj-plasma', muzzle: { x: 40, y: -68 }, windupMs: 320 },
   },
   {
     id: 'future-broker-drone',

@@ -4,6 +4,7 @@ import {
   MECH_ARMS,
   MECH_HEADS,
   MECH_ID_PREFIX,
+  MECH_LAUNCHER_MUZZLES,
   MECH_LEGS,
   MECH_OPTIONS,
   MECH_SLOTS,
@@ -102,7 +103,7 @@ export function lockedSlot(design: MechDesign, forgeLevel: number): MechSlot | n
   return MECH_SLOTS.find((slot) => (mechPart(design, slot).forge ?? 0) > forgeLevel) ?? null;
 }
 
-function armAttack(arm: ArmPart, design: MechDesign, age: number): UnitAttack | null {
+function armAttack(arm: ArmPart, design: MechDesign, age: number, hand: 'near' | 'far'): UnitAttack | null {
   const a = arm.attack;
   if (!a) return null;
   const torso = MECH_TORSOS[design.torso];
@@ -116,7 +117,10 @@ function armAttack(arm: ArmPart, design: MechDesign, age: number): UnitAttack | 
     windupMs: rigWindupMs(MECH.attackRate),
   };
   if (a.splashRadius) attack.splashRadius = a.splashRadius;
-  if (a.ranged) attack.projectileKey = MECH_SHELLS[age] ?? 'proj-shell';
+  if (a.ranged) {
+    attack.projectileKey = MECH_SHELLS[age] ?? 'proj-shell';
+    attack.muzzle = MECH_LAUNCHER_MUZZLES[design.legs][hand];
+  }
   if (a.baseDamageMult) attack.baseDamageMult = a.baseDamageMult;
   return attack;
 }
@@ -140,7 +144,7 @@ export function mechDefinition(design: MechDesign, age: number): UnitDefinition 
   const hp = MECH.coreHp + parts.reduce((sum, p) => sum + (p.hp ?? 0), 0);
   const armor = parts.reduce((mult, p) => mult * (p.armor ?? 1), 1);
   // Main attack: the shorter reach (it decides where the Mech stops).
-  const attacks = [armAttack(MECH_ARMS[design.left], design, age), armAttack(MECH_ARMS[design.right], design, age)]
+  const attacks = [armAttack(MECH_ARMS[design.left], design, age, 'near'), armAttack(MECH_ARMS[design.right], design, age, 'far')]
     .filter((a): a is UnitAttack => a !== null)
     .sort((a, b) => a.range - b.range);
   const [main, second] = attacks;

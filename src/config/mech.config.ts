@@ -157,5 +157,18 @@ export const MECH = {
   sides: ['player'],
 } as const;
 
+/**
+ * Where a launcher arm's shell leaves the art, px from the Mech's position
+ * (x forward, y up negative), per legs (hip height) and arm: `near` is the
+ * left arm, `far` the right. Measured with `/artlab.html?muzzles`
+ * (2026-09-28).
+ */
+export const MECH_LAUNCHER_MUZZLES: Readonly<Record<LegsId, { near: { x: number; y: number }; far: { x: number; y: number } }>> = {
+  walker: { near: { x: 61, y: -59 }, far: { x: 56, y: -70 } },
+  treads: { near: { x: 61, y: -48 }, far: { x: 56, y: -58 } },
+  striders: { near: { x: 61, y: -66 }, far: { x: 56, y: -77 } },
+  stompers: { near: { x: 61, y: -59 }, far: { x: 56, y: -70 } },
+};
+
 /** Every unit id of a Mech starts with this (`entities/mechDesign.ts`). */
 export const MECH_ID_PREFIX = 'mech:';

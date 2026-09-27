@@ -49,7 +49,7 @@ kinds.forEach((kind, row) => {
     }
   }
 });
-if (!params.has('turrets') && !params.has('buildings') && !params.has('mechs')) (window as unknown as { __labReady: boolean }).__labReady = true;
+if (!params.has('turrets') && !params.has('buildings') && !params.has('mechs') && !params.has('muzzles')) (window as unknown as { __labReady: boolean }).__labReady = true;
 
 /** `?bounds`: the drawn extent of each kind over all frames, in rig units. */
 if (params.has('bounds')) {
@@ -267,3 +267,79 @@ if (params.has('mechs')) {
   });
 }
 
+
+/**
+ * `?muzzles`: where every ranged unit's shot leaves its art (2026-09-28).
+ * Draws each one's attack frame just before release with a red dot on the
+ * point the drawing marked (`markShot`), and puts the numbers, in px from
+ * the unit's position (forward, up negative), in `window.__muzzles`: copy
+ * them into the units' `attack.muzzle` (and `MECH_LAUNCHER_MUZZLES`) after
+ * changing a ranged unit's art.
+ */
+if (params.has('muzzles')) {
+  void Promise.all([
+    import('@/art/rigKit'),
+    import('@config/unitArt.config'),
+    import('@entities/unitDefinitions'),
+    import('@/art/mechDraw'),
+    import('@config/mech.config'),
+  ]).then(([kit, art, defs, mechDraw, mech]) => {
+    const RELEASE = 0.44;
+    const probe = (draw: (g: CanvasRenderingContext2D) => void): { tag: string; at: [number, number] }[] => {
+      const off = document.createElement('canvas').getContext('2d')!;
+      kit.shotProbe.active = true;
+      kit.shotProbe.marks = [];
+      draw(off);
+      kit.shotProbe.active = false;
+      return kit.shotProbe.marks as { tag: string; at: [number, number] }[];
+    };
+    const units: Record<string, { x: number; y: number }> = {};
+    const ranged = defs.UNIT_DEFINITIONS.filter((d) => d.attack?.projectileKey || d.utility?.kind === 'aoe');
+    const sheet = document.getElementById('lab') as HTMLCanvasElement;
+    const S = 2.2;
+    sheet.width = ranged.length * 110 * S * 0.5 + 20;
+    sheet.height = 160 * S * 0.5 + 20;
+    const g = sheet.getContext('2d')!;
+    g.fillStyle = '#30343b';
+    g.fillRect(0, 0, sheet.width, sheet.height);
+    ranged.forEach((d, i) => {
+      const ua = art.UNIT_ART[d.id];
+      const rig = ua?.rig;
+      if (!ua || !rig) return;
+      const L = rig.live;
+      const anchorX = L[0] + (ua.originX ?? 0.5) * (L[1] - L[0]);
+      const marks = probe((o) => drawRig(o, rig.kind, team, 'attack', RELEASE));
+      const at = marks[marks.length - 1]?.at;
+      if (!at) return;
+      units[d.id] = { x: Math.round((at[0] - anchorX) * rig.pxPerUnit), y: Math.round(at[1] * rig.pxPerUnit) };
+      const k = S * 0.5 * 1.4;
+      const cx = 10 + i * 110 * S * 0.5 + 40 * S * 0.5;
+      const cy = sheet.height - 20;
+      g.save();
+      g.translate(cx, cy);
+      g.scale(k, k);
+      drawRig(g, rig.kind, team, 'attack', RELEASE);
+      g.fillStyle = '#ff2a2a';
+      g.beginPath();
+      g.arc(at[0], at[1], 2.2, 0, Math.PI * 2);
+      g.fill();
+      g.restore();
+      g.fillStyle = '#cfd';
+      g.fillText(`${d.id.split('-').slice(1).join('-')} ${units[d.id]!.x},${units[d.id]!.y}`, cx - 40, 14);
+    });
+    // The player's Mech: a launcher in each arm, per legs (the hip height changes).
+    const mechMuzzles: Record<string, { near: { x: number; y: number }; far: { x: number; y: number } }> = {};
+    for (const legs of Object.keys(mech.MECH_LEGS)) {
+      const marks = probe((o) =>
+        mechDraw.drawMechDesign(o, { legs: legs as 'walker', torso: 'frame', head: 'visor', left: 'launcher', right: 'launcher', age: 3 }, team, 'attack', RELEASE),
+      );
+      const px = (tag: string): { x: number; y: number } => {
+        const m = marks.find((x) => x.tag === tag)?.at ?? [0, 0];
+        return { x: Math.round(m[0] * 1.15), y: Math.round(m[1] * 1.15) };
+      };
+      mechMuzzles[legs] = { near: px('near'), far: px('far') };
+    }
+    (window as unknown as { __muzzles: unknown }).__muzzles = { units, mech: mechMuzzles };
+    (window as unknown as { __labReady: boolean }).__labReady = true;
+  });
+}

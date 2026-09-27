@@ -19,6 +19,7 @@ import {
   glow,
   leg,
   lerp,
+  markShot,
   muzzleFlash,
   OUT,
   poly,
@@ -937,6 +938,7 @@ function drawOneHanded(c: Ctx, o: Outfit, team: string, P: Pose, h: P2, ta: numb
       c.stroke();
       dot(c, e, 1.8, C.leather);
       if (P.rock) dot(c, e, 1.5, C.stone);
+      markShot(c, e);
       return;
     }
     case 'spear': {
@@ -1068,6 +1070,7 @@ function drawTwoHanded(c: Ctx, o: Outfit, team: string, P: Pose): void {
       gunBody(c, G, a, 22, C.wood, C.iron);
       const muzzle = pt(G, a, 22.5);
       muzzleFlash(c, muzzle, a, 5, P.flash);
+      markShot(c, muzzle);
       if (P.smoke > 0) smoke(c, pt(muzzle, a, 5), 5.5, P.smoke);
       return;
     }
@@ -1080,6 +1083,7 @@ function drawTwoHanded(c: Ctx, o: Outfit, team: string, P: Pose): void {
       dot(c, s1, 1.2, C.glass);
       const muzzle = pt(G, a, 22.5);
       muzzleFlash(c, muzzle, a, 3, P.flash);
+      markShot(c, muzzle);
       if (P.smoke > 0) smoke(c, pt(muzzle, a, 3), 2.5, P.smoke);
       return;
     }
@@ -1089,6 +1093,7 @@ function drawTwoHanded(c: Ctx, o: Outfit, team: string, P: Pose): void {
       for (let i = 0; i < 3; i++) dot(c, pt(pt(G, a, 5 + i * 3.2), a + Math.PI / 2, 1.4), 1.1, team);
       glow(c, pt(G, a, 8), 6, team, 0.35);
       const muzzle = pt(G, a, 17.5);
+      markShot(c, muzzle);
       glow(c, muzzle, 3 + P.flash * 8, team, 0.5 + 0.5 * P.flash);
       if (P.flash > 0) dot(c, muzzle, 1.5 + P.flash * 1.5, '#ffffff');
       return;
@@ -1132,6 +1137,7 @@ function drawBow(c: Ctx, P: Pose): void {
   c.lineWidth = 2;
   c.strokeStyle = C.wood;
   c.stroke();
+  markShot(c, [nock[0] + 20, nock[1]]);
   if (P.nocked) {
     const tip: P2 = [nock[0] + 20, nock[1]];
     poly(c, [nock, tip], 0.9, C.wood);

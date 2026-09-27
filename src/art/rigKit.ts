@@ -178,6 +178,23 @@ export function star(c: Ctx, p: P2, a: number, color = '255,230,150'): void {
   }
 }
 
+/**
+ * Where shots leave the art (2026-09-28, owner: ranged shots came out too
+ * low). Drawing code calls `markShot` at a weapon's release point (a gun's
+ * muzzle, the sling's pouch, the nocked arrow's tip); while `shotProbe` is
+ * active (dev measuring only: `/artlab.html?muzzles`) the point is recorded
+ * in the canvas's own coordinates, i.e. rig units from the feet when drawn
+ * on an untransformed canvas. The measured points become the units'
+ * `attack.muzzle` data, so the game never draws to know where to shoot.
+ */
+export const shotProbe: { active: boolean; marks: { tag: string; at: P2 }[] } = { active: false, marks: [] };
+
+export function markShot(c: Ctx, p: P2, tag = 'shot'): void {
+  if (!shotProbe.active) return;
+  const m = c.getTransform();
+  shotProbe.marks.push({ tag, at: [m.a * p[0] + m.c * p[1] + m.e, m.b * p[0] + m.d * p[1] + m.f] });
+}
+
 /** A muzzle flash pointing along angle `a` (pt convention), size `s`, strength `k`. */
 export function muzzleFlash(c: Ctx, p: P2, a: number, s: number, k: number, col = C.fireB): void {
   if (k <= 0) return;

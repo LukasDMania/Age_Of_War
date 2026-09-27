@@ -21,6 +21,7 @@ import {
   ellipse,
   glow,
   lerp,
+  markShot,
   muzzleFlash,
   OUT,
   poly,
@@ -945,6 +946,7 @@ function drawTool(c: Ctx, arm: ArmId, s: Pose, hand: P2, pose: ArmPose, near: bo
       if (pose.flash > 0) {
         muzzleFlash(c, muzzle, Math.PI / 2, 5, pose.flash, s.age === 4 ? '#e0c8ff' : C.fireB);
       }
+      markShot(c, muzzle, near ? 'near' : 'far');
       if (s.anim === 'attack' && s.u > 0.45 && s.age >= 2 && s.age <= 3) smoke(c, [muzzle[0] + 3, muzzle[1]], 5, (s.u - 0.45) / 0.55);
       break;
     }

@@ -1,5 +1,3 @@
-import { LANE_Y } from '@config/constants';
-import { UNIT_SHOT_HEIGHT } from '@config/projectiles.config';
 import type { Base } from '@entities/Base';
 import type { UnitAttack } from '@entities/unitDefinitions';
 import { UnitState, type Unit } from '@entities/Unit';
@@ -8,6 +6,7 @@ import type { UnitFactory } from '@entities/UnitFactory';
 import type { MatchState } from '@state/GameState';
 import { laneDir, otherSide, type Side } from '@state/types';
 import { dealBaseDamage, dealSplashDamage, dealUnitDamage } from '@systems/damageOps';
+import { shotLine } from '@systems/shotLine';
 import { emit, Events } from '@utils/EventBus';
 
 /**
@@ -171,16 +170,15 @@ export class CombatSystem {
   }
 
   /**
-   * Ranged: fire level along the lane from the unit's front edge. The target
-   * only decided that it is time to shoot; the shot hits whatever enemy it
-   * meets first, or the enemy base.
+   * Ranged: fire from the weapon's muzzle on the art toward the nearest enemy
+   * in reach (`shotLine`). The target only decided that it is time to
+   * shoot; the shot hits whatever enemy it meets first, or the enemy base.
    */
   private shoot(unit: Unit, attack: UnitAttack, projectileKey: string, damage: number): void {
-    const dir = laneDir(unit.side);
-    const x = unit.x + dir * unit.halfWidth;
-    const y = LANE_Y - UNIT_SHOT_HEIGHT;
-    const projectile = this.projectiles.launch(projectileKey, unit.side, x, y, damage, attack.splashRadius ?? 0);
-    projectile.aimAt(x + dir, y, true);
+    const reach = attack === unit.definition.secondaryAttack ? attack.range * unit.statMultiplier('range') : unit.getStat('range');
+    const line = shotLine(this.units.activeUnits, this.bases[otherSide(unit.side)], unit, attack.muzzle, reach);
+    const projectile = this.projectiles.launch(projectileKey, unit.side, line.x0, line.y0, damage, attack.splashRadius ?? 0);
+    projectile.aimAt(line.x1, line.y1, true);
     projectile.sourceSlot = unit.definition.slot;
     // Every nth shot pierces (trait).
     unit.shotsFired++;

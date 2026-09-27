@@ -1,15 +1,9 @@
-import {
-  LANE_Y,
-  UTILITY_AURA_PULSE_MS,
-  UTILITY_AURA_TICK_MS,
-  UTILITY_BUFF_LINGER_MS,
-} from '@config/constants';
-import { UNIT_SHOT_HEIGHT } from '@config/projectiles.config';
+import { UTILITY_AURA_PULSE_MS, UTILITY_AURA_TICK_MS, UTILITY_BUFF_LINGER_MS } from '@config/constants';
 import type { ProjectileFactory } from '@entities/ProjectileFactory';
 import type { Unit } from '@entities/Unit';
 import type { UnitFactory } from '@entities/UnitFactory';
 import type { UtilityEffect } from '@entities/unitDefinitions';
-import { laneDir } from '@state/types';
+import { shotLine } from '@systems/shotLine';
 import { applyModifier, grantShield } from '@systems/statusOps';
 import { emit, Events } from '@utils/EventBus';
 
@@ -137,11 +131,9 @@ export class UtilitySystem {
 
   /** The `aoe` effect's level shot with splash. */
   private throwArea(unit: Unit, effect: Extract<UtilityEffect, { kind: 'aoe' }>): void {
-    const dir = laneDir(unit.side);
-    const x = unit.x + dir * unit.halfWidth;
-    const y = LANE_Y - UNIT_SHOT_HEIGHT;
+    const line = shotLine(this.units.activeUnits, null, unit, effect.muzzle, effect.range);
     const damage = effect.damage * unit.statMultiplier('damage');
-    this.projectiles.launch(effect.projectileKey, unit.side, x, y, damage, effect.radius).aimAt(x + dir, y, true);
+    this.projectiles.launch(effect.projectileKey, unit.side, line.x0, line.y0, damage, effect.radius).aimAt(line.x1, line.y1, true);
   }
 
   private *alliesWithin(unit: Unit, radius: number): Generator<Unit> {

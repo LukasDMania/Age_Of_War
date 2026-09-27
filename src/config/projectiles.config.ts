@@ -45,8 +45,10 @@ export const PROJECTILE_FLIGHT: Readonly<Record<string, ProjectileFlight>> = {
 };
 
 /**
- * Height above the lane at which units' shots fly (level). Every unit sprite
- * must be taller than this, or level shots would pass over it.
+ * Height above the lane of a unit's shot when its attack has no `muzzle`
+ * (all ranged units have one since 2026-09-28: shots leave the weapon on the
+ * art and fly toward the target's middle, `systems/shotLine.ts`). Every unit
+ * sprite must be taller than this.
  */
 export const UNIT_SHOT_HEIGHT = 26;
 

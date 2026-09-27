@@ -15,6 +15,7 @@ import {
   ellipse,
   glow,
   lerp,
+  markShot,
   muzzleFlash,
   OUT,
   poly,
@@ -88,6 +89,7 @@ export function drawCatapult(c: Ctx, team: string, anim: RigAnim, u: number): vo
   dot(c, pivot, 1.8, C.iron);
   ellipse(c, end[0], end[1], 3.4, 2.2, armA, C.leather);
   if (stone) dot(c, [end[0], end[1] - 2], 2.6, C.stone);
+  markShot(c, [end[0], end[1] - 2]);
   // Team banner on the frame.
   shape(c, [[18, -24], [18, -34], [27, -31], [18, -28]], team, 1.2);
   poly(c, [[18, -18], [18, -34]], 1.2, C.woodB);
@@ -177,6 +179,7 @@ export function drawTank(c: Ctx, team: string, anim: RigAnim, u: number): void {
   shape(c, [[-12 + tx, -47], [-6 + tx, -45], [-11.5 + tx, -43.5]], burn(team), 1);
   const muzzle: P2 = [b0[0] + len + 1, b0[1]];
   muzzleFlash(c, muzzle, Math.PI / 2, 6, flash);
+  markShot(c, muzzle);
   if (anim === 'attack' && u > 0.45) smoke(c, [muzzle[0] + 4, muzzle[1]], 6, (u - 0.45) / 0.55);
   c.restore();
   c.restore();
@@ -279,6 +282,7 @@ export function drawMech(c: Ctx, team: string, anim: RigAnim, u: number): void {
   rrect(c, -2, -4, 22, 7, 3, C.steelB);
   for (let i = 0; i < 3; i++) dot(c, [5 + i * 4, -0.5], 1.3, charge > 0.1 || flash > 0 ? team : C.steelD);
   const muzzle: P2 = [21, -0.5];
+  markShot(c, muzzle);
   glow(c, muzzle, 4 + charge * 8 + flash * 10, team, 0.4 + 0.6 * Math.max(charge, flash));
   if (flash > 0) dot(c, muzzle, 2 + flash * 2, '#ffffff');
   c.restore();
