@@ -12,7 +12,7 @@ import type { Side } from '@state/types';
 import { addPanel, fitImage, UI_FONT, UiColors, UiTextColors, UiTextures } from '@ui/kenneyUi';
 import { UiButton } from '@ui/UiButton';
 import { emit, Events } from '@utils/EventBus';
-import { textureKeyFor } from '@utils/PlaceholderArt';
+import { ensureTurretIcon, turretArtId } from '@utils/TurretArt';
 
 const PADDING = 12;
 const CARD_WIDTH = 144;
@@ -54,7 +54,8 @@ function textStyle(size: number, color: string): Phaser.Types.GameObjects.Text.T
  * - The next locked slot offers an Unlock button with its price; later
  *   locked slots only show their price (slots unlock in order).
  * - An empty slot offers the current age's turrets (icon and price; hover
- *   shows the name).
+ *   shows the name). Icons are the turrets' own art (`ensureTurretIcon`:
+ *   mount and head at rest, trimmed), at the level shown.
  * - A built turret shows its name, its upgrade level (dots), an Upgrade
  *   button with the next level's price (Phase 11) and a Sell button with the
  *   refund.
@@ -227,8 +228,8 @@ export class TurretPanel {
         onPress: () => emit(Events.BuyTurretRequested, { side: this.side, slotIndex, turretId }),
         onHover: (over) => hint.setText(over ? definition.name : 'Build'),
       });
-      const icon = this.scene.add.image(0, -10, textureKeyFor(definition.spriteKey, this.side));
-      fitImage(icon, MINI_WIDTH - 8, 32);
+      const icon = this.scene.add.image(0, -10, ensureTurretIcon(this.scene, turretArtId(definition.spriteKey), 0, this.side));
+      fitImage(icon, MINI_WIDTH - 4, 34);
       button.add(icon, this.priceLabel(0, 22, definition.cost, 11));
       card.container.add(button.container);
       card.buttons.push({ button, cost: definition.cost });
@@ -248,8 +249,8 @@ export class TurretPanel {
       pips.fillCircle(x, 12, 3.5);
     }
 
-    const icon = this.scene.add.image(CARD_WIDTH / 2, 44, textureKeyFor(definition.spriteKey, this.side));
-    fitImage(icon, 40, 24);
+    const icon = this.scene.add.image(CARD_WIDTH / 2, 46, ensureTurretIcon(this.scene, turretArtId(definition.spriteKey), turret.level, this.side));
+    fitImage(icon, 52, 24);
 
     const next = definition.upgrades[turret.level];
     const upgrade = new UiButton(this.scene, CARD_WIDTH / 2, 68, CARD_WIDTH - 16, 18, {
