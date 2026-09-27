@@ -58,7 +58,8 @@ const PURPLE = [0xd9b8ff, 0xb070ff, 0xffffff];
  * units' shots flash at the weapon's muzzle (`MUZZLE_STYLE`); melee blows
  * slash (an arc in the age's tint) and sparkle; hits on units sparkle;
  * explosions layer a flare, a fireball, embers and a rising smoke column;
- * heavies fall with a dust ring; a special flashes the sky; ricochets streak.
+ * heavies fall with a dust ring; a special flashes the sky; ricochets streak;
+ * the player's age-up flares over the base.
  *
  * Listens for: `projectile-impact`, `unit-struck`, `turret-fired`,
  * `unit-died`, `utility-pulse`, `base-damaged`, `base-destroyed`,
@@ -272,8 +273,17 @@ export class ImpactEffects {
         const front = positions.length ? positions[positions.length - 1]! : 0;
         this.ring(front, 90, 0xff8a3a, 420);
       }),
-      on(Events.AgeChanged, ({ side }) => {
-        if (side === HUD_SIDE && !this.muted) this.burst('gold', 24, BASE_X[side], LANE_Y - 90, 60, 50);
+      on(Events.AgeChanged, ({ side, age }) => {
+        if (side !== HUD_SIDE || this.muted) return;
+        // A new age: gold bursting over the base, a flare, two rings and a light sky wash.
+        const x = BASE_X[side];
+        this.burst('gold', 30, x, LANE_Y - 90, 60, 50);
+        this.pop('fx-flare', x, LANE_Y - 90, 150, 0xfff0b0, 520, { grow: 1.5 });
+        this.ring(x, 90, 0xf2c744, 520);
+        this.scene.time.delayedCall(160, () => {
+          if (!this.muted) this.ring(x, 150, 0xfff0b0, 700);
+        });
+        this.skyFlash(age, 0.6);
       }),
       on(Events.SpecialFired, ({ age }) => this.skyFlash(age)),
       on(Events.ShotBounced, ({ fromX, fromY, toX, toY }) => this.bounceStreak(fromX, fromY, toX, toY)),
@@ -457,11 +467,11 @@ export class ImpactEffects {
   }
 
   /** A special's sky flash: the whole view washes with the age's color and fades. */
-  private skyFlash(age: number): void {
+  private skyFlash(age: number, strength = 1): void {
     if (this.muted) return;
     const look = SPECIAL_SKY_FLASH[Math.max(0, Math.min(SPECIAL_SKY_FLASH.length - 1, age))]!;
     this.scene.tweens.killTweensOf(this.sky);
-    this.sky.setFillStyle(look.color).setAlpha(look.alpha).setVisible(true);
+    this.sky.setFillStyle(look.color).setAlpha(look.alpha * strength).setVisible(true);
     this.scene.tweens.add({ targets: this.sky, alpha: 0, duration: 700, ease: 'Quad.easeOut', onComplete: () => this.sky.setVisible(false) });
   }
 
