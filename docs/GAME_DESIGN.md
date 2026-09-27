@@ -287,6 +287,9 @@ PROPOSED details:
 - Multiple lanes, campaign, survival/roguelite modes. (2026-09-26: the
   owner asked for roguelite experiments; Conquest mode exists as a
   switchable prototype, section 13.)
+- 1v1 multiplayer (owner, 2026-09-27: "leave it for now"). Feasibility and
+  hosting notes in section 15; keep new game rules deterministic and
+  driven by `*-requested` events so it stays possible.
 
 ## 10. Open questions and tunables
 
@@ -649,3 +652,116 @@ the space age". Replaces the five-battle run of section 13.
 - Numbers in `config/conquest.config.ts`; state in `state/conquestState.ts`
   (localStorage; runs from the first version are dropped, Glory and
   matching unlocks carry over).
+
+## 15. Next features (owner, 2026-09-27 night)
+
+Discussed after the first full Conquest run. Not built yet; build order in
+`IMPLEMENTATION_PLAN.md` Phase 19.
+
+### Conquest archetype runs
+
+- **LOCKED (owner):** rewards should build characterised runs, like
+  building a deck around an archetype in Slay the Spire ("look at this
+  crazy ranger unit run"): paths for units, turrets and buildings, less
+  "your units do more damage in general". Choosing a commander must not
+  lock a run into one path.
+- **Paths (PROPOSED, Claude's pick, owner: "u choose"):** five to start,
+  **Vanguard** (melee), **Marksmen** (ranged), **Juggernauts** (heavies and
+  siege), **Bastion** (turrets) and **Guild** (money units, Mine, Market);
+  a sixth, **Workshop**, once the Mech exists (its parts and upgrades).
+  Utility units and the special show up as support rewards inside paths.
+- **Offers lean, never lock (PROPOSED):** every relic, camp upgrade and
+  event reward is tagged with a path. A path's offer weight is 1 plus the
+  rewards of it you own (at most 4); a commander counts as one owned
+  reward of its path, nothing more. Every offer of three includes at least
+  one other path. A small pool of untagged rewards stays.
+- **Rewards change behaviour, not just numbers (PROPOSED examples):**
+  - Vanguard: melee units take 30% less damage from shots; melee units heal
+    15% of the damage they deal. Keystone *Horde*: melee costs 40% less and
+    trains twice as fast, -30% HP.
+  - Marksmen: every third shot pierces one unit; a hit makes the target take
+    15% more damage for 3 s. Keystone *Ranger Lord*: ranged costs 30% less,
+    melee 50% more.
+  - Juggernauts: heavies trample what they walk through; heavy splash deals
+    double damage to bases. Keystone *Colossus*: one heavy alive at a time,
+    with triple HP and damage.
+  - Bastion: rapid turret shots bounce to a second unit; a turret gains a
+    level for every 25 kills in a battle. Keystone *Citadel*: turrets deal
+    double damage, units cost 25% more. (The two-turret starting cap of
+    section 14 still holds.)
+  - Guild: money units +50% HP; the Mine makes 4% more for every minute of a
+    battle. Keystone *Robber baron*: kills pay double, the Mine is closed.
+- Rarity: commons (small behaviour changes), rares, and keystones (define a
+  run, always with a price; from elites, bosses and treasure).
+- Built as data: new `ConquestEffect` kinds for the behaviours (pierce,
+  marks, lifesteal, cost and training multipliers per slot, alive caps,
+  turret bounce, turret kill levels, damage to bases), applied by the
+  systems that own those rules.
+
+### Keyboard play, rebinding and compositions
+
+- **LOCKED (owner):** the game is fully playable by keyboard, and every key
+  can be rebound. Then compositions like StarCraft control groups (owner's
+  example: Shift+F2 queues 2 melee and 3 ranged).
+- **Compositions (LOCKED, owner):** made **by slot** (so they keep working
+  in every age), any counts. Queued in list order; at the first unit that
+  can't be afforded, or when the training queue is full, it **stops**: the
+  rest isn't queued.
+- PROPOSED: one keymap (`config/keybindings.config.ts`) with an action for
+  everything the HUD can do (tabs, slots 1-5, turret slot, build, upgrade,
+  sell, age up, special, War Cry, speed, pause); defaults keep today's
+  keys; changes saved per browser; a Controls screen (menu and pause) to
+  rebind by pressing a key, with conflicts shown. Eight compositions, F1-F8
+  to queue, Ctrl+F1-F8 to save the current training queue as one, plus an
+  editor. Keys only emit the same `*-requested` events as clicks.
+
+### Buying several building levels (PROPOSED)
+
+- Owner: "i got tired spam clicking in new games". Shift+click (or Shift and
+  the key) buys levels up to the next stage (five) as far as the gold
+  goes; Ctrl+click buys as many as it can up to the age's cap. The same for
+  research tiers. Each level is still its own request, checked as today.
+
+### The Mech workshop
+
+- **LOCKED (owner):** a player-only unit you build yourself: very strong
+  but not an instant win, expensive, a way to break stalemates. Building a
+  Mech is available from the start; better parts and upgrades can be
+  unlocked beyond that. You really build a visible thing: the parts you
+  pick are what you see. Parts come in five versions, one per age, and
+  change look with the age.
+- PROPOSED:
+  - A Workshop tab with four part slots: chassis (legs, treads, hover:
+    speed, HP), weapon (hammer, cannon, flamer, artillery: damage, range,
+    splash), armour (HP, damage taken) and a module (repair aura, shield
+    projector, siege drill...). Two options per slot at first; more from
+    Forge research and, in Conquest, the Workshop path.
+  - Cost is the parts' prices times a multiplier that grows with the
+    build's total tier, so a light utility Mech is affordable early and a
+    maxed one is the late-game gold sink (the Kessler stalemate had 5-34k
+    gold with nothing to buy). Long build time; one Mech alive at a time;
+    rebuilt at full price when it falls.
+  - Across ages: the design (which parts) is kept. After an age-up new
+    builds use the new age's version of every part; a Mech on the lane can
+    be refitted at its base for the difference in price.
+  - Built as data: a design becomes a `UnitDefinition` (still one `Unit`
+    class), a MechArt module layers the parts' art per age like the rig
+    art, and a new MechSystem checks `build-mech-requested` and the
+    one-alive rule. The AI doesn't build Mechs (an exception to "the AI
+    plays by the same rules", like its own income); Conquest bosses could
+    get their own later.
+
+### 1v1 multiplayer (DEFERRED, notes for later)
+
+- Fits the code: every player action is already a `*-requested` command
+  with a side, and the battle is nearly deterministic (randomness only in
+  the AI, the campaign map and doctrines). Both browsers would run the same
+  battle and exchange only commands (lockstep), after making the tick
+  strictly fixed and adding a check that both games still match.
+- Hosting: the game itself is static files (GitHub Pages, Cloudflare Pages
+  or Netlify, free). Multiplayer adds a small relay that pairs two players
+  by room code and forwards their commands; a Cloudflare Worker with a
+  Durable Object per room fits and was free at friends-scale when checked
+  (2026-09-27). A small always-on server (Fly.io and the like) costs a few
+  dollars a month; for tests, a relay on the owner's PC behind a tunnel.
+

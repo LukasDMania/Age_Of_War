@@ -371,6 +371,24 @@ state machine finish without getting stuck; AI-vs-AI chapter battles in
 every age end within about 15 minutes; screens checked in headless
 Chromium.
 
+## Phase 19: Keyboard, compositions, the Mech, archetype runs (planned)
+
+Design in GAME_DESIGN section 15. Proposed order, smallest first; confirm
+with the owner before each.
+
+- [ ] Buy several building levels and research tiers at once
+  (Shift / Ctrl + click or key).
+- [ ] Keymap with every HUD action, full keyboard play, Controls screen
+  to rebind (saved per browser).
+- [ ] Compositions by slot: F1-F8 to queue, save from the current queue,
+  an editor; stop at the first unaffordable unit or a full queue.
+- [ ] Mech workshop: part data (4 slots, 2 options each, 5 age versions),
+  MechArt, Workshop tab, MechSystem (`build-mech-requested`, one alive,
+  refit), new events in Appendix A.
+- [ ] Conquest archetype paths: tags on every reward, leaning offers, new
+  behaviour effects, a first reward set for Vanguard, Marksmen,
+  Juggernauts, Bastion and Guild; Workshop after the Mech.
+
 ---
 
 ## Appendix A: Event catalog
@@ -1584,4 +1602,15 @@ decisions made, anything the owner needs to confirm.
   - Not changed: Master builders and other Legacy unlocks that start
     buildings higher (economy, not the t=0 army); the AI's own building
     caps (its Mine stays far behind the player's in later chapters).
+- 2026-09-27 (night, design): owner's answers on the next features,
+  recorded in GAME_DESIGN section 15 and planned as Phase 19. Archetype
+  paths: Claude's pick (owner: "u choose") is five to start plus the
+  Workshop later; a commander tilts offers but must not lock a run.
+  Compositions by slot, stop at the first unaffordable unit or a full
+  queue. The Mech: player-only, available from the start with more parts
+  unlockable, really built visually, parts in five age versions.
+  Multiplayer: DEFERRED ("leave it for now"); hosting notes in section 15
+  (checked 2026-09-27: Fly.io has no free tier any more; Cloudflare Workers
+  with Durable Objects is free up to 100k requests a day, incoming
+  WebSocket messages counted 20 to 1). Nothing built.
 
