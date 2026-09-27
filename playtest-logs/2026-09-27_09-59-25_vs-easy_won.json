@@ -1,0 +1,2572 @@
+{
+ "version": 1,
+ "startedAt": "2026-09-27T07:59:25.253Z",
+ "fileStem": "2026-09-27_09-59-25_vs-easy_won",
+ "opponent": "easy",
+ "result": "won",
+ "durationSec": 519,
+ "totals": {
+  "player": {
+   "goldEarned": {
+    "kill": 843,
+    "mine": 537
+   },
+   "goldSpent": 1255,
+   "spawned": {
+    "stone-clubber": 11,
+    "stone-slinger": 1,
+    "stone-mammoth-rider": 1,
+    "castle-swordsman": 2,
+    "castle-archer": 1,
+    "castle-catapult-crew": 1,
+    "castle-knight": 1
+   },
+   "kills": {
+    "stone-clubber": 33,
+    "stone-slinger": 16,
+    "stone-mammoth-rider": 3
+   },
+   "losses": {
+    "stone-clubber": 11,
+    "stone-slinger": 1,
+    "stone-mammoth-rider": 1
+   }
+  },
+  "enemy": {
+   "goldEarned": {
+    "ai-income": 935,
+    "mine": 205,
+    "kill": 203
+   },
+   "goldSpent": 1440,
+   "spawned": {
+    "stone-clubber": 33,
+    "stone-slinger": 16,
+    "stone-mammoth-rider": 3
+   },
+   "kills": {
+    "stone-clubber": 11,
+    "stone-slinger": 1,
+    "stone-mammoth-rider": 1
+   },
+   "losses": {
+    "stone-clubber": 33,
+    "stone-slinger": 16,
+    "stone-mammoth-rider": 3
+   }
+  }
+ },
+ "events": [
+  {
+   "t": 0,
+   "type": "playing"
+  },
+  {
+   "t": 1.5,
+   "type": "unit",
+   "side": "enemy",
+   "detail": "stone-clubber"
+  },
+  {
+   "t": 4,
+   "type": "unit",
+   "side": "enemy",
+   "detail": "stone-slinger"
+  },
+  {
+   "t": 4,
+   "type": "building",
+   "side": "enemy",
+   "detail": "mine:L1"
+  },
+  {
+   "t": 6.4,
+   "type": "turret-built",
+   "side": "player",
+   "detail": "0:stone-fire-pot"
+  },
+  {
+   "t": 12.2,
+   "type": "special",
+   "side": "player"
+  },
+  {
+   "t": 30.2,
+   "type": "unit",
+   "side": "enemy",
+   "detail": "stone-slinger"
+  },
+  {
+   "t": 57.2,
+   "type": "building",
+   "side": "player",
+   "detail": "mine:L1"
+  },
+  {
+   "t": 62.3,
+   "type": "unit",
+   "side": "enemy",
+   "detail": "stone-slinger"
+  },
+  {
+   "t": 90.4,
+   "type": "unit",
+   "side": "enemy",
+   "detail": "stone-slinger"
+  },
+  {
+   "t": 95.6,
+   "type": "speed",
+   "detail": 2
+  },
+  {
+   "t": 98.3,
+   "type": "speed",
+   "detail": 3
+  },
+  {
+   "t": 105.9,
+   "type": "unit",
+   "side": "player",
+   "detail": "stone-clubber"
+  },
+  {
+   "t": 114.5,
+   "type": "unit",
+   "side": "enemy",
+   "detail": "stone-slinger"
+  },
+  {
+   "t": 128,
+   "type": "unit",
+   "side": "enemy",
+   "detail": "stone-clubber"
+  },
+  {
+   "t": 136,
+   "type": "unit",
+   "side": "enemy",
+   "detail": "stone-clubber"
+  },
+  {
+   "t": 146.1,
+   "type": "unit",
+   "side": "enemy",
+   "detail": "stone-clubber"
+  },
+  {
+   "t": 152.5,
+   "type": "unit",
+   "side": "player",
+   "detail": "stone-clubber"
+  },
+  {
+   "t": 158.1,
+   "type": "unit",
+   "side": "enemy",
+   "detail": "stone-clubber"
+  },
+  {
+   "t": 168.7,
+   "type": "unit",
+   "side": "enemy",
+   "detail": "stone-slinger"
+  },
+  {
+   "t": 178.2,
+   "type": "unit",
+   "side": "enemy",
+   "detail": "stone-clubber"
+  },
+  {
+   "t": 179.7,
+   "type": "special",
+   "side": "player"
+  },
+  {
+   "t": 188.2,
+   "type": "unit",
+   "side": "enemy",
+   "detail": "stone-clubber"
+  },
+  {
+   "t": 194.1,
+   "type": "building",
+   "side": "player",
+   "detail": "mine:L2"
+  },
+  {
+   "t": 195.3,
+   "type": "building",
+   "side": "player",
+   "detail": "mine:L3"
+  },
+  {
+   "t": 202.8,
+   "type": "unit",
+   "side": "player",
+   "detail": "stone-clubber"
+  },
+  {
+   "t": 211.6,
+   "type": "speed",
+   "detail": 4
+  },
+  {
+   "t": 222.4,
+   "type": "unit",
+   "side": "enemy",
+   "detail": "stone-clubber"
+  },
+  {
+   "t": 234.4,
+   "type": "unit",
+   "side": "enemy",
+   "detail": "stone-mammoth-rider"
+  },
+  {
+   "t": 240.9,
+   "type": "unit",
+   "side": "enemy",
+   "detail": "stone-slinger"
+  },
+  {
+   "t": 248.4,
+   "type": "unit",
+   "side": "enemy",
+   "detail": "stone-clubber"
+  },
+  {
+   "t": 249.4,
+   "type": "unit",
+   "side": "player",
+   "detail": "stone-clubber"
+  },
+  {
+   "t": 253.7,
+   "type": "unit",
+   "side": "player",
+   "detail": "stone-slinger"
+  },
+  {
+   "t": 258.4,
+   "type": "unit",
+   "side": "player",
+   "detail": "stone-clubber"
+  },
+  {
+   "t": 261,
+   "type": "unit",
+   "side": "enemy",
+   "detail": "stone-slinger"
+  },
+  {
+   "t": 261.9,
+   "type": "special",
+   "side": "player"
+  },
+  {
+   "t": 262.5,
+   "type": "unit",
+   "side": "enemy",
+   "detail": "stone-clubber"
+  },
+  {
+   "t": 264.5,
+   "type": "unit",
+   "side": "enemy",
+   "detail": "stone-clubber"
+  },
+  {
+   "t": 272.5,
+   "type": "unit",
+   "side": "enemy",
+   "detail": "stone-clubber"
+  },
+  {
+   "t": 279,
+   "type": "unit",
+   "side": "enemy",
+   "detail": "stone-slinger"
+  },
+  {
+   "t": 279.6,
+   "type": "unit",
+   "side": "player",
+   "detail": "stone-mammoth-rider"
+  },
+  {
+   "t": 286.5,
+   "type": "unit",
+   "side": "enemy",
+   "detail": "stone-clubber"
+  },
+  {
+   "t": 316.6,
+   "type": "unit",
+   "side": "enemy",
+   "detail": "stone-mammoth-rider"
+  },
+  {
+   "t": 322.7,
+   "type": "unit",
+   "side": "enemy",
+   "detail": "stone-clubber"
+  },
+  {
+   "t": 328.7,
+   "type": "unit",
+   "side": "enemy",
+   "detail": "stone-clubber"
+  },
+  {
+   "t": 336.7,
+   "type": "unit",
+   "side": "enemy",
+   "detail": "stone-clubber"
+  },
+  {
+   "t": 342.8,
+   "type": "unit",
+   "side": "enemy",
+   "detail": "stone-clubber"
+  },
+  {
+   "t": 344.8,
+   "type": "unit",
+   "side": "enemy",
+   "detail": "stone-clubber"
+  },
+  {
+   "t": 345.9,
+   "type": "special",
+   "side": "player"
+  },
+  {
+   "t": 346.8,
+   "type": "unit",
+   "side": "enemy",
+   "detail": "stone-clubber"
+  },
+  {
+   "t": 351.3,
+   "type": "unit",
+   "side": "enemy",
+   "detail": "stone-slinger"
+  },
+  {
+   "t": 354.7,
+   "type": "unit",
+   "side": "player",
+   "detail": "stone-clubber"
+  },
+  {
+   "t": 356.4,
+   "type": "unit",
+   "side": "player",
+   "detail": "stone-clubber"
+  },
+  {
+   "t": 363.3,
+   "type": "unit",
+   "side": "enemy",
+   "detail": "stone-slinger"
+  },
+  {
+   "t": 368.3,
+   "type": "paused"
+  },
+  {
+   "t": 368.3,
+   "type": "playing"
+  },
+  {
+   "t": 368.9,
+   "type": "unit",
+   "side": "enemy",
+   "detail": "stone-clubber"
+  },
+  {
+   "t": 381.4,
+   "type": "unit",
+   "side": "enemy",
+   "detail": "stone-slinger"
+  },
+  {
+   "t": 381.5,
+   "type": "building",
+   "side": "player",
+   "detail": "mine:L4"
+  },
+  {
+   "t": 382.7,
+   "type": "building",
+   "side": "player",
+   "detail": "mine:L5"
+  },
+  {
+   "t": 386.9,
+   "type": "unit",
+   "side": "enemy",
+   "detail": "stone-clubber"
+  },
+  {
+   "t": 391,
+   "type": "unit",
+   "side": "enemy",
+   "detail": "stone-clubber"
+  },
+  {
+   "t": 397.5,
+   "type": "unit",
+   "side": "enemy",
+   "detail": "stone-slinger"
+  },
+  {
+   "t": 403.1,
+   "type": "base-below",
+   "side": "player",
+   "detail": 75
+  },
+  {
+   "t": 407.5,
+   "type": "unit",
+   "side": "enemy",
+   "detail": "stone-slinger"
+  },
+  {
+   "t": 412,
+   "type": "unit",
+   "side": "player",
+   "detail": "stone-clubber"
+  },
+  {
+   "t": 413.6,
+   "type": "unit",
+   "side": "player",
+   "detail": "stone-clubber"
+  },
+  {
+   "t": 415.1,
+   "type": "unit",
+   "side": "player",
+   "detail": "stone-clubber"
+  },
+  {
+   "t": 416.6,
+   "type": "unit",
+   "side": "player",
+   "detail": "stone-clubber"
+  },
+  {
+   "t": 429.7,
+   "type": "age-up",
+   "side": "player",
+   "detail": 1
+  },
+  {
+   "t": 437.1,
+   "type": "unit",
+   "side": "enemy",
+   "detail": "stone-mammoth-rider"
+  },
+  {
+   "t": 441.1,
+   "type": "unit",
+   "side": "enemy",
+   "detail": "stone-clubber"
+  },
+  {
+   "t": 447.6,
+   "type": "unit",
+   "side": "enemy",
+   "detail": "stone-slinger"
+  },
+  {
+   "t": 453.6,
+   "type": "unit",
+   "side": "enemy",
+   "detail": "stone-slinger"
+  },
+  {
+   "t": 457.2,
+   "type": "unit",
+   "side": "enemy",
+   "detail": "stone-clubber"
+  },
+  {
+   "t": 459.2,
+   "type": "unit",
+   "side": "enemy",
+   "detail": "stone-clubber"
+  },
+  {
+   "t": 465.2,
+   "type": "unit",
+   "side": "player",
+   "detail": "castle-swordsman"
+  },
+  {
+   "t": 465.2,
+   "type": "unit",
+   "side": "enemy",
+   "detail": "stone-clubber"
+  },
+  {
+   "t": 466.7,
+   "type": "unit",
+   "side": "player",
+   "detail": "castle-swordsman"
+  },
+  {
+   "t": 468.7,
+   "type": "unit",
+   "side": "player",
+   "detail": "castle-archer"
+  },
+  {
+   "t": 472.6,
+   "type": "special",
+   "side": "player"
+  },
+  {
+   "t": 473.2,
+   "type": "unit",
+   "side": "enemy",
+   "detail": "stone-clubber"
+  },
+  {
+   "t": 479.2,
+   "type": "unit",
+   "side": "enemy",
+   "detail": "stone-clubber"
+  },
+  {
+   "t": 489.3,
+   "type": "unit",
+   "side": "enemy",
+   "detail": "stone-clubber"
+  },
+  {
+   "t": 494.6,
+   "type": "unit",
+   "side": "player",
+   "detail": "castle-catapult-crew"
+  },
+  {
+   "t": 495.3,
+   "type": "unit",
+   "side": "enemy",
+   "detail": "stone-clubber"
+  },
+  {
+   "t": 499.3,
+   "type": "unit",
+   "side": "enemy",
+   "detail": "stone-clubber"
+  },
+  {
+   "t": 500.9,
+   "type": "unit",
+   "side": "player",
+   "detail": "castle-knight"
+  },
+  {
+   "t": 502.9,
+   "type": "base-below",
+   "side": "enemy",
+   "detail": 75
+  },
+  {
+   "t": 507.2,
+   "type": "base-below",
+   "side": "enemy",
+   "detail": 50
+  },
+  {
+   "t": 507.4,
+   "type": "unit",
+   "side": "enemy",
+   "detail": "stone-clubber"
+  },
+  {
+   "t": 513.4,
+   "type": "unit",
+   "side": "enemy",
+   "detail": "stone-clubber"
+  },
+  {
+   "t": 514.1,
+   "type": "base-below",
+   "side": "enemy",
+   "detail": 25
+  }
+ ],
+ "snapshots": [
+  {
+   "t": 0,
+   "front": {
+    "player": null,
+    "enemy": null
+   },
+   "player": {
+    "gold": 100,
+    "xp": 0,
+    "age": 0,
+    "baseHp": 1000,
+    "units": [
+     0,
+     0,
+     0,
+     0,
+     0
+    ],
+    "armyValue": 0,
+    "queue": 0,
+    "turrets": [],
+    "buildings": "mine0 lib0 forge0",
+    "researchTiers": 0,
+    "mineGoldPerSec": 0,
+    "libraryXpPerSec": 0
+   },
+   "enemy": {
+    "gold": 80,
+    "xp": 0,
+    "age": 0,
+    "baseHp": 1000,
+    "units": [
+     0,
+     0,
+     0,
+     0,
+     0
+    ],
+    "armyValue": 0,
+    "queue": 1,
+    "turrets": [],
+    "buildings": "mine0 lib0 forge0",
+    "researchTiers": 0,
+    "mineGoldPerSec": 0,
+    "libraryXpPerSec": 0
+   }
+  },
+  {
+   "t": 15,
+   "front": {
+    "player": null,
+    "enemy": null
+   },
+   "player": {
+    "gold": 30,
+    "xp": 15,
+    "age": 0,
+    "baseHp": 1000,
+    "units": [
+     0,
+     0,
+     0,
+     0,
+     0
+    ],
+    "armyValue": 0,
+    "queue": 0,
+    "turrets": [
+     "stone-fire-pot:L0"
+    ],
+    "buildings": "mine0 lib0 forge0",
+    "researchTiers": 0,
+    "mineGoldPerSec": 0,
+    "libraryXpPerSec": 0
+   },
+   "enemy": {
+    "gold": 20,
+    "xp": 0,
+    "age": 0,
+    "baseHp": 1000,
+    "units": [
+     0,
+     0,
+     0,
+     0,
+     0
+    ],
+    "armyValue": 0,
+    "queue": 0,
+    "turrets": [],
+    "buildings": "mine1 lib0 forge0",
+    "researchTiers": 0,
+    "mineGoldPerSec": 0.4,
+    "libraryXpPerSec": 0
+   }
+  },
+  {
+   "t": 30,
+   "front": {
+    "player": null,
+    "enemy": null
+   },
+   "player": {
+    "gold": 30,
+    "xp": 15,
+    "age": 0,
+    "baseHp": 1000,
+    "units": [
+     0,
+     0,
+     0,
+     0,
+     0
+    ],
+    "armyValue": 0,
+    "queue": 0,
+    "turrets": [
+     "stone-fire-pot:L0"
+    ],
+    "buildings": "mine0 lib0 forge0",
+    "researchTiers": 0,
+    "mineGoldPerSec": 0,
+    "libraryXpPerSec": 0
+   },
+   "enemy": {
+    "gold": 2,
+    "xp": 1,
+    "age": 0,
+    "baseHp": 1000,
+    "units": [
+     0,
+     0,
+     0,
+     0,
+     0
+    ],
+    "armyValue": 0,
+    "queue": 1,
+    "turrets": [],
+    "buildings": "mine1 lib0 forge0",
+    "researchTiers": 0,
+    "mineGoldPerSec": 0.4,
+    "libraryXpPerSec": 0
+   }
+  },
+  {
+   "t": 45,
+   "front": {
+    "player": null,
+    "enemy": 470
+   },
+   "player": {
+    "gold": 30,
+    "xp": 15,
+    "age": 0,
+    "baseHp": 1000,
+    "units": [
+     0,
+     0,
+     0,
+     0,
+     0
+    ],
+    "armyValue": 0,
+    "queue": 0,
+    "turrets": [
+     "stone-fire-pot:L0"
+    ],
+    "buildings": "mine0 lib0 forge0",
+    "researchTiers": 0,
+    "mineGoldPerSec": 0,
+    "libraryXpPerSec": 0
+   },
+   "enemy": {
+    "gold": 15,
+    "xp": 2,
+    "age": 0,
+    "baseHp": 1000,
+    "units": [
+     0,
+     1,
+     0,
+     0,
+     0
+    ],
+    "armyValue": 30,
+    "queue": 0,
+    "turrets": [],
+    "buildings": "mine1 lib0 forge0",
+    "researchTiers": 0,
+    "mineGoldPerSec": 0.4,
+    "libraryXpPerSec": 0
+   }
+  },
+  {
+   "t": 60,
+   "front": {
+    "player": null,
+    "enemy": null
+   },
+   "player": {
+    "gold": 9,
+    "xp": 24,
+    "age": 0,
+    "baseHp": 964,
+    "units": [
+     0,
+     0,
+     0,
+     0,
+     0
+    ],
+    "armyValue": 0,
+    "queue": 0,
+    "turrets": [
+     "stone-fire-pot:L0"
+    ],
+    "buildings": "mine1 lib0 forge0",
+    "researchTiers": 0,
+    "mineGoldPerSec": 0.4,
+    "libraryXpPerSec": 0
+   },
+   "enemy": {
+    "gold": 29,
+    "xp": 3,
+    "age": 0,
+    "baseHp": 1000,
+    "units": [
+     0,
+     0,
+     0,
+     0,
+     0
+    ],
+    "armyValue": 0,
+    "queue": 0,
+    "turrets": [],
+    "buildings": "mine1 lib0 forge0",
+    "researchTiers": 0,
+    "mineGoldPerSec": 0.4,
+    "libraryXpPerSec": 0
+   }
+  },
+  {
+   "t": 75,
+   "front": {
+    "player": null,
+    "enemy": 568
+   },
+   "player": {
+    "gold": 15,
+    "xp": 24,
+    "age": 0,
+    "baseHp": 964,
+    "units": [
+     0,
+     0,
+     0,
+     0,
+     0
+    ],
+    "armyValue": 0,
+    "queue": 0,
+    "turrets": [
+     "stone-fire-pot:L0"
+    ],
+    "buildings": "mine1 lib0 forge0",
+    "researchTiers": 0,
+    "mineGoldPerSec": 0.4,
+    "libraryXpPerSec": 0
+   },
+   "enemy": {
+    "gold": 15,
+    "xp": 4,
+    "age": 0,
+    "baseHp": 1000,
+    "units": [
+     0,
+     1,
+     0,
+     0,
+     0
+    ],
+    "armyValue": 30,
+    "queue": 0,
+    "turrets": [],
+    "buildings": "mine1 lib0 forge0",
+    "researchTiers": 0,
+    "mineGoldPerSec": 0.4,
+    "libraryXpPerSec": 0
+   }
+  },
+  {
+   "t": 90,
+   "front": {
+    "player": null,
+    "enemy": null
+   },
+   "player": {
+    "gold": 39,
+    "xp": 33,
+    "age": 0,
+    "baseHp": 928,
+    "units": [
+     0,
+     0,
+     0,
+     0,
+     0
+    ],
+    "armyValue": 0,
+    "queue": 0,
+    "turrets": [
+     "stone-fire-pot:L0"
+    ],
+    "buildings": "mine1 lib0 forge0",
+    "researchTiers": 0,
+    "mineGoldPerSec": 0.4,
+    "libraryXpPerSec": 0
+   },
+   "enemy": {
+    "gold": 2,
+    "xp": 6,
+    "age": 0,
+    "baseHp": 1000,
+    "units": [
+     0,
+     0,
+     0,
+     0,
+     0
+    ],
+    "armyValue": 0,
+    "queue": 1,
+    "turrets": [],
+    "buildings": "mine1 lib0 forge0",
+    "researchTiers": 0,
+    "mineGoldPerSec": 0.4,
+    "libraryXpPerSec": 0
+   }
+  },
+  {
+   "t": 105,
+   "front": {
+    "player": null,
+    "enemy": 480
+   },
+   "player": {
+    "gold": 25,
+    "xp": 33,
+    "age": 0,
+    "baseHp": 928,
+    "units": [
+     0,
+     0,
+     0,
+     0,
+     0
+    ],
+    "armyValue": 0,
+    "queue": 1,
+    "turrets": [
+     "stone-fire-pot:L0"
+    ],
+    "buildings": "mine1 lib0 forge0",
+    "researchTiers": 0,
+    "mineGoldPerSec": 0.4,
+    "libraryXpPerSec": 0
+   },
+   "enemy": {
+    "gold": 20,
+    "xp": 7,
+    "age": 0,
+    "baseHp": 1000,
+    "units": [
+     0,
+     1,
+     0,
+     0,
+     0
+    ],
+    "armyValue": 30,
+    "queue": 0,
+    "turrets": [],
+    "buildings": "mine1 lib0 forge0",
+    "researchTiers": 0,
+    "mineGoldPerSec": 0.4,
+    "libraryXpPerSec": 0
+   }
+  },
+  {
+   "t": 120,
+   "front": {
+    "player": 719,
+    "enemy": 888
+   },
+   "player": {
+    "gold": 49,
+    "xp": 42,
+    "age": 0,
+    "baseHp": 928,
+    "units": [
+     1,
+     0,
+     0,
+     0,
+     0
+    ],
+    "armyValue": 20,
+    "queue": 0,
+    "turrets": [
+     "stone-fire-pot:L0"
+    ],
+    "buildings": "mine1 lib0 forge0",
+    "researchTiers": 0,
+    "mineGoldPerSec": 0.4,
+    "libraryXpPerSec": 0
+   },
+   "enemy": {
+    "gold": 11,
+    "xp": 9,
+    "age": 0,
+    "baseHp": 1000,
+    "units": [
+     0,
+     1,
+     0,
+     0,
+     0
+    ],
+    "armyValue": 30,
+    "queue": 0,
+    "turrets": [],
+    "buildings": "mine1 lib0 forge0",
+    "researchTiers": 0,
+    "mineGoldPerSec": 0.4,
+    "libraryXpPerSec": 0
+   }
+  },
+  {
+   "t": 135,
+   "front": {
+    "player": null,
+    "enemy": 1018
+   },
+   "player": {
+    "gold": 73,
+    "xp": 51,
+    "age": 0,
+    "baseHp": 928,
+    "units": [
+     0,
+     0,
+     0,
+     0,
+     0
+    ],
+    "armyValue": 0,
+    "queue": 0,
+    "turrets": [
+     "stone-fire-pot:L0"
+    ],
+    "buildings": "mine1 lib0 forge0",
+    "researchTiers": 0,
+    "mineGoldPerSec": 0.4,
+    "libraryXpPerSec": 0
+   },
+   "enemy": {
+    "gold": 5,
+    "xp": 17,
+    "age": 0,
+    "baseHp": 1000,
+    "units": [
+     1,
+     0,
+     0,
+     0,
+     0
+    ],
+    "armyValue": 20,
+    "queue": 1,
+    "turrets": [],
+    "buildings": "mine1 lib0 forge0",
+    "researchTiers": 0,
+    "mineGoldPerSec": 0.4,
+    "libraryXpPerSec": 0
+   }
+  },
+  {
+   "t": 150.1,
+   "front": {
+    "player": null,
+    "enemy": 342
+   },
+   "player": {
+    "gold": 79,
+    "xp": 51,
+    "age": 0,
+    "baseHp": 928,
+    "units": [
+     0,
+     0,
+     0,
+     0,
+     0
+    ],
+    "armyValue": 0,
+    "queue": 0,
+    "turrets": [
+     "stone-fire-pot:L0"
+    ],
+    "buildings": "mine1 lib0 forge0",
+    "researchTiers": 0,
+    "mineGoldPerSec": 0.4,
+    "libraryXpPerSec": 0
+   },
+   "enemy": {
+    "gold": 10,
+    "xp": 19,
+    "age": 0,
+    "baseHp": 1000,
+    "units": [
+     3,
+     0,
+     0,
+     0,
+     0
+    ],
+    "armyValue": 60,
+    "queue": 0,
+    "turrets": [],
+    "buildings": "mine1 lib0 forge0",
+    "researchTiers": 0,
+    "mineGoldPerSec": 0.4,
+    "libraryXpPerSec": 0
+   }
+  },
+  {
+   "t": 165.1,
+   "front": {
+    "player": 279,
+    "enemy": 315
+   },
+   "player": {
+    "gold": 90,
+    "xp": 63,
+    "age": 0,
+    "baseHp": 928,
+    "units": [
+     1,
+     0,
+     0,
+     0,
+     0
+    ],
+    "armyValue": 20,
+    "queue": 0,
+    "turrets": [
+     "stone-fire-pot:L0"
+    ],
+    "buildings": "mine1 lib0 forge0",
+    "researchTiers": 0,
+    "mineGoldPerSec": 0.4,
+    "libraryXpPerSec": 0
+   },
+   "enemy": {
+    "gold": 16,
+    "xp": 22,
+    "age": 0,
+    "baseHp": 1000,
+    "units": [
+     2,
+     0,
+     0,
+     0,
+     0
+    ],
+    "armyValue": 40,
+    "queue": 0,
+    "turrets": [],
+    "buildings": "mine1 lib0 forge0",
+    "researchTiers": 0,
+    "mineGoldPerSec": 0.4,
+    "libraryXpPerSec": 0
+   }
+  },
+  {
+   "t": 180.1,
+   "front": {
+    "player": null,
+    "enemy": 203
+   },
+   "player": {
+    "gold": 96,
+    "xp": 63,
+    "age": 0,
+    "baseHp": 770,
+    "units": [
+     0,
+     0,
+     0,
+     0,
+     0
+    ],
+    "armyValue": 0,
+    "queue": 0,
+    "turrets": [
+     "stone-fire-pot:L0"
+    ],
+    "buildings": "mine1 lib0 forge0",
+    "researchTiers": 0,
+    "mineGoldPerSec": 0.4,
+    "libraryXpPerSec": 0
+   },
+   "enemy": {
+    "gold": 8,
+    "xp": 31,
+    "age": 0,
+    "baseHp": 1000,
+    "units": [
+     3,
+     1,
+     0,
+     0,
+     0
+    ],
+    "armyValue": 90,
+    "queue": 0,
+    "turrets": [],
+    "buildings": "mine1 lib0 forge0",
+    "researchTiers": 0,
+    "mineGoldPerSec": 0.4,
+    "libraryXpPerSec": 0
+   }
+  },
+  {
+   "t": 195.1,
+   "front": {
+    "player": null,
+    "enemy": 380
+   },
+   "player": {
+    "gold": 90,
+    "xp": 84,
+    "age": 0,
+    "baseHp": 758,
+    "units": [
+     0,
+     0,
+     0,
+     0,
+     0
+    ],
+    "armyValue": 0,
+    "queue": 0,
+    "turrets": [
+     "stone-fire-pot:L0"
+    ],
+    "buildings": "mine2 lib0 forge0",
+    "researchTiers": 0,
+    "mineGoldPerSec": 0.6,
+    "libraryXpPerSec": 0
+   },
+   "enemy": {
+    "gold": 19,
+    "xp": 34,
+    "age": 0,
+    "baseHp": 1000,
+    "units": [
+     2,
+     0,
+     0,
+     0,
+     0
+    ],
+    "armyValue": 40,
+    "queue": 0,
+    "turrets": [],
+    "buildings": "mine1 lib0 forge0",
+    "researchTiers": 0,
+    "mineGoldPerSec": 0.4,
+    "libraryXpPerSec": 0
+   }
+  },
+  {
+   "t": 210.1,
+   "front": {
+    "player": 293,
+    "enemy": 330
+   },
+   "player": {
+    "gold": 25,
+    "xp": 90,
+    "age": 0,
+    "baseHp": 758,
+    "units": [
+     1,
+     0,
+     0,
+     0,
+     0
+    ],
+    "armyValue": 20,
+    "queue": 0,
+    "turrets": [
+     "stone-fire-pot:L0"
+    ],
+    "buildings": "mine3 lib0 forge0",
+    "researchTiers": 0,
+    "mineGoldPerSec": 0.8,
+    "libraryXpPerSec": 0
+   },
+   "enemy": {
+    "gold": 52,
+    "xp": 37,
+    "age": 0,
+    "baseHp": 1000,
+    "units": [
+     1,
+     0,
+     0,
+     0,
+     0
+    ],
+    "armyValue": 20,
+    "queue": 0,
+    "turrets": [],
+    "buildings": "mine1 lib0 forge0",
+    "researchTiers": 0,
+    "mineGoldPerSec": 0.4,
+    "libraryXpPerSec": 0
+   }
+  },
+  {
+   "t": 225.1,
+   "front": {
+    "player": 947,
+    "enemy": 1016
+   },
+   "player": {
+    "gold": 49,
+    "xp": 96,
+    "age": 0,
+    "baseHp": 758,
+    "units": [
+     1,
+     0,
+     0,
+     0,
+     0
+    ],
+    "armyValue": 20,
+    "queue": 0,
+    "turrets": [
+     "stone-fire-pot:L0"
+    ],
+    "buildings": "mine3 lib0 forge0",
+    "researchTiers": 0,
+    "mineGoldPerSec": 0.8,
+    "libraryXpPerSec": 0
+   },
+   "enemy": {
+    "gold": 66,
+    "xp": 41,
+    "age": 0,
+    "baseHp": 1000,
+    "units": [
+     1,
+     0,
+     0,
+     0,
+     0
+    ],
+    "armyValue": 20,
+    "queue": 0,
+    "turrets": [],
+    "buildings": "mine1 lib0 forge0",
+    "researchTiers": 0,
+    "mineGoldPerSec": 0.4,
+    "libraryXpPerSec": 0
+   }
+  },
+  {
+   "t": 240.1,
+   "front": {
+    "player": null,
+    "enemy": 972
+   },
+   "player": {
+    "gold": 74,
+    "xp": 102,
+    "age": 0,
+    "baseHp": 758,
+    "units": [
+     0,
+     0,
+     0,
+     0,
+     0
+    ],
+    "armyValue": 0,
+    "queue": 0,
+    "turrets": [
+     "stone-fire-pot:L0"
+    ],
+    "buildings": "mine3 lib0 forge0",
+    "researchTiers": 0,
+    "mineGoldPerSec": 0.8,
+    "libraryXpPerSec": 0
+   },
+   "enemy": {
+    "gold": 5,
+    "xp": 51,
+    "age": 0,
+    "baseHp": 974,
+    "units": [
+     0,
+     0,
+     1,
+     0,
+     0
+    ],
+    "armyValue": 80,
+    "queue": 1,
+    "turrets": [],
+    "buildings": "mine1 lib0 forge0",
+    "researchTiers": 0,
+    "mineGoldPerSec": 0.4,
+    "libraryXpPerSec": 0
+   }
+  },
+  {
+   "t": 255.1,
+   "front": {
+    "player": 319,
+    "enemy": 370
+   },
+   "player": {
+    "gold": 36,
+    "xp": 102,
+    "age": 0,
+    "baseHp": 758,
+    "units": [
+     1,
+     1,
+     0,
+     0,
+     0
+    ],
+    "armyValue": 50,
+    "queue": 0,
+    "turrets": [
+     "stone-fire-pot:L0"
+    ],
+    "buildings": "mine3 lib0 forge0",
+    "researchTiers": 0,
+    "mineGoldPerSec": 0.8,
+    "libraryXpPerSec": 0
+   },
+   "enemy": {
+    "gold": 23,
+    "xp": 55,
+    "age": 0,
+    "baseHp": 974,
+    "units": [
+     1,
+     1,
+     1,
+     0,
+     0
+    ],
+    "armyValue": 130,
+    "queue": 0,
+    "turrets": [],
+    "buildings": "mine1 lib0 forge0",
+    "researchTiers": 0,
+    "mineGoldPerSec": 0.4,
+    "libraryXpPerSec": 0
+   }
+  },
+  {
+   "t": 270.1,
+   "front": {
+    "player": 231,
+    "enemy": 282
+   },
+   "player": {
+    "gold": 58,
+    "xp": 117,
+    "age": 0,
+    "baseHp": 758,
+    "units": [
+     1,
+     0,
+     0,
+     0,
+     0
+    ],
+    "armyValue": 20,
+    "queue": 0,
+    "turrets": [
+     "stone-fire-pot:L0"
+    ],
+    "buildings": "mine3 lib0 forge0",
+    "researchTiers": 0,
+    "mineGoldPerSec": 0.8,
+    "libraryXpPerSec": 0
+   },
+   "enemy": {
+    "gold": 23,
+    "xp": 74,
+    "age": 0,
+    "baseHp": 974,
+    "units": [
+     2,
+     1,
+     1,
+     0,
+     0
+    ],
+    "armyValue": 150,
+    "queue": 0,
+    "turrets": [],
+    "buildings": "mine1 lib0 forge0",
+    "researchTiers": 0,
+    "mineGoldPerSec": 0.4,
+    "libraryXpPerSec": 0
+   }
+  },
+  {
+   "t": 285.1,
+   "front": {
+    "player": 264,
+    "enemy": 315
+   },
+   "player": {
+    "gold": 68,
+    "xp": 156,
+    "age": 0,
+    "baseHp": 758,
+    "units": [
+     0,
+     0,
+     1,
+     0,
+     0
+    ],
+    "armyValue": 80,
+    "queue": 0,
+    "turrets": [
+     "stone-fire-pot:L0"
+    ],
+    "buildings": "mine3 lib0 forge0",
+    "researchTiers": 0,
+    "mineGoldPerSec": 0.8,
+    "libraryXpPerSec": 0
+   },
+   "enemy": {
+    "gold": 5,
+    "xp": 84,
+    "age": 0,
+    "baseHp": 974,
+    "units": [
+     2,
+     1,
+     0,
+     0,
+     0
+    ],
+    "armyValue": 70,
+    "queue": 1,
+    "turrets": [],
+    "buildings": "mine1 lib0 forge0",
+    "researchTiers": 0,
+    "mineGoldPerSec": 0.4,
+    "libraryXpPerSec": 0
+   }
+  },
+  {
+   "t": 300.1,
+   "front": {
+    "player": 489,
+    "enemy": 539
+   },
+   "player": {
+    "gold": 123,
+    "xp": 177,
+    "age": 0,
+    "baseHp": 758,
+    "units": [
+     0,
+     0,
+     1,
+     0,
+     0
+    ],
+    "armyValue": 80,
+    "queue": 0,
+    "turrets": [
+     "stone-fire-pot:L0"
+    ],
+    "buildings": "mine3 lib0 forge0",
+    "researchTiers": 0,
+    "mineGoldPerSec": 0.8,
+    "libraryXpPerSec": 0
+   },
+   "enemy": {
+    "gold": 46,
+    "xp": 88,
+    "age": 0,
+    "baseHp": 974,
+    "units": [
+     1,
+     0,
+     0,
+     0,
+     0
+    ],
+    "armyValue": 20,
+    "queue": 0,
+    "turrets": [],
+    "buildings": "mine1 lib0 forge0",
+    "researchTiers": 0,
+    "mineGoldPerSec": 0.4,
+    "libraryXpPerSec": 0
+   }
+  },
+  {
+   "t": 315.1,
+   "front": {
+    "player": 872,
+    "enemy": null
+   },
+   "player": {
+    "gold": 148,
+    "xp": 183,
+    "age": 0,
+    "baseHp": 758,
+    "units": [
+     0,
+     0,
+     1,
+     0,
+     0
+    ],
+    "armyValue": 80,
+    "queue": 0,
+    "turrets": [
+     "stone-fire-pot:L0"
+    ],
+    "buildings": "mine3 lib0 forge0",
+    "researchTiers": 0,
+    "mineGoldPerSec": 0.8,
+    "libraryXpPerSec": 0
+   },
+   "enemy": {
+    "gold": 7,
+    "xp": 93,
+    "age": 0,
+    "baseHp": 974,
+    "units": [
+     0,
+     0,
+     0,
+     0,
+     0
+    ],
+    "armyValue": 0,
+    "queue": 1,
+    "turrets": [],
+    "buildings": "mine1 lib0 forge0",
+    "researchTiers": 0,
+    "mineGoldPerSec": 0.4,
+    "libraryXpPerSec": 0
+   }
+  },
+  {
+   "t": 330.1,
+   "front": {
+    "player": 1007,
+    "enemy": 1073
+   },
+   "player": {
+    "gold": 160,
+    "xp": 183,
+    "age": 0,
+    "baseHp": 758,
+    "units": [
+     0,
+     0,
+     1,
+     0,
+     0
+    ],
+    "armyValue": 80,
+    "queue": 0,
+    "turrets": [
+     "stone-fire-pot:L0"
+    ],
+    "buildings": "mine3 lib0 forge0",
+    "researchTiers": 0,
+    "mineGoldPerSec": 0.8,
+    "libraryXpPerSec": 0
+   },
+   "enemy": {
+    "gold": 8,
+    "xp": 97,
+    "age": 0,
+    "baseHp": 974,
+    "units": [
+     2,
+     0,
+     1,
+     0,
+     0
+    ],
+    "armyValue": 120,
+    "queue": 0,
+    "turrets": [],
+    "buildings": "mine1 lib0 forge0",
+    "researchTiers": 0,
+    "mineGoldPerSec": 0.4,
+    "libraryXpPerSec": 0
+   }
+  },
+  {
+   "t": 345.1,
+   "front": {
+    "player": null,
+    "enemy": 885
+   },
+   "player": {
+    "gold": 172,
+    "xp": 183,
+    "age": 0,
+    "baseHp": 758,
+    "units": [
+     0,
+     0,
+     0,
+     0,
+     0
+    ],
+    "armyValue": 0,
+    "queue": 0,
+    "turrets": [
+     "stone-fire-pot:L0"
+    ],
+    "buildings": "mine3 lib0 forge0",
+    "researchTiers": 0,
+    "mineGoldPerSec": 0.8,
+    "libraryXpPerSec": 0
+   },
+   "enemy": {
+    "gold": 38,
+    "xp": 126,
+    "age": 0,
+    "baseHp": 974,
+    "units": [
+     5,
+     0,
+     1,
+     0,
+     0
+    ],
+    "armyValue": 180,
+    "queue": 0,
+    "turrets": [],
+    "buildings": "mine1 lib0 forge0",
+    "researchTiers": 0,
+    "mineGoldPerSec": 0.4,
+    "libraryXpPerSec": 0
+   }
+  },
+  {
+   "t": 360.1,
+   "front": {
+    "player": 273,
+    "enemy": 324
+   },
+   "player": {
+    "gold": 169,
+    "xp": 195,
+    "age": 0,
+    "baseHp": 758,
+    "units": [
+     2,
+     0,
+     0,
+     0,
+     0
+    ],
+    "armyValue": 40,
+    "queue": 0,
+    "turrets": [
+     "stone-fire-pot:L0"
+    ],
+    "buildings": "mine3 lib0 forge0",
+    "researchTiers": 0,
+    "mineGoldPerSec": 0.8,
+    "libraryXpPerSec": 0
+   },
+   "enemy": {
+    "gold": 30,
+    "xp": 130,
+    "age": 0,
+    "baseHp": 974,
+    "units": [
+     4,
+     1,
+     1,
+     0,
+     0
+    ],
+    "armyValue": 190,
+    "queue": 0,
+    "turrets": [],
+    "buildings": "mine1 lib0 forge0",
+    "researchTiers": 0,
+    "mineGoldPerSec": 0.4,
+    "libraryXpPerSec": 0
+   }
+  },
+  {
+   "t": 375.1,
+   "front": {
+    "player": 538,
+    "enemy": 652
+   },
+   "player": {
+    "gold": 296,
+    "xp": 252,
+    "age": 0,
+    "baseHp": 758,
+    "units": [
+     2,
+     0,
+     0,
+     0,
+     0
+    ],
+    "armyValue": 40,
+    "queue": 0,
+    "turrets": [
+     "stone-fire-pot:L0"
+    ],
+    "buildings": "mine3 lib0 forge0",
+    "researchTiers": 0,
+    "mineGoldPerSec": 0.8,
+    "libraryXpPerSec": 0
+   },
+   "enemy": {
+    "gold": 22,
+    "xp": 135,
+    "age": 0,
+    "baseHp": 974,
+    "units": [
+     1,
+     1,
+     0,
+     0,
+     0
+    ],
+    "armyValue": 50,
+    "queue": 0,
+    "turrets": [],
+    "buildings": "mine1 lib0 forge0",
+    "researchTiers": 0,
+    "mineGoldPerSec": 0.4,
+    "libraryXpPerSec": 0
+   }
+  },
+  {
+   "t": 390.1,
+   "front": {
+    "player": null,
+    "enemy": 876
+   },
+   "player": {
+    "gold": 142,
+    "xp": 267,
+    "age": 0,
+    "baseHp": 758,
+    "units": [
+     0,
+     0,
+     0,
+     0,
+     0
+    ],
+    "armyValue": 0,
+    "queue": 0,
+    "turrets": [
+     "stone-fire-pot:L0"
+    ],
+    "buildings": "mine5 lib0 forge0",
+    "researchTiers": 0,
+    "mineGoldPerSec": 1.2,
+    "libraryXpPerSec": 0
+   },
+   "enemy": {
+    "gold": 19,
+    "xp": 151,
+    "age": 0,
+    "baseHp": 974,
+    "units": [
+     1,
+     1,
+     0,
+     0,
+     0
+    ],
+    "armyValue": 50,
+    "queue": 1,
+    "turrets": [],
+    "buildings": "mine1 lib0 forge0",
+    "researchTiers": 0,
+    "mineGoldPerSec": 0.4,
+    "libraryXpPerSec": 0
+   }
+  },
+  {
+   "t": 405.1,
+   "front": {
+    "player": null,
+    "enemy": 323
+   },
+   "player": {
+    "gold": 160,
+    "xp": 267,
+    "age": 0,
+    "baseHp": 738,
+    "units": [
+     0,
+     0,
+     0,
+     0,
+     0
+    ],
+    "armyValue": 0,
+    "queue": 0,
+    "turrets": [
+     "stone-fire-pot:L0"
+    ],
+    "buildings": "mine5 lib0 forge0",
+    "researchTiers": 0,
+    "mineGoldPerSec": 1.4,
+    "libraryXpPerSec": 0
+   },
+   "enemy": {
+    "gold": 32,
+    "xp": 156,
+    "age": 0,
+    "baseHp": 974,
+    "units": [
+     2,
+     2,
+     0,
+     0,
+     0
+    ],
+    "armyValue": 100,
+    "queue": 0,
+    "turrets": [],
+    "buildings": "mine1 lib0 forge0",
+    "researchTiers": 0,
+    "mineGoldPerSec": 0.4,
+    "libraryXpPerSec": 0
+   }
+  },
+  {
+   "t": 420.1,
+   "front": {
+    "player": 265,
+    "enemy": 490
+   },
+   "player": {
+    "gold": 162,
+    "xp": 297,
+    "age": 0,
+    "baseHp": 697,
+    "units": [
+     4,
+     0,
+     0,
+     0,
+     0
+    ],
+    "armyValue": 80,
+    "queue": 0,
+    "turrets": [
+     "stone-fire-pot:L0"
+    ],
+    "buildings": "mine5 lib0 forge0",
+    "researchTiers": 0,
+    "mineGoldPerSec": 1.4,
+    "libraryXpPerSec": 0
+   },
+   "enemy": {
+    "gold": 45,
+    "xp": 160,
+    "age": 0,
+    "baseHp": 974,
+    "units": [
+     0,
+     1,
+     0,
+     0,
+     0
+    ],
+    "armyValue": 30,
+    "queue": 0,
+    "turrets": [],
+    "buildings": "mine1 lib0 forge0",
+    "researchTiers": 0,
+    "mineGoldPerSec": 0.4,
+    "libraryXpPerSec": 0
+   }
+  },
+  {
+   "t": 435.1,
+   "front": {
+    "player": 792,
+    "enemy": null
+   },
+   "player": {
+    "gold": 210,
+    "xp": 6,
+    "age": 1,
+    "baseHp": 1197,
+    "units": [
+     4,
+     0,
+     0,
+     0,
+     0
+    ],
+    "armyValue": 80,
+    "queue": 0,
+    "turrets": [
+     "stone-fire-pot:L0"
+    ],
+    "buildings": "mine5 lib0 forge0",
+    "researchTiers": 0,
+    "mineGoldPerSec": 3,
+    "libraryXpPerSec": 0
+   },
+   "enemy": {
+    "gold": 8,
+    "xp": 165,
+    "age": 0,
+    "baseHp": 974,
+    "units": [
+     0,
+     0,
+     0,
+     0,
+     0
+    ],
+    "armyValue": 0,
+    "queue": 1,
+    "turrets": [],
+    "buildings": "mine1 lib0 forge0",
+    "researchTiers": 0,
+    "mineGoldPerSec": 0.4,
+    "libraryXpPerSec": 0
+   }
+  },
+  {
+   "t": 450.1,
+   "front": {
+    "player": 956,
+    "enemy": 1007
+   },
+   "player": {
+    "gold": 255,
+    "xp": 6,
+    "age": 1,
+    "baseHp": 1197,
+    "units": [
+     2,
+     0,
+     0,
+     0,
+     0
+    ],
+    "armyValue": 40,
+    "queue": 0,
+    "turrets": [
+     "stone-fire-pot:L0"
+    ],
+    "buildings": "mine5 lib0 forge0",
+    "researchTiers": 0,
+    "mineGoldPerSec": 3,
+    "libraryXpPerSec": 0
+   },
+   "enemy": {
+    "gold": 26,
+    "xp": 182,
+    "age": 0,
+    "baseHp": 974,
+    "units": [
+     1,
+     1,
+     1,
+     0,
+     0
+    ],
+    "armyValue": 130,
+    "queue": 0,
+    "turrets": [],
+    "buildings": "mine1 lib0 forge0",
+    "researchTiers": 0,
+    "mineGoldPerSec": 0.4,
+    "libraryXpPerSec": 0
+   }
+  },
+  {
+   "t": 465.1,
+   "front": {
+    "player": null,
+    "enemy": 499
+   },
+   "player": {
+    "gold": 211,
+    "xp": 6,
+    "age": 1,
+    "baseHp": 1197,
+    "units": [
+     0,
+     0,
+     0,
+     0,
+     0
+    ],
+    "armyValue": 0,
+    "queue": 2,
+    "turrets": [
+     "stone-fire-pot:L0"
+    ],
+    "buildings": "mine5 lib0 forge0",
+    "researchTiers": 0,
+    "mineGoldPerSec": 3,
+    "libraryXpPerSec": 0
+   },
+   "enemy": {
+    "gold": 5,
+    "xp": 198,
+    "age": 0,
+    "baseHp": 974,
+    "units": [
+     3,
+     2,
+     1,
+     0,
+     0
+    ],
+    "armyValue": 200,
+    "queue": 1,
+    "turrets": [],
+    "buildings": "mine1 lib0 forge0",
+    "researchTiers": 0,
+    "mineGoldPerSec": 0.4,
+    "libraryXpPerSec": 0
+   }
+  },
+  {
+   "t": 480.1,
+   "front": {
+    "player": 505,
+    "enemy": 827
+   },
+   "player": {
+    "gold": 324,
+    "xp": 72,
+    "age": 1,
+    "baseHp": 1197,
+    "units": [
+     2,
+     1,
+     0,
+     0,
+     0
+    ],
+    "armyValue": 155,
+    "queue": 0,
+    "turrets": [
+     "stone-fire-pot:L0"
+    ],
+    "buildings": "mine5 lib0 forge0",
+    "researchTiers": 0,
+    "mineGoldPerSec": 3,
+    "libraryXpPerSec": 0
+   },
+   "enemy": {
+    "gold": 9,
+    "xp": 203,
+    "age": 0,
+    "baseHp": 974,
+    "units": [
+     2,
+     0,
+     0,
+     0,
+     0
+    ],
+    "armyValue": 40,
+    "queue": 0,
+    "turrets": [],
+    "buildings": "mine1 lib0 forge0",
+    "researchTiers": 0,
+    "mineGoldPerSec": 0.4,
+    "libraryXpPerSec": 0
+   }
+  },
+  {
+   "t": 495.1,
+   "front": {
+    "player": 1062,
+    "enemy": null
+   },
+   "player": {
+    "gold": 278,
+    "xp": 90,
+    "age": 1,
+    "baseHp": 1197,
+    "units": [
+     2,
+     1,
+     0,
+     0,
+     1
+    ],
+    "armyValue": 285,
+    "queue": 0,
+    "turrets": [
+     "stone-fire-pot:L0"
+    ],
+    "buildings": "mine5 lib0 forge0",
+    "researchTiers": 0,
+    "mineGoldPerSec": 3,
+    "libraryXpPerSec": 0
+   },
+   "enemy": {
+    "gold": 13,
+    "xp": 208,
+    "age": 0,
+    "baseHp": 951,
+    "units": [
+     0,
+     0,
+     0,
+     0,
+     0
+    ],
+    "armyValue": 0,
+    "queue": 1,
+    "turrets": [],
+    "buildings": "mine1 lib0 forge0",
+    "researchTiers": 0,
+    "mineGoldPerSec": 0.4,
+    "libraryXpPerSec": 0
+   }
+  },
+  {
+   "t": 510.2,
+   "front": {
+    "player": 1077,
+    "enemy": 1115
+   },
+   "player": {
+    "gold": 174,
+    "xp": 102,
+    "age": 1,
+    "baseHp": 1197,
+    "units": [
+     2,
+     1,
+     1,
+     0,
+     1
+    ],
+    "armyValue": 460,
+    "queue": 0,
+    "turrets": [
+     "stone-fire-pot:L0"
+    ],
+    "buildings": "mine5 lib0 forge0",
+    "researchTiers": 0,
+    "mineGoldPerSec": 3,
+    "libraryXpPerSec": 0
+   },
+   "enemy": {
+    "gold": 17,
+    "xp": 213,
+    "age": 0,
+    "baseHp": 416,
+    "units": [
+     1,
+     0,
+     0,
+     0,
+     0
+    ],
+    "armyValue": 20,
+    "queue": 0,
+    "turrets": [],
+    "buildings": "mine1 lib0 forge0",
+    "researchTiers": 0,
+    "mineGoldPerSec": 0.4,
+    "libraryXpPerSec": 0
+   }
+  },
+  {
+   "t": 519,
+   "front": {
+    "player": 1077,
+    "enemy": null
+   },
+   "player": {
+    "gold": 225,
+    "xp": 114,
+    "age": 1,
+    "baseHp": 1197,
+    "units": [
+     2,
+     1,
+     1,
+     0,
+     1
+    ],
+    "armyValue": 460,
+    "queue": 0,
+    "turrets": [
+     "stone-fire-pot:L0"
+    ],
+    "buildings": "mine5 lib0 forge0",
+    "researchTiers": 0,
+    "mineGoldPerSec": 3,
+    "libraryXpPerSec": 0
+   },
+   "enemy": {
+    "gold": 3,
+    "xp": 215,
+    "age": 0,
+    "baseHp": 0,
+    "units": [
+     0,
+     0,
+     0,
+     0,
+     0
+    ],
+    "armyValue": 0,
+    "queue": 1,
+    "turrets": [],
+    "buildings": "mine1 lib0 forge0",
+    "researchTiers": 0,
+    "mineGoldPerSec": 0.4,
+    "libraryXpPerSec": 0
+   }
+  }
+ ],
+ "config": {
+  "buildings": {
+   "mine": {
+    "id": "mine",
+    "name": "Mine",
+    "blurb": "Makes gold",
+    "stepCosts": [
+     40,
+     55,
+     70,
+     90,
+     110
+    ],
+    "spriteKey": "building-mine"
+   },
+   "library": {
+    "id": "library",
+    "name": "Library",
+    "blurb": "Makes XP",
+    "stepCosts": [
+     50,
+     65,
+     80,
+     100,
+     125
+    ],
+    "spriteKey": "building-library"
+   },
+   "forge": {
+    "id": "forge",
+    "name": "Forge",
+    "blurb": "Research tiers, unit damage",
+    "stepCosts": [
+     60,
+     75,
+     95,
+     120,
+     150
+    ],
+    "spriteKey": "building-forge"
+   },
+   "barracks": {
+    "id": "barracks",
+    "name": "Barracks",
+    "blurb": "Faster training, tougher recruits",
+    "stepCosts": [
+     60,
+     75,
+     95,
+     120,
+     150
+    ],
+    "spriteKey": "building-barracks",
+    "extra": true
+   },
+   "shrine": {
+    "id": "shrine",
+    "name": "Shrine",
+    "blurb": "Stronger, faster special",
+    "stepCosts": [
+     70,
+     90,
+     110,
+     140,
+     170
+    ],
+    "spriteKey": "building-shrine",
+    "extra": true
+   },
+   "market": {
+    "id": "market",
+    "name": "Market",
+    "blurb": "Sells surplus XP for gold",
+    "stepCosts": [
+     60,
+     80,
+     100,
+     125,
+     150
+    ],
+    "spriteKey": "building-market",
+    "extra": true
+   }
+  },
+  "research": [
+   {
+    "id": "bounty",
+    "name": "Plunder",
+    "short": "Kill gold",
+    "target": {
+     "kind": "bounty"
+    },
+    "perTier": 0.1,
+    "baseCost": 60
+   },
+   {
+    "id": "meleeDamage",
+    "name": "Sharpened weapons",
+    "short": "Melee dmg",
+    "target": {
+     "kind": "unit",
+     "slots": [
+      1
+     ],
+     "stat": "damage"
+    },
+    "perTier": 0.1,
+    "baseCost": 50
+   },
+   {
+    "id": "meleeArmor",
+    "name": "Melee armor",
+    "short": "Melee armor",
+    "target": {
+     "kind": "unit",
+     "slots": [
+      1
+     ],
+     "stat": "damageTaken"
+    },
+    "perTier": -0.06,
+    "baseCost": 50
+   },
+   {
+    "id": "rangedDamage",
+    "name": "Better ammo",
+    "short": "Ranged dmg",
+    "target": {
+     "kind": "unit",
+     "slots": [
+      2
+     ],
+     "stat": "damage"
+    },
+    "perTier": 0.1,
+    "baseCost": 50
+   },
+   {
+    "id": "rangedRange",
+    "name": "Keen eyes",
+    "short": "Ranged range",
+    "target": {
+     "kind": "unit",
+     "slots": [
+      2
+     ],
+     "stat": "range"
+    },
+    "perTier": 0.08,
+    "baseCost": 50
+   },
+   {
+    "id": "heavyDamage",
+    "name": "Heavy weapons",
+    "short": "Heavy dmg",
+    "target": {
+     "kind": "unit",
+     "slots": [
+      3
+     ],
+     "stat": "damage"
+    },
+    "perTier": 0.1,
+    "baseCost": 70
+   },
+   {
+    "id": "heavyArmor",
+    "name": "Heavy plating",
+    "short": "Heavy armor",
+    "target": {
+     "kind": "unit",
+     "slots": [
+      3
+     ],
+     "stat": "damageTaken"
+    },
+    "perTier": -0.06,
+    "baseCost": 70
+   },
+   {
+    "id": "turretDamage",
+    "name": "Turret power",
+    "short": "Turret dmg",
+    "target": {
+     "kind": "turret",
+     "stat": "damage"
+    },
+    "perTier": 0.05,
+    "baseCost": 60
+   },
+   {
+    "id": "turretRange",
+    "name": "Turret sights",
+    "short": "Turret range",
+    "target": {
+     "kind": "turret",
+     "stat": "range"
+    },
+    "perTier": 0.03,
+    "baseCost": 60
+   }
+  ]
+ }
+}
