@@ -44,7 +44,10 @@ export function dealUnitDamage(unit: Unit, rawAmount: number, attackerSide: Side
 /**
  * Damages every living unit not on `attackerSide` whose body is within
  * `radius` px of `x` along the lane (edge distance), except `skip` (the
- * primary target, already hit directly). Emits `area-hit` once.
+ * primary target, already hit directly). With `base` (the enemy base, for
+ * units' attacks), the base takes the same damage when its body is that
+ * close too: a heavy or siege unit fighting defenders in the gate also hits
+ * the wall (owner, 2026-09-27). Emits `area-hit` once.
  */
 export function dealSplashDamage(
   units: Iterable<Unit>,
@@ -53,6 +56,7 @@ export function dealSplashDamage(
   amount: number,
   attackerSide: Side,
   skip: Unit | null = null,
+  base: Base | null = null,
 ): void {
   if (!(radius > 0)) return;
   for (const unit of units) {
@@ -60,6 +64,9 @@ export function dealSplashDamage(
     if (Math.abs(unit.x - x) - unit.halfWidth <= radius) {
       dealUnitDamage(unit, amount, attackerSide);
     }
+  }
+  if (base && base.side !== attackerSide && Math.abs(base.x - x) - base.halfWidth <= radius) {
+    dealBaseDamage(base, amount);
   }
   emit(Events.AreaHit, { side: attackerSide, x, radius });
 }

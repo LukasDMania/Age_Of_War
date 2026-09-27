@@ -11,15 +11,18 @@ import { emit, Events } from '@utils/EventBus';
 
 /**
  * Unit targeting and attacks. Each frame every armed unit looks for the
- * nearest enemy unit within its reach (edge to edge), then for an enemy
- * standing in the gate of its base once that base is in reach, falling
- * back to the base itself, and attacks on its cooldown. Units with a target stand still
+ * nearest enemy unit within its reach (edge to edge), falling back to the
+ * enemy base, and attacks on its cooldown. A unit standing inside its own
+ * gate is out of a melee attacker's reach at the base front, so the
+ * attacker strikes the wall (owner, 2026-09-27: pushing an enemy back to
+ * its door should hurt the base). Units with a target stand still
  * (`Attacking`); the rest are marked `Walking` for `LaneSystem` to move.
  *
  * Melee units (no `projectileKey`) hit at once; ranged units fire a pooled
  * projectile level along the lane, which `ProjectileSystem` flies until it
  * hits the first enemy unit (or the enemy base) in its way. `attack.splashRadius`
- * also hurts every other enemy unit that close to the hit.
+ * also hurts every other enemy unit that close to the hit, and the enemy
+ * base when the splash reaches its body.
  *
  * Damage goes through `damageOps`; deaths are reported by `CasualtySystem`,
  * and gold/XP rewards come from `unit-died` (EconomySystem).
@@ -112,7 +115,8 @@ export class CombatSystem {
     if (targetUnit) {
       dealUnitDamage(targetUnit, damage, unit.side);
       if (attack.splashRadius) {
-        dealSplashDamage(this.units.activeUnits, targetUnit.x, attack.splashRadius, damage, unit.side, targetUnit);
+        const base = this.bases[otherSide(unit.side)];
+        dealSplashDamage(this.units.activeUnits, targetUnit.x, attack.splashRadius, damage, unit.side, targetUnit, base);
       }
     } else if (targetBase) {
       dealBaseDamage(targetBase, damage);
@@ -150,30 +154,6 @@ export class CombatSystem {
       if (gap !== null && gap <= reach && gap < bestGap) {
         best = other;
         bestGap = gap;
-      }
-    }
-    return best ?? this.defenderAtGate(unit, reach);
-  }
-
-  /**
-   * An enemy unit standing in its own gate (overlapping its base, where
-   * units spawn) once this unit can reach that base: it is hit before the
-   * wall. Before this, an attacker at the base front couldn't reach
-   * defenders inside the gate and struck the base instead (owner,
-   * 2026-09-27: a mammoth trampling units at the gate damaged the base).
-   */
-  private defenderAtGate(unit: Unit, reach: number): Unit | null {
-    const base = this.enemyBaseInReach(unit, reach);
-    if (!base) return null;
-    let best: Unit | null = null;
-    let bestDistance = Infinity;
-    for (const other of this.units.activeUnits) {
-      if (other.side !== base.side || !other.isAlive) continue;
-      if (Math.abs(other.x - base.x) - other.halfWidth > base.halfWidth) continue;
-      const distance = Math.abs(other.x - unit.x);
-      if (distance < bestDistance) {
-        best = other;
-        bestDistance = distance;
       }
     }
     return best;

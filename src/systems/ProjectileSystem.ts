@@ -165,6 +165,9 @@ export class ProjectileSystem {
     if (unit) dealUnitDamage(unit, projectile.damage, projectile.side);
     else if (projectile.impactBase) dealBaseDamage(projectile.impactBase, projectile.damage);
     if (projectile.splashRadius > 0) {
+      // Units' shots (`hitsBase`) splash onto the enemy base too, unless they
+      // already hit it directly; turret and special shots only hurt units.
+      const base = projectile.hitsBase && !projectile.impactBase ? this.bases[otherSide(projectile.side)] : null;
       dealSplashDamage(
         this.units.activeUnits,
         projectile.impactX,
@@ -172,6 +175,7 @@ export class ProjectileSystem {
         projectile.damage,
         projectile.side,
         unit,
+        base,
       );
     }
   }

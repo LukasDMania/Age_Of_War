@@ -347,7 +347,9 @@ Design in GAME_DESIGN section 14.
 - [x] `UnitDefinition.bodyWidth`; the catapult crew is two units wide.
 - [x] Melee attackers hit enemies standing in the gate before the base
   (`CombatSystem.defenderAtGate`). The area-shot rule that first shipped
-  here was reverted (misread request).
+  here was reverted (misread request). Both undone the same night (owner):
+  attackers at the door hit the wall, and units' splash reaches the base
+  (`dealSplashDamage` `base`).
 - [x] Money-unit rework (switch `moneyUnitRework`): growing income, loot,
   smaller bounty, income bar.
 - [x] Age catch-up (switch `ageCatchUp`, `systems/ageCatchUp.ts`).
@@ -361,6 +363,8 @@ Design in GAME_DESIGN section 14.
 - [x] Conquest battle economy (`BATTLE_ECONOMY`, Conquest effect
   `kill-gold`), `GameSceneData.playerAiIncome` for human-like balance runs,
   Conquest battles in match logs (log version 2).
+- [x] Conquest: the AI's first unit is in the battle's age; starting limits
+  (`START_LIMITS`: bonus gold, turrets).
 
 Acceptance: typecheck and build pass; 12 simulated runs of the campaign
 state machine finish without getting stuck; AI-vs-AI chapter battles in
@@ -1546,4 +1550,38 @@ decisions made, anything the owner needs to confirm.
   - Open for the owner: the run's snowball and t=0 all-ins; how a stalemate
     should end (siege guns for the side holding the lane, a gold sink for
     faster training, the Market in age-locked battles).
+- 2026-09-27 (night, later): owner decisions on the analysis above.
+  - Gate rule reversed (owner: "it makes more sense to do damage to the base
+    when ur pushing them in hard"): `CombatSystem.defenderAtGate` removed,
+    so a melee attacker at the base front strikes the wall while defenders
+    stand inside the gate. `dealSplashDamage` takes the enemy base: units'
+    splash (melee tramples in `CombatSystem`, units' shots in
+    `ProjectileSystem`, which covers the catapult crew's area shot) also
+    hits the base when its body is inside the radius; a shot that hit the
+    base directly doesn't splash it again; turret and special shots
+    (`hitsBase` false) still hurt only units. Checked with a nearly
+    invulnerable defender at the AI's gate, 10 s of attacks: clubber vs a
+    defender inside the gate 0 -> 120 base damage (it now hits the wall),
+    mammoth vs a defender at the gate edge 0 -> 98 (trample), tank 0 ->
+    1050 (shell splash), mech 2576 both times (its shots already hit the
+    wall first).
+  - Conquest starting limits (owner: starting gold "shouldn't get out of
+    hand", "some glory upgrades etc.", "I don't think u should start with 5
+    turrets ever ... 1/2 makes sense"): `START_LIMITS` caps the player's
+    bonus starting gold at +200 Stone-age gold and starting turrets at 2
+    (`capStartingBonuses` in `battleSetup`; the chapter's gold and Gold
+    rush don't count). Sources cut (PROPOSED values changed): Treasury +100
+    x5 -> +50 x4, War chest 150 -> 100, the Grail's gold 200 -> 100, the
+    caravan's war chest 250 -> 100, Deep pockets (Legacy) 100 -> 50, the
+    Merchant Prince 300 -> 200. Relic offers and camp upgrades skip what
+    would only add capped gold or turrets (camp shows "Capped"). Chapter 5
+    now starts at about 2.3x the AI's gold (was 5x). Checked in the browser:
+    a run stacked with the Castellan, Watchtower, Siege works, War chest,
+    the Grail, Treasury 2, Masons 1, the caravan and ruins events and Deep
+    pockets (450 gold and 7 turrets uncapped) starts battles with 200 and
+    2; 200 relic rerolls never offered War chest, Watchtower or Siege
+    works; camp screenshot checked.
+  - Not changed: Master builders and other Legacy unlocks that start
+    buildings higher (economy, not the t=0 army); the AI's own building
+    caps (its Mine stays far behind the player's in later chapters).
 

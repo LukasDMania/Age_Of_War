@@ -558,15 +558,17 @@ just go ahead". Numbers PROPOSED unless tagged.
 - **Catapult crew is two units wide** (footprint 60 px instead of 30; its
   art is centered on it). Any unit can now set its own footprint
   (`UnitDefinition.bodyWidth`).
-- **Units in the gate are hit before the base (LOCKED, owner).** The
-  owner saw a mammoth trampling units in front of the enemy base damage the
-  base. Cause: units spawn inside their base's gate, and a melee attacker
-  stops at the base's front edge, out of reach of units standing inside,
-  so it struck the wall. Now an attacker that can reach a base hits the
-  enemy units standing in its gate first (the trample hits the next one
-  too); the base takes blows only once the gate is clear. (A first attempt
-  that made area shots harmless to bases misread the request and was
-  reverted the same day: splash never touched bases.)
+- **Pushing an enemy back to its door hurts its base (LOCKED, owner,
+  2026-09-27 night; replaces "units in the gate are hit before the base"
+  from the same morning).** Units spawn inside their base's gate, out of
+  reach of a melee attacker standing at the base front, so that attacker
+  strikes the wall. Splash from units' attacks (heavy tramples, siege and
+  tank shells, the catapult crew's area shot) also hits the enemy base when
+  its body is inside the splash, so heavies and siege units fighting
+  defenders at the gate damage the base too. Turret and special splash
+  still hurt only units. Reason (owner): with the morning rule a stream of
+  fresh defenders kept a bigger army off the wall ("even if ur at the door
+  you will do some damage").
 - **Money units** (owner: "rarely valuable; make them more useful but not
   always easy money"; switch `moneyUnitRework`, `MONEY_UNIT_REWORK`):
   income starts at 50% and grows to 200% after 60 s alive (a gold bar under
@@ -632,6 +634,15 @@ the space age". Replaces the five-battle run of section 13.
   AI's base was untouched when the siege guns started, and the siege
   finished the player's already lower base. Details and measurements in
   the session log.
+- **Starting limits** (2026-09-27 night, owner: starting gold upgrades
+  "shouldn't get out of hand"; "I don't think u should start with 5 turrets
+  ever"): the player's bonus starting gold (commander, relics, camp,
+  events, Legacy together) stops at +200 Stone-age gold (times the age
+  factor), and starting turrets at 2 (`START_LIMITS`, PROPOSED). Smaller
+  sources too: Treasury +50 a level (4 levels), War chest +100, the Grail
+  +100, the caravan's war chest +100, Deep pockets +50, the Merchant Prince
+  +200. Relics and camp upgrades that would only add capped gold or turrets
+  aren't offered ("Capped" at the camp).
 - Length: a strong run is about 20 nodes and 14 battles (~1.5-2.5 h) and
   earns ~180 Glory; the Legacy tree costs ~1000, so unlocking it takes
   about 6 full clears (10+ hours), with commanders and Ascension beyond.

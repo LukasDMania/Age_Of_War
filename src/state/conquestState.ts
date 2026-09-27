@@ -39,6 +39,7 @@ import {
   NODE_REWARDS,
   RELIC_CHOICES,
   RELICS,
+  START_LIMITS,
   type Commander,
   type ConquestEffect,
   type ConquestEvent,
@@ -330,13 +331,79 @@ function rollChapter(chapter: number): { columns: MapNode[][]; boss: MapNode } {
   return { columns, boss };
 }
 
-function relicPool(owned: readonly string[], rare: boolean): Relic[] {
-  return RELICS.filter((r) => !owned.includes(r.id) && (!r.unlock || hasUnlock(r.unlock)) && (rare || !r.rare));
+/** What a run carries into every battle. */
+type RunLoadout = Pick<ConquestRun, 'commander' | 'relics' | 'upgrades' | 'runEffects'>;
+
+/** A loadout's battle effects: commander, relics, camp upgrades, event effects, then Legacy unlocks. */
+function loadoutEffects(run: RunLoadout): ConquestEffect[] {
+  const effects: ConquestEffect[] = [...(COMMANDERS.find((c) => c.id === run.commander)?.effects ?? [])];
+  for (const id of run.relics) effects.push(...(RELICS.find((r) => r.id === id)?.effects ?? []));
+  for (const upgrade of CAMP_UPGRADES) {
+    for (let i = 0; i < (run.upgrades[upgrade.id] ?? 0); i++) effects.push(...upgrade.effects);
+  }
+  effects.push(...run.runEffects);
+  for (const id of loadMeta().unlocks) effects.push(...(LEGACY.find((l) => l.id === id)?.battle ?? []));
+  return effects;
 }
 
-function rollRelics(owned: readonly string[], rare = true): string[] {
+/** Which `START_LIMITS` caps these effects already fill. */
+function capsFilled(effects: readonly ConquestEffect[]): { gold: boolean; turrets: boolean } {
+  let gold = 0;
+  let turrets = 0;
+  for (const e of effects) {
+    if (e.kind === 'gold' && e.side === 'player') gold += e.amount;
+    else if (e.kind === 'turrets' && e.side === 'player') turrets += e.count;
+  }
+  return { gold: gold >= START_LIMITS.bonusGold, turrets: turrets >= START_LIMITS.turrets };
+}
+
+/** True when effects would only add starting gold or turrets past a filled cap (a wasted pick). */
+function onlyCapped(effects: readonly ConquestEffect[], filled: { gold: boolean; turrets: boolean }): boolean {
+  return (
+    effects.length > 0 &&
+    effects.every(
+      (e) => (e.kind === 'gold' && e.side === 'player' && filled.gold) || (e.kind === 'turrets' && e.side === 'player' && filled.turrets),
+    )
+  );
+}
+
+/**
+ * Applies `START_LIMITS` to a battle's effects: the player's bonus starting
+ * gold and starting turrets stop at their caps (in list order; effects past
+ * a cap shrink or drop). Gold for both sides (the chapter's, Gold rush)
+ * doesn't count.
+ */
+function capStartingBonuses(effects: readonly ConquestEffect[]): ConquestEffect[] {
+  let gold = START_LIMITS.bonusGold;
+  let turrets = START_LIMITS.turrets;
+  const capped: ConquestEffect[] = [];
+  for (const e of effects) {
+    if (e.kind === 'gold' && e.side === 'player') {
+      const amount = Math.min(e.amount, gold);
+      gold -= amount;
+      if (amount > 0) capped.push({ ...e, amount });
+    } else if (e.kind === 'turrets' && e.side === 'player') {
+      const count = Math.min(e.count, turrets);
+      turrets -= count;
+      if (count > 0) capped.push({ ...e, count });
+    } else {
+      capped.push(e);
+    }
+  }
+  return capped;
+}
+
+/** Relics the run can be offered: not owned, unlocked, and not only adding capped starting gold or turrets. */
+function relicPool(run: RunLoadout, rare: boolean): Relic[] {
+  const filled = capsFilled(loadoutEffects(run));
+  return RELICS.filter(
+    (r) => !run.relics.includes(r.id) && (!r.unlock || hasUnlock(r.unlock)) && (rare || !r.rare) && !onlyCapped(r.effects, filled),
+  );
+}
+
+function rollRelics(run: RunLoadout, rare = true): string[] {
   const count = RELIC_CHOICES + runPerks().relicChoices;
-  return shuffled(relicPool(owned, rare))
+  return shuffled(relicPool(run, rare))
     .slice(0, count)
     .map((r) => r.id);
 }
@@ -349,7 +416,7 @@ export function startRun(commanderId: string, ascension: number): ConquestRun {
   const commander = COMMANDERS.find((c) => c.id === commanderId && commanderUnlocked(c)) ?? COMMANDERS[0]!;
   const level = Math.max(0, Math.min(ascension, meta.ascensionUnlocked));
   const relics: string[] = [];
-  if (perks.startingRelic) relics.push(pick(relicPool([], false)).id);
+  if (perks.startingRelic) relics.push(pick(relicPool({ commander: commander.id, relics: [], upgrades: {}, runEffects: [] }, false)).id);
   const maxBanners = BANNERS.max + perks.banners + (commander.banners ?? 0);
   const { columns, boss } = rollChapter(0);
   const run: ConquestRun = {
@@ -402,7 +469,7 @@ export function chooseNode(row: number): MapNode | null {
   if (!node) return null;
   const status: RunStatus =
     node.type === 'camp' ? 'camp' : node.type === 'event' ? 'event' : node.type === 'treasure' ? 'treasure' : 'battle';
-  const offer = node.type === 'treasure' ? rollRelics(run.relics) : [];
+  const offer = node.type === 'treasure' ? rollRelics(run) : [];
   const path = run.step >= MAP_COLUMNS ? run.path : [...run.path, row];
   if (node.type === 'event') bumpStats((s) => ({ eventsSeen: s.eventsSeen + 1 }));
   saveRun({ ...run, status, current: node, offer, path, eventOutcome: null, lastResult: null });
@@ -430,13 +497,7 @@ export function battleSetup(run: ConquestRun): BattleSetup | null {
   effects.push({ kind: 'ai-income', mult: BATTLE_ECONOMY.aiIncome }, { kind: 'kill-gold', side: 'player', mult: BATTLE_ECONOMY.playerKillGold });
   for (const id of battle.mutators) effects.push(...(MUTATORS.find((m) => m.id === id)?.effects ?? []));
   if (battle.boss !== undefined) effects.push(...(BOSSES[battle.boss]?.effects ?? []));
-  effects.push(...(COMMANDERS.find((c) => c.id === run.commander)?.effects ?? []));
-  for (const id of run.relics) effects.push(...(RELICS.find((r) => r.id === id)?.effects ?? []));
-  for (const upgrade of CAMP_UPGRADES) {
-    for (let i = 0; i < (run.upgrades[upgrade.id] ?? 0); i++) effects.push(...upgrade.effects);
-  }
-  effects.push(...run.runEffects, ...run.nextBattle);
-  for (const id of loadMeta().unlocks) effects.push(...(LEGACY.find((l) => l.id === id)?.battle ?? []));
+  effects.push(...loadoutEffects(run), ...run.nextBattle);
   const a = run.ascension;
   if (a > 0) {
     effects.push(
@@ -453,7 +514,7 @@ export function battleSetup(run: ConquestRun): BattleSetup | null {
     difficulty: battle.difficulty,
     profile: battle.profile,
     age: chapter.age,
-    effects,
+    effects: capStartingBonuses(effects),
     label: `${who} · ${AGE_NAMES[chapter.age]} ${run.chapter + 1}/5`,
   };
 }
@@ -500,7 +561,7 @@ export function finishBattle(won: boolean, baseShare = 0): void {
     glory: run.glory + glory,
     wins: run.wins + 1,
     nextBattle: [],
-    offer: type === 'elite' || type === 'boss' ? rollRelics(run.relics) : [],
+    offer: type === 'elite' || type === 'boss' ? rollRelics(run) : [],
     lastResult: { won: true, supplies, glory, banners: bannerBack },
   });
 }
@@ -517,7 +578,7 @@ export function takeRelic(id: string | null): void {
 export function rerollRelics(): boolean {
   const run = loadRun();
   if (!run || run.offer.length === 0 || run.rerolls <= 0) return false;
-  saveRun({ ...run, rerolls: run.rerolls - 1, offer: rollRelics(run.relics) });
+  saveRun({ ...run, rerolls: run.rerolls - 1, offer: rollRelics(run) });
   return true;
 }
 
@@ -560,6 +621,8 @@ export function campUpgradeCost(run: ConquestRun, id: string): number | null {
   const upgrade = CAMP_UPGRADES.find((u) => u.id === id);
   const level = run.upgrades[id] ?? 0;
   if (!upgrade || level >= upgrade.maxLevel) return null;
+  // Past a starting cap (`START_LIMITS`) the upgrade would add nothing.
+  if (onlyCapped(upgrade.effects, capsFilled(loadoutEffects(run)))) return null;
   return Math.round((upgrade.cost.base + upgrade.cost.step * level) * (1 - runPerks().campDiscount));
 }
 
@@ -600,7 +663,7 @@ export function chooseEventOption(index: number): boolean {
   if (outcome.nextBattle) next.nextBattle = [...next.nextBattle, ...outcome.nextBattle];
   if (outcome.runEffects) next.runEffects = [...next.runEffects, ...outcome.runEffects];
   if (outcome.relic) {
-    const relic = relicPool(next.relics, false);
+    const relic = relicPool(next, false);
     if (relic.length > 0) next = { ...next, relics: [...next.relics, pick(relic).id] };
   }
   if (outcome.glory) {

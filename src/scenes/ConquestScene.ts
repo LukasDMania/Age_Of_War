@@ -19,6 +19,7 @@ import {
   NODE_INFO,
   NODE_REWARDS,
   RELICS,
+  START_LIMITS,
 } from '@config/conquest.config';
 import { GAME_HEIGHT, GAME_WIDTH, SCENE_KEYS } from '@config/constants';
 import { unitArtKey } from '@config/unitArt.config';
@@ -609,7 +610,11 @@ export class ConquestScene extends Phaser.Scene {
 
   private showCamp(run: ConquestRun): void {
     const top = this.panel(460, 'Camp');
-    this.add2(this.add.text(CX, top + 70, 'Spend supplies on upgrades that last the rest of the run.', body(15, UiTextColors.dim)).setOrigin(0.5));
+    this.add2(
+      this.add
+        .text(CX, top + 70, `Spend supplies on upgrades that last the rest of the run. Starting bonuses stop at +${START_LIMITS.bonusGold} gold and ${START_LIMITS.turrets} turrets.`, body(15, UiTextColors.dim))
+        .setOrigin(0.5),
+    );
     const colW = 420;
     CAMP_UPGRADES.forEach((u, i) => {
       const col = i % 2;
@@ -625,7 +630,8 @@ export class ConquestScene extends Phaser.Scene {
         pips.fillStyle(p < level ? UiColors.gold : 0x000000, p < level ? 1 : 0.5).fillCircle(x + 30 + p * 11, y - 12, 4);
       }
       if (cost === null) {
-        this.add2(this.add.text(x + colW / 2, y, 'Max', title(15, '#8fe08f')).setOrigin(1, 0.5));
+        const label = level >= u.maxLevel ? 'Max' : 'Capped';
+        this.add2(this.add.text(x + colW / 2, y, label, title(15, '#8fe08f')).setOrigin(1, 0.5));
         return;
       }
       const buy = new UiButton(this, x + colW / 2 - 58, y, 116, 34, {

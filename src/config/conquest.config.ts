@@ -137,7 +137,7 @@ export interface Relic {
 export const RELICS: readonly Relic[] = [
   { id: 'whetstone', name: 'Whetstone', about: 'Your units +10% damage', effects: [{ kind: 'unit-stat', side: 'player', stat: 'damage', mult: 1.1 }] },
   { id: 'hides', name: 'Thick hides', about: 'Your units +12% HP', effects: [{ kind: 'unit-stat', side: 'player', stat: 'maxHp', mult: 1.12 }] },
-  { id: 'war-chest', name: 'War chest', about: '+150 starting gold', effects: [{ kind: 'gold', side: 'player', amount: 150 }] },
+  { id: 'war-chest', name: 'War chest', about: '+100 starting gold', effects: [{ kind: 'gold', side: 'player', amount: 100 }] },
   { id: 'prospector', name: "Prospector's map", about: 'Start with a Mine at level 3', effects: [{ kind: 'building', side: 'player', buildingId: 'mine', levels: 3 }] },
   { id: 'tomes', name: 'Old tomes', about: 'Start with a Library at level 2 and 80 XP', effects: [{ kind: 'building', side: 'player', buildingId: 'library', levels: 2 }, { kind: 'xp', side: 'player', amount: 80 }] },
   { id: 'anvil', name: 'Heirloom anvil', about: 'Start with a Forge at level 3', effects: [{ kind: 'building', side: 'player', buildingId: 'forge', levels: 3 }] },
@@ -167,12 +167,12 @@ export const RELICS: readonly Relic[] = [
   {
     id: 'grail',
     name: 'The grail',
-    about: 'Your utility units +60% HP; +200 gold',
+    about: 'Your utility units +60% HP; +100 gold',
     unlock: 'royal-relics',
     rare: true,
     effects: [
       { kind: 'unit-stat', side: 'player', stat: 'maxHp', mult: 1.6, slots: [5] },
-      { kind: 'gold', side: 'player', amount: 200 },
+      { kind: 'gold', side: 'player', amount: 100 },
     ],
   },
   {
@@ -313,7 +313,7 @@ export interface CampUpgrade {
 export const CAMP_UPGRADES: readonly CampUpgrade[] = [
   { id: 'drill', name: 'Drill yard', about: 'Your units +6% HP', maxLevel: 5, cost: { base: 30, step: 20 }, effects: [{ kind: 'unit-stat', side: 'player', stat: 'maxHp', mult: 1.06 }] },
   { id: 'armory', name: 'Armory', about: 'Your units +6% damage', maxLevel: 5, cost: { base: 30, step: 20 }, effects: [{ kind: 'unit-stat', side: 'player', stat: 'damage', mult: 1.06 }] },
-  { id: 'treasury', name: 'Treasury', about: '+100 starting gold', maxLevel: 5, cost: { base: 25, step: 15 }, effects: [{ kind: 'gold', side: 'player', amount: 100 }] },
+  { id: 'treasury', name: 'Treasury', about: '+50 starting gold', maxLevel: 4, cost: { base: 25, step: 15 }, effects: [{ kind: 'gold', side: 'player', amount: 50 }] },
   { id: 'masons', name: 'Masons', about: 'Start with one more rapid turret (upgraded once)', maxLevel: 2, cost: { base: 40, step: 40 }, effects: [{ kind: 'turrets', side: 'player', count: 1, turretKind: 'rapid', level: 1 }] },
   { id: 'surveyors', name: 'Surveyors', about: 'Start with the Mine 2 levels higher', maxLevel: 4, cost: { base: 30, step: 20 }, effects: [{ kind: 'building', side: 'player', buildingId: 'mine', levels: 2 }] },
   { id: 'smiths', name: 'Smithy', about: 'Start with the Forge 3 levels higher', maxLevel: 3, cost: { base: 35, step: 25 }, effects: [{ kind: 'building', side: 'player', buildingId: 'forge', levels: 3 }] },
@@ -381,7 +381,7 @@ export const EVENTS: readonly ConquestEvent[] = [
     title: 'Trade caravan',
     text: 'Merchants offer to trade supplies for coin.',
     options: [
-      { label: 'Buy a war chest', about: '35 supplies: +250 starting gold for the rest of the run', cost: 35, win: { runEffects: [{ kind: 'gold', side: 'player', amount: 250 }], text: 'Your treasury grows.' } },
+      { label: 'Buy a war chest', about: '35 supplies: +100 starting gold for the rest of the run', cost: 35, win: { runEffects: [{ kind: 'gold', side: 'player', amount: 100 }], text: 'Your treasury grows.' } },
       { label: 'Sell spare kit', about: '+40 supplies, your units -5% HP next battle', win: { supplies: 40, nextBattle: [{ kind: 'unit-stat', side: 'player', stat: 'maxHp', mult: 0.95 }], text: 'The armor was worth more than you thought.' } },
       { label: 'Ignore them', about: 'Nothing happens', win: { text: 'The caravan rolls on.' } },
     ],
@@ -492,11 +492,11 @@ export const COMMANDERS: readonly Commander[] = [
   {
     id: 'merchant',
     name: 'The Merchant Prince',
-    about: '+300 starting gold and a Mine at level 5; supplies x1.25; units -8% HP.',
+    about: '+200 starting gold and a Mine at level 5; supplies x1.25; units -8% HP.',
     unlock: 'hoarder',
     suppliesMult: 1.25,
     effects: [
-      { kind: 'gold', side: 'player', amount: 300 },
+      { kind: 'gold', side: 'player', amount: 200 },
       { kind: 'building', side: 'player', buildingId: 'mine', levels: 5 },
       { kind: 'unit-stat', side: 'player', stat: 'maxHp', mult: 0.92 },
     ],
@@ -607,7 +607,7 @@ export const LEGACY_TIER_REQUIRES: Readonly<Record<1 | 2 | 3 | 4, number>> = { 1
 
 export const LEGACY: readonly LegacyUnlock[] = [
   // Tier 1
-  { id: 'deep-pockets', name: 'Deep pockets', about: '+100 starting gold every battle', cost: 15, tier: 1, battle: [{ kind: 'gold', side: 'player', amount: 100 }] },
+  { id: 'deep-pockets', name: 'Deep pockets', about: '+50 starting gold every battle', cost: 15, tier: 1, battle: [{ kind: 'gold', side: 'player', amount: 50 }] },
   { id: 'reroll', name: 'Second opinion', about: 'Reroll a relic choice once per run', cost: 15, tier: 1, run: { rerolls: 1 } },
   { id: 'supply-lines', name: 'Supply lines', about: 'Start runs with 40 supplies', cost: 20, tier: 1, run: { supplies: 40 } },
   { id: 'extra-choice', name: 'Quartermaster', about: 'Four relics to choose from', cost: 25, tier: 1, run: { relicChoices: 1 } },
@@ -663,6 +663,30 @@ export const BATTLE_ECONOMY = {
   /** The player's kill gold x this (`kill-gold`). */
   playerKillGold: 1.5,
 } as const;
+
+/* ---- Starting limits ------------------------------------------------------------------------ */
+
+/**
+ * Caps on the player's starting position (2026-09-27, owner: "starting gold
+ * upgrades are good but they shouldn't get out of hand"; "I don't think u
+ * should start with 5 turrets ever ... starting with 1/2 makes sense but
+ * not all 5"). In the owner's first cleared run the player began chapter 5
+ * with 5x the AI's gold (600 Stone-age gold of bonuses, times the age
+ * factor) and five turrets, and won battles in 45-80 s by spending the gold
+ * at once.
+ *
+ * - `bonusGold`: the player's starting gold from the commander, relics, camp
+ *   upgrades, events and Legacy together, in Stone-age gold (times the
+ *   battle's age factor, like every `gold` effect). The chapter's own
+ *   starting gold and mutators don't count.
+ * - `turrets`: turrets the player starts with, from every source.
+ *
+ * Effects past a cap shrink or drop (`battleSetup`); relics and camp
+ * upgrades that would only add something already capped aren't offered.
+ * With these, chapter 5 starts at about 2.3x the AI's gold (was 5x).
+ * PROPOSED.
+ */
+export const START_LIMITS = { bonusGold: 200, turrets: 2 } as const;
 
 /* ---- Siege --------------------------------------------------------------------------------- */
 
