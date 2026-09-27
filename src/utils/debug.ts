@@ -132,6 +132,8 @@ export interface DebugHandle {
   research(researchId: ResearchId, side?: Side): void;
   /** Bytes of texture memory held by the rig unit sheets right now. */
   rigArtBytes(): number;
+  /** Slow motion for effects (tweens, particles, scene timers; 1 = normal), to review quick flashes. */
+  fxTimeScale(scale: number): void;
 }
 
 declare global {

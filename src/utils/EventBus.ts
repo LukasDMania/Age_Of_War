@@ -246,6 +246,10 @@ export interface EventPayloads {
     x: number;
     frontX: number;
     ranged: boolean;
+    /** Ranged: where the shot left (the weapon's muzzle) and what it is. */
+    muzzleX?: number;
+    muzzleY?: number;
+    projectileKey?: string;
   };
   /** A turret fired (feedback only); (`x`, `y`) is its muzzle. */
   [Events.TurretFired]: { side: Side; slotIndex: number; turretId: string; x: number; y: number };

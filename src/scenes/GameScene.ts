@@ -751,6 +751,10 @@ export class GameScene extends Phaser.Scene {
       upgradeBuilding: (buildingId, side = 'player') => emit(Events.UpgradeBuildingRequested, { side, buildingId }),
       research: (researchId, side = 'player') => emit(Events.ResearchRequested, { side, researchId }),
       rigArtBytes: () => rigArtBytes(this),
+      fxTimeScale: (scale) => {
+        this.tweens.timeScale = scale;
+        this.impacts.setTimeScale(scale);
+      },
     });
   }
 

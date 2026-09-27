@@ -443,6 +443,21 @@ default.
 - **Effects**: projectile trails and per-projectile impacts, scorch marks,
   sparks on melee blows, exploding machines, coins for the player's kills,
   particles on heals/shields/buffs, rubble from bases.
+- **Effects rehaul (2026-09-28, owner: "the art style is simple so that's
+  fine but a lot of the effects and projectiles can have something more to
+  it ... make the visuals look more impressive"; PROPOSED look):** every
+  projectile has a motion streak (tracers for bullets, pale streaks for
+  arrows, fire tails, energy beams) and fire or energy ones a soft glow;
+  units' shots flash at the weapon's muzzle (flare, sparks and smoke for
+  guns, a puff and a ground ring for cannons, colored flares for lasers
+  and plasma); melee blows draw a slash arc in the age's tint and a hit
+  sparkle; every shot that hits a unit sparkles; explosions layer a
+  white-hot flare, a cartoon fireball, embers and a smoke column that rises
+  after; units fall with a dust ring (heavies more); a special washes the
+  sky with its age's color; ricochets streak. Tunables in
+  `config/effects.config.ts` (`PROJECTILE_STREAK`, `MUZZLE_STYLE`,
+  `SLASH_TINTS`, `SPECIAL_SKY_FLASH`). Shots also leave the weapon on the
+  art now (`attack.muzzle`, measured with `/artlab.html?muzzles`).
 - **Heavy impact shake** (owner: "more graceful"): Phaser's random jitter
   is replaced by a damped vertical thump (`CAMERA_THUMP` in
   `config/effects.config.ts`) for heavy units' blows and shots, special

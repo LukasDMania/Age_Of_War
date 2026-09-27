@@ -113,3 +113,76 @@ export const EXPLODING_UNITS: ReadonlySet<string> = new Set([
 
 /** How long scorch marks stay on the ground, real ms. */
 export const SCORCH_MS = 5000;
+
+/* ---- Effects rehaul (2026-09-28, owner: "a lot of the effects and projectiles can have something more to it") ---- */
+
+/**
+ * The motion streak drawn behind a projectile in flight (and a glow on its
+ * head): `color`, `length` and `width` in px, `alpha` at the head fading to
+ * nothing at the tail; `add` draws it additively (light: fire, tracers,
+ * energy), otherwise normally (dust, smoke). The streak never reaches back
+ * past where the shot started.
+ */
+export interface StreakStyle {
+  color: number;
+  length: number;
+  width: number;
+  alpha: number;
+  add: boolean;
+  glow?: { color: number; radius: number; alpha: number };
+}
+
+export const PROJECTILE_STREAK: Readonly<Partial<Record<string, StreakStyle>>> = {
+  'proj-stone': { color: 0xd8c8a8, length: 16, width: 2.6, alpha: 0.4, add: false },
+  'proj-boulder': { color: 0xc8b89a, length: 26, width: 6, alpha: 0.32, add: false },
+  'proj-spear': { color: 0xffffff, length: 24, width: 1.8, alpha: 0.45, add: true },
+  'proj-arrow': { color: 0xffffff, length: 26, width: 1.6, alpha: 0.5, add: true },
+  'proj-bolt': { color: 0xffffff, length: 30, width: 1.8, alpha: 0.55, add: true },
+  'proj-ballista': { color: 0xffffff, length: 38, width: 2.6, alpha: 0.5, add: true },
+  'proj-fire': { color: 0xff9a3a, length: 30, width: 7, alpha: 0.75, add: true, glow: { color: 0xffa040, radius: 16, alpha: 0.55 } },
+  'proj-meteor': { color: 0xff8a2a, length: 70, width: 12, alpha: 0.85, add: true, glow: { color: 0xffb040, radius: 30, alpha: 0.65 } },
+  'proj-oil': { color: 0x3a2e1c, length: 18, width: 4, alpha: 0.35, add: false },
+  'proj-bullet': { color: 0xffe07a, length: 38, width: 2.2, alpha: 0.95, add: true, glow: { color: 0xffd070, radius: 6, alpha: 0.7 } },
+  'proj-cannonball': { color: 0x6a6560, length: 28, width: 6, alpha: 0.4, add: false },
+  'proj-mortar': { color: 0xffc070, length: 20, width: 3, alpha: 0.65, add: true, glow: { color: 0xffb040, radius: 7, alpha: 0.5 } },
+  'proj-shell': { color: 0xffd080, length: 30, width: 3.2, alpha: 0.7, add: true, glow: { color: 0xffb040, radius: 9, alpha: 0.55 } },
+  'proj-grenade': { color: 0x8a857c, length: 16, width: 3, alpha: 0.35, add: false },
+  'proj-bomb': { color: 0x8a857c, length: 26, width: 5, alpha: 0.4, add: false },
+  'proj-laser': { color: 0x7ff8ff, length: 48, width: 3.6, alpha: 0.95, add: true, glow: { color: 0x5ff5e0, radius: 12, alpha: 0.6 } },
+  'proj-rail': { color: 0xe8f8ff, length: 80, width: 3.2, alpha: 1, add: true, glow: { color: 0x9fd8ff, radius: 14, alpha: 0.65 } },
+  'proj-plasma': { color: 0xc080ff, length: 36, width: 9, alpha: 0.85, add: true, glow: { color: 0xb070ff, radius: 18, alpha: 0.75 } },
+  'proj-orbital': { color: 0xe8ffff, length: 100, width: 9, alpha: 0.9, add: true, glow: { color: 0xaef8ff, radius: 26, alpha: 0.75 } },
+};
+
+/** How a unit's shot leaves the weapon (by projectile key): the flash and puff at the muzzle. */
+export type MuzzleStyle = 'gun' | 'cannon' | 'bow' | 'sling' | 'fire' | 'laser' | 'plasma';
+
+export const MUZZLE_STYLE: Readonly<Partial<Record<string, MuzzleStyle>>> = {
+  'proj-stone': 'sling',
+  'proj-boulder': 'sling',
+  'proj-spear': 'bow',
+  'proj-arrow': 'bow',
+  'proj-bolt': 'bow',
+  'proj-ballista': 'bow',
+  'proj-fire': 'fire',
+  'proj-bullet': 'gun',
+  'proj-cannonball': 'cannon',
+  'proj-shell': 'cannon',
+  'proj-mortar': 'cannon',
+  'proj-grenade': 'gun',
+  'proj-laser': 'laser',
+  'proj-rail': 'laser',
+  'proj-plasma': 'plasma',
+};
+
+/** Tint of melee slash arcs per age (index = age); the Future's glow. */
+export const SLASH_TINTS: readonly number[] = [0xfff0d0, 0xffffff, 0xfff6e0, 0xffffff, 0x9ff8ff];
+
+/** The sky flash when a special fires, per age: color and strength (0-1). */
+export const SPECIAL_SKY_FLASH: readonly { color: number; alpha: number }[] = [
+  { color: 0xff8a3a, alpha: 0.28 },
+  { color: 0xffe0a0, alpha: 0.2 },
+  { color: 0xffc070, alpha: 0.24 },
+  { color: 0xffe0a0, alpha: 0.26 },
+  { color: 0xbff8ff, alpha: 0.32 },
+];

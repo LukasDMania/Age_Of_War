@@ -238,7 +238,11 @@ export type FxTextureId =
   | 'fx-hex'
   | 'fx-plus'
   | 'fx-drop'
-  | 'fx-puff';
+  | 'fx-puff'
+  /* Effects rehaul (2026-09-28). */
+  | 'fx-slash'
+  | 'fx-star'
+  | 'fx-flare';
 
 export const FX_SIZE: Readonly<Record<FxTextureId, readonly [number, number]>> = {
   'fx-soft': [32, 32],
@@ -253,6 +257,9 @@ export const FX_SIZE: Readonly<Record<FxTextureId, readonly [number, number]>> =
   'fx-plus': [12, 12],
   'fx-drop': [6, 8],
   'fx-puff': [26, 26],
+  'fx-slash': [40, 40],
+  'fx-star': [24, 24],
+  'fx-flare': [48, 48],
 };
 
 export function drawFx(c: Ctx, id: FxTextureId): void {
@@ -347,6 +354,59 @@ export function drawFx(c: Ctx, id: FxTextureId): void {
       c.quadraticCurveTo(-2.8, 1, 0, -3.5);
       c.fill();
       return;
+    case 'fx-slash': {
+      // A crescent swoosh, bright at its leading edge, thin at both tips.
+      c.save();
+      const g = c.createLinearGradient(-16, 0, 16, 0);
+      g.addColorStop(0, 'rgba(255,255,255,0)');
+      g.addColorStop(0.55, 'rgba(255,255,255,0.55)');
+      g.addColorStop(1, 'rgba(255,255,255,1)');
+      c.fillStyle = g;
+      c.beginPath();
+      c.arc(0, 0, 18, -1.35, 1.35);
+      c.arc(-5, 0, 14.5, 1.2, -1.2, true);
+      c.closePath();
+      c.fill();
+      c.restore();
+      return;
+    }
+    case 'fx-star': {
+      // A four-point hit sparkle with a soft core.
+      glow(c, [0, 0], 7, '#ffffff', 0.9);
+      c.fillStyle = '#ffffff';
+      c.beginPath();
+      for (let i = 0; i < 8; i++) {
+        const a = (i * Math.PI) / 4;
+        const r = i % 2 ? 2.2 : 11.5;
+        c.lineTo(Math.cos(a) * r, Math.sin(a) * r);
+      }
+      c.closePath();
+      c.fill();
+      return;
+    }
+    case 'fx-flare': {
+      // A flash with rays: muzzle flashes and big impacts.
+      const g = c.createRadialGradient(0, 0, 0, 0, 0, 22);
+      g.addColorStop(0, 'rgba(255,255,255,1)');
+      g.addColorStop(0.25, 'rgba(255,255,255,0.8)');
+      g.addColorStop(1, 'rgba(255,255,255,0)');
+      c.fillStyle = g;
+      c.beginPath();
+      c.arc(0, 0, 22, 0, Math.PI * 2);
+      c.fill();
+      c.fillStyle = 'rgba(255,255,255,0.85)';
+      for (let i = 0; i < 6; i++) {
+        const a = (i * Math.PI) / 3 + 0.3;
+        const r = i % 2 ? 16 : 23;
+        c.beginPath();
+        c.moveTo(Math.cos(a - 0.08) * 3, Math.sin(a - 0.08) * 3);
+        c.lineTo(Math.cos(a) * r, Math.sin(a) * r);
+        c.lineTo(Math.cos(a + 0.08) * 3, Math.sin(a + 0.08) * 3);
+        c.closePath();
+        c.fill();
+      }
+      return;
+    }
     case 'fx-puff': {
       // A cartoon cloud puff: a few overlapping soft circles.
       for (const [x, y, r] of [[-4, 2, 7], [4, 2, 6.5], [0, -3, 7.5], [0, 3, 6]] as const) {

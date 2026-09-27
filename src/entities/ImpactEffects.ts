@@ -2,14 +2,21 @@ import Phaser from 'phaser';
 import {
   CAMERA_THUMP,
   EXPLODING_UNITS,
+  MUZZLE_STYLE,
   PROJECTILE_IMPACT,
   PROJECTILE_SPIN,
+  PROJECTILE_STREAK,
   PROJECTILE_TRAIL,
   SCORCH_MS,
+  SLASH_TINTS,
+  SPECIAL_SKY_FLASH,
   TRAIL_INTERVAL_MS,
+  type StreakStyle,
   type TrailStyle,
 } from '@config/effects.config';
-import { BASE_X, LANE_Y } from '@config/constants';
+import { BASE_X, GAME_HEIGHT, GAME_WIDTH, LANE_Y } from '@config/constants';
+import { FX_SIZE } from '@/art/fxDraw';
+import { findUnitDefinition } from '@entities/unitDefinitions';
 import { activeBuildingIds, buildingStage, buildingX } from '@config/buildings.config';
 import type { FxTextureId } from '@/art/fxDraw';
 import { CameraThump } from '@entities/CameraThump';
@@ -45,9 +52,17 @@ const PURPLE = [0xd9b8ff, 0xb070ff, 0xffffff];
  * run on real time. `muted` skips everything (bulk simulation steps in dev
  * tooling and AI training).
  *
+ * Effects rehaul (2026-09-28, owner: "make the visuals look more
+ * impressive"): every projectile draws a motion streak and, for fire and
+ * energy, a glow (`PROJECTILE_STREAK`, redrawn each frame on two Graphics);
+ * units' shots flash at the weapon's muzzle (`MUZZLE_STYLE`); melee blows
+ * slash (an arc in the age's tint) and sparkle; hits on units sparkle;
+ * explosions layer a flare, a fireball, embers and a rising smoke column;
+ * heavies fall with a dust ring; a special flashes the sky; ricochets streak.
+ *
  * Listens for: `projectile-impact`, `unit-struck`, `turret-fired`,
  * `unit-died`, `utility-pulse`, `base-damaged`, `base-destroyed`,
- * `age-changed`, `building-upgraded`.
+ * `age-changed`, `building-upgraded`, `special-fired`, `shot-bounced`.
  */
 export class ImpactEffects {
   /** Set while the simulation runs in bulk without rendering. */
@@ -59,6 +74,13 @@ export class ImpactEffects {
   private readonly flashes: ObjectPool<Phaser.GameObjects.Image>;
   private readonly scorches: ObjectPool<Phaser.GameObjects.Image>;
   private readonly trailAt = new WeakMap<Projectile, number>();
+  /** Projectile streaks, redrawn each frame (normal blending keeps their color on bright skies). */
+  private readonly streaks: Phaser.GameObjects.Graphics;
+  /** Soft glows riding on fire and energy projectiles. */
+  private readonly glows: ObjectPool<Phaser.GameObjects.Image>;
+  private readonly glowOf = new Map<Projectile, Phaser.GameObjects.Image>();
+  /** The sky flash of a special (screen space). */
+  private readonly sky: Phaser.GameObjects.Rectangle;
 
   constructor(scene: Phaser.Scene) {
     this.scene = scene;
@@ -165,6 +187,41 @@ export class ImpactEffects {
       alpha: { start: 0.35, end: 0 }, lifespan: 420, tint: 0xeeeeee, maxParticles: 120,
     });
 
+    // Muzzle sparks, forward along the lane (one emitter per direction).
+    const muzzle = (angle: { min: number; max: number }): EmitterConfig => ({
+      speed: { min: 80, max: 230 }, angle, gravityY: 200,
+      scale: { start: 0.38 * INV, end: 0 }, alpha: { start: 1, end: 0 },
+      lifespan: { min: 110, max: 260 }, tint: METAL_SPARK, blendMode: 'ADD', maxParticles: 160,
+    });
+    make('muzzle-r', 'fx-spark', 3.6, muzzle({ min: -28, max: 28 }));
+    make('muzzle-l', 'fx-spark', 3.6, muzzle({ min: 152, max: 208 }));
+    make('embers', 'fx-spark', 3.55, {
+      speed: { min: 30, max: 150 }, angle: { min: 195, max: 345 }, gravityY: 70,
+      scale: { start: 0.36 * INV, end: 0 }, alpha: { start: 1, end: 0 },
+      lifespan: { min: 700, max: 1300 }, tint: FIRE_TINTS, blendMode: 'ADD', maxParticles: 220,
+    });
+    make('smoke-big', 'fx-puff', 3.35, {
+      speed: { min: 6, max: 30 }, angle: { min: 250, max: 290 }, gravityY: -30,
+      scale: { start: 0.9 * INV, end: 2.7 * INV }, alpha: { start: 0.5, end: 0 },
+      lifespan: { min: 1300, max: 2000 }, tint: [0x4a4642, 0x5e5852, 0x3c3935], maxParticles: 90,
+    });
+
+    this.streaks = scene.add.graphics().setDepth(2.9);
+    this.glows = new ObjectPool({
+      create: () => scene.add.image(0, 0, 'fx-soft').setDepth(2.95),
+      onRelease: (img) => img.setActive(false).setVisible(false),
+      onDestroy: (img) => img.destroy(),
+      prewarm: 12,
+    });
+    this.sky = scene.add
+      .rectangle(0, 0, GAME_WIDTH, GAME_HEIGHT, 0xffffff)
+      .setOrigin(0)
+      .setScrollFactor(0)
+      .setDepth(4.5)
+      .setBlendMode(Phaser.BlendModes.ADD)
+      .setAlpha(0)
+      .setVisible(false);
+
     this.flashes = new ObjectPool({
       create: () => scene.add.image(0, 0, 'fx-soft').setDepth(3.7).setBlendMode(Phaser.BlendModes.ADD),
       onRelease: (img) => img.setActive(false).setVisible(false),
@@ -218,12 +275,23 @@ export class ImpactEffects {
       on(Events.AgeChanged, ({ side }) => {
         if (side === HUD_SIDE && !this.muted) this.burst('gold', 24, BASE_X[side], LANE_Y - 90, 60, 50);
       }),
+      on(Events.SpecialFired, ({ age }) => this.skyFlash(age)),
+      on(Events.ShotBounced, ({ fromX, fromY, toX, toY }) => this.bounceStreak(fromX, fromY, toX, toY)),
     ];
+  }
+
+  /** Dev: slow motion for the particles (tweens are the scene's). */
+  setTimeScale(scale: number): void {
+    for (const e of Object.values(this.em)) e.timeScale = scale;
   }
 
   destroy(): void {
     for (const off of this.cleanups) off();
     for (const e of Object.values(this.em)) e.destroy();
+    this.streaks.destroy();
+    this.glows.destroy();
+    this.glowOf.clear();
+    this.sky.destroy();
     this.flashes.destroy();
     this.scorches.destroy();
     this.thump.clear();
@@ -235,7 +303,17 @@ export class ImpactEffects {
    */
   updateTrails(projectiles: ReadonlySet<Projectile>, now: number, deltaMs: number): void {
     if (this.muted) return;
+    this.streaks.clear();
+    // Glows of projectiles that are gone go back to the pool.
+    for (const [p, img] of this.glowOf) {
+      if (!projectiles.has(p) || !p.active) {
+        this.glows.release(img);
+        this.glowOf.delete(p);
+      }
+    }
     for (const p of projectiles) {
+      const streak = PROJECTILE_STREAK[p.key];
+      if (streak) this.drawStreak(p, streak);
       const spin = PROJECTILE_SPIN[p.key];
       if (spin) p.rotation += ((p.dirX < 0 ? -spin : spin) * deltaMs) / 1000;
       const style = PROJECTILE_TRAIL[p.key];
@@ -244,6 +322,44 @@ export class ImpactEffects {
       if (now - last < TRAIL_INTERVAL_MS) continue;
       this.trailAt.set(p, now);
       this.trail(style, p.x - p.dirX * 4, p.y - p.dirY * 4);
+    }
+  }
+
+  /**
+   * A projectile's streak: three segments from the tail (thin, faint) to the
+   * head (full width), never longer than the shot has flown; and a glow on
+   * the head for fire and energy.
+   */
+  private drawStreak(p: Projectile, st: StreakStyle): void {
+    const g = this.streaks;
+    const flown = (p.flight.speed * p.ageMs) / 1000;
+    const len = Math.min(st.length, flown);
+    if (len > 2) {
+      const steps = [
+        [1, 0.66, 0.35, 0.2],
+        [0.66, 0.33, 0.7, 0.5],
+        [0.33, 0, 1, 1],
+      ] as const;
+      for (const [from, to, w, a] of steps) {
+        g.lineStyle(st.width * w, st.color, st.alpha * a);
+        g.lineBetween(p.x - p.dirX * len * from, p.y - p.dirY * len * from, p.x - p.dirX * len * to, p.y - p.dirY * len * to);
+      }
+    }
+    if (st.glow) {
+      let img = this.glowOf.get(p);
+      if (!img) {
+        img = this.glows.acquire();
+        this.glowOf.set(p, img);
+      }
+      const { color, radius, alpha } = st.glow;
+      // Normal blending: the soft sprite keeps its color on bright skies too.
+      img
+        .setPosition(p.x, p.y)
+        .setTint(color)
+        .setScale((radius * 2) / FX_SIZE['fx-soft'][0] / FX_SUPERSAMPLE)
+        .setAlpha(alpha)
+        .setActive(true)
+        .setVisible(true);
     }
   }
 
@@ -280,6 +396,7 @@ export class ImpactEffects {
     const img = this.flashes.acquire();
     const size = (radius * 2) / (32 * FX_SUPERSAMPLE) * FX_SUPERSAMPLE;
     img
+      .setBlendMode(Phaser.BlendModes.ADD)
       .setTexture(key)
       .setPosition(x, y)
       .setTint(tint)
@@ -297,11 +414,74 @@ export class ImpactEffects {
     });
   }
 
+  /**
+   * A textured flash (flare, star, slash, streak) of `size` px across that
+   * pops in, grows by `grow` and fades over `ms`. Additive.
+   */
+  private pop(
+    key: 'fx-flare' | 'fx-star' | 'fx-slash' | 'fx-soft' | 'fx-streak' | 'fx-puff',
+    x: number,
+    y: number,
+    size: number,
+    tint: number,
+    ms: number,
+    opts: { rotation?: number; flipX?: boolean; grow?: number; alpha?: number; scaleY?: number; color?: boolean } = {},
+  ): void {
+    const img = this.flashes.acquire();
+    const scale = size / FX_SIZE[key][0] / FX_SUPERSAMPLE;
+    // White-hot flashes add light; colored ones blend normally, or a bright sky washes them to white.
+    img
+      .setBlendMode(opts.color ? Phaser.BlendModes.NORMAL : Phaser.BlendModes.ADD)
+      .setTexture(key)
+      .setPosition(x, y)
+      .setTint(tint)
+      .setRotation(opts.rotation ?? 0)
+      .setFlipX(opts.flipX ?? false)
+      .setScale(scale * 0.7, scale * 0.7 * (opts.scaleY ?? 1))
+      .setAlpha(opts.alpha ?? 1)
+      .setActive(true)
+      .setVisible(true);
+    const grow = opts.grow ?? 1.25;
+    this.scene.tweens.add({
+      targets: img,
+      scaleX: scale * grow,
+      scaleY: scale * grow * (opts.scaleY ?? 1),
+      alpha: 0,
+      duration: ms,
+      ease: 'Quad.easeOut',
+      onComplete: () => {
+        img.setRotation(0).setFlipX(false);
+        this.flashes.release(img);
+      },
+    });
+  }
+
+  /** A special's sky flash: the whole view washes with the age's color and fades. */
+  private skyFlash(age: number): void {
+    if (this.muted) return;
+    const look = SPECIAL_SKY_FLASH[Math.max(0, Math.min(SPECIAL_SKY_FLASH.length - 1, age))]!;
+    this.scene.tweens.killTweensOf(this.sky);
+    this.sky.setFillStyle(look.color).setAlpha(look.alpha).setVisible(true);
+    this.scene.tweens.add({ targets: this.sky, alpha: 0, duration: 700, ease: 'Quad.easeOut', onComplete: () => this.sky.setVisible(false) });
+  }
+
+  /** A ricochet: a bright streak from one unit to the next and a sparkle where it lands. */
+  private bounceStreak(fromX: number, fromY: number, toX: number, toY: number): void {
+    if (this.muted) return;
+    const dx = toX - fromX;
+    const dy = toY - fromY;
+    const dist = Math.hypot(dx, dy);
+    this.pop('fx-streak', fromX + dx / 2, fromY + dy / 2, dist, 0xffe890, 170, { rotation: Math.atan2(dy, dx), grow: 1.05, scaleY: 1.2 });
+    this.pop('fx-star', toX, toY, 16, 0xfff0b0, 140);
+    this.burst('sparks', 3, toX, toY);
+  }
+
   /** An expanding shockwave ring lying on the lane. */
   private ring(x: number, radius: number, tint: number, ms = 320): void {
     const img = this.flashes.acquire();
     const base = (radius * 2) / 64;
     img
+      .setBlendMode(Phaser.BlendModes.ADD)
       .setTexture('fx-ring')
       .setPosition(x, LANE_Y - 2)
       .setTint(tint)
@@ -340,13 +520,23 @@ export class ImpactEffects {
 
   private explosion(x: number, y: number, radius: number, heavy = false): void {
     const r = Math.max(16, radius);
-    this.flash(x, y, r * 1.4, 0xfff0b0, 200);
-    this.burst('fire', Math.round(8 + r / 5), x, y, r * 0.3, r * 0.2);
+    // A white-hot flare, then an orange fireball swelling out of it.
+    this.pop('fx-flare', x, y, r * 2.6, 0xfff0c0, 220);
+    // Cartoon fireball: opaque puffs keep their color on any sky.
+    this.pop('fx-puff', x, y - r * 0.25, r * 2.2, 0xff7a2a, 460, { grow: 1.6, alpha: 0.95, color: true, rotation: Math.random() * 6 });
+    this.pop('fx-puff', x, y - r * 0.15, r * 1.3, 0xffd060, 300, { grow: 1.5, color: true, rotation: Math.random() * 6 });
+    this.burst('fire', Math.round(10 + r / 4), x, y, r * 0.3, r * 0.2);
     this.burst('smoke', Math.round(3 + r / 14), x, y - 6, r * 0.3, 4);
     this.burst('chunks', Math.round(4 + r / 12), x, Math.min(y, LANE_Y - 2), r * 0.2, 0);
-    this.burst('sparks', 6, x, y);
+    this.burst('sparks', 8, x, y);
+    this.burst('embers', Math.round(6 + r / 5), x, y, r * 0.3, r * 0.2);
+    // A smoke column rising where it hit.
+    this.scene.time.delayedCall(140, () => {
+      if (!this.muted) this.burst('smoke-big', Math.round(2 + r / 12), x, y - 8, r * 0.25, 6);
+    });
     if (y >= LANE_Y - 30) {
       this.ring(x, r, 0xffc070);
+      if (heavy) this.ring(x, r * 1.7, 0xffe0b0, 520);
       this.scorch(x, r * 1.6);
     }
     // Only specials and exploding machines thump: turret splashes never do
@@ -366,7 +556,14 @@ export class ImpactEffects {
   private onImpact({ key, x, y, radius, target }: EventPayloads[typeof Events.ProjectileImpact]): void {
     if (this.muted) return;
     const gy = target === 'ground' ? LANE_Y - 1 : y;
-    switch (PROJECTILE_IMPACT[key] ?? 'dust') {
+    const style = PROJECTILE_IMPACT[key] ?? 'dust';
+    // Every hit on a unit sparkles, in the shot's light.
+    if (target === 'unit') {
+      const tint =
+        style === 'bullet' ? 0xffe07a : style === 'laser' || style === 'rail' ? 0x9ff8ff : style === 'plasma' ? 0xd9b8ff : style === 'fire' ? 0xffa040 : 0xffffff;
+      this.pop('fx-star', x, gy, style === 'dust' || style === 'splinter' ? 12 : 16, tint, 110, { rotation: Math.random() * 0.8, color: tint !== 0xffffff });
+    }
+    switch (style) {
       case 'dust':
         this.burst('dust', key === 'proj-boulder' ? 5 : 2, x, gy);
         this.burst('chunks', key === 'proj-boulder' ? 7 : 3, x, gy);
@@ -388,14 +585,16 @@ export class ImpactEffects {
         if (radius > 0) this.scorch(x, radius * 1.2);
         break;
       case 'bullet':
-        this.burst('sparks', 3, x, gy);
-        if (target === 'ground') this.burst('dust', 1, x, gy);
+        this.burst('sparks', 4, x, gy);
+        if (target === 'ground') this.burst('dust', 2, x, gy);
         break;
       case 'cannon':
-        this.flash(x, gy, 20, 0xffe0a0, 140);
-        this.burst('dust', 4, x, gy);
-        this.burst('chunks', 6, x, gy);
-        this.burst('smoke', 2, x, gy - 4);
+        this.pop('fx-flare', x, gy, 34, 0xffe0a0, 150);
+        this.burst('dust', 5, x, gy);
+        this.burst('chunks', 7, x, gy);
+        this.burst('smoke', 3, x, gy - 4);
+        this.burst('embers', 4, x, gy);
+        if (target === 'ground') this.ring(x, 20, 0xd8c8a8, 260);
         break;
       case 'explosion':
         // The airstrike special's bombs thump; mortars, grenades and shells don't.
@@ -406,8 +605,8 @@ export class ImpactEffects {
         this.burst('fire', 10, x, gy - 8, 10, 6);
         break;
       case 'laser':
-        this.flash(x, gy, 14, 0x9ff8ff, 120);
-        this.burst('cyan', 5, x, gy);
+        this.pop('fx-flare', x, gy, 26, 0x7ff0ff, 130, { color: true });
+        this.burst('cyan', 7, x, gy);
         break;
       case 'rail':
         this.flash(x, gy, 26, 0xe8f8ff, 180);
@@ -415,7 +614,8 @@ export class ImpactEffects {
         this.ring(x, 24, 0x9fd8ff, 240);
         break;
       case 'plasma':
-        this.flash(x, gy, Math.max(20, radius), 0xb070ff, 220);
+        this.pop('fx-soft', x, gy, Math.max(40, radius * 2), 0xb070ff, 260, { grow: 1.5, alpha: 0.85, color: true });
+        this.pop('fx-flare', x, gy, Math.max(24, radius * 1.2), 0xffffff, 160);
         this.burst('purple', 14, x, gy, radius * 0.25, 4);
         this.burst('cyan', 3, x, gy);
         if (radius > 0) {
@@ -434,19 +634,32 @@ export class ImpactEffects {
     }
   }
 
-  private onStruck({ unitId, slot, frontX, x, ranged, side }: EventPayloads[typeof Events.UnitStruck]): void {
+  private onStruck(p: EventPayloads[typeof Events.UnitStruck]): void {
     if (this.muted) return;
-    const age = unitId.split('-')[0];
+    const { unitId, slot, frontX, x, ranged, side } = p;
+    const ageIndex = findUnitDefinition(unitId)?.age ?? 0;
+    const dir = laneDir(side);
     if (ranged) {
+      if (p.muzzleX !== undefined && p.muzzleY !== undefined) this.muzzleFlash(p.muzzleX, p.muzzleY, dir, p.projectileKey ?? '');
       // Heavy guns (tank, mech) rock the ground a little when they fire.
       if (slot === 3) this.thumpAt(CAMERA_THUMP.heavyStrike, x, 0.6);
       return;
     }
-    const hitX = frontX + laneDir(side) * 4;
+    const hitX = frontX + dir * 4;
     const hitY = LANE_Y - (slot === 3 ? 28 : 24);
-    if (age === 'stone') this.burst('dust', 1, hitX, hitY + 10);
-    else if (age === 'future') this.burst('cyan', 5, hitX, hitY);
-    else this.burst('sparks', 4, hitX, hitY);
+    // The blow: a slash arc in the age's tint and a sparkle where it lands.
+    const heavy = slot === 3;
+    this.pop('fx-slash', hitX + dir * 2, hitY - 4, heavy ? 54 : 36, SLASH_TINTS[ageIndex] ?? 0xffffff, heavy ? 200 : 160, {
+      flipX: dir < 0,
+      rotation: (Math.random() - 0.5) * 0.9,
+      grow: 1.35,
+      alpha: 0.95,
+      color: true,
+    });
+    this.pop('fx-star', hitX + dir * 6, hitY, heavy ? 22 : 14, 0xffffff, 120, { rotation: Math.random() });
+    if (ageIndex === 0) this.burst('dust', 2, hitX, hitY + 10);
+    else if (ageIndex === 4) this.burst('cyan', 6, hitX, hitY);
+    else this.burst('sparks', 5, hitX, hitY);
     if (slot === 3) {
       // Heavy blow: dust kicked up along the ground and a graceful thump.
       this.burst('dust', 6, hitX, LANE_Y - 2, 14, 0);
@@ -455,16 +668,69 @@ export class ImpactEffects {
     }
   }
 
+  /** A unit's shot leaving the weapon: a flash and a puff styled by the projectile. */
+  private muzzleFlash(x: number, y: number, dir: 1 | -1, key: string): void {
+    const sparks = dir > 0 ? 'muzzle-r' : 'muzzle-l';
+    const fx = x + dir * 3;
+    switch (MUZZLE_STYLE[key]) {
+      case 'gun':
+        this.pop('fx-flare', fx, y, 26, 0xffe0a0, 100, { grow: 1.1 });
+        this.burst(sparks, 3, fx, y);
+        this.burst('smoke', 1, fx + dir * 4, y - 2);
+        break;
+      case 'cannon':
+        this.pop('fx-flare', fx, y, 44, 0xffd080, 140, { grow: 1.15 });
+        this.pop('fx-puff', fx + dir * 6, y, 20, 0xffb050, 160, { color: true });
+        this.burst(sparks, 6, fx, y);
+        this.burst('smoke', 3, fx + dir * 6, y - 2, 4, 2);
+        this.ring(x, 22, 0xd8c8a8, 280);
+        break;
+      case 'fire':
+        this.pop('fx-flare', fx, y, 22, 0xffa040, 110, { color: true });
+        this.burst('fire', 4, fx, y);
+        break;
+      case 'laser':
+        this.pop('fx-flare', fx, y, 26, 0x7ff0ff, 100, { color: true });
+        this.burst('cyan', 3, fx, y);
+        break;
+      case 'plasma':
+        this.pop('fx-flare', fx, y, 38, 0xb070ff, 150, { color: true });
+        this.burst('purple', 5, fx, y);
+        break;
+      case 'bow':
+        this.pop('fx-star', fx, y, 9, 0xffffff, 80, { alpha: 0.7 });
+        break;
+      case 'sling':
+        this.burst('dust', 1, x, y);
+        break;
+      default:
+        break;
+    }
+  }
+
   private onTurretFired(turretId: string, x: number, y: number): void {
     if (this.muted) return;
     const age = turretId.split('-')[0];
-    if (age === 'renaissance' || age === 'modern') this.burst('smoke', 1, x, y);
+    if (age === 'renaissance' || age === 'modern') {
+      this.burst('smoke', 1, x, y);
+      this.burst('sparks', 2, x, y);
+    } else if (age === 'future') {
+      this.burst('cyan', 2, x, y);
+    }
   }
 
   private onDied(side: Side, unitId: string, x: number, killerSide: Side): void {
     if (this.muted) return;
-    if (EXPLODING_UNITS.has(unitId)) this.explosion(x, LANE_Y - 22, 32, unitId === 'modern-tank' || unitId === 'future-mech');
-    else this.burst('dust', 3, x, LANE_Y - 3, 10, 0);
+    const definition = findUnitDefinition(unitId);
+    const big = definition?.slot === 3;
+    if (EXPLODING_UNITS.has(unitId) || unitId.startsWith('mech:')) {
+      this.explosion(x, LANE_Y - 22, big ? 40 : 32, unitId === 'modern-tank' || unitId === 'future-mech' || unitId.startsWith('mech:'));
+    } else {
+      // A fall: dust kicked up and a dust ring on the ground; heavies throw up more.
+      this.burst('dust', big ? 12 : 5, x, LANE_Y - 3, big ? 26 : 12, 0);
+      this.ring(x, big ? 36 : 18, 0xd8c8a8, big ? 420 : 300);
+      if (big) this.burst('chunks', 4, x, LANE_Y - 4, 16, 0);
+    }
     if (killerSide === HUD_SIDE && side !== HUD_SIDE) this.burst('coins', 4, x, LANE_Y - 36, 6, 4);
   }
 
@@ -496,6 +762,7 @@ export class ImpactEffects {
     const y = LANE_Y - Phaser.Math.Between(20, 150);
     this.burst('chunks', 2, x, y);
     this.burst('dust', 1, x, y);
+    this.pop('fx-star', x, y, 14, 0xfff0d0, 110, { rotation: Math.random() });
     if (side === HUD_SIDE) this.thump.add(CAMERA_THUMP.baseHit, this.scene.time.now);
   }
 

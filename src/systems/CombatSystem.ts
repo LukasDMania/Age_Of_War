@@ -101,19 +101,11 @@ export class CombatSystem {
     const first = unit.attacksMade === 0 ? (this.state[unit.side].traits.firstStrike[unit.definition.slot] ?? 1) : 1;
     unit.attacksMade++;
     const damage = unit.getStat('damage') * first;
-    emit(Events.UnitStruck, {
-      side: unit.side,
-      instanceId: unit.instanceId,
-      unitId: unit.definition.id,
-      slot: unit.definition.slot,
-      x: unit.x,
-      frontX: unit.x + laneDir(unit.side) * unit.halfWidth,
-      ranged: attack.projectileKey !== undefined,
-    });
     if (attack.projectileKey) {
       this.shoot(unit, attack, attack.projectileKey, damage);
       return;
     }
+    this.announce(unit, attack);
     const range = unit.getStat('range');
     const target = targetUnit === undefined ? this.nearestEnemyInReach(unit, range) : targetUnit;
     const base = target ? null : targetBase === undefined ? this.enemyBaseInReach(unit, range) : targetBase;
@@ -156,6 +148,16 @@ export class CombatSystem {
     if (!targetUnit && !targetBase) return;
     unit.secondaryReadyAt = nowMs + Math.max(1, attack.cooldownMs * unit.statMultiplier('attackCooldown'));
     const damage = attack.damage * unit.statMultiplier('damage');
+    if (attack.projectileKey) {
+      this.shoot(unit, attack, attack.projectileKey, damage);
+      return;
+    }
+    this.announce(unit, attack);
+    this.strike(unit, attack, damage, targetUnit, targetBase);
+  }
+
+  /** `unit-struck` for the effects: a blow, or a shot leaving `muzzle`. */
+  private announce(unit: Unit, attack: UnitAttack, muzzle?: { x: number; y: number }): void {
     emit(Events.UnitStruck, {
       side: unit.side,
       instanceId: unit.instanceId,
@@ -164,9 +166,8 @@ export class CombatSystem {
       x: unit.x,
       frontX: unit.x + laneDir(unit.side) * unit.halfWidth,
       ranged: attack.projectileKey !== undefined,
+      ...(muzzle && attack.projectileKey ? { muzzleX: muzzle.x, muzzleY: muzzle.y, projectileKey: attack.projectileKey } : {}),
     });
-    if (attack.projectileKey) this.shoot(unit, attack, attack.projectileKey, damage);
-    else this.strike(unit, attack, damage, targetUnit, targetBase);
   }
 
   /**
@@ -177,6 +178,7 @@ export class CombatSystem {
   private shoot(unit: Unit, attack: UnitAttack, projectileKey: string, damage: number): void {
     const reach = attack === unit.definition.secondaryAttack ? attack.range * unit.statMultiplier('range') : unit.getStat('range');
     const line = shotLine(this.units.activeUnits, this.bases[otherSide(unit.side)], unit, attack.muzzle, reach);
+    this.announce(unit, attack, { x: line.x0, y: line.y0 });
     const projectile = this.projectiles.launch(projectileKey, unit.side, line.x0, line.y0, damage, attack.splashRadius ?? 0);
     projectile.aimAt(line.x1, line.y1, true);
     projectile.sourceSlot = unit.definition.slot;

@@ -472,7 +472,7 @@ validates and acts):
 | `background-changed` | `{ id, name }` | GameScene |
 | `keybindings-changed` | `{}` | ControlsScene (closed after keys or armies changed; the HUD redraws its key labels) |
 | `projectile-impact` | `{ side, key, x, y, radius, target }` (`target` `'unit' \| 'base' \| 'ground'`) | ProjectileSystem (feedback: impact effects) |
-| `unit-struck` | `{ side, instanceId, unitId, slot, x, frontX, ranged }` | CombatSystem (feedback: a blow landed or a shot left; heavies thump the camera) |
+| `unit-struck` | `{ side, instanceId, unitId, slot, x, frontX, ranged, muzzleX?, muzzleY?, projectileKey? }` (a shot: where it left the weapon and what it is) | CombatSystem (feedback: a blow landed or a shot left; heavies thump the camera; muzzle flashes) |
 | `turret-fired` | `{ side, slotIndex, turretId, x, y }` (muzzle position) | TurretSystem (feedback: muzzle effects) |
 | `building-perk-chosen` | `{ side, buildingId, choice, picks }` | BuildingSystem (prototype `buildingPerks`) |
 | `unit-promoted` | `{ side, instanceId, rank, x, topY }` | VeterancySystem (prototype `veterancy`) |
