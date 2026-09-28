@@ -4,10 +4,9 @@ Handoff document. Read `CLAUDE.md` (rules) and `docs/GAME_DESIGN.md` (what
 we're building) first, then work through the phases below **in order**.
 
 **Current status (2026-09-28):** Phases 0 to 20 are done (15 and 16 are
-log-only). The work is on the branch `claude/youthful-ptolemy-su6zli`
-(pushed; main has everything up to the Conquest balance fix of
-2026-09-27, and the branch contains all of main, so merging it is a
-fast-forward). Nothing is waiting half-built.
+log-only). Everything is on main (pushed 2026-09-28 at the owner's
+request, from the branch `claude/youthful-ptolemy-su6zli`). Nothing is
+waiting half-built.
 
 ### Start here (new agent)
 
