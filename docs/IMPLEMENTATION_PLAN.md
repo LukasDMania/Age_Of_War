@@ -36,7 +36,8 @@ waiting half-built.
 - **Mech**: parts in `config/mech.config.ts`; a design becomes a unit in
   `entities/mechDesign.ts` (the unit id spells out the design); art in
   `art/mechDraw.ts` + `utils/MechArt.ts`; `systems/MechSystem.ts`;
-  `ui/WorkshopPanel.ts`. `/artlab.html?mechs` shows designs per age.
+  the hangar `ui/HangarScene.ts` (Phase 21; brief in
+  `docs/MECH_EXPANSION.md`). `/artlab.html?mechs` shows designs per age.
 - **Conquest paths**: `PATHS`, `PATH_LEAN`, relics / camp upgrades with
   `path` and `keystone` in `config/conquest.config.ts`; offers in
   `state/conquestState.ts` (`pathCounts`, `rollRelics`, `campOffer`);
@@ -468,6 +469,26 @@ can pick up easily".
 - [x] Effects rehaul (streaks, glows, muzzle flashes, slashes, sparkles,
   layered explosions, deaths, sky flash, ricochets, age-up).
 - [x] Handoff: this file's "Start here", `tools/checks/`, session log.
+
+## Phase 21: Mech expansion (in progress)
+
+Owner (2026-09-29): "start implementing the Mech features u documented".
+The brief is `docs/MECH_EXPANSION.md`; its build order is followed here.
+
+- [x] 1. Hangar UI: full-screen `ui/HangarScene.ts` (replaces the
+  Workshop tab; B / Esc), age rooms (`art/hangarDraw.ts`,
+  `utils/HangarArt.ts`), hotspots and callouts on the model, parts
+  drawer, hover preview with a loop, stat bars with ghost segments, build
+  sheet with role tags, 4 blueprint slots (`ui/mechBlueprints.ts`, T),
+  locked parts in blueprint blue, assembly scaffold on the lane
+  (`entities/MechScaffold.ts`).
+- [ ] 2. Parts roster up to 7 per slot, plus the Special module slot.
+- [ ] 3. Pair combos and set bonuses.
+- [ ] 4. Account level and part unlocks.
+- [ ] 5. Evolve on age-up.
+- [ ] 6. Utility Mech.
+- [ ] 7. Mech vs Mech mode.
+- [ ] 8. Titan (experimental).
 
 ---
 
@@ -1844,3 +1865,26 @@ decisions made, anything the owner needs to confirm.
     notes.
   - Not checked: a match played by hand, touch devices, frame rate on real
     hardware with many units. Not built: Mech refit, a Workshop commander.
+- 2026-09-29 (Mech expansion, step 1: the hangar): owner: "start
+  implementing the Mech features u documented". Built section 1 of
+  `docs/MECH_EXPANSION.md`:
+  - `ui/HangarScene.ts`, a full-screen scene launched from the HUD (B or
+    the Hangar button in the tab row, which shows the build's seconds).
+    The Workshop tab and `ui/WorkshopPanel.ts` are gone. Choices made
+    (PROPOSED, for the owner): the battle keeps running behind the hangar
+    (its top bar shows gold and base HP); Esc closes the hangar instead
+    of pausing while it is open; 4 blueprint slots, renamed by clicking
+    the name (a browser prompt); role tags are Tank (2+ armored parts),
+    Brawler, Artillery (a gun arm), Support (a head aura).
+  - Art: `art/hangarDraw.ts` (hut, forge, steam hall, army hangar, lab
+    bay, and the gantry), `mechSlotAnchors` in `art/mechDraw.ts`,
+    `drawMechDesign` can draw only some slots, `drawMechPreview` takes a
+    size, a loop frame and a blueprint look.
+  - Keys: `mech-blueprint` (T) and `hangar-close` (Esc) added; the
+    Workshop keys are grouped as "Hangar". No new events.
+  - `entities/MechScaffold.ts`: the Mech appears part by part (legs,
+    torso, arms, head) on a scaffold in front of the gate while it
+    builds, with welding sparks.
+  - Checked: typecheck, build, `node tools/checks/mech.mjs` (rewritten
+    for the hangar: open, switch parts, blueprints, build, Esc, spawn,
+    fall), screenshots of the Stone and Future hangars and the scaffold.

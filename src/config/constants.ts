@@ -201,6 +201,8 @@ export const SCENE_KEYS = {
   game: 'GameScene',
   /** HUD, run in parallel on top of the game scene (Phase 3). */
   hud: 'HUDScene',
+  /** The Mech hangar, full screen over the battle (Mech expansion). */
+  hangar: 'HangarScene',
   /** Pause and game-over panel, on top of the HUD (Phase 13). */
   overlay: 'OverlayScene',
   /** Conquest campaign screen (prototype, feature `conquest`). */

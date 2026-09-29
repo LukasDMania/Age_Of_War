@@ -26,6 +26,7 @@ import {
 import { Backdrop } from '@entities/Backdrop';
 import { Base } from '@entities/Base';
 import { Building } from '@entities/Building';
+import { MechScaffold } from '@entities/MechScaffold';
 import { HitEffects } from '@entities/HitEffects';
 import { ImpactEffects } from '@entities/ImpactEffects';
 import { ProjectileFactory } from '@entities/ProjectileFactory';
@@ -157,6 +158,8 @@ export class GameScene extends Phaser.Scene {
   private stats!: StatsSystem;
   private buildingSystem!: BuildingSystem;
   private buildingViews!: Record<Side, Partial<Record<BuildingId, Building>>>;
+  /** A Mech being put together in front of each base. */
+  private scaffolds!: Record<Side, MechScaffold>;
   /** Pause, speed, background, camera and dev keys (the keymap's `always` actions). */
   private keys: KeyboardControls | null = null;
   private ai: AiBrain | null = null;
@@ -244,6 +247,7 @@ export class GameScene extends Phaser.Scene {
       this.aiIncome.push(new AiIncomeSystem(this.state, 'enemy', this.difficultyFor(this.aiSetting), bonus));
     }
     if (this.playerAiSetting && this.sceneData.playerAiIncome !== false) this.aiIncome.push(new AiIncomeSystem(this.state, 'player', this.difficultyFor(this.playerAiSetting)));
+    this.scaffolds = { player: new MechScaffold(this, 'player', LANE_Y), enemy: new MechScaffold(this, 'enemy', LANE_Y) };
     this.buildingViews = {
       player: this.createBuildingViews('player'),
       enemy: this.createBuildingViews('enemy'),
@@ -288,6 +292,7 @@ export class GameScene extends Phaser.Scene {
       // A Mech's sheets are drawn when its build starts (not the frame it
       // walks out), and older designs no longer on the lane are freed.
       on(Events.MechChanged, ({ side, build }) => {
+        this.scaffolds[side].setBuild(build);
         if (!build || build.remainingMs < build.totalMs) return;
         releaseMechArt(this, this.rigArtInUse());
         ensureRigArt(this, build.unitId, side);
@@ -310,7 +315,8 @@ export class GameScene extends Phaser.Scene {
     // Keymap (config/keybindings.config.ts): pause, speed (cycles 1x-8x for
     // playtesting, like the HUD button), background, camera, and in dev
     // builds the cheats (gold and XP for the player, an instant age-up).
-    this.keys = new KeyboardControls(this, () => ['always'])
+    // The hangar takes Esc (close) while it is open.
+    this.keys = new KeyboardControls(this, () => (this.scene.isActive(SCENE_KEYS.hangar) ? [] : ['always']))
       .on('pause', () => this.match.togglePause())
       .on('speed', () => {
         const next = GAME_SPEEDS[(GAME_SPEEDS.indexOf(this.simSpeed) + 1) % GAME_SPEEDS.length] ?? 1;
@@ -762,6 +768,7 @@ export class GameScene extends Phaser.Scene {
     for (const off of this.cleanups) off();
     this.cleanups = [];
     this.scene.stop(SCENE_KEYS.hud);
+    this.scene.stop(SCENE_KEYS.hangar);
     this.scene.stop(SCENE_KEYS.overlay);
     this.anims.resumeAll();
     this.stats.destroy();
@@ -780,6 +787,7 @@ export class GameScene extends Phaser.Scene {
     this.special.destroy();
     this.turrets.destroy();
     this.mech.destroy();
+    for (const scaffold of Object.values(this.scaffolds)) scaffold.destroy();
     this.spawn.destroy();
     this.economy.destroy();
     this.match.destroy();

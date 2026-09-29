@@ -868,7 +868,13 @@ built, archetype runs since 2026-09-28).
   - Only the player builds Mechs (`MECH.sides`); the AI doesn't (an
     exception to "the AI plays by the same rules", like its own income).
     Conquest bosses and the Workshop path come later.
-- **Expansion agreed 2026-09-29 (not built):** hangar UI, 7 parts per
+- **Hangar (built 2026-09-29, expansion step 1):** the Workshop tab is
+  replaced by a full-screen hangar (B, or the Hangar button beside the
+  tabs): the Mech large on a gantry in an age room, slot hotspots, a
+  parts drawer with hover preview, stat bars, build sheet, 4 blueprint
+  slots (T), and the Mech assembled on a scaffold at the gate while it
+  builds. PROPOSED: the battle keeps running while the hangar is open.
+- **Expansion agreed 2026-09-29 (being built, Phase 21):** hangar UI, 7 parts per
   slot, pair combos and sets, an optional Special module slot, account
   unlocks, evolve on age-up, Mech vs Mech, a utility Mech and a Titan
   (experimental). See `docs/MECH_EXPANSION.md`.

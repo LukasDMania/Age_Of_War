@@ -28,7 +28,7 @@ import { WarCryButton } from '@ui/experimental/WarCryButton';
 import { TurretPanel } from '@ui/TurretPanel';
 import { UiButton } from '@ui/UiButton';
 import { UnitBuyPanel } from '@ui/UnitBuyPanel';
-import { WorkshopPanel } from '@ui/WorkshopPanel';
+import type { HangarSceneData } from '@ui/HangarScene';
 import { emit, Events, on } from '@utils/EventBus';
 import { ageGap } from '@systems/ageCatchUp';
 import { armyFromQueue, armyLabel, getArmy, queueArmy, setArmy } from '@ui/compositions';
@@ -86,15 +86,15 @@ const PANEL_TOP = GAME_HEIGHT - BOTTOM_MARGIN - PANEL_HEIGHT;
 const TAB_WIDTH = 92;
 const TAB_HEIGHT = 26;
 
-export type TabKey = 'units' | 'turrets' | 'buildings' | 'research' | 'workshop';
-const TAB_ORDER: readonly TabKey[] = ['units', 'turrets', 'buildings', 'research', 'workshop'];
+export type TabKey = 'units' | 'turrets' | 'buildings' | 'research';
+const TAB_ORDER: readonly TabKey[] = ['units', 'turrets', 'buildings', 'research'];
 
 /**
  * The HUD, run as a separate scene on top of `GameScene`: age, gold, the XP
  * bar, the age-up button and both base HP bars at the top; at the bottom a panel with a Units
  * tab (buy units, training queue), a Turrets tab (unlock slots, build and
- * sell turrets), Buildings, Research and the Workshop (design and build
- * the Mech), plus the special attack button on its right. Click a tab or
+ * sell turrets), Buildings, Research, and a Hangar button (the full-screen
+ * hangar where you design and build the Mech), plus the special attack button on its right. Click a tab or
  * use its key to switch.
  *
  * Keyboard (owner, 2026-09-27: fully playable by keyboard, every key
@@ -141,7 +141,9 @@ export class HUDScene extends Phaser.Scene {
   private turretPanel!: TurretPanel;
   private buildingPanel!: BuildingPanel;
   private researchPanel!: ResearchPanel;
-  private workshopPanel!: WorkshopPanel;
+  /** Opens the hangar (the Mech): a button in the tab row, not a tab. */
+  private hangarButton!: UiButton;
+  private hangarLabel!: Phaser.GameObjects.Text;
   private speedButton!: UiButton;
   private speedText!: Phaser.GameObjects.Text;
   private speed = 1;
@@ -211,7 +213,6 @@ export class HUDScene extends Phaser.Scene {
     });
     this.buildingPanel = new BuildingPanel(this, HUD_SIDE, own, PANEL_LEFT, PANEL_TOP);
     this.researchPanel = new ResearchPanel(this, HUD_SIDE, own, PANEL_LEFT, PANEL_TOP);
-    this.workshopPanel = new WorkshopPanel(this, HUD_SIDE, this.state, PANEL_LEFT, PANEL_TOP);
     this.specialButton = new SpecialButton(
       this,
       HUD_SIDE,
@@ -229,10 +230,10 @@ export class HUDScene extends Phaser.Scene {
       turrets: this.buildTab(1, 'Turrets', 'turrets'),
       buildings: this.buildTab(2, 'Buildings', 'buildings'),
       research: this.buildTab(3, 'Research', 'research'),
-      workshop: this.buildTab(4, 'Workshop', 'workshop'),
     };
+    this.buildHangarButton(4);
     this.tabHint = this.add
-      .text(PANEL_LEFT + 12 + TAB_ORDER.length * (TAB_WIDTH + 6) + 6, PANEL_TOP - TAB_HEIGHT / 2 + 2, '', {
+      .text(PANEL_LEFT + 12 + (TAB_ORDER.length + 1) * (TAB_WIDTH + 6) + 6, PANEL_TOP - TAB_HEIGHT / 2 + 2, '', {
         fontFamily: UI_FONT,
         fontSize: '12px',
         fontStyle: '600',
@@ -350,11 +351,10 @@ export class HUDScene extends Phaser.Scene {
         if (side !== HUD_SIDE) return;
         this.buildingPanel.rebuild();
         this.researchPanel.rebuild();
-        this.workshopPanel.refresh();
         this.refreshIncome();
       }),
       on(Events.MechChanged, ({ side, alive, build }) => {
-        if (side === HUD_SIDE) this.workshopPanel.setMech({ alive, build });
+        if (side === HUD_SIDE) this.showMech(alive, build);
       }),
       on(Events.ResearchCompleted, ({ side }) => {
         if (side === HUD_SIDE) this.researchPanel.rebuild();
@@ -386,7 +386,8 @@ export class HUDScene extends Phaser.Scene {
 
   /** Live key contexts, most important first; none while the match isn't being played. */
   private keyContexts(): readonly KeyContext[] {
-    if (this.locked) return [];
+    // The hangar has its own keys while it is open.
+    if (this.locked || this.scene.isActive(SCENE_KEYS.hangar)) return [];
     const popup = this.buildingPanel.perkChoiceOpen || (this.doctrinePopup?.isOpen ?? false);
     return popup ? ['popup', this.activeTab, 'battle'] : [this.activeTab, 'battle'];
   }
@@ -400,16 +401,13 @@ export class HUDScene extends Phaser.Scene {
     k.on('tab-turrets', () => this.showTab('turrets'));
     k.on('tab-buildings', () => this.showTab('buildings'));
     k.on('tab-research', () => this.showTab('research'));
-    k.on('tab-workshop', () => this.showTab('workshop'));
+    k.on('tab-workshop', () => this.openHangar());
     for (let n = 1; n <= 10; n++) k.on(`slot-${n}`, (modifiers) => this.pressSlot(n, modifiers));
     k.on('turret-build-1', () => this.turretPanel.build(0));
     k.on('turret-build-2', () => this.turretPanel.build(1));
     k.on('turret-build-3', () => this.turretPanel.build(2));
     k.on('turret-upgrade', () => this.turretPanel.upgrade());
     k.on('turret-sell', () => this.turretPanel.sell());
-    k.on('mech-prev', () => this.workshopPanel.cycle(-1));
-    k.on('mech-next', () => this.workshopPanel.cycle(1));
-    k.on('mech-build', () => this.workshopPanel.build());
     k.on('age-up', () => this.ageUpButton.press());
     k.on('special', () => this.specialButton.press());
     k.on('war-cry', () => (this.warCryButton ? this.warCryButton.press() : false));
@@ -441,8 +439,6 @@ export class HUDScene extends Phaser.Scene {
         this.researchPanel.press(track.id, modifiers);
         return true;
       }
-      case 'workshop':
-        return this.workshopPanel.select(slot - 1);
     }
   }
 
@@ -486,8 +482,6 @@ export class HUDScene extends Phaser.Scene {
         return `${range('slot-1', `slot-${Math.min(10, activeBuildingIds().length)}`)} upgrade  ·  Shift: to stage end  ·  Ctrl: max`;
       case 'research':
         return `${range('slot-1', `slot-${Math.min(10, RESEARCH.length)}`)} research  ·  Shift: every open tier`;
-      case 'workshop':
-        return `${range('slot-1', 'slot-5')} choose part  ·  ${keyHint('mech-prev')} ${keyHint('mech-next')} switch it  ·  ${keyHint('mech-build')} build`;
     }
   }
 
@@ -592,19 +586,52 @@ export class HUDScene extends Phaser.Scene {
     return tab;
   }
 
+  /** The Workshop button beside the tabs: opens the hangar, and shows the Mech's build. */
+  private buildHangarButton(index: number): void {
+    const x = PANEL_LEFT + 12 + TAB_WIDTH / 2 + index * (TAB_WIDTH + 6);
+    const y = PANEL_TOP - TAB_HEIGHT / 2 + 2;
+    this.hangarButton = new UiButton(this, x, y, TAB_WIDTH, TAB_HEIGHT, {
+      onPress: () => this.openHangar(),
+      tint: UiColors.ready,
+      hoverTint: UiColors.panelHover,
+    });
+    this.hangarLabel = this.add
+      .text(0, 0, 'Hangar', { fontFamily: UI_FONT, fontSize: '14px', fontStyle: '600', color: UiTextColors.parchment })
+      .setOrigin(0.5);
+    this.hangarButton.add(
+      this.hangarLabel,
+      this.add
+        .text(TAB_WIDTH / 2 - 6, 0, keyHint('tab-workshop'), { fontFamily: UI_FONT, fontSize: '10px', color: UiTextColors.dim })
+        .setOrigin(1, 0.5),
+    );
+    const mech = this.state[HUD_SIDE].mech;
+    this.showMech(mech.alive, mech.build);
+  }
+
+  /** The hangar button's label: the build's seconds left while one runs. */
+  private showMech(alive: boolean, build: { remainingMs: number } | null): void {
+    const label = build ? (build.remainingMs > 0 ? `Mech ${Math.ceil(build.remainingMs / 1000)}s` : 'Mech ready') : alive ? 'Mech out' : 'Hangar';
+    if (this.hangarLabel.text !== label) this.hangarLabel.setText(label);
+  }
+
+  /** Full-screen Mech hangar over the battle (Mech expansion); B again or Esc closes it. */
+  private openHangar(): void {
+    if (this.locked || this.scene.isActive(SCENE_KEYS.hangar)) return;
+    this.scene.launch(SCENE_KEYS.hangar, { state: this.state, side: HUD_SIDE } satisfies HangarSceneData);
+  }
+
   private showTab(key: TabKey, moveCamera = true): void {
     this.activeTab = key;
     this.unitPanel.setVisible(key === 'units');
     this.turretPanel.setVisible(key === 'turrets');
     this.buildingPanel.setVisible(key === 'buildings');
     this.researchPanel.setVisible(key === 'research');
-    this.workshopPanel.setVisible(key === 'workshop');
     for (const tab of TAB_ORDER) this.tabs[tab].setSelected(key === tab);
     if (!this.hintFlash) this.tabHint.setText(this.tabKeysText(key)).setColor(UiTextColors.parchment);
     // The buildings stand behind the base: show them while their tab is open.
     if (!moveCamera) return;
     if (key === 'buildings') emit(Events.CameraFocusRequested, { target: 'buildings' });
-    else if (key !== 'research' && key !== 'workshop') emit(Events.CameraFocusRequested, { target: 'lane' });
+    else if (key !== 'research') emit(Events.CameraFocusRequested, { target: 'lane' });
   }
 
   /** Big banner in the middle of the screen when the player ages up. */
@@ -664,7 +691,7 @@ export class HUDScene extends Phaser.Scene {
     this.turretPanel.setLocked(locked);
     this.buildingPanel.setLocked(locked);
     this.researchPanel.setLocked(locked);
-    this.workshopPanel.setLocked(locked);
+    this.hangarButton.setEnabled(!locked);
     this.speedButton.setEnabled(!locked);
     this.specialButton.setLocked(locked);
     this.ageUpButton.setLocked(locked);
@@ -746,7 +773,6 @@ export class HUDScene extends Phaser.Scene {
     this.turretPanel.setGold(gold);
     this.buildingPanel.refreshButtons();
     this.researchPanel.refreshButtons();
-    this.workshopPanel.setGold();
   }
 
   private showXp(xp: number, xpToNext: number | null): void {

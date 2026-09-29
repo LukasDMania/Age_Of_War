@@ -193,3 +193,76 @@ export function designSummary(design: MechDesign, age: number): { hp: number; to
     armed: def.attack !== undefined,
   };
 }
+
+/** What the hangar's stat bars show for a design. */
+export interface MechStats {
+  hp: number;
+  /** Damage per second of both arms. */
+  dps: number;
+  /** The longest weapon reach, px (0 unarmed). */
+  range: number;
+  /** Walking speed, px/s. */
+  speed: number;
+  /** Damage taken is cut by this share (0..1). */
+  armor: number;
+}
+
+export type MechStatKey = keyof MechStats;
+
+export function designStats(design: MechDesign, age: number): MechStats {
+  const def = mechDefinition(design, age);
+  const attacks = [def.attack, def.secondaryAttack].filter((a): a is UnitAttack => a !== undefined);
+  return {
+    hp: def.hp,
+    dps: Math.round(attacks.reduce((sum, a) => sum + (a.damage * 1000) / a.cooldownMs, 0)),
+    range: attacks.reduce((max, a) => Math.max(max, a.range), 0),
+    speed: def.speed,
+    armor: Math.round((1 - (def.armor ?? 1)) * 100) / 100,
+  };
+}
+
+/**
+ * The most each stat can reach in an age (a full bar), taken slot by slot
+ * so it stays cheap however many parts there are.
+ */
+export function designStatCaps(age: number): MechStats {
+  const best = <T,>(list: readonly T[], f: (t: T) => number): number => list.reduce((m, t) => Math.max(m, f(t)), 0);
+  const legs = MECH_OPTIONS.legs.map((id) => MECH_LEGS[id as keyof typeof MECH_LEGS]);
+  const torsos = MECH_OPTIONS.torso.map((id) => MECH_TORSOS[id as keyof typeof MECH_TORSOS]);
+  const heads = MECH_OPTIONS.head.map((id) => MECH_HEADS[id as keyof typeof MECH_HEADS]);
+  const arms = MECH_OPTIONS.left.map((id) => MECH_ARMS[id as keyof typeof MECH_ARMS]);
+  const hp = MECH.coreHp + best(legs, (p) => p.hp ?? 0) + best(torsos, (p) => p.hp ?? 0) + best(heads, (p) => p.hp ?? 0) + 2 * best(arms, (p) => p.hp ?? 0);
+  const armDps = best(arms, (arm) => {
+    const a = arm.attack;
+    if (!a) return 0;
+    return best(torsos, (t) => {
+      const cd = a.cooldownMs * (t.cooldown ?? 1) * (a.ranged ? (t.rangedCooldown ?? 1) : 1);
+      const boost = a.ranged ? best(heads, (h) => h.rangedDamage ?? 1) : best(legs, (l) => l.meleeDamage ?? 1);
+      return (a.damage * (t.damage ?? 1) * boost * 1000) / cd;
+    });
+  });
+  const minArmor = (list: readonly { armor?: number }[]): number => list.reduce((m, p) => Math.min(m, p.armor ?? 1), 1);
+  return {
+    hp: Math.round(hp * getAge(age).scale),
+    dps: Math.round(2 * armDps * getAge(age).scale),
+    range: Math.round(best(arms, (a) => (a.attack ? a.attack.range * (a.attack.ranged ? best(heads, (h) => h.rangedRange ?? 1) : 1) : 0))),
+    speed: Math.round(MECH.speed * best(legs, (l) => l.speed ?? 1)),
+    armor: 1 - minArmor(legs) * minArmor(torsos) * minArmor(heads) * minArmor(arms) ** 2,
+  };
+}
+
+/** Role tags on the hangar's build sheet, from what the parts do. */
+export type MechRole = 'Tank' | 'Brawler' | 'Artillery' | 'Support' | 'Utility';
+
+export function designRoles(design: MechDesign): MechRole[] {
+  const arms = [MECH_ARMS[design.left], MECH_ARMS[design.right]];
+  const armored = MECH_SLOTS.filter((slot) => ((mechPart(design, slot) as { armor?: number }).armor ?? 1) < 1).length;
+  const melee = arms.filter((a) => a.attack && !a.attack.ranged).length;
+  const ranged = arms.filter((a) => a.attack?.ranged).length;
+  const roles: MechRole[] = [];
+  if (armored >= 2) roles.push('Tank');
+  if (melee > 0 && (ranged === 0 || MECH_LEGS[design.legs].meleeDamage)) roles.push('Brawler');
+  if (ranged > 0) roles.push('Artillery');
+  if (MECH_HEADS[design.head].aura) roles.push('Support');
+  return roles;
+}

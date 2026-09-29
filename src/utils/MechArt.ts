@@ -1,7 +1,8 @@
 import Phaser from 'phaser';
 import { drawMechDesign, type MechLook } from '@/art/mechDraw';
+import type { RigAnim } from '@/art/rigFigure';
 import { RIG_SUPERSAMPLE, rigArt, type RigBox, type UnitArt } from '@config/unitArt.config';
-import { MECH } from '@config/mech.config';
+import { MECH, type MechSlot } from '@config/mech.config';
 import { parseMechId } from '@entities/mechDesign';
 
 /**
@@ -39,31 +40,78 @@ export function mechUnitArt(unitId: string): UnitArt | undefined {
   return art;
 }
 
-/** Size of the Workshop preview texture, in shown px. */
+/** Default size of a preview texture, in shown px. */
 export const MECH_PREVIEW_SIZE = { width: 118, height: 128 } as const;
 
+export interface MechPreviewOptions {
+  /** Shown size in px (default `MECH_PREVIEW_SIZE`). */
+  width?: number;
+  height?: number;
+  /** Texture px per shown px (default the rig supersample). */
+  supersample?: number;
+  anim?: RigAnim;
+  /** Phase through `anim`, 0..1. */
+  u?: number;
+  /** Only these slots (the scaffold while a Mech is put together). */
+  parts?: ReadonlySet<MechSlot>;
+  /** Drawn as blue blueprint lines (a part you haven't unlocked). */
+  blueprint?: boolean;
+}
+
+/** How rig units map into a preview of this size: px per unit and where the feet are. */
+export function mechPreviewFit(width: number, height: number): { scale: number; feetX: number; feetY: number } {
+  const scale = Math.min(width / (LIVE[1] - LIVE[0]), height / (LIVE[3] - LIVE[2]));
+  return { scale, feetX: width / 2 - ((LIVE[0] + LIVE[1]) / 2) * scale, feetY: height - LIVE[3] * scale };
+}
+
+let scratch: HTMLCanvasElement | null = null;
+
 /**
- * Draws a design's standing frame into the texture `key` (made on first
- * use, redrawn in place after). Returns the key.
+ * Draws one frame of a design into the texture `key` (made on first use,
+ * redrawn in place after), feet at the bottom. Returns the key.
  */
-export function drawMechPreview(scene: Phaser.Scene, key: string, look: MechLook, team: string): string {
-  const k = RIG_SUPERSAMPLE;
-  const w = Math.round(MECH_PREVIEW_SIZE.width * k);
-  const h = Math.round(MECH_PREVIEW_SIZE.height * k);
+export function drawMechPreview(scene: Phaser.Scene, key: string, look: MechLook, team: string, options: MechPreviewOptions = {}): string {
+  const k = options.supersample ?? RIG_SUPERSAMPLE;
+  const w = Math.round((options.width ?? MECH_PREVIEW_SIZE.width) * k);
+  const h = Math.round((options.height ?? MECH_PREVIEW_SIZE.height) * k);
   let texture = scene.textures.exists(key) ? (scene.textures.get(key) as Phaser.Textures.CanvasTexture) : null;
+  if (texture && (texture.width !== w || texture.height !== h)) {
+    scene.textures.remove(key);
+    texture = null;
+  }
   if (!texture) {
     texture = scene.textures.createCanvas(key, w, h);
     if (!texture) return key;
   }
   const ctx = texture.getContext();
   ctx.clearRect(0, 0, w, h);
-  ctx.save();
-  // Fit the live box into the preview, feet at the bottom.
-  const scale = Math.min(w / (LIVE[1] - LIVE[0]), h / (LIVE[3] - LIVE[2]));
-  ctx.translate(w / 2 - ((LIVE[0] + LIVE[1]) / 2) * scale, h - LIVE[3] * scale);
-  ctx.scale(scale, scale);
-  drawMechDesign(ctx, look, team, 'stand', 0);
-  ctx.restore();
+  const paint = (c: CanvasRenderingContext2D): void => {
+    const fit = mechPreviewFit(w, h);
+    c.save();
+    c.translate(fit.feetX, fit.feetY);
+    c.scale(fit.scale, fit.scale);
+    drawMechDesign(c, look, team, options.anim ?? 'stand', options.u ?? 0, options.parts);
+    c.restore();
+  };
+  if (options.blueprint) {
+    // Draw it aside, turn it blue, then lay it down see-through.
+    scratch ??= document.createElement('canvas');
+    scratch.width = w;
+    scratch.height = h;
+    const s = scratch.getContext('2d');
+    if (s) {
+      paint(s);
+      s.globalCompositeOperation = 'source-atop';
+      s.fillStyle = 'rgba(80,150,255,0.82)';
+      s.fillRect(0, 0, w, h);
+      s.globalCompositeOperation = 'source-over';
+      ctx.globalAlpha = 0.75;
+      ctx.drawImage(scratch, 0, 0);
+      ctx.globalAlpha = 1;
+    }
+  } else {
+    paint(ctx);
+  }
   texture.refresh();
   return key;
 }

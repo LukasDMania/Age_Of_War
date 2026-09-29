@@ -34,7 +34,7 @@ import {
   type Ctx,
   type P2,
 } from '@/art/rigKit';
-import type { ArmId, HeadId, LegsId, MechDesign, TorsoId } from '@config/mech.config';
+import type { ArmId, HeadId, LegsId, MechDesign, MechSlot, TorsoId } from '@config/mech.config';
 
 export interface MechLook extends MechDesign {
   /** The age the parts were built in: picks their look (0-4). */
@@ -75,6 +75,21 @@ function palette(age: number): Palette {
 
 /** Hip height above the ground per legs. */
 const HIP: Readonly<Record<LegsId, number>> = { walker: 34, stompers: 34, treads: 24, striders: 40 };
+
+/**
+ * Where each slot's part sits on a standing Mech, rig units from the feet,
+ * and roughly how far it reaches (the hangar's hotspots on the model).
+ */
+export function mechSlotAnchors(legs: LegsId): Record<MechSlot, { at: P2; r: number }> {
+  const h = HIP[legs];
+  return {
+    legs: { at: [0, -h / 2], r: Math.max(12, h / 2) },
+    torso: { at: [-2, -h - 20], r: 15 },
+    head: { at: [3, -h - 50], r: 10 },
+    left: { at: [22, -h - 18], r: 10 },
+    right: { at: [20, -h - 36], r: 10 },
+  };
+}
 
 /** Everything that moves, for one frame. */
 interface Pose {
@@ -1051,8 +1066,11 @@ function drawShield(c: Ctx, s: Pose, hand: P2, near: boolean): void {
 /**
  * Draws one frame of a Mech. `u` is the phase through the animation, 0..1.
  * The canvas must already be translated to the feet and scaled to rig units.
+ * `parts` limits it to some slots (the scaffold at the base shows the Mech
+ * being put together; the hangar highlights a slot).
  */
-export function drawMechDesign(c: Ctx, look: MechLook, team: string, anim: RigAnim, u: number): void {
+export function drawMechDesign(c: Ctx, look: MechLook, team: string, anim: RigAnim, u: number, parts?: ReadonlySet<MechSlot>): void {
+  const has = (slot: MechSlot): boolean => !parts || parts.has(slot);
   const walking = anim === 'walk';
   const p = walking ? u * Math.PI * 2 : 0;
   const collapse = anim === 'die' ? ease(clamp01(u / 0.55)) : 0;
@@ -1074,12 +1092,13 @@ export function drawMechDesign(c: Ctx, look: MechLook, team: string, anim: RigAn
   };
   if (anim === 'die' && u > 0.6) c.globalAlpha = Math.max(0, 1 - (u - 0.6) / 0.4);
   // Shadow.
-  c.fillStyle = 'rgba(0,0,0,.25)';
-  c.beginPath();
-  c.ellipse(0, 0, 28, 3.5, 0, 0, Math.PI * 2);
-  c.fill();
-
-  drawLegs(c, look.legs, s, false);
+  if (has('legs')) {
+    c.fillStyle = 'rgba(0,0,0,.25)';
+    c.beginPath();
+    c.ellipse(0, 0, 28, 3.5, 0, 0, Math.PI * 2);
+    c.fill();
+    drawLegs(c, look.legs, s, false);
+  }
   // Upper body: rotates around the hip.
   const upper = (fn: () => void): void => {
     c.save();
@@ -1088,11 +1107,11 @@ export function drawMechDesign(c: Ctx, look: MechLook, team: string, anim: RigAn
     fn();
     c.restore();
   };
-  upper(() => drawArm(c, look.right, s, false));
-  upper(() => drawTorso(c, look.torso, s));
-  upper(() => drawHead(c, look.head, s));
-  drawLegs(c, look.legs, s, true);
-  upper(() => drawArm(c, look.left, s, true));
+  if (has('right')) upper(() => drawArm(c, look.right, s, false));
+  if (has('torso')) upper(() => drawTorso(c, look.torso, s));
+  if (has('head')) upper(() => drawHead(c, look.head, s));
+  if (has('legs')) drawLegs(c, look.legs, s, true);
+  if (has('left')) upper(() => drawArm(c, look.left, s, true));
 
   if (anim === 'die') {
     if (u < 0.55) glow(c, [4, -40], 14 + u * 30, C.fireB, 0.7 * (1 - u / 0.55));

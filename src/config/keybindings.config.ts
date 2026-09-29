@@ -50,6 +50,8 @@ export const KEY_ACTION_IDS = [
   'mech-prev',
   'mech-next',
   'mech-build',
+  'mech-blueprint',
+  'hangar-close',
   'age-up',
   'special',
   'war-cry',
@@ -100,7 +102,7 @@ export const KEY_ACTIONS: readonly KeyAction[] = [
   { id: 'tab-turrets', label: 'Turrets tab', group: 'Tabs', context: 'battle', defaults: [key('KeyX')] },
   { id: 'tab-buildings', label: 'Buildings tab', group: 'Tabs', context: 'battle', defaults: [key('KeyC')] },
   { id: 'tab-research', label: 'Research tab', group: 'Tabs', context: 'battle', defaults: [key('KeyV')] },
-  { id: 'tab-workshop', label: 'Workshop tab (Mech)', group: 'Tabs', context: 'battle', defaults: [key('KeyB')] },
+  { id: 'tab-workshop', label: 'Hangar (Mech), open / close', group: 'Tabs', context: 'battle', defaults: [key('KeyB')] },
   ...SLOT_KEYS.map(
     (code, i): KeyAction => ({
       id: `slot-${i + 1}`,
@@ -116,10 +118,12 @@ export const KEY_ACTIONS: readonly KeyAction[] = [
   { id: 'turret-build-3', label: 'Build 3rd turret', group: 'Turrets (chosen slot)', context: 'turrets', defaults: [key('KeyR')] },
   { id: 'turret-upgrade', label: 'Upgrade / unlock', group: 'Turrets (chosen slot)', context: 'turrets', defaults: [key('KeyU')] },
   { id: 'turret-sell', label: 'Sell', group: 'Turrets (chosen slot)', context: 'turrets', defaults: [key('Delete'), key('Backspace')] },
-  // Workshop: 1-5 pick the part slot (legs, torso, head, left arm, right arm).
-  { id: 'mech-prev', label: 'Previous part', group: 'Workshop (chosen part)', context: 'workshop', defaults: [key('KeyQ')] },
-  { id: 'mech-next', label: 'Next part', group: 'Workshop (chosen part)', context: 'workshop', defaults: [key('KeyE')] },
-  { id: 'mech-build', label: 'Build the Mech', group: 'Workshop (chosen part)', context: 'workshop', defaults: [key('KeyR')] },
+  // Hangar: 1-5 pick the part slot (legs, torso, head, left arm, right arm).
+  { id: 'mech-prev', label: 'Previous part', group: 'Hangar', context: 'workshop', defaults: [key('KeyQ')] },
+  { id: 'mech-next', label: 'Next part', group: 'Hangar', context: 'workshop', defaults: [key('KeyE')] },
+  { id: 'mech-build', label: 'Build the Mech', group: 'Hangar', context: 'workshop', defaults: [key('KeyR')] },
+  { id: 'mech-blueprint', label: 'Next blueprint', group: 'Hangar', context: 'workshop', defaults: [key('KeyT')] },
+  { id: 'hangar-close', label: 'Close the hangar', group: 'Hangar', context: 'workshop', defaults: [key('Escape')] },
   { id: 'age-up', label: 'Age up', group: 'Abilities', context: 'battle', defaults: [key('KeyA')] },
   { id: 'special', label: 'Special', group: 'Abilities', context: 'battle', defaults: [key('KeyS')] },
   { id: 'war-cry', label: 'War Cry', group: 'Abilities', context: 'battle', defaults: [key('KeyW')] },
