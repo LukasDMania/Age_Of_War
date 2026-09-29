@@ -471,6 +471,41 @@ can pick up easily".
 
 ---
 
+## Phase 21: 1v1 online multiplayer (planned, not started)
+
+Design: GAME_DESIGN 15, "1v1 multiplayer". Build it behind a
+`multiplayer` switch in `config/features.config.ts`, in its own files
+(`src/net/` or `systems/experimental/`), like the other prototypes.
+Keep the game runnable after each step.
+
+- [ ] Add `peerjs` dependency; `net/PeerLink.ts` wraps host/join by room
+  code, send/receive JSON messages, and a `disconnected` callback.
+- [ ] Menu: "Host online" (shows the room code) and "Join online" (enter
+  a code). Start the normal match when both are connected.
+- [ ] Host: start the match with the enemy AI and `AiIncomeSystem` off.
+  `net/NetCommandBridge.ts` receives the guest's commands and re-emits the
+  matching `*-requested` events with `side: 'enemy'`; only whitelisted
+  event names are accepted.
+- [ ] Guest: the HUD emits requests for `enemy`; a bridge forwards them to
+  the host instead of the local bus. Check the HUD, hotkeys and turret
+  slots read the local side rather than assuming `player`.
+- [ ] Snapshot: `net/snapshot.ts` serializes units (id, unitId, side, x,
+  hp, state), projectiles, bases, turrets, gold/xp/age, cooldowns and the
+  match state; host sends ~15/s. Notable one-off events (special fired,
+  age-up, unit-died, game over) go as events so effects and sounds play.
+- [ ] Guest render mode: no simulation systems run; entities are created
+  and updated from snapshots (pooled, via `UnitFactory`), positions
+  interpolated between the last two snapshots.
+- [ ] Disconnect on either side ends the match ("Connection lost").
+  Pause is disabled online (or pauses both; decide with owner).
+- [ ] Deploy: GitHub Actions workflow building with Vite to GitHub Pages
+  (`base` set in `vite.config.ts`); keep dev tools out of the build.
+- [ ] Check: two Playwright pages on the dev server (host + guest) play a
+  scripted match; test with a friend over the internet; add a TURN server
+  if the connection fails behind strict NAT.
+- [ ] Add the network messages to Appendix A; update README (how to play
+  online) and the Session log.
+
 ## Appendix A: Event catalog
 
 All cross-system communication goes through `utils/EventBus.ts`. Keep this
@@ -1844,3 +1879,10 @@ decisions made, anything the owner needs to confirm.
     notes.
   - Not checked: a match played by hand, touch devices, frame rate on real
     hardware with many units. Not built: Mech refit, a Workshop commander.
+
+- **2026-09-29, multiplayer plan (docs only, no code):** owner chose 1v1,
+  normal match only, disconnect ends the match, side by least code (host
+  is `player`, guest is `enemy`). Planned host-authoritative netcode over
+  PeerJS/WebRTC with free hosting on GitHub Pages as Phase 21;
+  GAME_DESIGN's multiplayer note changed from DEFERRED (lockstep) to
+  PROPOSED (host-authoritative).

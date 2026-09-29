@@ -873,17 +873,25 @@ built, archetype runs since 2026-09-28).
   unlocks, evolve on age-up, Mech vs Mech, a utility Mech and a Titan
   (experimental). See `docs/MECH_EXPANSION.md`.
 
-### 1v1 multiplayer (DEFERRED, notes for later)
+### 1v1 multiplayer (PROPOSED, planned as Phase 21, not built)
 
-- Fits the code: every player action is already a `*-requested` command
-  with a side, and the battle is nearly deterministic (randomness only in
-  the AI, the campaign map and doctrines). Both browsers would run the same
-  battle and exchange only commands (lockstep), after making the tick
-  strictly fixed and adding a check that both games still match.
-- Hosting: the game itself is static files (GitHub Pages, Cloudflare Pages
-  or Netlify, free). Multiplayer adds a small relay that pairs two players
-  by room code and forwards their commands; a Cloudflare Worker with a
-  Durable Object per room fits and was free at friends-scale when checked
-  (2026-09-27). A small always-on server (Fly.io and the like) costs a few
-  dollars a month; for tests, a relay on the owner's PC behind a tunnel.
+Owner decisions (2026-09-29):
+- **1v1 only**, normal match only (no Conquest, no Mech-vs-Mech yet).
+- **Sides:** whatever is least code. So the host is always the `player`
+  side (left) and the guest drives the `enemy` side; the guest's screen
+  shows it from the host's point of view with the HUD bound to `enemy`.
+- **Disconnect ends the match** (no AI takeover). The side still connected
+  sees a "Connection lost" game-over.
 
+Approach (replaces the earlier lockstep note):
+- **Host-authoritative.** The host's browser runs the whole simulation as
+  today, with the enemy AI and `AiIncomeSystem` off. The guest sends only
+  its `*-requested` commands; the host re-emits them on the EventBus for
+  the `enemy` side, so the rules still decide. The host sends compact
+  state snapshots (~15/s) that the guest renders with interpolation.
+  No fixed tick or seeded randomness needed.
+- **Hosting (free):** the static build on GitHub Pages; players connect
+  browser-to-browser with WebRTC via PeerJS (free public broker only for
+  the handshake, room code = peer id). If a friend can't connect (strict
+  NAT), add a free TURN tier. A Cloudflare Durable Object relay stays the
+  fallback if WebRTC proves unreliable.
