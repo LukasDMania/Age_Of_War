@@ -882,6 +882,7 @@ Owner decisions (2026-09-29):
   shows it from the host's point of view with the HUD bound to `enemy`.
 - **Disconnect ends the match** (no AI takeover). The side still connected
   sees a "Connection lost" game-over.
+- **No pause** in online matches.
 
 Approach (replaces the earlier lockstep note):
 - **Host-authoritative.** The host's browser runs the whole simulation as

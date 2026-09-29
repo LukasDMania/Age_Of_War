@@ -497,7 +497,7 @@ Keep the game runnable after each step.
   and updated from snapshots (pooled, via `UnitFactory`), positions
   interpolated between the last two snapshots.
 - [ ] Disconnect on either side ends the match ("Connection lost").
-  Pause is disabled online (or pauses both; decide with owner).
+  Pause is disabled online (owner, 2026-09-29).
 - [ ] Deploy: GitHub Actions workflow building with Vite to GitHub Pages
   (`base` set in `vite.config.ts`); keep dev tools out of the build.
 - [ ] Check: two Playwright pages on the dev server (host + guest) play a
