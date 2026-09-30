@@ -492,7 +492,12 @@ The brief is `docs/MECH_EXPANSION.md`; its build order is followed here.
   `MechBonus` data in `config/mech.config.ts`, applied in
   `entities/mechDesign.ts` (`designBonuses`); shown on the hangar's
   build sheet with set progress.
-- [ ] 4. Account level and part unlocks.
+- [x] 4. Account level and part unlocks: `config/account.config.ts`,
+  `state/accountProgress.ts` (per browser), `systems/AccountTracker.ts`
+  (achievement counters, XP at match end), `SideState.mechLocked`
+  (MechSystem refuses unopened parts), hangar locks with progress,
+  game-over lines, `__aow.unlockAll()` / `__aow.accountXp(n)`, check
+  `tools/checks/account.mjs`.
 - [ ] 5. Evolve on age-up.
 - [ ] 6. Utility Mech.
 - [ ] 7. Mech vs Mech mode.
@@ -1974,3 +1979,29 @@ decisions made, anything the owner needs to confirm.
     (a whole wave at once) before deeper tuning.
   - Checked: typecheck, build, `mechparts.mjs` (29 checks, 8 new for
     combos and sets), hangar screenshot of the build sheet.
+- 2026-09-30 (Mech expansion, step 4: account level and unlocks):
+  - Account XP per finished match (PROPOSED): win 100, loss 20 (50 if it
+    lasted 8 min), +5 per 10 kills, +40 for a won Conquest battle. Level n
+    -> n+1 needs 150 + 50 (n-1) XP. Levels open: Sniper scope and
+    Flamethrower (2), Hover jets and Leap thrusters (3), Minigun and
+    Barrier dome (4), Hangar bay (5), Overload (6), EMP (7), Orbital (8).
+  - Achievements, as the brief's list with these readings (PROPOSED):
+    Twin guns (win after building a Mech with two gun arms) -> Tesla;
+    Siege gunner (win with a Launcher Mech on the lane; the base's killer
+    isn't tracked) -> Railgun, Overcharge; Rampage (10 enemies falling
+    within one Mech life's reach; kills aren't credited to units) -> Jump
+    legs, Wrecking ball; Iron wall (5,000 damage on your Mechs in a match,
+    Stone-age scale) -> Spider legs, Taunt beacon; Hunter (50 ranged
+    enemies falling at your Mech, all games) -> Grapple, Salvage scanner;
+    Big army (20 units alive) -> Troop carrier.
+  - Only matches a person plays count (not headless or AI-vs-AI runs).
+    `SideState.mechLocked` holds the unopened parts for the match;
+    `mechRejection` returns `account-locked`. Forge locks still apply.
+  - Hangar: unopened parts in blueprint blue with the requirement and
+    progress ("Account level 3 (now 2)", "0/10"); the account level in
+    the top bar. The game-over panel lists XP, a level-up, achievements
+    and newly opened parts.
+  - Checked: typecheck, build, `account.mjs` (locks, refusal, unlockAll,
+    a win's XP, Big army opening the carrier, level 2 opening the scope
+    and flamethrower), `mech.mjs`, `mechparts.mjs`, hangar screenshot.
+    Not checked: the game-over panel's new lines by eye.

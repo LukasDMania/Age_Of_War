@@ -883,6 +883,9 @@ built, archetype runs since 2026-09-28).
   combos and 6 sets as in the brief, applied when the Mech is built and
   listed on the hangar's build sheet. "Sometimes" effects are every nth
   hit (PROPOSED).
+- **Account unlocks (built 2026-09-30, expansion step 4):** an account
+  level per browser from finished matches; wild parts open by level or
+  achievement (table in the session log, numbers PROPOSED).
 - **Expansion agreed 2026-09-29 (being built, Phase 21):** hangar UI, 7 parts per
   slot, pair combos and sets, an optional Special module slot, account
   unlocks, evolve on age-up, Mech vs Mech, a utility Mech and a Titan

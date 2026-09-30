@@ -63,6 +63,12 @@ export interface SideState {
   buildingPerks: Record<BuildingId, PerkChoice[]>;
   /** The Mech being built or on the lane (owned by MechSystem). */
   mech: MechState;
+  /**
+   * Mech parts this side may not build (`kind:id` keys, `partKey`): the
+   * player's account hasn't opened them yet. Set at match setup; empty
+   * means every part is open.
+   */
+  mechLocked: string[];
   /** Rule changes from Conquest rewards (`state/traits.ts`); neutral otherwise. Set at battle setup. */
   traits: SideTraits;
 }
@@ -89,6 +95,7 @@ export function createSideState(): SideState {
     research: emptyResearch(),
     buildingPerks: emptyPerks(),
     mech: { build: null, alive: false },
+    mechLocked: [],
     traits: defaultTraits(),
   };
 }

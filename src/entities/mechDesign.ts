@@ -199,6 +199,17 @@ export function designBuildMs(design: MechDesign): number {
   return Math.round((MECH.buildMs + MECH.buildPerTierMs * (designTier(design) - MECH_BODY_SLOTS.length)) * bonusMult(design, 'buildTime'));
 }
 
+/** A part's key in the account's lock list: both arms share `arm`. */
+export function partKey(slot: MechSlot, id: string): string {
+  return `${slot === 'left' || slot === 'right' ? 'arm' : slot}:${id}`;
+}
+
+/** The first slot whose part the account hasn't opened (`SideState.mechLocked`), or null. */
+export function accountLockedSlot(design: MechDesign, locked: readonly string[]): MechSlot | null {
+  if (locked.length === 0) return null;
+  return MECH_SLOTS.find((slot) => locked.includes(partKey(slot, design[slot]))) ?? null;
+}
+
 /** The first slot whose part needs a higher Forge level than `forgeLevel`, or null. */
 export function lockedSlot(design: MechDesign, forgeLevel: number): MechSlot | null {
   return MECH_SLOTS.find((slot) => (mechPart(design, slot).forge ?? 0) > forgeLevel) ?? null;

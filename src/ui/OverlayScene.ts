@@ -2,6 +2,7 @@ import Phaser from 'phaser';
 import { AI_DIFFICULTIES, type AiDifficultyName } from '@config/ai.config';
 import { getAge } from '@config/ages.config';
 import { GAME_HEIGHT, GAME_WIDTH, SCENE_KEYS } from '@config/constants';
+import type { AccountResult } from '@systems/AccountTracker';
 import type { SideStats } from '@systems/StatsSystem';
 import { addThemedPanel, UI_FONT, UI_TITLE_FONT, UiTextColors } from '@ui/kenneyUi';
 import { bindingsLabel, KeyboardControls } from '@ui/keymap';
@@ -16,6 +17,8 @@ export interface MatchSummary {
   enemyAge: number;
   enemyController: AiDifficultyName | 'off';
   player: SideStats;
+  /** What the match did for the account (Mech unlocks); absent in AI-only runs. */
+  account?: AccountResult | null;
 }
 
 /** `conquest`: a Conquest campaign battle (prototype), which can't be restarted. */
@@ -153,5 +156,15 @@ function summaryLines(s: MatchSummary): string[] {
     `You: ${getAge(s.playerAge).name} Age  ·  Enemy: ${getAge(s.enemyAge).name} Age`,
     `Units trained ${s.player.unitsTrained}  ·  Kills ${s.player.kills}  ·  Lost ${s.player.losses}`,
     `Gold earned ${Math.round(s.player.goldEarned)}  ·  Turrets built ${s.player.turretsBuilt}`,
+    ...accountLines(s.account ?? null),
   ];
+}
+
+/** Account XP, a level-up and newly opened Mech parts. */
+function accountLines(a: AccountResult | null): string[] {
+  if (!a) return [];
+  const lines = [`Account +${a.xpGained} XP${a.levelAfter > a.levelBefore ? `  ·  Level ${a.levelAfter}!` : `  ·  Level ${a.levelAfter}`}`];
+  if (a.achieved.length) lines.push(`Achieved: ${a.achieved.join(', ')}`);
+  if (a.unlocked.length) lines.push(`New Mech parts: ${a.unlocked.join(', ')}`);
+  return lines;
 }

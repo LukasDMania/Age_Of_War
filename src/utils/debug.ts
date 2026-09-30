@@ -105,6 +105,9 @@ export interface DebugHandle {
   damage(instanceId: number, amount: number): boolean;
   /** Kills a unit through damageOps (credited to the other side). Returns whether it did. */
   kill(instanceId: number): boolean;
+  /** The account (Mech parts): open every part (or undo with false), or set the account XP. */
+  unlockAll(on?: boolean): void;
+  accountXp(xp: number): void;
   /** Moves a unit to lane x (set up fights for checks). */
   place(instanceId: number, x: number): boolean;
   /** Grants a shield to a unit. Returns its new shield. */

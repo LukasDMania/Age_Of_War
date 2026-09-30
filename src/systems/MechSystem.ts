@@ -4,7 +4,7 @@ import type { Base } from '@entities/Base';
 import type { ProjectileFactory } from '@entities/ProjectileFactory';
 import { UnitState, type Unit } from '@entities/Unit';
 import type { UnitFactory } from '@entities/UnitFactory';
-import { designCost, isMechUnitId, isValidDesign, lockedSlot, mechDefinition } from '@entities/mechDesign';
+import { accountLockedSlot, designCost, isMechUnitId, isValidDesign, lockedSlot, mechDefinition } from '@entities/mechDesign';
 import { findUnitDefinition } from '@entities/unitDefinitions';
 import { addGold, trySpendGold } from '@state/economyOps';
 import type { MatchState, SideState } from '@state/GameState';
@@ -16,7 +16,7 @@ import { applyModifier, clearSideModifier, grantShield, setSideModifier, stunUni
 import { emit, Events, on, type EventPayloads } from '@utils/EventBus';
 
 /** Why a Mech can't be built right now. */
-export type MechRejection = 'not-playing' | 'player-only' | 'invalid' | 'locked' | 'building' | 'alive' | 'cannot-afford';
+export type MechRejection = 'not-playing' | 'player-only' | 'invalid' | 'account-locked' | 'locked' | 'building' | 'alive' | 'cannot-afford';
 
 /** Why the Mech's module can't be used right now. */
 export type MechAbilityRejection = 'not-playing' | 'no-mech' | 'no-module' | 'cooling-down' | 'airborne';
@@ -45,6 +45,7 @@ export function mechRejection(state: MatchState, side: Side, design: MechDesign)
   if (!(MECH.sides as readonly Side[]).includes(side)) return 'player-only';
   if (!isValidDesign(design)) return 'invalid';
   const me = state[side];
+  if (accountLockedSlot(design, me.mechLocked) !== null) return 'account-locked';
   if (lockedSlot(design, mechForgeLevel(me)) !== null) return 'locked';
   if (me.mech.build) return 'building';
   if (me.mech.alive) return 'alive';

@@ -6,7 +6,9 @@ import { getAge } from '@config/ages.config';
 import { baseMaxHp, GAME_HEIGHT, GAME_WIDTH, SCENE_KEYS } from '@config/constants';
 import { MECH_OPTIONS, MECH_SETS, MECH_SLOT_NAMES, MECH_SLOTS, type MechDesign, type MechSlot } from '@config/mech.config';
 import {
+  accountLockedSlot,
   designBonuses,
+  partKey,
   designRoles,
   designStatCaps,
   designStats,
@@ -15,6 +17,7 @@ import {
   type MechStatKey,
   type MechStats,
 } from '@entities/mechDesign';
+import { accountLevel, loadAccount, unlockText, type AccountProgress } from '@state/accountProgress';
 import type { MatchState } from '@state/GameState';
 import type { MechState, Side } from '@state/types';
 import { mechBuildMs, mechForgeLevel, mechPrice, mechRejection, type MechRejection } from '@systems/MechSystem';
@@ -126,6 +129,8 @@ export class HangarScene extends Phaser.Scene {
   private state!: MatchState;
   private side: Side = 'player';
   private blueprints!: MechBlueprints;
+  /** The account's progress (parts opened across games), read when the hangar opens. */
+  private account: AccountProgress = { xp: 0, counters: {} };
   private design!: MechDesign;
   private slot: MechSlot = 'legs';
   /** The part under the pointer in the drawer (previewed), if any. */
@@ -169,6 +174,7 @@ export class HangarScene extends Phaser.Scene {
     this.state = data.state;
     this.side = data.side;
     this.blueprints = new MechBlueprints();
+    this.account = loadAccount();
     this.design = this.blueprints.design;
     this.slot = 'legs';
     this.hover = null;
@@ -335,6 +341,10 @@ export class HangarScene extends Phaser.Scene {
     this.add.text(430, TOP_H / 2, 'Gold', text(14, BLUE_TEXT, '600')).setOrigin(0, 0.5);
     this.goldText = this.add.text(470, TOP_H / 2, '', { fontFamily: UI_TITLE_FONT, fontSize: '22px', color: UiTextColors.gold }).setOrigin(0, 0.5);
     this.baseText = this.add.text(600, TOP_H / 2, '', text(14, UiTextColors.parchment, '600')).setOrigin(0, 0.5);
+    const lv = accountLevel(this.account.xp);
+    this.add
+      .text(GAME_WIDTH - 230, TOP_H / 2, `Account Lv ${lv.level}  ${lv.into}/${lv.needed} XP`, text(13, BLUE_TEXT, '600'))
+      .setOrigin(1, 0.5);
     const close = new UiButton(this, GAME_WIDTH - 110, TOP_H / 2, 196, 36, { onPress: () => this.close(), tint: UiColors.panelDark, framed: true });
     const key = keyHint('tab-workshop');
     close.add(this.add.text(0, 0, `Back to battle${key ? ` (${key})` : ''}`, text(15, UiTextColors.parchment, '600')).setOrigin(0.5));
@@ -553,7 +563,9 @@ export class HangarScene extends Phaser.Scene {
   }
 
   private previewLocked(): boolean {
-    return lockedSlot(this.previewDesign(), mechForgeLevel(this.state[this.side])) !== null;
+    const me = this.state[this.side];
+    const shown = this.previewDesign();
+    return lockedSlot(shown, mechForgeLevel(me)) !== null || accountLockedSlot(shown, me.mechLocked) !== null;
   }
 
   private drawMech(look: MechDesign, anim: RigAnim, u: number): void {
@@ -591,11 +603,16 @@ export class HangarScene extends Phaser.Scene {
     const forge = mechForgeLevel(me);
     for (const row of this.rows) {
       const part = mechPart({ ...this.design, [this.slot]: row.id } as MechDesign, this.slot);
-      const locked = (part.forge ?? 0) > forge;
+      // Not opened on this account yet: blueprint blue, with what it needs and how far along you are.
+      const unopened = me.mechLocked.includes(partKey(this.slot, row.id));
+      const locked = unopened || (part.forge ?? 0) > forge;
       row.name.setText(part.name).setColor(locked ? BLUE_TEXT : UiTextColors.parchment);
-      row.about.setText(part.about);
+      row.about.setText(unopened ? unlockText(this.account, part.unlock) : part.about).setColor(unopened ? BLUE_TEXT : UiTextColors.dim);
+      row.about.setScale(1);
+      if (row.about.width > DRAWER_W - 44) row.about.setScale((DRAWER_W - 44) / row.about.width);
+      const cost = `${'●'.repeat(part.tier)}${'○'.repeat(3 - part.tier)}  ${Math.round(part.cost * getAge(me.age).scale)}`;
       row.foot
-        .setText(locked ? `🔒 Forge ${(part.forge ?? 0) - me.traits.mechForgeBonus}` : `${'●'.repeat(part.tier)}${'○'.repeat(3 - part.tier)}  ${Math.round(part.cost * getAge(me.age).scale)}`)
+        .setText(unopened ? '🔒 Locked' : locked ? `🔒 Forge ${(part.forge ?? 0) - me.traits.mechForgeBonus}` : cost)
         .setColor(locked ? RED_TEXT : UiTextColors.gold);
       row.button.setSelected(row.id === this.design[this.slot]);
     }
@@ -682,7 +699,8 @@ export class HangarScene extends Phaser.Scene {
       'not-playing': 'Paused',
       'player-only': 'Not for this side',
       invalid: 'Unknown part',
-      locked: 'Part locked',
+      locked: 'Needs a Forge level',
+      'account-locked': 'Part not unlocked yet',
       building: 'Building',
       alive: 'Mech in battle',
       'cannot-afford': 'Need gold',

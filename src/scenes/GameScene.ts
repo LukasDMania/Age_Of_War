@@ -79,6 +79,8 @@ import {
 import { emit, eventBus, Events, on } from '@utils/EventBus';
 import { ensureRigArt, ensureRigArtForAge, releaseMechArt, releaseRigArtOutside, rigArtBytes } from '@utils/RigArt';
 import { HEADLESS_SIM } from '@utils/runtimeFlags';
+import { AccountTracker } from '@systems/AccountTracker';
+import { loadAccount, lockedPartKeys, saveAccount } from '@state/accountProgress';
 
 /** Options for starting (or restarting) a match. */
 export interface GameSceneData {
@@ -156,6 +158,7 @@ export class GameScene extends Phaser.Scene {
   private ages!: AgeProgressionSystem;
   private utility!: UtilitySystem;
   private stats!: StatsSystem;
+  private account: AccountTracker | null = null;
   private buildingSystem!: BuildingSystem;
   private buildingViews!: Record<Side, Partial<Record<BuildingId, Building>>>;
   /** A Mech being put together in front of each base. */
@@ -247,6 +250,10 @@ export class GameScene extends Phaser.Scene {
     this.ages = new AgeProgressionSystem(this.state, this.bases);
     this.utility = new UtilitySystem(this.units, this.projectiles);
     this.stats = new StatsSystem();
+    // The account (Mech parts opened across games): only for matches a person plays.
+    const personPlays = !HEADLESS_SIM && this.playerAiSetting === null;
+    this.account = personPlays ? new AccountTracker(this.units) : null;
+    if (personPlays) this.state.player.mechLocked = lockedPartKeys(loadAccount());
     this.buildingSystem = new BuildingSystem(this.state, this.units);
     this.aiIncome = [];
     if (this.aiSetting !== 'off') {
@@ -564,6 +571,13 @@ export class GameScene extends Phaser.Scene {
       finishBattle(side === 'enemy', Math.max(0, me.baseHp) / baseMaxHp(me.age));
     }
     this.bases[side].setTint(0x4a4a4a);
+    const account =
+      this.account?.finish({
+        won: side === 'enemy',
+        durationMs: this.match.elapsedMs,
+        kills: this.stats.for('player').kills,
+        conquest: this.isConquest,
+      }) ?? null;
     this.time.delayedCall(GAME_OVER_DELAY_MS, () => {
       const summary = {
         won: side === 'enemy',
@@ -572,6 +586,7 @@ export class GameScene extends Phaser.Scene {
         enemyAge: this.state.enemy.age,
         enemyController: this.aiSetting,
         player: this.stats.for('player'),
+        account,
       };
       this.scene.launch(SCENE_KEYS.overlay, { kind: 'gameover', summary, conquest: this.isConquest } satisfies OverlaySceneData);
     });
@@ -738,6 +753,19 @@ export class GameScene extends Phaser.Scene {
         dealUnitDamage(unit, amount, otherSide(unit.side));
         return true;
       },
+      unlockAll: (on = true) => {
+        const progress = loadAccount();
+        if (on) progress.allUnlocked = true;
+        else delete progress.allUnlocked;
+        saveAccount(progress);
+        this.state.player.mechLocked = lockedPartKeys(progress);
+      },
+      accountXp: (xp) => {
+        const progress = loadAccount();
+        progress.xp = Math.max(0, xp);
+        saveAccount(progress);
+        this.state.player.mechLocked = lockedPartKeys(progress);
+      },
       place: (instanceId, x) => {
         const unit = this.units.findByInstanceId(instanceId);
         if (!unit || !unit.isAlive) return false;
@@ -800,6 +828,8 @@ export class GameScene extends Phaser.Scene {
     this.special.destroy();
     this.turrets.destroy();
     this.mech.destroy();
+    this.account?.destroy();
+    this.account = null;
     for (const scaffold of Object.values(this.scaffolds)) scaffold.destroy();
     this.spawn.destroy();
     this.economy.destroy();
