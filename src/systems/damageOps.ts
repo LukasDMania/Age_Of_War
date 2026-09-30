@@ -111,3 +111,17 @@ export function dealBaseDamage(base: Base, amount: number): void {
   emit(Events.BaseDamaged, { side: base.side, hp, maxHp: base.maxHp, amount });
   if (hp <= 0) emit(Events.BaseDestroyed, { side: base.side });
 }
+
+/**
+ * A unit losing HP to its own part (the Overcharge core, the Overload
+ * module): never below `floorHp`, never lethal, no kill credit and no
+ * damage number. Returns the HP it took.
+ */
+export function drainUnit(unit: Unit, amount: number, floorHp: number): number {
+  if (!unit.isAlive || !(amount > 0) || unit.hp <= floorHp) return 0;
+  const taken = Math.min(amount, unit.hp - Math.max(1, floorHp));
+  if (taken <= 0) return 0;
+  unit.hp -= taken;
+  unit.markBarDirty();
+  return taken;
+}

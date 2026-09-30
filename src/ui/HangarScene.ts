@@ -72,6 +72,7 @@ const CALLOUTS: Readonly<Record<MechSlot, { x: number; y: number }>> = {
   legs: { x: HANGAR_MECH_X - 175, y: 500 },
   right: { x: HANGAR_MECH_X + 185, y: 230 },
   left: { x: HANGAR_MECH_X + 185, y: 390 },
+  module: { x: HANGAR_MECH_X + 185, y: 540 },
 };
 const CALLOUT_W = 132;
 const CALLOUT_H = 40;
@@ -365,7 +366,7 @@ export class HangarScene extends Phaser.Scene {
       this.callouts.set(slot, { button, part });
     }
     // Invisible zones over the model itself (arms last, so they win where they overlap the torso).
-    for (const slot of ['legs', 'torso', 'head', 'right', 'left'] as const) {
+    for (const slot of ['module', 'legs', 'torso', 'head', 'right', 'left'] as const) {
       const zone = this.add.zone(0, 0, 10, 10).setInteractive({ useHandCursor: true });
       zone.setData('slot', slot);
       zone.on('pointerover', () => {

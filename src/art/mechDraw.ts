@@ -34,7 +34,7 @@ import {
   type Ctx,
   type P2,
 } from '@/art/rigKit';
-import type { ArmId, HeadId, LegsId, MechDesign, MechSlot, TorsoId } from '@config/mech.config';
+import type { ArmId, HeadId, LegsId, MechDesign, MechSlot, ModuleId, TorsoId } from '@config/mech.config';
 
 export interface MechLook extends MechDesign {
   /** The age the parts were built in: picks their look (0-4). */
@@ -74,7 +74,7 @@ function palette(age: number): Palette {
 }
 
 /** Hip height above the ground per legs. */
-const HIP: Readonly<Record<LegsId, number>> = { walker: 34, stompers: 34, treads: 24, striders: 40 };
+const HIP: Readonly<Record<LegsId, number>> = { walker: 34, stompers: 34, treads: 24, striders: 40, hover: 36, spider: 30, jump: 36 };
 
 /**
  * Where each slot's part sits on a standing Mech, rig units from the feet,
@@ -88,6 +88,7 @@ export function mechSlotAnchors(legs: LegsId): Record<MechSlot, { at: P2; r: num
     head: { at: [3, -h - 50], r: 10 },
     left: { at: [22, -h - 18], r: 10 },
     right: { at: [20, -h - 36], r: 10 },
+    module: { at: [-20, -h - 30], r: 10 },
   };
 }
 
@@ -212,6 +213,14 @@ function drawLegs(c: Ctx, legs: LegsId, s: Pose, near: boolean): void {
     if (!near) drawTreads(c, s);
     return;
   }
+  if (legs === 'hover') {
+    if (!near) drawHover(c, s);
+    return;
+  }
+  if (legs === 'spider') {
+    drawSpider(c, s, near);
+    return;
+  }
   if (legs === 'striders') {
     drawStrider(c, s, near);
     return;
@@ -246,6 +255,19 @@ function drawLegs(c: Ctx, legs: LegsId, s: Pose, near: boolean): void {
     const m = pt(knee, a - bend, shin * 0.45);
     hazard(c, m[0] - 3, m[1] - 1.5, 6, 3);
   }
+  if (legs === 'jump') {
+    // A coil spring down the shin and a piston: jump legs.
+    const a0 = pt(knee, a - bend, 3);
+    c.strokeStyle = s.age === 4 ? s.team : s.pal.accent;
+    c.lineWidth = 1.3;
+    c.beginPath();
+    for (let i = 0; i <= 10; i++) {
+      const q = pt(a0, a - bend, (i / 10) * (shin - 5));
+      const side = (i % 2 ? 1 : -1) * 3.2;
+      c.lineTo(q[0] + Math.cos(a - bend) * side, q[1] - Math.sin(a - bend) * side);
+    }
+    c.stroke();
+  }
   dot(c, knee, heavy ? 4 : 3, s.pal.metal);
   // Foot.
   const fw = heavy ? 18 : 13;
@@ -254,6 +276,54 @@ function drawLegs(c: Ctx, legs: LegsId, s: Pose, near: boolean): void {
   if (heavy && s.age >= 1) {
     for (let i = 0; i < 3; i++) dot(c, [ankle[0] - fw * 0.35 + 3 + i * 5, ankle[1] + fh * 0.4], 1.2, s.pal.metal);
   }
+}
+
+/** Hover jets: a skirted pod under the hip, jets firing downward. */
+function drawHover(c: Ctx, s: Pose): void {
+  const pal = s.pal;
+  const bob = Math.sin(s.u * Math.PI * 2) * 1.2;
+  const y = s.hip[1] + 2 + bob + s.collapse * 20;
+  c.save();
+  // Jet flames, flickering.
+  const flame = s.pal.fire ?? s.team;
+  const flick = 0.7 + 0.3 * Math.sin(s.u * Math.PI * 16);
+  for (const x of [-10, 10]) {
+    if (s.collapse < 0.5) {
+      glow(c, [x, y + 20], 9 * flick, flame, 0.6);
+      shape(c, [[x - 4, y + 13], [x, y + 13 + 14 * flick], [x + 4, y + 13]], rgba(C.fireB, 0.9), 0);
+    }
+    rrect(c, x - 5, y + 6, 10, 8, 2, pal.metal);
+  }
+  // The pod.
+  shape(c, [[-18, y - 3], [18, y - 3], [14, y + 9], [-14, y + 9]], pal.mainB);
+  plate(c, -13, y - 5, 26, 9, 4, pal.main, s);
+  if (s.age === 0) {
+    // A floating boulder with a glowing rune.
+    dot(c, [0, y + 2], 3, rgba(C.fireB, 0.8));
+  } else if (s.age === 3) hazard(c, -12, y + 5, 24, 3);
+  else if (s.age === 4) poly(c, [[-12, y + 5], [12, y + 5]], 1.2, s.team);
+  // Shadow on the ground, smaller the higher it floats.
+  c.restore();
+}
+
+/** Spider legs: two legs per side, bent high like an insect's. */
+function drawSpider(c: Ctx, s: Pose, near: boolean): void {
+  const pal = s.pal;
+  const col = near ? pal.main : pal.mainB;
+  const colB = near ? pal.mainB : pal.mainD;
+  for (const [i, reachX] of [[0, 20], [1, -18]] as const) {
+    const phase = s.walking ? Math.sin(s.p + i * Math.PI + (near ? 0 : Math.PI / 2)) : 0;
+    const lift = s.walking ? Math.max(0, Math.cos(s.p + i * Math.PI + (near ? 0 : Math.PI / 2))) * 4 : 0;
+    const hip: P2 = [s.hip[0] + (reachX > 0 ? 6 : -6), s.hip[1] + 2];
+    const foot: P2 = [reachX + phase * 5 + (near ? 2 : -2), -lift + s.collapse * -4];
+    const knee: P2 = [(hip[0] + foot[0]) / 2 + (reachX > 0 ? 8 : -8), hip[1] - 12 + s.collapse * 14];
+    poly(c, [hip, knee], 5.5, s.age === 0 ? (near ? pal.trim : shade(pal.trim, 0.8)) : col);
+    poly(c, [knee, foot], 4, colB);
+    dot(c, knee, 2.6, pal.metal);
+    if (s.age === 4) poly(c, [pt(knee, Math.atan2(foot[0] - knee[0], foot[1] - knee[1]), 2), pt(knee, Math.atan2(foot[0] - knee[0], foot[1] - knee[1]), 10)], 1, s.team);
+    shape(c, [[foot[0] - 2, foot[1]], [foot[0], foot[1] - 4], [foot[0] + 2, foot[1]]], pal.metal, 1);
+  }
+  if (!near) plate(c, s.hip[0] - 12, s.hip[1] - 2, 24, 8, 3, pal.mainB, s);
 }
 
 /** Long bird-like legs: thigh forward, shin back, a long foot and toes. */
@@ -390,6 +460,59 @@ function drawTorso(c: Ctx, torso: TorsoId, s: Pose): void {
       if (s.age === 3) hazard(c, -12, -8, 24, 4);
       return;
     }
+    case 'bay': {
+      // A drone hangar: a box with a roof hatch and a drone waiting on it.
+      plate(c, -16, -38, 32, 36, 6, pal.main, s);
+      rrect(c, -13, -44, 22, 7, 2, pal.mainB, 1.2);
+      const open = s.anim === 'attack' ? bump(s.u, 0.2, 0.8) : 0;
+      poly(c, [[-13, -44], [-13 - open * 6, -50 - open * 2]], 2, pal.metal);
+      drawDrone(c, [-2, -50 - open * 6], s, 0.8);
+      rrect(c, -10, -30, 20, 16, 3, pal.mainD, 1.2);
+      for (let i = 0; i < 3; i++) poly(c, [[-8, -26 + i * 5], [8, -26 + i * 5]], 1, pal.mainB);
+      emblem(c, [9, -9], 3, s);
+      if (s.age === 3) hazard(c, -13, -8, 18, 4);
+      return;
+    }
+    case 'overcharge': {
+      // A cracked core that burns too hot.
+      const pulse = 0.5 + 0.5 * Math.sin(s.u * Math.PI * 8);
+      plate(c, -16, -40, 32, 38, 8, pal.mainD, s);
+      glow(c, [0, -22], 16 + pulse * 5, s.pal.fire ?? s.team, 0.5 + 0.35 * pulse);
+      dot(c, [0, -22], 9, pal.metal);
+      dot(c, [0, -22], 6.5, s.age <= 2 ? C.fire : s.team);
+      dot(c, [0, -22], 3, '#ffffff');
+      c.strokeStyle = rgba('#fff3c8', 0.9);
+      c.lineWidth = 1;
+      c.beginPath();
+      c.moveTo(-6, -30);
+      c.lineTo(-2, -25);
+      c.lineTo(-7, -20);
+      c.moveTo(6, -14);
+      c.lineTo(3, -19);
+      c.stroke();
+      // Heat vents with a lick of flame.
+      for (const x of [-12, 12]) {
+        rrect(c, x - 2.5, -44, 5, 6, 1, pal.metal, 1);
+        shape(c, [[x - 2, -44], [x, -49 - pulse * 3], [x + 2, -44]], C.fireB, 0);
+      }
+      return;
+    }
+    case 'carrier': {
+      // A wide troop box: a side door and three helmets in the window.
+      plate(c, -19, -40, 38, 38, 6, pal.main, s);
+      rrect(c, -15, -34, 28, 11, 3, '#1c2430', 1.2);
+      const helmet = s.age === 0 ? C.hair : s.age === 1 ? C.steel : s.age === 2 ? pal.metal : s.age === 3 ? C.olive : C.white;
+      for (let i = 0; i < 3; i++) {
+        const bob = s.walking ? Math.sin(s.p + i) * 0.8 : 0;
+        dot(c, [-9 + i * 9, -27 + bob], 3.2, C.skin);
+        shape(c, [[-12.5 + i * 9, -28 + bob], [-9 + i * 9, -32 + bob], [-5.5 + i * 9, -28 + bob]], helmet, 1);
+      }
+      rrect(c, -8, -20, 16, 16, 2, pal.mainB, 1.3);
+      poly(c, [[0, -20], [0, -4]], 1, pal.mainD);
+      emblem(c, [13, -12], 3, s);
+      if (s.age === 3) hazard(c, -17, -6, 12, 3);
+      return;
+    }
     case 'reactor': {
       plate(c, -16, -40, 32, 38, 8, pal.main, s);
       // Vents and pipes.
@@ -410,6 +533,101 @@ function drawTorso(c: Ctx, torso: TorsoId, s: Pose): void {
       emblem(c, [-9, -8], 2.8, s);
       return;
     }
+  }
+}
+
+/** A small drone (the Hangar bay's): stone bird, kite, brass beetle, quadcopter, glowing orb. */
+export function drawDrone(c: Ctx, p: P2, s: Pose | { age: number; team: string; pal?: undefined }, k = 1): void {
+  const age = s.age;
+  const team = s.team;
+  c.save();
+  c.translate(p[0], p[1]);
+  c.scale(k, k);
+  switch (age) {
+    case 0:
+      shape(c, [[-6, 0], [0, -2], [6, 0], [0, 2]], '#8d8a85', 1);
+      shape(c, [[-2, -1], [-5, -6], [2, -1]], '#6d6a66', 1);
+      break;
+    case 1:
+      shape(c, [[-6, 0], [0, -5], [6, 0], [0, 4]], team, 1);
+      poly(c, [[0, 4], [-2, 8]], 0.8, '#efe6d2');
+      break;
+    case 2:
+      ellipse(c, 0, 0, 6, 3.5, 0, '#c9a04a', 1);
+      poly(c, [[-5, -3], [5, -3]], 1, '#5a4a32');
+      break;
+    case 3:
+      rrect(c, -4, -2, 8, 4, 1, '#6b7440', 1);
+      poly(c, [[-7, -3], [7, -3]], 1.2, '#2a2622');
+      dot(c, [0, 1], 1, '#ff5a3a');
+      break;
+    default:
+      glow(c, [0, 0], 7, team, 0.6);
+      dot(c, [0, 0], 3.5, '#eef2f5');
+      dot(c, [0, 0], 1.6, team);
+  }
+  c.restore();
+}
+
+/** The Special module, on the Mech's back (behind the torso). */
+function drawModule(c: Ctx, module: ModuleId, s: Pose): void {
+  if (module === 'none') return;
+  const pal = s.pal;
+  const pulse = 0.5 + 0.5 * Math.sin(s.u * Math.PI * 4);
+  const at: P2 = [-18, -30];
+  // The mount.
+  rrect(c, at[0] - 3, at[1] - 6, 8, 16, 2, pal.mainD, 1.2);
+  switch (module) {
+    case 'smoke':
+      for (let i = 0; i < 3; i++) {
+        rrect(c, at[0] - 6 + i * 4, at[1] - 16, 3.6, 12, 1.2, i === 1 ? pal.accent : pal.metal, 1);
+        dot(c, [at[0] - 4.2 + i * 4, at[1] - 16], 1.3, OUT);
+      }
+      break;
+    case 'overdrive':
+      rrect(c, at[0] - 6, at[1] - 10, 10, 14, 3, pal.main);
+      gear(c, [at[0] - 1, at[1] - 3], 3.5, s.u * Math.PI * 4, pal.metal);
+      poly(c, [[at[0] - 4, at[1] - 10], [at[0] - 4, at[1] - 18]], 2.4, pal.trim);
+      if (s.age >= 2) smoke(c, [at[0] - 4, at[1] - 20], 4, s.u);
+      break;
+    case 'leap':
+      for (const dx of [-5, 1]) {
+        rrect(c, at[0] + dx, at[1] - 12, 5, 18, 2, pal.main, 1.2);
+        shape(c, [[at[0] + dx, at[1] + 6], [at[0] + dx + 2.5, at[1] + 10], [at[0] + dx + 5, at[1] + 6]], pal.metal, 1);
+      }
+      break;
+    case 'overload':
+      rrect(c, at[0] - 6, at[1] - 14, 11, 18, 3, pal.mainB);
+      for (let i = 0; i < 3; i++) poly(c, [[at[0] - 6, at[1] - 10 + i * 5], [at[0] + 5, at[1] - 10 + i * 5]], 1.4, pal.metal);
+      glow(c, [at[0], at[1] - 18], 5 + pulse * 3, s.pal.fire ?? s.team, 0.7);
+      poly(c, [[at[0] - 3, at[1] - 14], [at[0] - 1, at[1] - 18], [at[0] + 1, at[1] - 16], [at[0] + 3, at[1] - 20]], 0.9, '#fff3c8');
+      break;
+    case 'dome':
+      poly(c, [[at[0], at[1] - 6], [at[0], at[1] - 16]], 1.6, pal.metal);
+      c.beginPath();
+      c.arc(at[0], at[1] - 16, 6, Math.PI, 0);
+      c.closePath();
+      c.fillStyle = rgba(s.age >= 3 ? s.team : C.glass, 0.55);
+      c.fill();
+      c.lineWidth = 1.2;
+      c.strokeStyle = OUT;
+      c.stroke();
+      break;
+    case 'emp':
+      poly(c, [[at[0], at[1] - 6], [at[0], at[1] - 14]], 1.4, pal.metal);
+      c.strokeStyle = s.age >= 3 ? s.team : pal.accent;
+      c.lineWidth = 1.6;
+      c.beginPath();
+      c.ellipse(at[0], at[1] - 17, 7, 2.6, 0, 0, Math.PI * 2);
+      c.stroke();
+      glow(c, [at[0], at[1] - 17], 6, s.team, 0.3 + 0.4 * pulse);
+      break;
+    case 'orbital':
+      poly(c, [[at[0] + 1, at[1] - 6], [at[0] - 2, at[1] - 30]], 1.2, pal.metal);
+      poly(c, [[at[0] - 5, at[1] - 22], [at[0] + 2, at[1] - 22]], 1, pal.metal);
+      dot(c, [at[0] - 2, at[1] - 31], 1.8, pulse > 0.5 ? '#ff5a3a' : '#7a2a2a');
+      glow(c, [at[0] - 2, at[1] - 31], 5, '#ff5a3a', 0.5 * pulse);
+      break;
   }
 }
 
@@ -574,6 +792,29 @@ function drawHead(c: Ctx, head: HeadId, s: Pose): void {
     case 'beacon':
       drawBeacon(c, s);
       break;
+    case 'scope':
+      // A long scope on the side of the head.
+      rrect(c, -3, -16, 16, 4, 1.5, pal.metal, 1.1);
+      ellipse(c, 13, -14, 1.6, 2.6, 0, s.age >= 3 ? '#ff5a3a' : C.glass, 1);
+      glow(c, [14, -14], 4, s.age >= 3 ? '#ff5a3a' : C.glass, 0.5);
+      break;
+    case 'taunt': {
+      // A red flag or beacon that dares enemies to come.
+      const wave = Math.sin(s.u * Math.PI * 2) * 1.4;
+      poly(c, [[-4, -14], [-5, -30]], 1.1, s.age === 0 ? C.wood : C.iron);
+      shape(c, [[-5, -30], [7 + wave, -27], [-5, -23]], '#d9483d', 1);
+      if (s.age >= 3) glow(c, [-5, -30], 5, '#ff5a3a', 0.6 + 0.3 * Math.sin(s.u * Math.PI * 8));
+      break;
+    }
+    case 'salvage': {
+      // A turning scanner dish with a magnet hook.
+      const turn = Math.sin(s.u * Math.PI * 2);
+      poly(c, [[-2, -14], [-2, -19]], 1.3, pal.metal);
+      ellipse(c, -2, -22, 6 * (0.6 + 0.4 * Math.abs(turn)), 3, 0, pal.mainB, 1.1);
+      dot(c, [-2 + turn * 2, -22], 1.2, s.age >= 3 ? s.team : pal.accent);
+      shape(c, [[5, -15], [9, -15], [9, -12], [7, -12], [7, -13.5], [5, -13.5]], '#c0392b', 0.8);
+      break;
+    }
   }
   c.restore();
 }
@@ -734,7 +975,8 @@ function armPose(arm: ArmId, s: Pose, near: boolean): ArmPose {
   // both arms' tools show; the near arm works at the waist.
   const rest = near ? 0.35 : 1.25;
   const pose: ArmPose = { ua: rest + sway, fa: near ? 1.45 : 1.5, back: 0, flash: 0, spin: s.walking ? s.u * Math.PI * 4 : 0 };
-  if (arm === 'launcher') {
+  const gun = arm === 'launcher' || arm === 'minigun' || arm === 'railgun' || arm === 'flamer' || arm === 'tesla' || arm === 'grapple';
+  if (gun) {
     pose.ua = (near ? 0.62 : 1.3) + sway * 0.4;
     pose.fa = Math.PI / 2;
   }
@@ -746,7 +988,7 @@ function armPose(arm: ArmId, s: Pose, near: boolean): ArmPose {
     const u = s.u;
     const restUa = pose.ua;
     const restFa = pose.fa;
-    if (arm === 'fist' || arm === 'blade') {
+    if (arm === 'fist' || arm === 'blade' || arm === 'wrecker') {
       // Raise, smash at 45%, hold, return.
       const hitFa = arm === 'blade' ? 2.2 : 1.9;
       if (u < 0.3) {
@@ -781,6 +1023,19 @@ function armPose(arm: ArmId, s: Pose, near: boolean): ArmPose {
         pose.back = lerp(-5, 0, k);
         pose.ua = lerp(reachUa, restUa, k);
       }
+    } else if (arm === 'minigun') {
+      pose.spin = u * Math.PI * 12;
+      pose.flash = Math.sin(u * Math.PI * 12) > 0.3 ? 0.8 : 0;
+      pose.back = Math.sin(u * Math.PI * 24) * 0.6;
+    } else if (arm === 'railgun') {
+      const recoil = u >= 0.45 ? Math.max(0, 1 - (u - 0.45) / 0.4) : 0;
+      pose.back = recoil * 5;
+      pose.flash = u < 0.45 ? u / 0.45 : 0;
+      pose.ua -= recoil * 0.2;
+    } else if (arm === 'flamer' || arm === 'tesla') {
+      pose.flash = bump(u, 0.3, 1);
+    } else if (arm === 'grapple') {
+      pose.flash = bump(u, 0.25, 0.95);
     } else if (arm === 'launcher') {
       const recoil = u >= 0.45 ? Math.max(0, 1 - (u - 0.45) / 0.3) : 0;
       pose.back = recoil * 3.5;
@@ -965,6 +1220,111 @@ function drawTool(c: Ctx, arm: ArmId, s: Pose, hand: P2, pose: ArmPose, near: bo
       if (s.anim === 'attack' && s.u > 0.45 && s.age >= 2 && s.age <= 3) smoke(c, [muzzle[0] + 3, muzzle[1]], 5, (s.u - 0.45) / 0.55);
       break;
     }
+    case 'flamer': {
+      // A fuel tank under a nozzle; a jet of fire on the attack.
+      rrect(c, -2, 1, 12, 7, 3, s.age === 3 ? '#b03a2a' : pal.trim);
+      bar(c, [2, -1.5], [20, -1.5], 3.4, s.age === 0 ? C.wood : pal.metal);
+      rrect(c, 18, -4.5, 5, 6, 1.5, pal.mainD, 1);
+      if (s.age === 0) dot(c, [22, -1.5], 2.2, C.fire);
+      else glow(c, [23, -1.5], 2.5, C.fire, 0.8);
+      if (pose.flash > 0) {
+        const len = 14 + 26 * pose.flash;
+        glow(c, [23 + len * 0.6, -1.5], len * 0.5, C.fire, 0.55 * pose.flash);
+        shape(c, [[23, -3], [23 + len, -8 * pose.flash], [23 + len * 1.1, -1.5], [23 + len, 5 * pose.flash], [23, 0]], rgba(C.fire, 0.9), 0);
+        shape(c, [[23, -2.2], [23 + len * 0.7, -3], [23 + len * 0.75, -1.5], [23 + len * 0.7, 0.5], [23, -0.8]], rgba(C.fireB, 0.95), 0);
+      }
+      markShot(c, [24, -1.5], near ? 'near' : 'far');
+      break;
+    }
+    case 'minigun': {
+      rrect(c, -2, -4, 9, 9, 2, pal.mainB);
+      if (s.age === 3) hazard(c, -1, 2, 7, 2.5);
+      const barrels = 3;
+      for (let i = 0; i < barrels; i++) {
+        const off = Math.sin(pose.spin + (i * Math.PI * 2) / barrels) * 2.4;
+        bar(c, [7, off], [24, off], 1.8, s.age === 4 ? pal.mainB : s.age === 0 ? C.wood : pal.metal);
+      }
+      rrect(c, 7, -3.5, 3, 7, 1, pal.main, 1);
+      rrect(c, 20, -3.5, 2.5, 7, 1, pal.main, 1);
+      if (pose.flash > 0) muzzleFlash(c, [25, 0], Math.PI / 2, 4, pose.flash, s.age === 4 ? '#e0c8ff' : C.fireB);
+      markShot(c, [25, 0], near ? 'near' : 'far');
+      break;
+    }
+    case 'tesla': {
+      // A coil with rings; lightning crackles from the tip on the attack.
+      bar(c, [0, 0], [10, 0], 3.5, pal.mainB);
+      for (let i = 0; i < 4; i++) ellipse(c, 11 + i * 3, 0, 1.6, 5.5 - i * 0.6, 0, s.age <= 1 ? '#b87a3a' : s.age === 2 ? pal.accent : C.steelB, 0.9);
+      const tip: P2 = [24, 0];
+      dot(c, tip, 3.2, pal.metal);
+      const arc = s.age >= 3 ? s.team : '#9fe8ff';
+      glow(c, tip, 4 + pose.flash * 12, arc, 0.35 + 0.55 * pose.flash);
+      if (pose.flash > 0.2) {
+        c.strokeStyle = rgba('#ffffff', 0.9);
+        c.lineWidth = 1;
+        c.beginPath();
+        c.moveTo(tip[0], tip[1]);
+        for (let i = 1; i <= 5; i++) c.lineTo(tip[0] + i * 5, tip[1] + Math.sin(s.u * 50 + i * 2) * 3);
+        c.stroke();
+      }
+      markShot(c, tip, near ? 'near' : 'far');
+      break;
+    }
+    case 'railgun': {
+      // Two long rails that glow as they charge.
+      rrect(c, -3, -4, 10, 8, 2, pal.mainB);
+      const railCol = s.age === 0 ? C.wood : s.age === 4 ? pal.main : pal.metal;
+      bar(c, [5, -2.5], [32, -2.5], 1.8, railCol);
+      bar(c, [5, 2.5], [32, 2.5], 1.8, railCol);
+      for (let x = 9; x < 30; x += 6) rrect(c, x, -3.5, 2, 7, 0.6, pal.mainD, 0.8);
+      const charge = s.age >= 3 ? s.team : C.fireB;
+      if (pose.flash > 0) {
+        c.strokeStyle = rgba(charge, 0.9 * pose.flash);
+        c.lineWidth = 1.4;
+        c.beginPath();
+        c.moveTo(5, 0);
+        c.lineTo(5 + 27 * pose.flash, 0);
+        c.stroke();
+        glow(c, [5 + 27 * pose.flash, 0], 5, charge, 0.8 * pose.flash);
+      }
+      markShot(c, [33, 0], near ? 'near' : 'far');
+      break;
+    }
+    case 'grapple': {
+      // A launcher with a claw on a cable; the claw flies out on the attack.
+      rrect(c, -2, -4, 12, 8, 3, pal.mainB);
+      const out = pose.flash * 26;
+      if (out > 0) {
+        c.strokeStyle = OUT;
+        c.lineWidth = 1;
+        c.beginPath();
+        c.moveTo(10, 0);
+        c.lineTo(12 + out, 0);
+        c.stroke();
+      }
+      const claw: P2 = [12 + out, 0];
+      poly(c, [[claw[0], claw[1]], [claw[0] + 5, claw[1] - 4], [claw[0] + 8, claw[1] - 1]], 1.6, pal.metal);
+      poly(c, [[claw[0], claw[1]], [claw[0] + 5, claw[1] + 4], [claw[0] + 8, claw[1] + 1]], 1.6, pal.metal);
+      dot(c, claw, 2, pal.accent);
+      break;
+    }
+    case 'wrecker': {
+      // A short haft with a chain and a heavy ball.
+      bar(c, [0, 0], [7, 0], 3, pal.trim);
+      const swing = s.anim === 'attack' ? Math.sin(s.u * Math.PI * 2) * 0.8 : s.walking ? Math.sin(s.p) * 0.3 : 0;
+      const ball = pt([8, 0], Math.PI / 2 - 0.5 + swing, 13);
+      c.strokeStyle = s.age === 0 ? C.khaki : pal.metal;
+      c.lineWidth = 1.4;
+      c.setLineDash([1.6, 1]);
+      c.beginPath();
+      c.moveTo(8, 0);
+      c.lineTo(ball[0], ball[1]);
+      c.stroke();
+      c.setLineDash([]);
+      dot(c, ball, 7, s.age === 0 ? C.stone : s.age === 4 ? pal.mainB : pal.metal);
+      if (s.age >= 1) for (let i = 0; i < 6; i++) dot(c, pt(ball, (i * Math.PI) / 3, 7), 1.2, pal.mainD);
+      if (s.age === 4) glow(c, ball, 8, s.team, 0.4);
+      break;
+    }
     case 'drill': {
       const spin = pose.spin;
       switch (s.age) {
@@ -1107,6 +1467,7 @@ export function drawMechDesign(c: Ctx, look: MechLook, team: string, anim: RigAn
     fn();
     c.restore();
   };
+  if (has('module')) upper(() => drawModule(c, look.module, s));
   if (has('right')) upper(() => drawArm(c, look.right, s, false));
   if (has('torso')) upper(() => drawTorso(c, look.torso, s));
   if (has('head')) upper(() => drawHead(c, look.head, s));

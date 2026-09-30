@@ -18,9 +18,9 @@ await press('KeyB', 500);
 check('B opens the hangar', await hangarOpen());
 await page.screenshot({ path: `${OUT}/hangar.png` });
 await press('Digit5');
-await press('KeyE');
+await press('KeyQ'); // launcher -> shield
 let s = await stored();
-check('5, E switches the right arm and keeps the design', s?.slots?.[0]?.design?.right === 'shield', JSON.stringify(s?.slots?.[0]?.design));
+check('5, Q switches the right arm and keeps the design', s?.slots?.[0]?.design?.right === 'shield', JSON.stringify(s?.slots?.[0]?.design));
 // Hover the first arm in the drawer: the preview plays and the bars show ghosts.
 await page.mouse.move(180, 135);
 await page.waitForTimeout(400);
@@ -34,7 +34,7 @@ check('T switches blueprint; edits go to the new one', s?.active === 1 && s.slot
 await press('KeyT');
 await press('KeyT');
 await press('KeyT');
-await press('KeyE'); // walker -> treads (open)
+await press('KeyE'); // walker -> striders (open)
 await page.evaluate(() => {
   window.__aow.state.player.gold = 0;
 });

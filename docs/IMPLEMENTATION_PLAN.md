@@ -482,7 +482,12 @@ The brief is `docs/MECH_EXPANSION.md`; its build order is followed here.
   sheet with role tags, 4 blueprint slots (`ui/mechBlueprints.ts`, T),
   locked parts in blueprint blue, assembly scaffold on the lane
   (`entities/MechScaffold.ts`).
-- [ ] 2. Parts roster up to 7 per slot, plus the Special module slot.
+- [x] 2. Parts roster: 7 legs, 7 torsos, 7 heads, 11 arms, and the
+  Special module slot (7 modules plus empty), art in five ages, behaviors
+  (`CombatSystem` weapons, `MechSystem` parts and abilities, `laneOps`,
+  burns and stuns in `statusOps` / `StatusSystem`), HUD module button,
+  checks `tools/checks/mechparts.mjs` and `mechbalance.mjs`. Account
+  unlock data is on the parts but not enforced until step 4.
 - [ ] 3. Pair combos and set bonuses.
 - [ ] 4. Account level and part unlocks.
 - [ ] 5. Evolve on age-up.
@@ -530,7 +535,8 @@ validates and acts):
 | `choose-doctrine-requested` | `{ side, doctrineId }` | DoctrineSystem (prototype `ageDoctrines`; HUD popup, DoctrineAi) |
 | `war-cry-requested` | `{ side }` | WarCrySystem (prototype `warCry`; HUD button or W, WarCryAi) |
 | `conquest-continue-requested` | `{}` | GameScene (prototype `conquest`; game-over Continue or pause Retreat: records a retreat as a loss, returns to the campaign screen) |
-| `build-mech-requested` | `{ side, design }` (`design` a `MechDesign`: legs, torso, head, left, right) | MechSystem (Workshop tab Build or R; pays and starts the build in the side's age) |
+| `build-mech-requested` | `{ side, design }` (`design` a `MechDesign`: legs, torso, head, left, right, module) | MechSystem (hangar Build or R; pays and starts the build in the side's age) |
+| `mech-ability-requested` | `{ side }` | MechSystem (the module button / War cry key while a Mech with a module is out; checks it and fires the ability) |
 
 **Notifications** (emitted by systems; anyone may listen):
 
@@ -575,6 +581,9 @@ validates and acts):
 | `siege-changed` | `{ mult }` (every unit's siege damage multiplier) | ConquestSystem (prototype; each minute of siege in a Conquest battle) |
 | `shot-bounced` | `{ side, fromX, fromY, toX, toY }` | `systems/damageOps` `dealBounceDamage` (feedback: a turret shot ricocheted; Conquest's Ricochet) |
 | `mech-changed` | `{ side, alive, build }` (`build` `{ unitId, remainingMs, totalMs }` or null) | MechSystem (build started, every frame while building, walked out, fell) |
+| `mech-ability-changed` | `{ side, moduleId, remainingMs, totalMs }` (`moduleId` null: no Mech with a module out) | MechSystem (module shown or gone, 5x/s while recharging, 1x/s otherwise) |
+| `mech-ability-used` | `{ side, moduleId, kind, x, radius, toX? }` | MechSystem (a module fired; feedback) |
+| `weapon-fx` | `{ side, kind, x, y, points?, radius? }` (`kind`: flame, chain, pull, knockback, leap, land, drone, troops, stun; `points` x, y pairs) | CombatSystem, laneOps, MechSystem (Mech weapon and part feedback) |
 
 ## Appendix B: Data shape sketches
 
@@ -1888,3 +1897,43 @@ decisions made, anything the owner needs to confirm.
   - Checked: typecheck, build, `node tools/checks/mech.mjs` (rewritten
     for the hangar: open, switch parts, blueprints, build, Esc, spawn,
     fall), screenshots of the Stone and Future hangars and the scaffold.
+- 2026-09-29/30 (Mech expansion, step 2: parts roster and the module):
+  - Data (`config/mech.config.ts`, all numbers PROPOSED): the brief's
+    table, every slot at 7 (arms 11), a sixth optional slot `module`
+    (`none` or 7 modules), set tags and account `unlock` data on the
+    parts (enforced in step 4). The unit id gets a 7th field (the
+    module); ids and stored blueprints without one read as `none`. Empty
+    module is tier 0, so tier sums still count above the five body slots.
+  - Weapons as optional `UnitAttack` fields handled in `CombatSystem`:
+    `cone` + `burn` (flamethrower), `chain` (tesla), `spinUp` (minigun,
+    no wind-up), `pierce` (railgun), `pull` (grapple, back-most enemy),
+    `knockback` (wrecking ball), `targetBack` (Sniper scope: shots fly
+    over the front line, `Projectile.onlyUnit`). A Taunt beacon in reach
+    is every attacker's target and draws shots over the units in front.
+  - Parts as a `mech` block on the definition, run by `MechSystem`: jump
+    legs leap over the front line (units get a `leap`, airborne units
+    don't fight or walk), Hangar bay drones (a projectile per age; no
+    drone art yet), Overcharge drain (`damageOps.drainUnit`, never
+    lethal), Troop carrier (3 of the age's melee when it first stops or
+    falls), Salvage scanner (+50% kill gold near it, gold source
+    `salvage`). Hover jets ignore hostile slows and stuns
+    (`StatModifier.hostile`); Spider legs can't be moved.
+  - Modules: `mech-ability-requested` checked by `MechSystem`; smoke
+    (enemy ranged damage x0.25), overdrive, leap, overload, dome, EMP
+    (stuns heavies and turrets, `TurretSystem.stunNear`), orbital. The
+    HUD's `ui/MechAbilityButton.ts` takes the War cry's place and key
+    while a Mech with a module is out; War cry stays its own switch.
+  - Fix on the way: Striders' "walks 60% faster" never worked (every unit
+    walks at one pace); the Mech's legs now set `walkSpeedMult`.
+  - Tuning (Mech vs equal-gold stream, `node tools/checks/mechbalance.mjs
+    0,3`): jump legs leap 60 -> 40 damage, 9 -> 12 s; tesla 30 -> 25;
+    minigun fast cooldown 160 -> 200 ms; spider +450 -> +600 HP; drones
+    45 -> 60 damage every 5 s; overcharge drain 1.2% -> 0.8%/s, floor 30%
+    -> 50%; grapple 30 -> 45 damage, 5 -> 4 s. After: every variant wins
+    with 9-58% HP left (default 46% Stone, 27% Modern). Jump legs camp the
+    enemy gate in Modern (71%, stream only 45% sent), so that one is
+    inflated.
+  - Checked: typecheck, build, `mech.mjs`, `mechparts.mjs` (21 checks:
+    each weapon, part and module in a real lane), screenshots of the
+    artlab (`?mechs`, eight showcase designs, five ages), the hangar arm
+    drawer and a lane with an orbital strike and the module button.

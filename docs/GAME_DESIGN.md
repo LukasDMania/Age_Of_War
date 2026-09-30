@@ -874,6 +874,11 @@ built, archetype runs since 2026-09-28).
   parts drawer with hover preview, stat bars, build sheet, 4 blueprint
   slots (T), and the Mech assembled on a scaffold at the gate while it
   builds. PROPOSED: the battle keeps running while the hangar is open.
+- **Parts roster and the Special module (built 2026-09-30, expansion
+  step 2):** 7 legs, torsos and heads, 11 arms and an optional sixth
+  module slot with an active ability on the War cry button, as in
+  `docs/MECH_EXPANSION.md` sections 2 and 4 (numbers PROPOSED, tuned in
+  the session log). Walking speed from legs now works (it was ignored).
 - **Expansion agreed 2026-09-29 (being built, Phase 21):** hangar UI, 7 parts per
   slot, pair combos and sets, an optional Special module slot, account
   unlocks, evolve on age-up, Mech vs Mech, a utility Mech and a Titan

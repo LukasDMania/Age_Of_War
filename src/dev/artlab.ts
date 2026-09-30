@@ -181,16 +181,18 @@ if (params.has('mechs')) {
   void import('@/art/mechDraw').then(({ drawMechDesign }) => {
     type Design = import('@config/mech.config').MechDesign;
     const showcase: Design[] = [
-      { legs: 'walker', torso: 'frame', head: 'visor', left: 'fist', right: 'launcher' },
-      { legs: 'treads', torso: 'hull', head: 'crest', left: 'shield', right: 'blade' },
-      { legs: 'stompers', torso: 'reactor', head: 'beacon', left: 'drill', right: 'fist' },
-      { legs: 'striders', torso: 'armory', head: 'siren', left: 'launcher', right: 'launcher' },
-      { legs: 'treads', torso: 'armory', head: 'crest', left: 'blade', right: 'blade' },
-      { legs: 'striders', torso: 'frame', head: 'siren', left: 'shield', right: 'drill' },
+      { legs: 'walker', torso: 'frame', head: 'visor', left: 'fist', right: 'launcher', module: 'none' },
+      { legs: 'treads', torso: 'hull', head: 'crest', left: 'shield', right: 'blade', module: 'dome' },
+      { legs: 'stompers', torso: 'reactor', head: 'beacon', left: 'drill', right: 'fist', module: 'overload' },
+      { legs: 'striders', torso: 'armory', head: 'siren', left: 'launcher', right: 'launcher', module: 'smoke' },
+      { legs: 'hover', torso: 'bay', head: 'scope', left: 'minigun', right: 'railgun', module: 'orbital' },
+      { legs: 'spider', torso: 'overcharge', head: 'taunt', left: 'flamer', right: 'tesla', module: 'emp' },
+      { legs: 'jump', torso: 'carrier', head: 'salvage', left: 'wrecker', right: 'grapple', module: 'leap' },
+      { legs: 'treads', torso: 'armory', head: 'crest', left: 'blade', right: 'blade', module: 'overdrive' },
     ];
     const one = params.get('design');
     const designs: Design[] = one
-      ? [Object.fromEntries(['legs', 'torso', 'head', 'left', 'right'].map((k, i) => [k, one.split(',')[i]])) as unknown as Design]
+      ? [Object.fromEntries(['legs', 'torso', 'head', 'left', 'right', 'module'].map((k, i) => [k, one.split(',')[i] ?? 'none'])) as unknown as Design]
       : showcase;
     const ms = Number(params.get('scale') ?? 1.6);
     const cw = 110 * ms;
@@ -331,7 +333,7 @@ if (params.has('muzzles')) {
     const mechMuzzles: Record<string, { near: { x: number; y: number }; far: { x: number; y: number } }> = {};
     for (const legs of Object.keys(mech.MECH_LEGS)) {
       const marks = probe((o) =>
-        mechDraw.drawMechDesign(o, { legs: legs as 'walker', torso: 'frame', head: 'visor', left: 'launcher', right: 'launcher', age: 3 }, team, 'attack', RELEASE),
+        mechDraw.drawMechDesign(o, { legs: legs as 'walker', torso: 'frame', head: 'visor', left: 'launcher', right: 'launcher', module: 'none', age: 3 }, team, 'attack', RELEASE),
       );
       const px = (tag: string): { x: number; y: number } => {
         const m = marks.find((x) => x.tag === tag)?.at ?? [0, 0];

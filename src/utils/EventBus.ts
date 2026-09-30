@@ -19,6 +19,8 @@ export const Events = {
   // Requests
   BuyUnitRequested: 'buy-unit-requested',
   BuildMechRequested: 'build-mech-requested',
+  /** Use the Mech's Special module (the War cry button while a Mech with one is out). */
+  MechAbilityRequested: 'mech-ability-requested',
   BuySlotRequested: 'buy-slot-requested',
   BuyTurretRequested: 'buy-turret-requested',
   UpgradeTurretRequested: 'upgrade-turret-requested',
@@ -43,6 +45,10 @@ export const Events = {
   UnitSpawned: 'unit-spawned',
   UnitQueueChanged: 'unit-queue-changed',
   MechChanged: 'mech-changed',
+  MechAbilityChanged: 'mech-ability-changed',
+  MechAbilityUsed: 'mech-ability-used',
+  /** Feedback for Mech weapons and part effects (flames, lightning, pulls, leaps...). */
+  WeaponFx: 'weapon-fx',
   UnitDied: 'unit-died',
   UnitDamaged: 'unit-damaged',
   AreaHit: 'area-hit',
@@ -82,6 +88,9 @@ export const Events = {
   SiegeChanged: 'siege-changed',
 } as const;
 
+/** Mech weapon and part effects (`weapon-fx`). */
+export type WeaponFxKind = 'flame' | 'chain' | 'pull' | 'knockback' | 'leap' | 'land' | 'drone' | 'troops' | 'stun';
+
 /** The utility effect kinds (see `UtilityEffect` in unitDefinitions). */
 export type UtilityKind = 'heal' | 'aoe' | 'slow' | 'buff' | 'shield';
 
@@ -97,6 +106,8 @@ export type GoldSource =
   | 'refund'
   /** Conquest prototype: a battle's starting grants (paid straight back into the requested purchase). */
   | 'conquest'
+  /** A Mech's Salvage scanner: extra gold for kills near it. */
+  | 'salvage'
   | 'cheat';
 
 /** One unit waiting in (or being trained by) a side's training queue. */
@@ -106,6 +117,16 @@ export interface EventPayloads {
   [Events.BuyUnitRequested]: { side: Side; unitId: string };
   /** The Mech workshop: build this design (in the side's current age). */
   [Events.BuildMechRequested]: { side: Side; design: MechDesign };
+  [Events.MechAbilityRequested]: { side: Side };
+  /** The side's Mech module: which one is out (null: no Mech with a module) and its cooldown. */
+  [Events.MechAbilityChanged]: { side: Side; moduleId: string | null; remainingMs: number; totalMs: number };
+  /** A module fired (feedback): `x` where, `radius` its reach, `toX` a leap's landing or a strike's target. */
+  [Events.MechAbilityUsed]: { side: Side; moduleId: string; kind: string; x: number; radius: number; toX?: number };
+  /**
+   * A Mech weapon or part effect (feedback only). `points` are x, y pairs
+   * (a lightning chain's hops; a flame's start and end).
+   */
+  [Events.WeaponFx]: { side: Side; kind: WeaponFxKind; x: number; y: number; points?: readonly number[]; radius?: number };
   [Events.BuySlotRequested]: { side: Side };
   [Events.BuyTurretRequested]: {
     side: Side;

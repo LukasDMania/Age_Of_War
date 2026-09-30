@@ -119,6 +119,20 @@ export class TurretSystem {
     }
   }
 
+  /**
+   * Stuns `side`'s turrets within `range` px of `x` until `untilMs` (a Mech's
+   * EMP pulse): they hold fire. Returns the muzzle x of each one stunned.
+   */
+  stunNear(side: Side, x: number, range: number, untilMs: number): number[] {
+    const hit: number[] = [];
+    for (const turret of this.turrets[side]) {
+      if (!turret || Math.abs(turret.x - x) > range) continue;
+      turret.fireReadyAt = Math.max(turret.fireReadyAt, untilMs);
+      hit.push(turret.x, turret.y);
+    }
+    return hit;
+  }
+
   /** Why unlocking the next slot would fail right now, or null if it would work. */
   slotRejection(side: Side): TurretRejection | null {
     if (this.state.phase !== 'playing') return 'not-playing';

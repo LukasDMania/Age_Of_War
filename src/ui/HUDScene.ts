@@ -29,6 +29,7 @@ import { TurretPanel } from '@ui/TurretPanel';
 import { UiButton } from '@ui/UiButton';
 import { UnitBuyPanel } from '@ui/UnitBuyPanel';
 import type { HangarSceneData } from '@ui/HangarScene';
+import { MechAbilityButton } from '@ui/MechAbilityButton';
 import { emit, Events, on } from '@utils/EventBus';
 import { ageGap } from '@systems/ageCatchUp';
 import { armyFromQueue, armyLabel, getArmy, queueArmy, setArmy } from '@ui/compositions';
@@ -155,6 +156,8 @@ export class HUDScene extends Phaser.Scene {
   private pauseButton!: UiButton;
   /** Prototype HUD parts (features.config), null when switched off. */
   private warCryButton: WarCryButton | null = null;
+  /** The Mech's Special module: takes the War cry's place while a Mech with one is out. */
+  private mechAbilityButton!: MechAbilityButton;
   private doctrinePopup: DoctrinePopup | null = null;
   private tabs!: Record<TabKey, UiButton>;
   private activeTab: TabKey = 'units';
@@ -224,6 +227,14 @@ export class HUDScene extends Phaser.Scene {
     this.warCryButton = feature('warCry')
       ? new WarCryButton(this, HUD_SIDE, PANEL_LEFT + PANEL_WIDTH + SIDE_GAP * 2 + SIDE_BUTTON_SIZE + 48, PANEL_TOP + PANEL_HEIGHT / 2, 96)
       : null;
+    this.mechAbilityButton = new MechAbilityButton(
+      this,
+      HUD_SIDE,
+      PANEL_LEFT + PANEL_WIDTH + SIDE_GAP * 2 + SIDE_BUTTON_SIZE + 48,
+      PANEL_TOP + PANEL_HEIGHT / 2,
+      96,
+      (shown) => this.warCryButton?.setVisible(!shown),
+    );
     this.doctrinePopup = feature('ageDoctrines') ? new DoctrinePopup(this, HUD_SIDE) : null;
     this.tabs = {
       units: this.buildTab(0, 'Units', 'units'),
@@ -410,7 +421,7 @@ export class HUDScene extends Phaser.Scene {
     k.on('turret-sell', () => this.turretPanel.sell());
     k.on('age-up', () => this.ageUpButton.press());
     k.on('special', () => this.specialButton.press());
-    k.on('war-cry', () => (this.warCryButton ? this.warCryButton.press() : false));
+    k.on('war-cry', () => (this.mechAbilityButton.press() ? true : this.warCryButton ? this.warCryButton.press() : false));
     for (let n = 1; n <= ARMY_COUNT; n++) {
       k.on(`army-${n}`, () => this.queueArmy(n - 1));
       k.on(`army-save-${n}`, () => this.saveArmy(n - 1));
@@ -697,6 +708,7 @@ export class HUDScene extends Phaser.Scene {
     this.ageUpButton.setLocked(locked);
     this.pauseButton.setEnabled(!locked);
     this.warCryButton?.setLocked(locked);
+    this.mechAbilityButton.setLocked(locked);
   }
 
   private showBackgroundName(name: string): void {
@@ -810,6 +822,7 @@ export class HUDScene extends Phaser.Scene {
     this.specialButton.destroy();
     this.ageUpButton.destroy();
     this.warCryButton?.destroy();
+    this.mechAbilityButton.destroy();
     this.warCryButton = null;
     this.doctrinePopup?.destroy();
     this.doctrinePopup = null;

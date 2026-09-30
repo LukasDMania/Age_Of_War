@@ -131,6 +131,7 @@ export class ProjectileSystem {
     projectile.impactBase = null;
     for (const unit of this.units.activeUnits) {
       if (unit.side !== enemy || !unit.isAlive || unit === projectile.ignoreUnit) continue;
+      if (projectile.onlyUnit && unit !== projectile.onlyUnit) continue;
       const t = entryFraction(x0, y0, dx, dy, unit.x - unit.halfWidth, unit.topY, unit.x + unit.halfWidth, unit.y);
       if (t >= 0 && t < hitAt) {
         hitAt = t;

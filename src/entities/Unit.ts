@@ -29,6 +29,8 @@ export interface StatModifier {
   stat: ModifiableStat;
   mult: number;
   expiresAt?: number;
+  /** Put on by an enemy (slows, stuns): Hover jets ignore these on speed and attack rate. */
+  hostile?: boolean;
 }
 
 const BAR_HEIGHT = 4;
@@ -100,6 +102,24 @@ export class Unit extends Phaser.GameObjects.Sprite {
    * grown, 0..1, shown as a gold bar under the HP bar; -1 hides it.
    */
   incomeRamp = -1;
+  /** Burning (a Mech's flamethrower): damage per second, until when (sim ms, 0 = not burning), and from whom. */
+  burnDps = 0;
+  burnUntil = 0;
+  burnSide: Side = 'player';
+  /** Spin-up weapons (minigun): when the current burst began and when it last fired (sim ms). */
+  spinSince = -1;
+  spinLastShot = -Infinity;
+  /**
+   * A leap in flight (Mech jump legs and thrusters): from and to x, over
+   * sim ms [start, end]. Airborne units don't fight or walk; MechSystem
+   * moves them.
+   */
+  leap: { fromX: number; toX: number; start: number; end: number; damage: number; radius: number } | null = null;
+  /** Mech part timers (sim ms): the next jump-legs leap and the next drone. */
+  leapReadyAt = 0;
+  droneReadyAt = 0;
+  /** Troop carrier: the troops are out. */
+  troopsDropped = false;
   /** Footprint on the lane: the placeholder's size, whatever art is shown. */
   bodyWidth = 0;
   bodyHeight = 0;
@@ -167,6 +187,14 @@ export class Unit extends Phaser.GameObjects.Sprite {
     this.kills = 0;
     this.rank = 0;
     this.incomeRamp = -1;
+    this.burnDps = 0;
+    this.burnUntil = 0;
+    this.spinSince = -1;
+    this.spinLastShot = -Infinity;
+    this.leap = null;
+    this.leapReadyAt = 0;
+    this.droneReadyAt = 0;
+    this.troopsDropped = false;
     this.flashUntil = 0;
     this.restoreTint();
     this.unitState = UnitState.Idle;
@@ -215,6 +243,11 @@ export class Unit extends Phaser.GameObjects.Sprite {
 
   get halfWidth(): number {
     return this.bodyWidth / 2;
+  }
+
+  /** Mid-leap: in the air, not fighting or walking. */
+  get airborne(): boolean {
+    return this.leap !== null;
   }
 
   get isAlive(): boolean {
@@ -316,7 +349,8 @@ export class Unit extends Phaser.GameObjects.Sprite {
         return this.definition.attack?.damage ?? 0;
       case 'speed':
         // One walking speed for everyone (owner, 2026-09-26); `definition.speed` is unused for now.
-        return UNIT_WALK_SPEED;
+        // Only the Mech's legs change it (Striders, Hover jets).
+        return UNIT_WALK_SPEED * (this.definition.walkSpeedMult ?? 1);
       case 'attackCooldown':
         return this.definition.attack?.cooldownMs ?? 0;
       case 'maxHp':

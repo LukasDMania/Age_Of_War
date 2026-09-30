@@ -62,6 +62,11 @@ export class WarCryButton {
     this.button.setEnabled(!locked);
   }
 
+  /** Hidden while the Mech's module button takes its place. */
+  setVisible(visible: boolean): void {
+    this.button.container.setVisible(visible);
+  }
+
   /** Presses the button as a click would (keyboard). */
   press(): void {
     this.button.press();

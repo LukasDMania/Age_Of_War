@@ -110,8 +110,8 @@ export class UtilitySystem {
         unit.utilityReadyAt = nowMs + UTILITY_AURA_TICK_MS;
         const expiresAt = nowMs + effect.durationMs;
         for (const enemy of this.enemiesWithin(unit, effect.range)) {
-          applyModifier(enemy, { id: SLOW_SPEED_ID, source: 'utility', stat: 'speed', mult: effect.mult, expiresAt });
-          applyModifier(enemy, { id: SLOW_ATTACK_ID, source: 'utility', stat: 'attackCooldown', mult: 1 / effect.mult, expiresAt });
+          applyModifier(enemy, { id: SLOW_SPEED_ID, source: 'utility', stat: 'speed', mult: effect.mult, expiresAt, hostile: true });
+          applyModifier(enemy, { id: SLOW_ATTACK_ID, source: 'utility', stat: 'attackCooldown', mult: 1 / effect.mult, expiresAt, hostile: true });
         }
         this.auraPulse(unit, 'slow', effect.range, nowMs);
         return;

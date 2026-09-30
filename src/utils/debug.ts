@@ -105,6 +105,8 @@ export interface DebugHandle {
   damage(instanceId: number, amount: number): boolean;
   /** Kills a unit through damageOps (credited to the other side). Returns whether it did. */
   kill(instanceId: number): boolean;
+  /** Moves a unit to lane x (set up fights for checks). */
+  place(instanceId: number, x: number): boolean;
   /** Grants a shield to a unit. Returns its new shield. */
   shield(instanceId: number, amount: number): number;
   /** Sets a modifier on every unit of a side, including future spawns. */

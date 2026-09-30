@@ -22,6 +22,7 @@
  *   as plain units until phases 9 and 10.
  */
 
+import type { MechAbility } from '@config/mech.config';
 import type { UnitRole } from '@state/types';
 import { mechDefinitionFromId } from '@entities/mechDesign';
 
@@ -83,6 +84,44 @@ export interface UnitAttack {
    * leave the front edge at `UNIT_SHOT_HEIGHT`.
    */
   muzzle?: { x: number; y: number };
+  /*
+   * Mech weapons (Mech expansion; `config/mech.config.ts` has what each
+   * does). Handled by `CombatSystem`; any unit could carry them.
+   */
+  /** Flames: enemies up to this far past the target are hit too. */
+  cone?: number;
+  /** After a hit: damage per second for `durationMs` (StatusSystem). */
+  burn?: { dps: number; durationMs: number };
+  /** Cooldown shrinks to `fastCooldownMs` over `rampMs` of steady firing. */
+  spinUp?: { fastCooldownMs: number; rampMs: number };
+  /** Lightning: jumps to `jumps` more enemies within `reach`, x `falloff` each jump. */
+  chain?: { jumps: number; reach: number; falloff: number };
+  /** Shots fly through every unit in their way. */
+  pierce?: boolean;
+  /** Hooks the back-most enemy in reach and pulls it in front of the attacker. */
+  pull?: boolean;
+  /** Knocks the target back this many px. */
+  knockback?: number;
+  /** Shoots the back-most enemy in reach, over the ones in front. */
+  targetBack?: boolean;
+}
+
+/**
+ * What a Mech's parts do beyond stats and weapons (Mech expansion), scaled
+ * to the age it was built in. `MechSystem` runs these; `CombatSystem` and
+ * `statusOps` read the immunities and the taunt.
+ */
+export interface MechBehavior {
+  slowImmune?: boolean;
+  knockbackImmune?: boolean;
+  leap?: { cooldownMs: number; damage: number; radius: number };
+  drones?: { cooldownMs: number; damage: number; radius: number; range: number; projectileKey: string };
+  drain?: { perSec: number; floor: number };
+  troops?: { unitId: string; count: number };
+  taunt?: { radius: number };
+  salvage?: { radius: number; goldMult: number };
+  /** The Special module's active ability (damage and shields already scaled). */
+  ability?: { moduleId: string; ability: MechAbility };
 }
 
 export interface UnitDefinition {
@@ -123,6 +162,10 @@ export interface UnitDefinition {
   allyPenalty?: { damageMult: number; speedMult: number };
   /** Utility units. */
   utility?: UtilityEffect;
+  /** Walking speed x this (only the Mech's legs; every other unit shares one pace). */
+  walkSpeedMult?: number;
+  /** The Mech's part behaviors. */
+  mech?: MechBehavior;
 }
 
 /* ---- Stone age -------------------------------------------------------- */

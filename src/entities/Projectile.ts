@@ -37,6 +37,8 @@ export class Projectile extends Phaser.GameObjects.Image {
   /** Enemies it may still fly through (Conquest's pierce trait), and the one it just went through. */
   pierceLeft = 0;
   ignoreUnit: Unit | null = null;
+  /** Aimed over the front line (a Mech's Sniper scope): hits only this unit, else the ground. */
+  onlyUnit: Unit | null = null;
 
   constructor(scene: Phaser.Scene) {
     super(scene, 0, 0, '__DEFAULT');
@@ -70,6 +72,7 @@ export class Projectile extends Phaser.GameObjects.Image {
     this.turretKind = null;
     this.pierceLeft = 0;
     this.ignoreUnit = null;
+    this.onlyUnit = null;
     this.setPosition(x, y).setRotation(0).setFlipX(false);
     this.setActive(true).setVisible(true);
     return this;
@@ -92,9 +95,11 @@ export class Projectile extends Phaser.GameObjects.Image {
   }
 
   deactivate(): void {
+    this.onlyUnit = null;
     this.impactUnit = null;
     this.impactBase = null;
     this.ignoreUnit = null;
+    this.onlyUnit = null;
     this.setActive(false).setVisible(false);
   }
 }

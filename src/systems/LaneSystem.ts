@@ -33,6 +33,8 @@ export class LaneSystem {
   /** `deltaMs` is simulation time. */
   update(deltaMs: number): void {
     for (const unit of this.units.activeUnits) {
+      // Leaping units (Mech jump legs, thrusters) are moved by MechSystem.
+      if (unit.airborne) continue;
       if (unit.unitState === UnitState.Attacking) {
         this.closeRanks(unit, deltaMs);
         continue;
@@ -97,7 +99,7 @@ export class LaneSystem {
     let room = Infinity;
 
     for (const other of this.units.activeUnits) {
-      if (other === unit || !other.isAlive) continue;
+      if (other === unit || !other.isAlive || other.airborne) continue;
       let ahead = (other.x - unit.x) * dir;
       // Stacked at the same spot (spawn stacking): the older unit counts as
       // in front, so the stack peels off one by one instead of moving as one.

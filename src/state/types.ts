@@ -30,6 +30,8 @@ export interface MechState {
   build: { unitId: string; remainingMs: number; totalMs: number } | null;
   /** A Mech of this side is alive (only one at a time). */
   alive: boolean;
+  /** Sim time (ms) when its Special module can be used again. */
+  abilityReadyAt?: number;
 }
 
 /** Match state machine. See `MatchSystem` (Phase 2). */

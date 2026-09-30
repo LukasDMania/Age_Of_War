@@ -40,6 +40,8 @@ function keepHpRatio(unit: Unit, change: () => void, mode: HpMode = 'ratio'): vo
 /** Adds a modifier (replacing one with the same id) and emits `modifier-applied`. */
 export function applyModifier(unit: Unit, modifier: StatModifier, hpMode: HpMode = 'ratio'): void {
   if (!unit.isAlive) return;
+  // Hover jets: an enemy's slows and stuns don't take.
+  if (modifier.hostile && unit.definition.mech?.slowImmune && (modifier.stat === 'speed' || modifier.stat === 'attackCooldown')) return;
   if (!Number.isFinite(modifier.mult) || modifier.mult < 0) {
     throw new Error(`Invalid modifier multiplier: ${modifier.mult}`);
   }
@@ -121,4 +123,30 @@ export function clearSideModifier(match: MatchState, units: Iterable<Unit>, side
 /** The per-unit copy of a side-wide modifier. */
 export function toUnitModifier(modifier: SideModifier): StatModifier {
   return { id: modifier.id, source: modifier.source, stat: modifier.stat, mult: modifier.mult };
+}
+
+/**
+ * Stuns a unit for `ms` (Mech EMP): it can't move (a hostile timed speed x0)
+ * and its attacks wait until the stun ends. Hover jets shrug it off.
+ */
+export function stunUnit(unit: Unit, ms: number, nowMs: number): void {
+  if (!unit.isAlive || unit.definition.mech?.slowImmune) return;
+  const until = nowMs + ms;
+  applyModifier(unit, { id: 'stun', source: 'mech', stat: 'speed', mult: 0, expiresAt: until, hostile: true });
+  unit.attackReadyAt = Math.max(unit.attackReadyAt, until);
+  unit.secondaryReadyAt = Math.max(unit.secondaryReadyAt, until);
+  unit.strikeAt = 0;
+}
+
+/**
+ * Sets a unit burning (a Mech's flamethrower): `dps` damage per second from
+ * `side` until `untilMs`; `StatusSystem` deals it through damageOps. A new
+ * burn replaces a weaker or shorter one.
+ */
+export function applyBurn(unit: Unit, dps: number, untilMs: number, side: Side): void {
+  if (!unit.isAlive || !(dps > 0)) return;
+  if (unit.burnUntil > 0 && unit.burnDps > dps && unit.burnUntil > untilMs) return;
+  unit.burnDps = Math.max(dps, unit.burnUntil > 0 ? unit.burnDps : 0);
+  unit.burnUntil = Math.max(untilMs, unit.burnUntil);
+  unit.burnSide = side;
 }

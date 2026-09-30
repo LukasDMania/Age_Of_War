@@ -63,7 +63,8 @@ const PURPLE = [0xd9b8ff, 0xb070ff, 0xffffff];
  *
  * Listens for: `projectile-impact`, `unit-struck`, `turret-fired`,
  * `unit-died`, `utility-pulse`, `base-damaged`, `base-destroyed`,
- * `age-changed`, `building-upgraded`, `special-fired`, `shot-bounced`.
+ * `age-changed`, `building-upgraded`, `special-fired`, `shot-bounced`,
+ * `weapon-fx` and `mech-ability-used` (Mech weapons, parts and modules).
  */
 export class ImpactEffects {
   /** Set while the simulation runs in bulk without rendering. */
@@ -82,6 +83,8 @@ export class ImpactEffects {
   private readonly glowOf = new Map<Projectile, Phaser.GameObjects.Image>();
   /** The sky flash of a special (screen space). */
   private readonly sky: Phaser.GameObjects.Rectangle;
+  /** Lines that flash and fade (lightning, cables, beams). */
+  private readonly bolts: ObjectPool<Phaser.GameObjects.Graphics>;
 
   constructor(scene: Phaser.Scene) {
     this.scene = scene;
@@ -236,7 +239,16 @@ export class ImpactEffects {
       prewarm: 8,
     });
 
+    this.bolts = new ObjectPool({
+      create: () => scene.add.graphics().setDepth(3.65),
+      onRelease: (g) => g.clear().setActive(false).setVisible(false).setAlpha(1),
+      onDestroy: (g) => g.destroy(),
+      prewarm: 4,
+    });
+
     this.cleanups = [
+      on(Events.WeaponFx, (p) => this.onWeaponFx(p)),
+      on(Events.MechAbilityUsed, (p) => this.onMechAbility(p)),
       on(Events.ProjectileImpact, (p) => this.onImpact(p)),
       on(Events.UnitStruck, (p) => this.onStruck(p)),
       on(Events.TurretFired, ({ turretId, x, y }) => this.onTurretFired(turretId, x, y)),
@@ -304,6 +316,7 @@ export class ImpactEffects {
     this.sky.destroy();
     this.flashes.destroy();
     this.scorches.destroy();
+    this.bolts.destroy();
     this.thump.clear();
   }
 
@@ -484,6 +497,128 @@ export class ImpactEffects {
     this.pop('fx-streak', fromX + dx / 2, fromY + dy / 2, dist, 0xffe890, 170, { rotation: Math.atan2(dy, dx), grow: 1.05, scaleY: 1.2 });
     this.pop('fx-star', toX, toY, 16, 0xfff0b0, 140);
     this.burst('sparks', 3, toX, toY);
+  }
+
+  /** Draws a line (straight or jagged) through x, y pairs that fades over `ms`. */
+  private bolt(points: readonly number[], color: number, width: number, ms: number, jag = 0): void {
+    if (points.length < 4) return;
+    const g = this.bolts.acquire().setActive(true).setVisible(true).setAlpha(1);
+    const path = (w: number, c: number, a: number): void => {
+      g.lineStyle(w, c, a);
+      g.beginPath();
+      g.moveTo(points[0]!, points[1]!);
+      for (let i = 2; i < points.length; i += 2) {
+        const x0 = points[i - 2]!;
+        const y0 = points[i - 1]!;
+        const x1 = points[i]!;
+        const y1 = points[i + 1]!;
+        if (jag > 0) {
+          for (let k = 1; k < 4; k++) {
+            const t = k / 4;
+            g.lineTo(x0 + (x1 - x0) * t + (Math.random() - 0.5) * jag, y0 + (y1 - y0) * t + (Math.random() - 0.5) * jag);
+          }
+        }
+        g.lineTo(x1, y1);
+      }
+      g.strokePath();
+    };
+    path(width * 2.4, color, 0.35);
+    path(width, 0xffffff, 0.95);
+    this.scene.tweens.add({ targets: g, alpha: 0, duration: ms, ease: 'Quad.easeIn', onComplete: () => this.bolts.release(g) });
+  }
+
+  /** Mech weapons and parts (`weapon-fx`). */
+  private onWeaponFx({ kind, x, y, points, radius }: EventPayloads[typeof Events.WeaponFx]): void {
+    if (this.muted) return;
+    switch (kind) {
+      case 'flame': {
+        const [x0, y0, x1, y1] = points ?? [x, y, x, y];
+        for (let i = 0; i <= 4; i++) {
+          const t = i / 4;
+          const px = x0! + (x1! - x0!) * t;
+          const py = y0! + (y1! - y0!) * t;
+          this.pop('fx-puff', px, py, 14 + t * 26, i < 2 ? 0xffd060 : 0xff7a2a, 260 + t * 160, { grow: 1.5, alpha: 0.85, color: true, rotation: Math.random() * 6 });
+        }
+        this.burst('fire', 6, x1!, y1!, 16, 8);
+        return;
+      }
+      case 'chain':
+        this.bolt(points ?? [], 0x9fe8ff, 2, 220, 12);
+        for (let i = 2; i < (points?.length ?? 0); i += 2) {
+          this.pop('fx-star', points![i]!, points![i + 1]!, 22, 0xbff4ff, 180);
+          this.burst('cyan', 3, points![i]!, points![i + 1]!);
+        }
+        return;
+      case 'pull':
+        this.bolt(points ?? [], 0x5d636b, 1.4, 260);
+        this.burst('dust', 3, points?.[2] ?? x, LANE_Y - 2, 8, 0);
+        return;
+      case 'knockback':
+        this.burst('dust', 5, points?.[2] ?? x, LANE_Y - 2, 12, 0);
+        this.pop('fx-streak', ((points?.[0] ?? x) + (points?.[2] ?? x)) / 2, y, Math.abs((points?.[2] ?? x) - (points?.[0] ?? x)) + 10, 0xfff0c0, 160);
+        return;
+      case 'leap':
+        this.burst('dust', 10, x, LANE_Y - 2, 20, 0);
+        this.burst('fire', 8, x, LANE_Y - 10, 10, 4);
+        return;
+      case 'land':
+        this.ring(x, radius ?? 50, 0xffc070, 380);
+        this.burst('dust', 14, x, LANE_Y - 2, (radius ?? 50) * 0.6, 0);
+        this.burst('chunks', 6, x, LANE_Y - 4, 10, 0);
+        this.thumpAt(CAMERA_THUMP.heavyStrike, x, 0.8);
+        return;
+      case 'drone':
+        this.burst('sparks', 4, x, y, 4, 4);
+        return;
+      case 'troops':
+        this.burst('dust', 10, x, LANE_Y - 4, 24, 0);
+        this.pop('fx-flare', x, y, 50, 0xfff0b0, 240);
+        return;
+      case 'stun':
+        for (let i = 0; i + 1 < (points?.length ?? 0); i += 2) {
+          this.pop('fx-star', points![i]!, points![i + 1]! - 20, 26, 0x9fe8ff, 400);
+          this.burst('cyan', 4, points![i]!, points![i + 1]! - 20, 8, 8);
+        }
+        return;
+    }
+  }
+
+  /** A Mech module fired (`mech-ability-used`). */
+  private onMechAbility({ kind, x, radius, toX }: EventPayloads[typeof Events.MechAbilityUsed]): void {
+    if (this.muted) return;
+    switch (kind) {
+      case 'smoke':
+        this.burst('smoke-big', 10, x, LANE_Y - 30, radius * 0.5, 16);
+        this.burst('smoke', 12, x, LANE_Y - 20, radius * 0.6, 10);
+        return;
+      case 'overdrive':
+        this.burst('sparks', 12, x, LANE_Y - 60, 20, 30);
+        this.pop('fx-flare', x, LANE_Y - 60, 90, 0xffd060, 300);
+        return;
+      case 'overload':
+        this.explosion(x, LANE_Y - 30, radius, true);
+        this.ring(x, radius * 1.2, 0x9fe8ff, 500);
+        return;
+      case 'dome':
+        this.ring(x, radius, 0x8fe0ff, 600);
+        this.pop('fx-soft', x, LANE_Y - 50, radius * 1.8, 0x8fe0ff, 700, { grow: 1.1, alpha: 0.6, scaleY: 0.8 });
+        return;
+      case 'emp':
+        this.ring(x, radius, 0x9fe8ff, 500);
+        this.ring(x, radius * 0.6, 0xffffff, 350);
+        this.burst('cyan', 20, x, LANE_Y - 40, radius * 0.4, 20);
+        return;
+      case 'orbital': {
+        const at = toX ?? x;
+        this.bolt([at, -40, at, LANE_Y - 10], 0xff6a5a, 7, 420);
+        this.scene.time.delayedCall(90, () => {
+          if (!this.muted) this.explosion(at, LANE_Y - 20, radius, true);
+        });
+        return;
+      }
+      case 'leap':
+        return;
+    }
   }
 
   /** An expanding shockwave ring lying on the lane. */

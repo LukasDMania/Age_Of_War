@@ -1,14 +1,24 @@
-import { MECH, type MechDesign } from '@config/mech.config';
+import { LANE_Y } from '@config/constants';
+import { MECH, type MechAbility, type MechDesign } from '@config/mech.config';
+import type { Base } from '@entities/Base';
+import type { ProjectileFactory } from '@entities/ProjectileFactory';
+import { UnitState, type Unit } from '@entities/Unit';
 import type { UnitFactory } from '@entities/UnitFactory';
 import { designCost, isMechUnitId, isValidDesign, lockedSlot, mechDefinition } from '@entities/mechDesign';
-import { trySpendGold } from '@state/economyOps';
+import { findUnitDefinition } from '@entities/unitDefinitions';
+import { addGold, trySpendGold } from '@state/economyOps';
 import type { MatchState, SideState } from '@state/GameState';
-import { SIDES, type Side } from '@state/types';
+import { laneDir, otherSide, SIDES, type Side } from '@state/types';
+import { dealSplashDamage, drainUnit } from '@systems/damageOps';
 import type { SpawnPointCheck } from '@systems/SpawnSystem';
+import { applyModifier, grantShield, stunUnit } from '@systems/statusOps';
 import { emit, Events, on, type EventPayloads } from '@utils/EventBus';
 
 /** Why a Mech can't be built right now. */
 export type MechRejection = 'not-playing' | 'player-only' | 'invalid' | 'locked' | 'building' | 'alive' | 'cannot-afford';
+
+/** Why the Mech's module can't be used right now. */
+export type MechAbilityRejection = 'not-playing' | 'no-mech' | 'no-module' | 'cooling-down' | 'airborne';
 
 /** What a design costs a side now (its age; Conquest traits can change it). */
 export function mechPrice(side: SideState, design: MechDesign): number {
@@ -27,7 +37,7 @@ export function mechForgeLevel(side: SideState): number {
 
 /**
  * Why `side` can't build `design` now, or null if it can. Shared by the
- * system and the Workshop tab (which greys its Build button with it).
+ * system and the hangar (which greys its Build button with it).
  */
 export function mechRejection(state: MatchState, side: Side, design: MechDesign): MechRejection | null {
   if (state.phase !== 'playing') return 'not-playing';
@@ -41,6 +51,23 @@ export function mechRejection(state: MatchState, side: Side, design: MechDesign)
   return null;
 }
 
+/** Stuns a side's turrets near x until a time; returns their positions (x, y pairs). */
+export type TurretStun = (side: Side, x: number, range: number, untilMs: number) => number[];
+
+/** How long a leap is in the air, sim ms. */
+const LEAP_MS = 650;
+/** Jump legs leap only over a front line at least this close, px (edge to edge). */
+const LEAP_TRIGGER_GAP = 40;
+/** How far past the enemy front a jump-legs leap lands, px. */
+const LEAP_PAST = 70;
+/** Leaps land at least this far short of the enemy base's front, px. */
+const LEAP_BASE_MARGIN = 20;
+/** How long the carried troops stand apart when dropped, px. */
+const TROOP_SPACING = 18;
+/** Cooldown events are sent at most this often while a module recharges, sim ms. */
+const ABILITY_ANNOUNCE_MS = 200;
+const ABILITY_IDLE_ANNOUNCE_MS = 1000;
+
 /**
  * The Mech workshop (owner, 2026-09-27; data in `config/mech.config.ts`).
  * A build request is paid up front and starts the build: the design in the
@@ -49,32 +76,58 @@ export function mechRejection(state: MatchState, side: Side, design: MechDesign)
  * clear, built by `UnitFactory` like any unit. One Mech per side at a time,
  * building or alive; only the player builds them (the AI never asks).
  *
- * Listens for: `build-mech-requested`, `unit-died` (its Mech fell).
+ * In battle it runs what the Mech's parts do beyond stats and weapons (the
+ * definition's `mech` block, Mech expansion): jump legs leap over the enemy
+ * front line; the Hangar bay launches drones; the Overcharge core burns the
+ * Mech's own HP; the Troop carrier drops melee troops when the Mech first
+ * stops to fight or falls; the Salvage scanner pays extra kill gold near
+ * it. And the Special module: `mech-ability-requested` is checked here and
+ * the ability fired (smoke, overdrive, leap, overload, dome, EMP, orbital).
+ *
+ * Listens for: `build-mech-requested`, `mech-ability-requested`,
+ * `unit-died` (its Mech fell; salvage).
  * Emits: `mech-changed` (build start, every frame while building, spawn,
- * fall), `unit-spawned`, and `gold-changed` through economyOps.
+ * fall), `mech-ability-changed`, `mech-ability-used`, `weapon-fx`,
+ * `unit-spawned`; `gold-changed` through economyOps; damage and status
+ * events through damageOps / statusOps.
  */
 export class MechSystem {
   private readonly state: MatchState;
   private readonly units: UnitFactory;
   private readonly isSpawnPointClear: SpawnPointCheck;
+  private readonly bases: Record<Side, Base>;
+  private readonly projectiles: ProjectileFactory;
+  private readonly stunTurrets: TurretStun;
   private readonly cleanups: (() => void)[];
+  private nowMs = 0;
+  /** When each side's module cooldown was last announced (sim ms). */
+  private announcedAt: Record<Side, number> = { player: -Infinity, enemy: -Infinity };
+  /** The module each side last announced (null: none out). */
+  private announcedModule: Record<Side, string | null> = { player: null, enemy: null };
+  private announcedRemaining: Record<Side, number> = { player: 0, enemy: 0 };
 
-  constructor(state: MatchState, units: UnitFactory, isSpawnPointClear: SpawnPointCheck) {
+  constructor(
+    state: MatchState,
+    units: UnitFactory,
+    isSpawnPointClear: SpawnPointCheck,
+    world: { bases: Record<Side, Base>; projectiles: ProjectileFactory; stunTurrets: TurretStun },
+  ) {
     this.state = state;
     this.units = units;
     this.isSpawnPointClear = isSpawnPointClear;
+    this.bases = world.bases;
+    this.projectiles = world.projectiles;
+    this.stunTurrets = world.stunTurrets;
     this.cleanups = [
       on(Events.BuildMechRequested, (payload) => this.onBuildRequested(payload)),
-      on(Events.UnitDied, ({ side, unitId }) => {
-        if (!isMechUnitId(unitId)) return;
-        this.state[side].mech.alive = false;
-        this.announce(side);
-      }),
+      on(Events.MechAbilityRequested, ({ side }) => this.onAbilityRequested(side)),
+      on(Events.UnitDied, (payload) => this.onUnitDied(payload)),
     ];
   }
 
-  /** `deltaMs` is simulation time; call only while the match is playing. */
-  update(deltaMs: number): void {
+  /** `deltaMs` and `nowMs` are simulation time; call only while the match is playing. */
+  update(deltaMs: number, nowMs: number): void {
+    this.nowMs = nowMs;
     for (const side of SIDES) {
       const mech = this.state[side].mech;
       const build = mech.build;
@@ -84,15 +137,34 @@ export class MechSystem {
         const unit = this.units.create(build.unitId, side);
         mech.build = null;
         mech.alive = true;
+        mech.abilityReadyAt = nowMs;
         emit(Events.UnitSpawned, { side, unitId: build.unitId, instanceId: unit.instanceId });
       }
       this.announce(side);
     }
+    for (const unit of this.units.activeUnits) {
+      if (!unit.isAlive || !unit.definition.mech) continue;
+      this.runParts(unit, deltaMs, nowMs);
+    }
+    for (const side of SIDES) this.announceAbility(side, false);
   }
 
   destroy(): void {
     for (const off of this.cleanups) off();
   }
+
+  /** Why `side` can't use its Mech's module now, or null. */
+  abilityRejection(side: Side): MechAbilityRejection | null {
+    if (this.state.phase !== 'playing') return 'not-playing';
+    const unit = this.mechOf(side);
+    if (!unit) return 'no-mech';
+    if (!unit.definition.mech?.ability) return 'no-module';
+    if (unit.airborne) return 'airborne';
+    if (this.nowMs < (this.state[side].mech.abilityReadyAt ?? 0)) return 'cooling-down';
+    return null;
+  }
+
+  /* ---- Building ------------------------------------------------------------------------------ */
 
   private onBuildRequested({ side, design }: EventPayloads[typeof Events.BuildMechRequested]): void {
     if (mechRejection(this.state, side, design) !== null) return;
@@ -107,5 +179,241 @@ export class MechSystem {
   private announce(side: Side): void {
     const { alive, build } = this.state[side].mech;
     emit(Events.MechChanged, { side, alive, build: build ? { ...build } : null });
+  }
+
+  private onUnitDied({ side, unitId, instanceId, killerSide, x }: EventPayloads[typeof Events.UnitDied]): void {
+    if (isMechUnitId(unitId)) {
+      this.state[side].mech.alive = false;
+      const unit = this.units.findByInstanceId(instanceId);
+      // A carrier that never stopped drops its troops where it fell.
+      if (unit?.definition.mech?.troops && !unit.troopsDropped) this.dropTroops(unit, x);
+      this.announce(side);
+      this.announceAbility(side, true);
+      return;
+    }
+    // Salvage scanner: kills near the killer's Mech pay extra.
+    const mech = this.mechOf(killerSide);
+    const salvage = mech?.definition.mech?.salvage;
+    if (!mech || !salvage || Math.abs(mech.x - x) > salvage.radius) return;
+    const reward = findUnitDefinition(unitId)?.killGold ?? 0;
+    const extra = Math.round(reward * salvage.goldMult);
+    if (extra > 0) addGold(this.state, killerSide, extra, 'salvage');
+  }
+
+  /* ---- Parts --------------------------------------------------------------------------------- */
+
+  private runParts(unit: Unit, deltaMs: number, nowMs: number): void {
+    const parts = unit.definition.mech!;
+    if (unit.leap) {
+      this.flyLeap(unit, nowMs);
+      return;
+    }
+    if (parts.drain) {
+      const max = unit.getStat('maxHp');
+      drainUnit(unit, (max * parts.drain.perSec * deltaMs) / 1000, max * parts.drain.floor);
+    }
+    if (parts.troops && !unit.troopsDropped && unit.unitState === UnitState.Attacking) this.dropTroops(unit, unit.x);
+    if (parts.leap && nowMs >= unit.leapReadyAt && unit.unitState === UnitState.Attacking) {
+      const front = this.enemyFront(unit);
+      if (front && this.gap(unit, front) <= LEAP_TRIGGER_GAP) {
+        const to = front.x + laneDir(unit.side) * (front.halfWidth + unit.halfWidth + LEAP_PAST);
+        if (this.startLeap(unit, to, parts.leap.damage, parts.leap.radius)) unit.leapReadyAt = nowMs + parts.leap.cooldownMs;
+      }
+    }
+    if (parts.drones && nowMs >= unit.droneReadyAt) this.launchDrone(unit, parts.drones);
+  }
+
+  private launchDrone(unit: Unit, drones: NonNullable<NonNullable<Unit['definition']['mech']>['drones']>): void {
+    const target = this.nearestEnemy(unit, drones.range);
+    if (!target) return;
+    unit.droneReadyAt = this.nowMs + drones.cooldownMs;
+    const x0 = unit.x - laneDir(unit.side) * 6;
+    const y0 = unit.topY - 6;
+    const damage = drones.damage * unit.statMultiplier('damage');
+    this.projectiles.launch(drones.projectileKey, unit.side, x0, y0, damage, drones.radius).aimAt(target.x, target.centerY, false);
+    emit(Events.WeaponFx, { side: unit.side, kind: 'drone', x: x0, y: y0, points: [x0, y0, target.x, target.centerY] });
+  }
+
+  private dropTroops(unit: Unit, x: number): void {
+    const troops = unit.definition.mech?.troops;
+    unit.troopsDropped = true;
+    if (!troops) return;
+    const dir = laneDir(unit.side);
+    for (let i = 0; i < troops.count; i++) {
+      const troop = this.units.create(troops.unitId, unit.side);
+      troop.x = this.clampX(troop, x - dir * (i * TROOP_SPACING - TROOP_SPACING));
+      emit(Events.UnitSpawned, { side: unit.side, unitId: troops.unitId, instanceId: troop.instanceId });
+    }
+    emit(Events.WeaponFx, { side: unit.side, kind: 'troops', x, y: unit.centerY });
+  }
+
+  /** Starts a leap to `toX` (kept short of the enemy base). False if there is no room to go forward. */
+  private startLeap(unit: Unit, toX: number, damage: number, radius: number): boolean {
+    const dir = laneDir(unit.side);
+    const enemyFront = this.bases[otherSide(unit.side)].frontX;
+    const limit = enemyFront - dir * (unit.halfWidth + LEAP_BASE_MARGIN);
+    const to = dir > 0 ? Math.min(toX, limit) : Math.max(toX, limit);
+    if ((to - unit.x) * dir < 10) return false;
+    unit.leap = { fromX: unit.x, toX: to, start: this.nowMs, end: this.nowMs + LEAP_MS, damage, radius };
+    unit.strikeAt = 0;
+    emit(Events.WeaponFx, { side: unit.side, kind: 'leap', x: unit.x, y: unit.y, points: [unit.x, unit.y, to, unit.y] });
+    return true;
+  }
+
+  /** Moves a leaping unit along its arc; on landing, splash around it. */
+  private flyLeap(unit: Unit, nowMs: number): void {
+    const leap = unit.leap!;
+    const k = Math.min(1, (nowMs - leap.start) / (leap.end - leap.start));
+    unit.x = leap.fromX + (leap.toX - leap.fromX) * k;
+    unit.y = LANE_Y - Math.sin(k * Math.PI) * 70;
+    if (k < 1) return;
+    unit.leap = null;
+    unit.y = LANE_Y;
+    const base = this.bases[otherSide(unit.side)];
+    dealSplashDamage(this.units.activeUnits, unit.x, leap.radius, leap.damage * unit.statMultiplier('damage'), unit.side, null, base);
+    emit(Events.WeaponFx, { side: unit.side, kind: 'land', x: unit.x, y: unit.y, radius: leap.radius });
+  }
+
+  /* ---- The Special module -------------------------------------------------------------------- */
+
+  private onAbilityRequested(side: Side): void {
+    if (this.abilityRejection(side) !== null) return;
+    const unit = this.mechOf(side)!;
+    const { ability } = unit.definition.mech!.ability!;
+    if (!this.fire(unit, ability)) return;
+    this.state[side].mech.abilityReadyAt = this.nowMs + ability.cooldownMs;
+    this.announceAbility(side, true);
+  }
+
+  /** Fires an ability. False when it had nothing to do (the cooldown isn't spent). */
+  private fire(unit: Unit, ability: MechAbility): boolean {
+    const side = unit.side;
+    const dir = laneDir(side);
+    const moduleId = unit.definition.mech!.ability!.moduleId;
+    const used = (x: number, radius: number, toX?: number): void =>
+      emit(Events.MechAbilityUsed, { side, moduleId, kind: ability.kind, x, radius, ...(toX !== undefined ? { toX } : {}) });
+    const damageMult = unit.statMultiplier('damage');
+    switch (ability.kind) {
+      case 'smoke': {
+        const x = unit.x + dir * (unit.halfWidth + ability.radius * 0.5);
+        for (const enemy of this.enemiesWithin(x, ability.radius, side)) {
+          if (!enemy.definition.attack?.projectileKey) continue;
+          applyModifier(enemy, { id: 'mech-smoke', source: 'mech', stat: 'damage', mult: ability.damageMult, expiresAt: this.nowMs + ability.durationMs, hostile: true });
+        }
+        used(x, ability.radius);
+        return true;
+      }
+      case 'overdrive':
+        applyModifier(unit, { id: 'mech-overdrive', source: 'mech', stat: 'attackCooldown', mult: ability.cooldownMult, expiresAt: this.nowMs + ability.durationMs });
+        unit.attackReadyAt = Math.min(unit.attackReadyAt, this.nowMs);
+        used(unit.x, 40);
+        return true;
+      case 'leap':
+        if (!this.startLeap(unit, unit.x + dir * ability.distance, ability.damage, ability.radius)) return false;
+        used(unit.x, ability.radius, unit.leap!.toX);
+        return true;
+      case 'overload': {
+        const base = this.bases[otherSide(side)];
+        dealSplashDamage(this.units.activeUnits, unit.x, ability.radius, ability.damage * damageMult, side, null, base);
+        drainUnit(unit, unit.getStat('maxHp') * ability.hpCost, 1);
+        used(unit.x, ability.radius);
+        return true;
+      }
+      case 'dome':
+        for (const ally of this.units.activeUnits) {
+          if (ally.side !== side || !ally.isAlive || Math.abs(ally.x - unit.x) - ally.halfWidth > ability.radius) continue;
+          grantShield(ally, ally === unit ? ability.shield : ability.shield * 0.5);
+        }
+        used(unit.x, ability.radius);
+        return true;
+      case 'emp': {
+        const until = this.nowMs + ability.stunMs;
+        const points: number[] = [];
+        for (const enemy of this.enemiesWithin(unit.x, ability.range, side)) {
+          if (enemy.definition.slot !== 3) continue;
+          stunUnit(enemy, ability.stunMs, this.nowMs);
+          points.push(enemy.x, enemy.centerY);
+        }
+        points.push(...this.stunTurrets(otherSide(side), unit.x, ability.range, until));
+        if (points.length) emit(Events.WeaponFx, { side, kind: 'stun', x: unit.x, y: unit.centerY, points });
+        used(unit.x, ability.range);
+        return true;
+      }
+      case 'orbital': {
+        const target = this.enemyFront(unit, Infinity);
+        if (!target) return false;
+        const base = this.bases[otherSide(side)];
+        dealSplashDamage(this.units.activeUnits, target.x, ability.radius, ability.damage * damageMult, side, null, base);
+        used(target.x, ability.radius, target.x);
+        return true;
+      }
+    }
+  }
+
+  /**
+   * `mech-ability-changed` when the module shown changes, a few times a
+   * second while it recharges, and once a second otherwise (so a HUD that
+   * was rebuilt catches up).
+   */
+  private announceAbility(side: Side, force: boolean): void {
+    const unit = this.mechOf(side);
+    const ability = unit?.definition.mech?.ability ?? null;
+    const moduleId = ability?.moduleId ?? null;
+    const remainingMs = ability ? Math.max(0, (this.state[side].mech.abilityReadyAt ?? 0) - this.nowMs) : 0;
+    const every = remainingMs > 0 ? ABILITY_ANNOUNCE_MS : ABILITY_IDLE_ANNOUNCE_MS;
+    const justReady = remainingMs === 0 && this.announcedRemaining[side] > 0;
+    if (!force && !justReady && moduleId === this.announcedModule[side] && this.nowMs - this.announcedAt[side] < every) return;
+    this.announcedModule[side] = moduleId;
+    this.announcedRemaining[side] = remainingMs;
+    this.announcedAt[side] = this.nowMs;
+    emit(Events.MechAbilityChanged, { side, moduleId, remainingMs, totalMs: ability?.ability.cooldownMs ?? 1 });
+  }
+
+  /* ---- Helpers ------------------------------------------------------------------------------- */
+
+  /** The side's Mech on the lane, if any. */
+  private mechOf(side: Side): Unit | null {
+    if (!this.state[side].mech.alive) return null;
+    for (const unit of this.units.activeUnits) {
+      if (unit.side === side && unit.isAlive && isMechUnitId(unit.definition.id)) return unit;
+    }
+    return null;
+  }
+
+  /** Edge-to-edge gap between two units. */
+  private gap(a: Unit, b: Unit): number {
+    return Math.abs(a.x - b.x) - a.halfWidth - b.halfWidth;
+  }
+
+  /** The nearest enemy ahead of `unit` within `reach` (edge to edge). */
+  private nearestEnemy(unit: Unit, reach: number): Unit | null {
+    return this.enemyFront(unit, reach);
+  }
+
+  /** The enemy unit furthest forward toward `unit`'s side (its front line), within `reach` of it. */
+  private enemyFront(unit: Unit, reach = Infinity): Unit | null {
+    const dir = laneDir(unit.side);
+    let best: Unit | null = null;
+    let bestAhead = Infinity;
+    for (const other of this.units.activeUnits) {
+      if (other.side === unit.side || !other.isAlive || other.airborne) continue;
+      const ahead = (other.x - unit.x) * dir;
+      if (ahead < -unit.halfWidth || this.gap(unit, other) > reach) continue;
+      if (ahead < bestAhead) {
+        best = other;
+        bestAhead = ahead;
+      }
+    }
+    return best;
+  }
+
+  private *enemiesWithin(x: number, radius: number, side: Side): Generator<Unit> {
+    for (const other of this.units.activeUnits) {
+      if (other.side !== side && other.isAlive && Math.abs(other.x - x) - other.halfWidth <= radius) yield other;
+    }
+  }
+
+  private clampX(unit: Unit, x: number): number {
+    return Math.max(this.bases.player.frontX + unit.halfWidth, Math.min(this.bases.enemy.frontX - unit.halfWidth, x));
   }
 }

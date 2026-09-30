@@ -231,8 +231,15 @@ export class GameScene extends Phaser.Scene {
     this.spawn = new SpawnSystem(this.state, this.units, (unitId, side) =>
       this.lane.isSpawnPointClear(side, this.units.spriteWidth(unitId, side)),
     );
-    this.mech = new MechSystem(this.state, this.units, (unitId, side) =>
-      this.lane.isSpawnPointClear(side, this.units.spriteWidth(unitId, side)),
+    this.mech = new MechSystem(
+      this.state,
+      this.units,
+      (unitId, side) => this.lane.isSpawnPointClear(side, this.units.spriteWidth(unitId, side)),
+      {
+        bases: this.bases,
+        projectiles: this.projectiles,
+        stunTurrets: (side, x, range, untilMs) => this.turrets.stunNear(side, x, range, untilMs),
+      },
     );
     this.turrets = new TurretSystem(this, this.state, this.bases, this.units, this.projectiles);
     this.special = new SpecialSystem(this.state, this.units, this.projectiles, () => this.match.elapsedMs);
@@ -383,7 +390,7 @@ export class GameScene extends Phaser.Scene {
     this.ai?.update(now);
     this.playerAi?.update(now);
     this.spawn.update(dt);
-    this.mech.update(dt);
+    this.mech.update(dt, this.match.elapsedMs);
     this.status.update(now);
     this.combat.update(now);
     this.turrets.update(now);
@@ -729,6 +736,12 @@ export class GameScene extends Phaser.Scene {
         const unit = this.units.findByInstanceId(instanceId);
         if (!unit || !unit.isAlive) return false;
         dealUnitDamage(unit, amount, otherSide(unit.side));
+        return true;
+      },
+      place: (instanceId, x) => {
+        const unit = this.units.findByInstanceId(instanceId);
+        if (!unit || !unit.isAlive) return false;
+        unit.x = x;
         return true;
       },
       kill: (instanceId) => {
