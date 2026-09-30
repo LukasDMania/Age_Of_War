@@ -38,7 +38,7 @@ export function shotLine(
   let target: Unit | null = null;
   let bestGap = Infinity;
   for (const other of units) {
-    if (other.side === shooter.side || !other.isAlive) continue;
+    if (other.side === shooter.side || !other.onLane) continue;
     const ahead = (other.x - shooter.x) * dir;
     if (ahead < 0) continue;
     const gap = ahead - shooter.halfWidth - other.halfWidth;

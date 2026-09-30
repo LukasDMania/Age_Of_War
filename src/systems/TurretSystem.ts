@@ -269,7 +269,7 @@ export class TurretSystem {
     let best: Unit | null = null;
     let bestAdvance = Infinity;
     for (const unit of this.units.activeUnits) {
-      if (unit.side !== enemy || !unit.isAlive) continue;
+      if (unit.side !== enemy || !unit.onLane) continue;
       if (Math.abs(unit.x - turret.x) - unit.halfWidth > range) continue;
       // Distance from our base along the lane: smaller means further advanced.
       const advance = (unit.x - homeX) * dir;

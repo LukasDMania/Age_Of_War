@@ -266,9 +266,9 @@ and boosts them.
     Forge level outright after N seconds of work.
   - Speed up building upgrades or cut their cost.
   - Repair the base.
-- Open questions for the owner before building: can it be attacked while
-  working? Can it switch buildings mid-life? Is it a mode chosen in the
-  hangar (combat vs utility), or implied by the parts?
+- Owner's answers (2026-09-30): it can't be attacked while working; it
+  can switch buildings mid-life; it is implied by the parts. Built; see
+  GAME_DESIGN and the session log.
 - Code: behavior blocks on parts (`utility: { buildingBuff, craftRate, ...
   }`) handled by MechSystem and BuildingSystem through events
   (`mech-assist-started` / `mech-assist-ended`). No direct state edits.

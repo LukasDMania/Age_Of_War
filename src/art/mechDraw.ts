@@ -74,7 +74,7 @@ function palette(age: number): Palette {
 }
 
 /** Hip height above the ground per legs. */
-const HIP: Readonly<Record<LegsId, number>> = { walker: 34, stompers: 34, treads: 24, striders: 40, hover: 36, spider: 30, jump: 36 };
+const HIP: Readonly<Record<LegsId, number>> = { walker: 34, stompers: 34, treads: 24, striders: 40, hover: 36, spider: 30, jump: 36, crawler: 24 };
 
 /**
  * Where each slot's part sits on a standing Mech, rig units from the feet,
@@ -217,6 +217,10 @@ function drawLegs(c: Ctx, legs: LegsId, s: Pose, near: boolean): void {
     if (!near) drawHover(c, s);
     return;
   }
+  if (legs === 'crawler') {
+    if (!near) drawCrawler(c, s);
+    return;
+  }
   if (legs === 'spider') {
     drawSpider(c, s, near);
     return;
@@ -303,6 +307,32 @@ function drawHover(c: Ctx, s: Pose): void {
   } else if (s.age === 3) hazard(c, -12, y + 5, 24, 3);
   else if (s.age === 4) poly(c, [[-12, y + 5], [12, y + 5]], 1.2, s.team);
   // Shadow on the ground, smaller the higher it floats.
+  c.restore();
+}
+
+/** Cargo crawler: a low six-wheeled flatbed with a crate lashed on the back. */
+function drawCrawler(c: Ctx, s: Pose): void {
+  const pal = s.pal;
+  const spin = s.walking ? -s.u * Math.PI * 4 : 0;
+  const drop = s.collapse * 2;
+  c.save();
+  c.translate(0, drop);
+  // The crate at the back.
+  rrect(c, -28, -26, 14, 12, 1.5, s.age === 0 ? C.wood : s.age === 4 ? pal.mainB : shade(pal.trim, 1.1));
+  poly(c, [[-28, -20], [-14, -20]], 1, OUT);
+  // Flatbed.
+  plate(c, -30, -15, 58, 7, 2, pal.mainB, s);
+  if (s.age === 3) hazard(c, -26, -10, 50, 2.5);
+  if (s.age === 4) poly(c, [[-26, -9], [24, -9]], 1.2, s.team);
+  // Pelvis mount.
+  rrect(c, s.hip[0] - 9, s.hip[1] - 1, 18, 10, 3, pal.main);
+  // Six wheels.
+  for (let i = 0; i < 6; i++) {
+    const w: P2 = [-25 + i * 10, -4.5];
+    dot(c, w, 4.5, s.age === 0 ? pal.mainD : C.black);
+    dot(c, w, 2.2, s.age === 0 ? C.wood : pal.metal);
+    poly(c, [pt(w, spin + i, 2), pt(w, spin + i + Math.PI, 2)], 0.8, OUT);
+  }
   c.restore();
 }
 
@@ -497,6 +527,26 @@ function drawTorso(c: Ctx, torso: TorsoId, s: Pose): void {
       }
       return;
     }
+    case 'workshop': {
+      // A walking workbench: tool rack, an anvil or lathe, a work lamp.
+      plate(c, -16, -40, 32, 38, 5, pal.main, s);
+      rrect(c, -13, -35, 26, 10, 2, s.age === 0 ? C.wood : pal.mainD, 1.2);
+      // Tools hung on the rack.
+      poly(c, [[-9, -34], [-9, -27]], 1.4, pal.metal);
+      shape(c, [[-11, -28], [-7, -28], [-9, -25]], pal.metal, 0.8);
+      poly(c, [[-2, -34], [-2, -27]], 1.4, s.age === 0 ? C.bone : C.steel);
+      dot(c, [5, -30], 2.6, pal.metal);
+      poly(c, [[5, -30], [9, -27]], 1.2, pal.metal);
+      // An anvil (early) or a spinning gear lathe (later).
+      if (s.age <= 1) {
+        shape(c, [[-10, -20], [8, -20], [11, -17], [4, -17], [4, -12], [-5, -12], [-5, -17], [-10, -17]], s.age === 0 ? C.stone : C.iron);
+      } else {
+        gear(c, [0, -16], 5.5, s.u * Math.PI * 4, pal.metal);
+        if (s.age >= 3) glow(c, [0, -16], 6, s.team, 0.3);
+      }
+      emblem(c, [11, -8], 2.6, s);
+      return;
+    }
     case 'carrier': {
       // A wide troop box: a side door and three helmets in the window.
       plate(c, -19, -40, 38, 38, 6, pal.main, s);
@@ -621,6 +671,13 @@ function drawModule(c: Ctx, module: ModuleId, s: Pose): void {
       c.ellipse(at[0], at[1] - 17, 7, 2.6, 0, 0, Math.PI * 2);
       c.stroke();
       glow(c, [at[0], at[1] - 17], 6, s.team, 0.3 + 0.4 * pulse);
+      break;
+    case 'rush':
+      // A pennant and a stopwatch: rush order.
+      poly(c, [[at[0] - 2, at[1] - 6], [at[0] - 2, at[1] - 24]], 1.2, s.age === 0 ? C.wood : pal.metal);
+      shape(c, [[at[0] - 2, at[1] - 24], [at[0] + 7, at[1] - 21], [at[0] - 2, at[1] - 18]], '#f2c744', 1);
+      dot(c, [at[0] + 1, at[1] - 10], 3.6, pal.accent);
+      poly(c, [[at[0] + 1, at[1] - 10], [at[0] + 1 + Math.sin(s.u * Math.PI * 2) * 2.4, at[1] - 10 - Math.cos(s.u * Math.PI * 2) * 2.4]], 0.8, OUT);
       break;
     case 'orbital':
       poly(c, [[at[0] + 1, at[1] - 6], [at[0] - 2, at[1] - 30]], 1.2, pal.metal);
@@ -804,6 +861,23 @@ function drawHead(c: Ctx, head: HeadId, s: Pose): void {
       poly(c, [[-4, -14], [-5, -30]], 1.1, s.age === 0 ? C.wood : C.iron);
       shape(c, [[-5, -30], [7 + wave, -27], [-5, -23]], '#d9483d', 1);
       if (s.age >= 3) glow(c, [-5, -30], 5, '#ff5a3a', 0.6 + 0.3 * Math.sin(s.u * Math.PI * 8));
+      break;
+    }
+    case 'foreman': {
+      // A hard hat for the age (fur cap, iron cap, brass dome, a yellow hard hat, a light visor) and a work lamp.
+      const hat = s.age === 0 ? '#8a5a2b' : s.age === 1 ? C.steelB : s.age === 2 ? pal.main : s.age === 3 ? '#f2c744' : pal.mainB;
+      c.beginPath();
+      c.arc(1, -14, 8.5, Math.PI, 0);
+      c.closePath();
+      c.fillStyle = hat;
+      c.fill();
+      c.lineWidth = 1.2;
+      c.strokeStyle = OUT;
+      c.stroke();
+      poly(c, [[-9, -14], [11, -14]], 1.8, shade(hat, 0.8));
+      const lamp = s.age >= 3 ? '#fff6c8' : C.fireB;
+      dot(c, [8, -18], 2, lamp);
+      glow(c, [10, -18], 6, lamp, 0.55);
       break;
     }
     case 'salvage': {
@@ -1305,6 +1379,33 @@ function drawTool(c: Ctx, arm: ArmId, s: Pose, hand: P2, pose: ArmPose, near: bo
       poly(c, [[claw[0], claw[1]], [claw[0] + 5, claw[1] - 4], [claw[0] + 8, claw[1] - 1]], 1.6, pal.metal);
       poly(c, [[claw[0], claw[1]], [claw[0] + 5, claw[1] + 4], [claw[0] + 8, claw[1] + 1]], 1.6, pal.metal);
       dot(c, claw, 2, pal.accent);
+      break;
+    }
+    case 'wrench': {
+      // A big wrench (a bone club with a hook in the Stone age); it knocks on the attack.
+      const tap = s.anim === 'attack' ? Math.sin(s.u * Math.PI * 4) * 0.35 : 0;
+      c.rotate(tap);
+      bar(c, [0, 0], [18, 0], 3.2, s.age === 0 ? C.bone : C.steel);
+      shape(c, [[16, -5], [24, -6], [26, -2], [21, -1], [21, 1], [26, 2], [24, 6], [16, 5]], s.age === 0 ? C.bone : C.steelB, 1.1);
+      if (s.age === 3) rrect(c, 3, -2, 7, 4, 1, '#c0392b', 0.8);
+      if (s.age === 4) glow(c, [22, 0], 6, s.team, 0.5);
+      break;
+    }
+    case 'crane': {
+      // A small crane jib with a cable and a hook that swings.
+      bar(c, [0, 0], [22, 0], 3, s.age === 0 ? C.wood : pal.metal);
+      for (let x = 4; x < 20; x += 5) poly(c, [[x, -1.5], [x + 2.5, 1.5]], 0.8, OUT);
+      const swing = Math.sin((s.anim === 'attack' ? s.u * 4 : s.u * 2) * Math.PI) * 0.25;
+      c.save();
+      c.translate(22, 0);
+      c.rotate(-(Math.PI / 2 - pose.fa) + swing);
+      poly(c, [[0, 0], [0, 12]], 0.9, OUT);
+      c.beginPath();
+      c.arc(0, 14, 2.6, -Math.PI / 2, Math.PI * 0.9);
+      c.lineWidth = 1.6;
+      c.strokeStyle = s.age === 0 ? C.bone : C.steelB;
+      c.stroke();
+      c.restore();
       break;
     }
     case 'wrecker': {

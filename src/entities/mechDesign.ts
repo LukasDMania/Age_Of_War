@@ -15,6 +15,7 @@ import {
   MECH_SETS,
   MECH_SLOTS,
   MECH_TORSOS,
+  MECH_UTILITY,
   TITAN,
   type ArmId,
   type ArmPart,
@@ -26,6 +27,7 @@ import {
   type MechSetId,
   type MechSlot,
   type PartUnlock,
+  type UtilityPartEffect,
 } from '@config/mech.config';
 import { rigWindupMs } from '@config/unitArt.config';
 import type { MechBehavior, UnitAttack, UnitDefinition, UtilityEffect } from '@entities/unitDefinitions';
@@ -97,6 +99,7 @@ export interface PartInfo {
   set?: MechSetId;
   hp?: number;
   armor?: number;
+  utility?: UtilityPartEffect;
 }
 
 /** A part by slot and id, whatever its kind. */
@@ -345,6 +348,19 @@ function behavior(design: MechDesign, age: number): MechBehavior | undefined {
   if (head.taunt) b.taunt = { ...head.taunt };
   if (head.salvage) b.salvage = { ...head.salvage };
   if (module.ability) b.ability = { moduleId: design.module, ability: scaledAbility(module.ability, age) };
+  if (isUtilityDesign(design)) {
+    const u = { lifetimeMs: MECH_UTILITY.lifetimeMs, output: MECH_UTILITY.output, discount: 0, craftEveryMs: null as number | null, repairPerSec: 0 };
+    for (const slot of MECH_SLOTS) {
+      const e = mechPart(design, slot).utility;
+      if (!e) continue;
+      u.lifetimeMs += e.lifetimeMs ?? 0;
+      u.output += e.output ?? 0;
+      u.discount = Math.min(0.6, u.discount + (e.discount ?? 0));
+      if (e.craftEveryMs) u.craftEveryMs = Math.min(u.craftEveryMs ?? Infinity, e.craftEveryMs);
+      u.repairPerSec += e.repairPerSec ?? 0;
+    }
+    b.utility = u;
+  }
   for (const bonus of designBonuses(design).bonuses) {
     if (bonus.kind !== 'mech') continue;
     if (bonus.slowImmune) b.slowImmune = true;
@@ -504,6 +520,16 @@ export function designStatCaps(age: number): MechStats {
   };
 }
 
+/** How many of a design's parts are utility parts. */
+export function utilityParts(design: MechDesign): number {
+  return MECH_SLOTS.filter((slot) => mechPart(design, slot).utility !== undefined).length;
+}
+
+/** A utility Mech (owner: "a part based switch"): enough utility parts, and it works at a building instead of fighting. */
+export function isUtilityDesign(design: MechDesign): boolean {
+  return utilityParts(design) >= MECH_UTILITY.minParts;
+}
+
 /** Role tags on the hangar's build sheet, from what the parts do. */
 export type MechRole = 'Tank' | 'Brawler' | 'Artillery' | 'Support' | 'Utility';
 
@@ -514,6 +540,7 @@ export function designRoles(design: MechDesign): MechRole[] {
   const ranged = arms.filter((a) => a.attack?.ranged).length;
   const head = MECH_HEADS[design.head];
   const torso = MECH_TORSOS[design.torso];
+  if (isUtilityDesign(design)) return ['Utility'];
   const roles: MechRole[] = [];
   if (armored >= 2 || head.taunt) roles.push('Tank');
   if (melee > 0 && (ranged === 0 || MECH_LEGS[design.legs].meleeDamage)) roles.push('Brawler');

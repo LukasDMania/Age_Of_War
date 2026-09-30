@@ -322,6 +322,11 @@ export class GameScene extends Phaser.Scene {
         this.showPerkBadges();
       }),
       on(Events.BuildingPerkChosen, () => this.showPerkBadges()),
+      on(Events.MechAssistChanged, ({ side, buildingId, working, remainingMs }) => {
+        for (const [id, view] of Object.entries(this.buildingViews[side])) {
+          view?.setAssist(id === buildingId ? (working ? 'working' : 'coming') : null, Math.ceil(remainingMs / 1000));
+        }
+      }),
       // A Mech's sheets are drawn when its build starts (not the frame it
       // walks out), and older designs no longer on the lane are freed.
       on(Events.MechChanged, ({ side, build }) => {
@@ -402,8 +407,8 @@ export class GameScene extends Phaser.Scene {
     this.experiments.push({ update: (now) => brain.update(now), destroy: () => undefined });
     // The side whose Mech falls loses: its base goes with it.
     this.cleanups.push(
-      on(Events.UnitDied, ({ side, unitId }) => {
-        if (isMechUnitId(unitId) && this.match.phase === 'playing') dealBaseDamage(this.bases[side], this.bases[side].maxHp * 10);
+      on(Events.UnitDied, ({ side, unitId, retired }) => {
+        if (isMechUnitId(unitId) && !retired && this.match.phase === 'playing') dealBaseDamage(this.bases[side], this.bases[side].maxHp * 10);
       }),
     );
   }
@@ -663,6 +668,8 @@ export class GameScene extends Phaser.Scene {
     const views: Partial<Record<BuildingId, Building>> = {};
     activeBuildingIds().forEach((id, index) => {
       const view = new Building(this, side, id, buildingX(side, BASE_X[side], index));
+      // A click sends the player's utility Mech here (MechSystem checks there is one).
+      if (side === 'player') view.onPress(() => emit(Events.MechAssistRequested, { side, buildingId: id }));
       view.setLevel(this.state[side].buildings[id]);
       views[id] = view;
     });

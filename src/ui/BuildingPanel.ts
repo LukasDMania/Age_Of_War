@@ -5,7 +5,6 @@ import {
   BUILDING_OUTPUT,
   BUILDING_PERKS,
   BUILDINGS,
-  buildingUpgradeCost,
   LEVELS_PER_AGE,
   maxBuildingLevel,
   perksPending,
@@ -16,6 +15,7 @@ import type { SideState } from '@state/GameState';
 import type { Side } from '@state/types';
 import {
   buildingEffects,
+  buildingPrice,
   buildingRejection,
   libraryXpPerSec,
   marketXpPerSec,
@@ -142,7 +142,7 @@ export class BuildingPanel {
       onPress: (modifiers) => (pending ? this.openPerkChoice(id) : this.buyLevels(id, modifiers)),
       tint: pending ? UiColors.ready : UiColors.panelDark,
     });
-    const cost = buildingUpgradeCost(id, level);
+    const cost = buildingPrice(this.sideState, id);
     const rejection = buildingRejection(me, id);
     if (pending) {
       const t = this.scene.add.text(0, 0, 'Pick perk!', { fontFamily: UI_TITLE_FONT, fontSize: '14px', color: '#fff6de' }).setOrigin(0.5);

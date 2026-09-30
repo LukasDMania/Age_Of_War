@@ -34,6 +34,12 @@ export interface MechState {
   abilityReadyAt?: number;
   /** The Titan (experimental) was built this match: once only. */
   titanBuilt?: boolean;
+  /**
+   * A utility Mech's work (Mech expansion section 7, owned by MechSystem,
+   * read by BuildingSystem): the building it goes to or works at (a
+   * `BuildingId`), whether it is there, and what it does to that building.
+   */
+  assist?: { buildingId: string; working: boolean; output: number; discount: number } | null;
 }
 
 /** Match state machine. See `MatchSystem` (Phase 2). */

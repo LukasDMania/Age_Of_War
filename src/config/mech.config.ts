@@ -31,9 +31,9 @@ export const MECH_SLOT_NAMES: Readonly<Record<MechSlot, string>> = {
   module: 'Module',
 };
 
-export type LegsId = 'walker' | 'treads' | 'striders' | 'stompers' | 'hover' | 'spider' | 'jump';
-export type TorsoId = 'frame' | 'hull' | 'armory' | 'reactor' | 'bay' | 'overcharge' | 'carrier';
-export type HeadId = 'visor' | 'crest' | 'siren' | 'beacon' | 'scope' | 'taunt' | 'salvage';
+export type LegsId = 'walker' | 'treads' | 'striders' | 'stompers' | 'hover' | 'spider' | 'jump' | 'crawler';
+export type TorsoId = 'frame' | 'hull' | 'armory' | 'reactor' | 'bay' | 'overcharge' | 'carrier' | 'workshop';
+export type HeadId = 'visor' | 'crest' | 'siren' | 'beacon' | 'scope' | 'taunt' | 'salvage' | 'foreman';
 export type ArmId =
   | 'fist'
   | 'blade'
@@ -45,9 +45,11 @@ export type ArmId =
   | 'tesla'
   | 'railgun'
   | 'grapple'
-  | 'wrecker';
+  | 'wrecker'
+  | 'wrench'
+  | 'crane';
 /** `none`: the module slot left empty (saves gold). */
-export type ModuleId = 'none' | 'smoke' | 'overdrive' | 'leap' | 'overload' | 'dome' | 'emp' | 'orbital';
+export type ModuleId = 'none' | 'smoke' | 'overdrive' | 'leap' | 'overload' | 'dome' | 'emp' | 'orbital' | 'rush';
 
 export interface MechDesign {
   legs: LegsId;
@@ -90,6 +92,26 @@ interface PartBase {
   unlock?: PartUnlock;
   /** Set bonus tag. */
   set?: MechSetId;
+  /**
+   * A utility part (Mech expansion section 7): a design with
+   * `MECH_UTILITY.minParts` or more of these is a utility Mech that works at
+   * a building instead of fighting. What each one adds to that work.
+   */
+  utility?: UtilityPartEffect;
+}
+
+/** What a utility part adds to a utility Mech's work at a building (Stone-age numbers). */
+export interface UtilityPartEffect {
+  /** Extra life, ms. */
+  lifetimeMs?: number;
+  /** The worked building's output (Mine gold, Library XP, Market trade) + this share. */
+  output?: number;
+  /** The worked building's upgrades (and research at the Forge) cost this share less. */
+  discount?: number;
+  /** A free level of the worked building every this many ms of work. */
+  craftEveryMs?: number;
+  /** The base regains this share of its max HP per second while it works. */
+  repairPerSec?: number;
 }
 
 export interface LegsPart extends PartBase {
@@ -177,7 +199,9 @@ export type MechAbility =
   | { kind: 'overload'; cooldownMs: number; radius: number; damage: number; hpCost: number }
   | { kind: 'dome'; cooldownMs: number; radius: number; shield: number }
   | { kind: 'emp'; cooldownMs: number; range: number; stunMs: number }
-  | { kind: 'orbital'; cooldownMs: number; damage: number; radius: number };
+  | { kind: 'orbital'; cooldownMs: number; damage: number; radius: number }
+  /** Utility Mechs: the worked building gets a free level now. */
+  | { kind: 'rush'; cooldownMs: number };
 
 export interface ModulePart extends PartBase {
   ability?: MechAbility;
@@ -203,6 +227,7 @@ export const MECH_LEGS: Readonly<Record<LegsId, LegsPart>> = {
   stompers: { name: 'Stompers', about: '+500 HP, melee +30%', tier: 3, cost: 240, hp: 500, meleeDamage: 1.3, forge: 6, set: 'assault' },
   hover: { name: 'Hover jets', about: '+100 HP, 90% faster, shrugs off slows', tier: 3, cost: 210, hp: 100, speed: 1.9, slowImmune: true, unlock: level(3) },
   spider: { name: 'Spider legs', about: '+600 HP, guns +20% reach, no knockback', tier: 3, cost: 230, hp: 600, rangedRange: 1.2, knockbackImmune: true, unlock: achievement('mech-absorb'), set: 'arsenal' },
+  crawler: { name: 'Cargo crawler', about: 'Utility: +600 HP, slow, works 30 s longer', tier: 2, cost: 130, hp: 600, speed: 0.7, utility: { lifetimeMs: 30_000 }, unlock: level(2) },
   jump: { name: 'Jump legs', about: '+350 HP, leaps over the front line', tier: 3, cost: 250, hp: 350, leap: { cooldownMs: 12000, damage: 40, radius: 50 }, unlock: achievement('mech-rampage'), set: 'assault' },
 };
 
@@ -213,6 +238,7 @@ export const MECH_TORSOS: Readonly<Record<TorsoId, TorsoPart>> = {
   reactor: { name: 'Reactor', about: '+700 HP, weapons +35% and faster', tier: 3, cost: 300, hp: 700, damage: 1.35, cooldown: 0.85, forge: 6, set: 'energy' },
   bay: { name: 'Hangar bay', about: '+500 HP, launches drones', tier: 3, cost: 280, hp: 500, drones: { cooldownMs: 5000, damage: 60, radius: 26, range: 300 }, unlock: level(5), set: 'command' },
   overcharge: { name: 'Overcharge core', about: '+600 HP, weapons +60%, burns its own HP', tier: 3, cost: 260, hp: 600, damage: 1.6, drain: { perSec: 0.008, floor: 0.5 }, unlock: achievement('launcher-siege'), set: 'energy' },
+  workshop: { name: 'Workshop core', about: 'Utility: +400 HP, crafts a free building level every 30 s', tier: 3, cost: 260, hp: 400, utility: { craftEveryMs: 30_000 }, unlock: level(3) },
   carrier: { name: 'Troop carrier', about: '+800 HP, drops 3 melee troops', tier: 3, cost: 270, hp: 800, troops: 3, unlock: achievement('big-army'), set: 'command' },
 };
 
@@ -223,6 +249,7 @@ export const MECH_HEADS: Readonly<Record<HeadId, HeadPart>> = {
   beacon: { name: 'Repair beacon', about: 'Heals itself and allies nearby', tier: 3, cost: 195, aura: { kind: 'heal', radius: 160, amount: 15, intervalMs: 1500 }, forge: 11, set: 'command' },
   scope: { name: 'Sniper scope', about: 'Guns reach +35%, hit the back line', tier: 2, cost: 150, rangedRange: 1.35, targetBack: true, unlock: level(2), set: 'arsenal' },
   taunt: { name: 'Taunt beacon', about: '+300 HP, armor, enemies near must hit it', tier: 3, cost: 180, hp: 300, armor: 0.9, taunt: { radius: 160 }, unlock: achievement('mech-absorb'), set: 'bastion' },
+  foreman: { name: 'Foreman', about: 'Utility: the worked building +50% output', tier: 2, cost: 140, utility: { output: 0.5 } },
   salvage: { name: 'Salvage scanner', about: 'Kills near it pay +50% gold', tier: 2, cost: 140, salvage: { radius: 220, goldMult: 0.5 }, unlock: achievement('mech-hunter') },
 };
 
@@ -237,6 +264,8 @@ export const MECH_ARMS: Readonly<Record<ArmId, ArmPart>> = {
   tesla: { name: 'Tesla coil', about: 'Lightning that jumps to 3 more', tier: 3, cost: 240, attack: { damage: 25, range: 110, cooldownMs: 1600, chain: { jumps: 3, reach: 70, falloff: 0.75 } }, unlock: achievement('twin-guns-win'), set: 'energy' },
   railgun: { name: 'Railgun', about: 'A slow shot through the whole line', tier: 3, cost: 260, attack: { damage: 95, range: 320, cooldownMs: 4200, ranged: true, projectile: 'rail', pierce: true }, unlock: achievement('launcher-siege'), set: 'energy' },
   grapple: { name: 'Grapple claw', about: 'Pulls a back-line enemy to you', tier: 3, cost: 200, attack: { damage: 45, range: 220, cooldownMs: 4000, pull: true }, unlock: achievement('mech-hunter') },
+  wrench: { name: 'Wrench arm', about: 'Utility: repairs your base while it works', tier: 1, cost: 80, utility: { repairPerSec: 0.004 } },
+  crane: { name: 'Crane arm', about: 'Utility: that building\'s upgrades 20% cheaper', tier: 1, cost: 90, utility: { discount: 0.2 } },
   wrecker: { name: 'Wrecking ball', about: 'Big swings that knock enemies back', tier: 3, cost: 230, attack: { damage: 36, range: 26, cooldownMs: 1800, splashRadius: 20, knockback: 60 }, unlock: achievement('mech-rampage'), set: 'assault' },
 };
 
@@ -248,6 +277,7 @@ export const MECH_MODULES: Readonly<Record<ModuleId, ModulePart>> = {
   overload: { name: 'Overload', about: 'A big blast around it, costs 15% HP', tier: 3, cost: 170, ability: { kind: 'overload', cooldownMs: 22_000, radius: 110, damage: 150, hpCost: 0.15 }, unlock: level(6), set: 'energy' },
   dome: { name: 'Barrier dome', about: 'Shields it and allies nearby', tier: 3, cost: 180, ability: { kind: 'dome', cooldownMs: 30_000, radius: 150, shield: 400 }, unlock: level(4), set: 'bastion' },
   emp: { name: 'EMP pulse', about: 'Stuns turrets and heavies near it, 3 s', tier: 3, cost: 170, ability: { kind: 'emp', cooldownMs: 30_000, range: 240, stunMs: 3000 }, unlock: level(7), set: 'energy' },
+  rush: { name: 'Rush order', about: 'Utility: the worked building gets a free level now', tier: 2, cost: 120, ability: { kind: 'rush', cooldownMs: 45_000 }, utility: {}, unlock: level(4) },
   orbital: { name: 'Orbital beacon', about: 'One strike on the enemy front', tier: 3, cost: 200, ability: { kind: 'orbital', cooldownMs: 35_000, damage: 400, radius: 50 }, unlock: level(8), set: 'command' },
 };
 
@@ -312,6 +342,7 @@ export const MECH_LAUNCHER_MUZZLES: Readonly<Record<LegsId, { near: { x: number;
   hover: { near: { x: 61, y: -61 }, far: { x: 56, y: -72 } },
   spider: { near: { x: 61, y: -55 }, far: { x: 56, y: -66 } },
   jump: { near: { x: 61, y: -61 }, far: { x: 56, y: -72 } },
+  crawler: { near: { x: 61, y: -49 }, far: { x: 56, y: -60 } },
 };
 
 /**
@@ -508,4 +539,30 @@ export const MECH_DUEL = {
   /** Random designs tried when looking for a fair opponent. */
   samples: 400,
   enemyAbilityRange: 220,
+} as const;
+
+/**
+ * The utility Mech (Mech expansion section 7; owner, 2026-09-30: "no when
+ * working at building cant attack, yes can switch, its a part based
+ * switch"). A design with `minParts` or more utility parts doesn't fight:
+ * it walks back to a building (the one you click, or the first of
+ * `priority` that exists) and works there for `lifetimeMs` plus its parts'
+ * extra, then powers down and frees the Mech slot. Nothing can attack it,
+ * on the way or at work; clicking another building sends it there.
+ *
+ * While it works, the building's output is `1 + output` times (Mine gold,
+ * Library XP, Market trade), and each utility part adds its own effect.
+ * All numbers PROPOSED.
+ */
+export const MECH_UTILITY = {
+  minParts: 3,
+  lifetimeMs: 75_000,
+  /** Output bonus every utility Mech gives the building it works. */
+  output: 0.25,
+  /** Off the lane it walks this many times faster (the buildings are far behind the gate). */
+  walkMult: 2,
+  /** It swings its tools this often while working (the attack animation), ms. */
+  workAnimMs: 1400,
+  /** Buildings it picks by itself, in order. */
+  priority: ['mine', 'forge', 'library', 'barracks', 'shrine', 'market'],
 } as const;

@@ -21,6 +21,10 @@ export const Events = {
   BuildMechRequested: 'build-mech-requested',
   /** Use the Mech's Special module (the War cry button while a Mech with one is out). */
   MechAbilityRequested: 'mech-ability-requested',
+  /** Send the utility Mech to a building (a click on the building). */
+  MechAssistRequested: 'mech-assist-requested',
+  /** A free building level (a utility Mech's crafting or Rush order); BuildingSystem checks the age cap. */
+  GrantBuildingLevelRequested: 'grant-building-level-requested',
   BuySlotRequested: 'buy-slot-requested',
   BuyTurretRequested: 'buy-turret-requested',
   UpgradeTurretRequested: 'upgrade-turret-requested',
@@ -47,6 +51,9 @@ export const Events = {
   MechChanged: 'mech-changed',
   MechAbilityChanged: 'mech-ability-changed',
   MechEvolved: 'mech-evolved',
+  /** A utility Mech's building, arrival, and time left (Mech expansion section 7). */
+  MechAssistChanged: 'mech-assist-changed',
+  BaseRepaired: 'base-repaired',
   MechAbilityUsed: 'mech-ability-used',
   /** Feedback for Mech weapons and part effects (flames, lightning, pulls, leaps...). */
   WeaponFx: 'weapon-fx',
@@ -119,6 +126,11 @@ export interface EventPayloads {
   /** The Mech workshop: build this design (in the side's current age). */
   [Events.BuildMechRequested]: { side: Side; design: MechDesign; titan?: boolean };
   [Events.MechAbilityRequested]: { side: Side };
+  [Events.MechAssistRequested]: { side: Side; buildingId: BuildingId };
+  [Events.GrantBuildingLevelRequested]: { side: Side; buildingId: BuildingId };
+  /** `buildingId` null: the utility Mech powered down. `remainingMs`: its life left. */
+  [Events.MechAssistChanged]: { side: Side; buildingId: BuildingId | null; working: boolean; remainingMs: number };
+  [Events.BaseRepaired]: { side: Side; hp: number; maxHp: number; amount: number };
   /** A Mech on the lane took its side's newer age (Mech expansion 4b); `cost` was paid. */
   [Events.MechEvolved]: { side: Side; instanceId: number; x: number; topY: number; fromAge: number; toAge: number; cost: number };
   /** The side's Mech module: which one is out (null: no Mech with a module) and its cooldown. */
@@ -177,6 +189,8 @@ export interface EventPayloads {
     x: number;
     /** Set when a turret scored the kill: its slot. */
     killerTurret?: number;
+    /** Left without being killed (a utility Mech powering down): no rewards, no kill. */
+    retired?: boolean;
   };
   /**
    * A unit lost HP. `amount` is the HP lost; `absorbed` is what a shield

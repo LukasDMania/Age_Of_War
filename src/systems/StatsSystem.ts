@@ -33,7 +33,8 @@ export class StatsSystem {
   constructor() {
     this.cleanups = [
       on(Events.UnitSpawned, ({ side }) => this.stats[side].unitsTrained++),
-      on(Events.UnitDied, ({ side, killerSide }) => {
+      on(Events.UnitDied, ({ side, killerSide, retired }) => {
+        if (retired) return;
         this.stats[side].losses++;
         if (killerSide !== side) this.stats[killerSide].kills++;
       }),

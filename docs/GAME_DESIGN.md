@@ -894,7 +894,13 @@ built, archetype runs since 2026-09-28).
   one round. No account XP for duels (PROPOSED).
 - **Titan (built 2026-09-30, EXPERIMENTAL, switch `titan`):** in the
   final age, once per match, the design built huge (numbers PROPOSED).
-- **Expansion agreed 2026-09-29 (being built, Phase 21):** hangar UI, 7 parts per
+- **Utility Mech (built 2026-09-30; LOCKED by the owner: it can't be
+  attacked while working, it can switch buildings, it is decided by its
+  parts):** three or more utility parts (Cargo crawler, Workshop core,
+  Foreman, Wrench arm, Crane arm, Rush order) make a Mech that works at a
+  building for a time instead of fighting: more output, cheaper
+  upgrades, free levels, base repair (numbers PROPOSED, session log).
+- **Expansion agreed 2026-09-29 (built, Phase 21):** hangar UI, 7 parts per
   slot, pair combos and sets, an optional Special module slot, account
   unlocks, evolve on age-up, Mech vs Mech, a utility Mech and a Titan
   (experimental). See `docs/MECH_EXPANSION.md`.

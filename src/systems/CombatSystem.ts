@@ -80,7 +80,7 @@ export class CombatSystem {
   update(nowMs: number): void {
     this.nowMs = nowMs;
     for (const unit of this.units.activeUnits) {
-      if (!unit.isAlive || unit.airborne) continue;
+      if (!unit.onLane || unit.airborne) continue;
       this.fireSecondary(unit, nowMs);
 
       const attack = unit.attack;
@@ -174,7 +174,7 @@ export class CombatSystem {
     const far = reach + (attack.cone ?? 0);
     const x0 = unit.x + dir * unit.halfWidth;
     for (const other of this.units.activeUnits) {
-      if (other.side === unit.side || !other.isAlive) continue;
+      if (other.side === unit.side || !other.onLane) continue;
       const gap = this.gapTo(unit, other);
       if (gap === null || gap > far) continue;
       this.afterHit(unit, attack, other, dealUnitDamage(other, damage, unit.side));
@@ -201,7 +201,7 @@ export class CombatSystem {
       let next: Unit | null = null;
       let best = Infinity;
       for (const other of this.units.activeUnits) {
-        if (other.side === unit.side || !other.isAlive || hit.has(other)) continue;
+        if (other.side === unit.side || !other.onLane || hit.has(other)) continue;
         const d = Math.abs(other.x - current.x) - other.halfWidth - current.halfWidth;
         if (d <= chain.reach && d < best) {
           best = d;
@@ -261,7 +261,7 @@ export class CombatSystem {
       if (attack.sweepEvery && unit.weaponUses % attack.sweepEvery === 0) {
         const reach = attack === unit.definition.secondaryAttack ? attack.range * unit.statMultiplier('range') : unit.getStat('range');
         for (const other of this.units.activeUnits) {
-          if (other === targetUnit || other.side === unit.side || !other.isAlive) continue;
+          if (other === targetUnit || other.side === unit.side || !other.onLane) continue;
           const gap = Math.abs(other.x - unit.x) - unit.halfWidth - other.halfWidth;
           if (gap <= reach + SWEEP_EXTRA) dealUnitDamage(other, damage, unit.side);
         }
@@ -355,7 +355,7 @@ export class CombatSystem {
     let bestGap = Infinity;
     let taunter: Unit | null = null;
     for (const other of this.units.activeUnits) {
-      if (other.side !== enemy || !other.isAlive || other.airborne) continue;
+      if (other.side !== enemy || !other.onLane || other.airborne) continue;
       const gap = this.gapTo(unit, other);
       if (gap === null || gap > reach) continue;
       if (gap < bestGap) {
@@ -373,7 +373,7 @@ export class CombatSystem {
   private taunterInReach(unit: Unit, reach: number): Unit | null {
     for (const other of this.units.activeUnits) {
       const taunt = other.definition.mech?.taunt;
-      if (!taunt || other.side === unit.side || !other.isAlive || other.airborne) continue;
+      if (!taunt || other.side === unit.side || !other.onLane || other.airborne) continue;
       const gap = this.gapTo(unit, other);
       if (gap !== null && gap <= reach && gap <= taunt.radius) return other;
     }
@@ -386,7 +386,7 @@ export class CombatSystem {
     let best: Unit | null = null;
     let bestGap = -Infinity;
     for (const other of this.units.activeUnits) {
-      if (other.side !== enemy || !other.isAlive || other.airborne) continue;
+      if (other.side !== enemy || !other.onLane || other.airborne) continue;
       const gap = this.gapTo(unit, other);
       if (gap === null || gap > reach || gap <= bestGap) continue;
       if (pullable && (gap < PULL_MIN_GAP || other.definition.mech?.knockbackImmune)) continue;

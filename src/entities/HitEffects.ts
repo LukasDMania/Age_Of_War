@@ -104,7 +104,8 @@ export class HitEffects {
 
     this.cleanups = [
       on(Events.UnitDamaged, (payload) => this.showNumber(payload)),
-      on(Events.UnitDied, ({ side, unitId, x }) => {
+      on(Events.UnitDied, ({ side, unitId, x, retired }) => {
+        if (retired) return;
         if (!this.showCorpse(side, unitId, x)) this.showPuff(side, x);
       }),
       on(Events.AreaHit, ({ x, radius }) => this.showRing(x, radius, RING_COLOR, RING_DURATION_MS, 0.3)),

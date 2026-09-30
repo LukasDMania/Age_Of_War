@@ -27,6 +27,8 @@ export class Building extends Phaser.GameObjects.Container {
   private readonly levelText: Phaser.GameObjects.Text;
   private readonly pips: Phaser.GameObjects.Graphics;
   private readonly badge: Phaser.GameObjects.Text;
+  /** Shown while a utility Mech works here (or walks here). */
+  private readonly assistBadge: Phaser.GameObjects.Text;
   private level = -1;
   private artKey = '';
 
@@ -55,10 +57,26 @@ export class Building extends Phaser.GameObjects.Container {
       .setOrigin(0.5)
       .setVisible(false);
     scene.tweens.add({ targets: this.badge, scale: 1.15, duration: 500, yoyo: true, repeat: -1 });
-    this.add([this.sprite, this.label, this.levelText, this.pips, this.badge]);
+    this.assistBadge = scene.add
+      .text(0, top - 44, '', { fontFamily: UI_FONT, fontSize: '12px', fontStyle: '600', color: '#241408', backgroundColor: '#9fd0ff', padding: { x: 4, y: 1 } })
+      .setOrigin(0.5)
+      .setVisible(false);
+    this.add([this.sprite, this.label, this.levelText, this.pips, this.badge, this.assistBadge]);
     this.setDepth(0.5);
     scene.add.existing(this);
     this.setLevel(0);
+  }
+
+  /** Calls `handler` when the building is clicked (sends a utility Mech here). */
+  onPress(handler: () => void): this {
+    this.sprite.setInteractive({ useHandCursor: true }).on('pointerdown', handler);
+    return this;
+  }
+
+  /** A utility Mech's work here: 'working', 'coming', or null (none). */
+  setAssist(state: 'working' | 'coming' | null, secondsLeft = 0): void {
+    this.assistBadge.setVisible(state !== null);
+    if (state) this.assistBadge.setText(state === 'working' ? `Mech at work ${secondsLeft}s` : 'Mech on the way');
   }
 
   setLevel(level: number): void {

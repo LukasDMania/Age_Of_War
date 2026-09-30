@@ -63,10 +63,32 @@ export function buildingEffects(side: SideState): BuildingEffects {
       fx[perk.stat] *= perk.mult;
     }
   }
+  // A utility Mech working a building raises its output (Mech expansion section 7).
+  const assist = side.mech.assist;
+  if (assist?.working) {
+    const boost = 1 + assist.output;
+    if (assist.buildingId === 'mine') fx.mineGold *= boost;
+    else if (assist.buildingId === 'library') fx.libraryXp *= boost;
+    else if (assist.buildingId === 'market') fx.marketRate *= boost;
+    else if (assist.buildingId === 'forge') fx.researchCost *= 1 - assist.discount;
+  }
   // Conquest traits: the Mine grows or is closed; money units earn more.
   fx.mineGold *= side.traits.mineClosed ? 0 : side.traits.mineMult;
   fx.moneyIncome *= side.traits.moneyIncome;
   return fx;
+}
+
+/**
+ * A side's price for the next level of a building (null at the top): the
+ * listed price, less a utility Mech's Crane-arm discount while it works
+ * there. Shared by the system, the HUD and the AI.
+ */
+export function buildingPrice(side: SideState, id: BuildingId): number | null {
+  const cost = buildingUpgradeCost(id, side.buildings[id]);
+  if (cost === null) return null;
+  const assist = side.mech.assist;
+  const discount = assist?.working && assist.buildingId === id ? assist.discount : 0;
+  return Math.round((cost * (1 - discount)) / 5) * 5;
 }
 
 /** Pure checks, shared by the system, the HUD and the AI. */
@@ -74,7 +96,7 @@ export function buildingRejection(side: SideState, id: BuildingId): BuildingReje
   if (!activeBuildingIds().includes(id)) return 'inactive';
   if (id === 'mine' && side.traits.mineClosed) return 'closed';
   const level = side.buildings[id];
-  const cost = buildingUpgradeCost(id, level);
+  const cost = buildingPrice(side, id);
   if (cost === null) return 'max-level';
   if (level + 1 > maxBuildingLevel(side.age)) return 'age-locked';
   if (side.gold < cost) return 'gold';
@@ -157,8 +179,12 @@ const UNIT_HP_MOD = 'building-unit-hp';
  *
  * This system has no sprites; `GameScene` draws the buildings.
  *
+ * A utility Mech (Mech expansion section 7) working a building raises its
+ * output and cuts its price (`buildingEffects`, `buildingPrice`), and can
+ * grant it free levels (`grant-building-level-requested`, age cap applies).
+ *
  * Listens for: `upgrade-building-requested`, `research-requested`,
- * `choose-perk-requested`.
+ * `choose-perk-requested`, `grant-building-level-requested`.
  * Emits: `building-upgraded`, `research-completed`, `building-perk-chosen`;
  * `gold-changed` and `xp-changed` through economyOps; `modifier-applied`
  * through statusOps.
@@ -178,6 +204,7 @@ export class BuildingSystem {
       on(Events.UpgradeBuildingRequested, ({ side, buildingId }) => this.onUpgrade(side, buildingId)),
       on(Events.ResearchRequested, ({ side, researchId }) => this.onResearch(side, researchId)),
       on(Events.ChoosePerkRequested, ({ side, buildingId, choice }) => this.onChoosePerk(side, buildingId, choice)),
+      on(Events.GrantBuildingLevelRequested, ({ side, buildingId }) => this.onGrantLevel(side, buildingId)),
     ];
   }
 
@@ -222,8 +249,22 @@ export class BuildingSystem {
   private onUpgrade(side: Side, id: BuildingId): void {
     const sideState = this.state[side];
     if (!BUILDINGS[id] || buildingRejection(sideState, id) !== null) return;
-    const cost = buildingUpgradeCost(id, sideState.buildings[id]);
+    const cost = buildingPrice(sideState, id);
     if (cost === null || !trySpendGold(this.state, side, cost, 'purchase')) return;
+    this.levelUp(side, id);
+  }
+
+  /** A free level (a utility Mech's crafting or Rush order), if the age allows one. */
+  private onGrantLevel(side: Side, id: BuildingId): void {
+    const sideState = this.state[side];
+    if (!BUILDINGS[id] || !activeBuildingIds().includes(id)) return;
+    const level = sideState.buildings[id];
+    if (buildingUpgradeCost(id, level) === null || level + 1 > maxBuildingLevel(sideState.age)) return;
+    this.levelUp(side, id);
+  }
+
+  private levelUp(side: Side, id: BuildingId): void {
+    const sideState = this.state[side];
     sideState.buildings[id] += 1;
     this.applyUnitModifiers(side);
     emit(Events.BuildingUpgraded, { side, buildingId: id, level: sideState.buildings[id] });

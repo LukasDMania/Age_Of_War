@@ -147,7 +147,8 @@ export class MatchLogger {
         bump(this.log.totals[side].spawned, unitId);
         add('unit', side, unitId);
       }),
-      on(Events.UnitDied, ({ side, unitId, killerSide }) => {
+      on(Events.UnitDied, ({ side, unitId, killerSide, retired }) => {
+        if (retired) return;
         bump(this.log.totals[side].losses, unitId);
         bump(this.log.totals[killerSide].kills, unitId);
       }),

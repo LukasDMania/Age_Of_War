@@ -157,7 +157,9 @@ export class EconomySystem {
     addGold(this.state, side, whole, source);
   }
 
-  private onUnitDied({ side, unitId, killerSide, instanceId, x }: EventPayloads[typeof Events.UnitDied]): void {
+  private onUnitDied({ side, unitId, killerSide, instanceId, x, retired }: EventPayloads[typeof Events.UnitDied]): void {
+    // A utility Mech powering down pays nobody.
+    if (retired) return;
     const definition = getUnitDefinition(unitId);
     const bounty = definition.income ? (this.rework ? MONEY_UNIT_REWORK.bountyMult : ECONOMY_KILL_BOUNTY_MULT) : 1;
     const plunder = researchMult('bounty', this.state[killerSide].research.bounty);

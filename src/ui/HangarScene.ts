@@ -7,9 +7,12 @@ import { baseMaxHp, GAME_HEIGHT, GAME_WIDTH, SCENE_KEYS } from '@config/constant
 import { AGE_COUNT } from '@config/ages.config';
 import type { GameSceneData } from '@/scenes/GameScene';
 import { createGameState } from '@state/GameState';
-import { MECH_DUEL, MECH_OPTIONS, MECH_SETS, MECH_SLOT_NAMES, MECH_SLOTS, type MechDesign, type MechSlot } from '@config/mech.config';
+import { MECH_DUEL, MECH_UTILITY, MECH_OPTIONS, MECH_SETS, MECH_SLOT_NAMES, MECH_SLOTS, type MechDesign, type MechSlot } from '@config/mech.config';
 import {
   accountLockedSlot,
+  isUtilityDesign,
+  mechDefinition,
+  utilityParts,
   designBonuses,
   designCost,
   randomDesign,
@@ -359,6 +362,8 @@ export class HangarScene extends Phaser.Scene {
   private build(): boolean {
     if (mechRejection(this.state, this.side, this.design, this.titan) !== null) return false;
     if (this.duel) {
+      // A utility Mech doesn't fight.
+      if (isUtilityDesign(this.design)) return false;
       this.fight();
       return true;
     }
@@ -725,9 +730,15 @@ export class HangarScene extends Phaser.Scene {
     }
     const shown = this.previewDesign();
     const me = this.state[this.side];
-    this.sheetText.setText(
-      [`Build time  ${Math.round(mechBuildMs(me, shown, this.titan) / 1000)} s`, `Toughness  ${Math.round(next.hp / Math.max(0.05, 1 - next.armor)).toLocaleString('en-US')} effective HP`].join('\n'),
-    );
+    const utility = mechDefinition(shown, me.age).mech?.utility;
+    const second = utility
+      ? `Utility: works ${Math.round(utility.lifetimeMs / 1000)} s at a building (click one to send it)`
+      : `Toughness  ${Math.round(next.hp / Math.max(0.05, 1 - next.armor)).toLocaleString('en-US')} effective HP`;
+    const parts = utilityParts(shown);
+    const third = !utility && parts > 0 ? `Utility parts ${parts}/${MECH_UTILITY.minParts}: a utility Mech at ${MECH_UTILITY.minParts}` : '';
+    this.sheetText.setText([`Build time  ${Math.round(mechBuildMs(me, shown, this.titan) / 1000)} s`, second, third].filter(Boolean).join('\n'));
+    this.sheetText.setScale(1);
+    if (this.sheetText.width > SHEET_W - 28) this.sheetText.setScale((SHEET_W - 28) / this.sheetText.width);
     const roles = designRoles(shown);
     this.rolesText.setText(roles.length ? `Roles: ${roles.join(' · ')}` : 'Roles: none (unarmed)');
     this.refreshBonuses(shown);
@@ -795,6 +806,11 @@ export class HangarScene extends Phaser.Scene {
       'cannot-afford': 'Need gold',
     };
     const key = keyHint('mech-build');
+    if (this.duel && rejection === null && isUtilityDesign(this.design)) {
+      this.buildButton.setEnabled(false);
+      this.buildLabel.setText('Utility Mechs don\'t duel');
+      return;
+    }
     const go = this.duel ? 'Fight!' : 'Build';
     this.buildLabel.setText(rejection === null ? `${go}${key ? ` (${key})` : ''}` : labels[rejection]);
   }

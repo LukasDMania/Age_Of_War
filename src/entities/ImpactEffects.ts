@@ -264,7 +264,14 @@ export class ImpactEffects {
       on(Events.ProjectileImpact, (p) => this.onImpact(p)),
       on(Events.UnitStruck, (p) => this.onStruck(p)),
       on(Events.TurretFired, ({ turretId, x, y }) => this.onTurretFired(turretId, x, y)),
-      on(Events.UnitDied, ({ side, unitId, x, killerSide }) => this.onDied(side, unitId, x, killerSide)),
+      on(Events.UnitDied, ({ side, unitId, x, killerSide, retired }) => {
+        // A utility Mech powering down: a puff of steam behind the base, no wreck.
+        if (retired) {
+          if (!this.muted) this.burst('steam', 10, x, LANE_Y - 40, 20, 20);
+          return;
+        }
+        this.onDied(side, unitId, x, killerSide);
+      }),
       on(Events.UtilityPulse, ({ kind, x, radius }) => this.onPulse(kind, x, radius)),
       on(Events.BaseDamaged, ({ side }) => this.onBaseHit(side)),
       on(Events.BaseDestroyed, ({ side }) => this.onBaseDestroyed(side)),

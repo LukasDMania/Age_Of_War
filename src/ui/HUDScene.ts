@@ -147,6 +147,8 @@ export class HUDScene extends Phaser.Scene {
   /** Opens the hangar (the Mech): a button in the tab row, not a tab. */
   private hangarButton!: UiButton;
   private hangarLabel!: Phaser.GameObjects.Text;
+  /** The utility Mech's building and whether it works there (last seen). */
+  private assistKey = '';
   private speedButton!: UiButton;
   private speedText!: Phaser.GameObjects.Text;
   private speed = 1;
@@ -381,6 +383,21 @@ export class HUDScene extends Phaser.Scene {
       on(Events.MechChanged, ({ side, alive, build }) => {
         if (side === HUD_SIDE) this.showMech(alive, build);
       }),
+      // A utility Mech at a building: its time left on the hangar button; that building's prices change.
+      on(Events.MechAssistChanged, ({ side, buildingId, working, remainingMs }) => {
+        if (side !== HUD_SIDE) return;
+        const label = buildingId ? `${working ? 'Works' : 'Mech'} ${Math.ceil(remainingMs / 1000)}s` : 'Hangar';
+        if (this.hangarLabel.text !== label) this.hangarLabel.setText(label);
+        // Prices change when it arrives, leaves or moves on: redraw the cards then.
+        const key = `${buildingId}:${working}`;
+        if (key !== this.assistKey) {
+          this.assistKey = key;
+          this.buildingPanel.rebuild();
+          this.researchPanel.rebuild();
+          this.refreshIncome();
+        }
+      }),
+      on(Events.BaseRepaired, ({ side, hp, maxHp }) => this.showBaseHp(side, hp, maxHp)),
       on(Events.ResearchCompleted, ({ side }) => {
         if (side === HUD_SIDE) this.researchPanel.rebuild();
       }),

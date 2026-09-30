@@ -146,6 +146,8 @@ export interface MechBehavior {
   allyHp?: number;
   troopBuff?: { damage: number; ms: number };
   killGold?: { radius: number; goldMult: number };
+  /** A utility Mech (enough utility parts): it works at a building instead of fighting. */
+  utility?: { lifetimeMs: number; output: number; discount: number; craftEveryMs: number | null; repairPerSec: number };
   /** The Special module's active ability (damage and shields already scaled). */
   ability?: { moduleId: string; ability: MechAbility };
 }

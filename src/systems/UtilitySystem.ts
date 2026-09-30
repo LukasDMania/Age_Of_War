@@ -144,7 +144,7 @@ export class UtilitySystem {
 
   private *enemiesWithin(unit: Unit, range: number): Generator<Unit> {
     for (const other of this.units.activeUnits) {
-      if (other.side !== unit.side && other.isAlive && distanceTo(unit.x, other) - unit.halfWidth <= range) yield other;
+      if (other.side !== unit.side && other.onLane && distanceTo(unit.x, other) - unit.halfWidth <= range) yield other;
     }
   }
 

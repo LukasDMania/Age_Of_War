@@ -64,7 +64,7 @@ export function dealSplashDamage(
 ): void {
   if (!(radius > 0)) return;
   for (const unit of units) {
-    if (unit === skip || unit.side === attackerSide || !unit.isAlive) continue;
+    if (unit === skip || unit.side === attackerSide || !unit.onLane) continue;
     if (Math.abs(unit.x - x) - unit.halfWidth <= radius) {
       dealUnitDamage(unit, amount, attackerSide, opts.shot ?? false, opts.turretSlot ?? -1);
     }
@@ -92,7 +92,7 @@ export function dealBounceDamage(
   let best: Unit | null = null;
   let bestGap = Infinity;
   for (const unit of units) {
-    if (unit === from || unit.side === attackerSide || !unit.isAlive) continue;
+    if (unit === from || unit.side === attackerSide || !unit.onLane) continue;
     const gap = (unit.x - from.x) * dir;
     if (gap < 0 || gap > reach || gap >= bestGap) continue;
     best = unit;
@@ -124,4 +124,23 @@ export function drainUnit(unit: Unit, amount: number, floorHp: number): number {
   unit.hp -= taken;
   unit.markBarDirty();
   return taken;
+}
+
+/**
+ * A unit leaving without being killed (a utility Mech powering down): it
+ * is marked dead with `retired` set, so `unit-died` carries `retired` and
+ * nobody earns a reward or counts a kill.
+ */
+export function retireUnit(unit: Unit): void {
+  if (!unit.isAlive) return;
+  unit.retired = true;
+  unit.markDead(unit.side);
+}
+
+/** Repairs a base (a utility Mech's Wrench arm); emits `base-repaired`. */
+export function repairBase(base: Base, amount: number): void {
+  if (base.isDestroyed || !(amount > 0) || base.hp >= base.maxHp) return;
+  const before = base.hp;
+  const hp = base.repair(amount);
+  emit(Events.BaseRepaired, { side: base.side, hp, maxHp: base.maxHp, amount: hp - before });
 }

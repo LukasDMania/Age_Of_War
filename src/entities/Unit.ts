@@ -123,6 +123,18 @@ export class Unit extends Phaser.GameObjects.Sprite {
   salvoReadyAt = 0;
   /** Troop carrier: the troops are out. */
   troopsDropped = false;
+  /**
+   * A utility Mech (Mech expansion section 7): off the lane for its whole
+   * life. Nothing targets or blocks it and it doesn't fight; MechSystem
+   * walks it to its building.
+   */
+  offLane = false;
+  /** Left without being killed (`damageOps.retireUnit`): no rewards. */
+  retired = false;
+  /** Utility Mech: when it powers down, and its work time toward the next crafted level (sim ms). */
+  workUntil = 0;
+  craftMs = 0;
+  workAnimAt = 0;
   /** Footprint on the lane: the placeholder's size, whatever art is shown. */
   bodyWidth = 0;
   bodyHeight = 0;
@@ -184,6 +196,11 @@ export class Unit extends Phaser.GameObjects.Sprite {
     this.droneReadyAt = 0;
     this.salvoReadyAt = 0;
     this.troopsDropped = false;
+    this.offLane = false;
+    this.retired = false;
+    this.workUntil = 0;
+    this.craftMs = 0;
+    this.workAnimAt = 0;
     this.flashUntil = 0;
     this.restoreTint();
     this.unitState = UnitState.Idle;
@@ -273,6 +290,11 @@ export class Unit extends Phaser.GameObjects.Sprite {
   /** Mid-leap: in the air, not fighting or walking. */
   get airborne(): boolean {
     return this.leap !== null;
+  }
+
+  /** Can be targeted, hit and blocked: alive and on the lane (not a working utility Mech). */
+  get onLane(): boolean {
+    return this.isAlive && !this.offLane;
   }
 
   get isAlive(): boolean {

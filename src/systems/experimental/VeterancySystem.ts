@@ -23,7 +23,9 @@ export class VeterancySystem {
 
   constructor(units: UnitFactory) {
     this.units = units;
-    this.cleanups = [on(Events.UnitDied, ({ x, killerSide }) => this.credit(killerSide, x))];
+    this.cleanups = [on(Events.UnitDied, ({ x, killerSide, retired }) => {
+        if (!retired) this.credit(killerSide, x);
+      })];
   }
 
   destroy(): void {

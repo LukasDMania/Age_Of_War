@@ -31,6 +31,7 @@ export class CasualtySystem {
         killerSide: unit.killerSide ?? otherSide(unit.side),
         x: unit.x,
         ...(unit.killerTurret >= 0 ? { killerTurret: unit.killerTurret } : {}),
+        ...(unit.retired ? { retired: true } : {}),
       });
       this.units.release(unit);
     }

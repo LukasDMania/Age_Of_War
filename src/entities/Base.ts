@@ -135,6 +135,14 @@ export class Base extends Phaser.GameObjects.Image {
     return this.sideState.baseHp;
   }
 
+  /** Bookkeeping only: raises HP (never above max) and returns the new value. */
+  repair(amount: number): number {
+    if (this.isDestroyed || !(amount > 0)) return this.sideState.baseHp;
+    this.sideState.baseHp = Math.min(this.maxHp, this.sideState.baseHp + amount);
+    this.showDamage();
+    return this.sideState.baseHp;
+  }
+
   /** Called by the scene update list (added in `scene.add.existing`). */
   preUpdate(time: number): void {
     if (this.flashUntil !== 0 && time >= this.flashUntil) {

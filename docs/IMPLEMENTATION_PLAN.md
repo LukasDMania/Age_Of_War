@@ -5,8 +5,8 @@ we're building) first, then work through the phases below **in order**.
 
 **Current status (2026-09-30):** Phases 0 to 20 are done (15 and 16 are
 log-only). Phase 21 (the Mech expansion, `docs/MECH_EXPANSION.md`) is on
-the branch `claude/relaxed-bohr-o99qdj`: steps 1-5, 7 and 8 are built;
-step 6 (utility Mech) waits on the owner's answers.
+the branch `claude/relaxed-bohr-o99qdj`: all eight steps are built
+(waiting for the owner's playtest).
 
 ### Start here (new agent)
 
@@ -501,7 +501,11 @@ The brief is `docs/MECH_EXPANSION.md`; its build order is followed here.
 - [x] 5. Evolve on age-up: `MechSystem.evolve`, `Unit.setDefinition`
   (new stats and art, same HP ratio), `mech-evolved` with a flare and
   "EVOLVED!".
-- [ ] 6. Utility Mech (waiting on the owner's answers to the brief's open questions).
+- [x] 6. Utility Mech (owner's answers 2026-09-30): six utility parts;
+  3+ make a utility Mech that works at a building off the lane
+  (`MechSystem.runUtility`, `MechState.assist`, `buildingPrice`,
+  `retireUnit`), clicks on buildings send it; check
+  `tools/checks/utility.mjs`.
 - [x] 7. Mech vs Mech: menu D / MECH DUEL -> the hangar in duel mode
   (age picker, every Forge part open, account locks apply) -> Fight;
   `GameSceneData.duel`, `systems/MechDuelAI.ts`, a trimmed HUD; check
@@ -552,6 +556,8 @@ validates and acts):
 | `war-cry-requested` | `{ side }` | WarCrySystem (prototype `warCry`; HUD button or W, WarCryAi) |
 | `conquest-continue-requested` | `{}` | GameScene (prototype `conquest`; game-over Continue or pause Retreat: records a retreat as a loss, returns to the campaign screen) |
 | `build-mech-requested` | `{ side, design }` (`design` a `MechDesign`: legs, torso, head, left, right, module) | MechSystem (hangar Build or R; pays and starts the build in the side's age) |
+| `mech-assist-requested` | `{ side, buildingId }` | MechSystem (a click on one of the player's buildings sends the utility Mech there) |
+| `grant-building-level-requested` | `{ side, buildingId }` | BuildingSystem (a free level from a utility Mech's crafting or Rush order; the age cap applies) |
 | `mech-ability-requested` | `{ side }` | MechSystem (the module button / War cry key while a Mech with a module is out; checks it and fires the ability) |
 
 **Notifications** (emitted by systems; anyone may listen):
@@ -562,7 +568,7 @@ validates and acts):
 | `xp-changed` | `{ side, xp, xpToNext }` (`xpToNext` is null in the final age) | `state/economyOps` helpers |
 | `unit-spawned` | `{ side, unitId, instanceId }` | SpawnSystem (bought units and debug spawns) |
 | `unit-queue-changed` | `{ side, queue }` | SpawnSystem (on buy, on spawn, and every frame while the front unit trains) |
-| `unit-died` | `{ side, unitId, instanceId, killerSide, x, killerTurret? }` (`killerTurret`: the slot of the turret that scored it) | CasualtySystem (end of frame, for every unit `damageOps` marked dead) |
+| `unit-died` | `{ side, unitId, instanceId, killerSide, x, killerTurret?, retired? }` (`killerTurret`: the slot of the turret that scored it; `retired`: it left without being killed, a utility Mech powering down: no rewards, no kill) | CasualtySystem (end of frame, for every unit `damageOps` marked dead) |
 | `unit-damaged` | `{ side, instanceId, amount, absorbed, x, topY }` | `systems/damageOps` (any damage source) |
 | `area-hit` | `{ side, x, radius }` | `systems/damageOps` (splash landed; `side` dealt it) |
 | `economy-changed` | `{ side, economyUnits, incomePerSec, damageMult, speedMult }` | EconomySystem (a money unit spawned or died) |
@@ -598,6 +604,8 @@ validates and acts):
 | `shot-bounced` | `{ side, fromX, fromY, toX, toY }` | `systems/damageOps` `dealBounceDamage` (feedback: a turret shot ricocheted; Conquest's Ricochet) |
 | `mech-changed` | `{ side, alive, build }` (`build` `{ unitId, remainingMs, totalMs }` or null) | MechSystem (build started, every frame while building, walked out, fell) |
 | `mech-ability-changed` | `{ side, moduleId, remainingMs, totalMs }` (`moduleId` null: no Mech with a module out) | MechSystem (module shown or gone, 5x/s while recharging, 2x/s otherwise) |
+| `mech-assist-changed` | `{ side, buildingId, working, remainingMs }` (`buildingId` null: it powered down) | MechSystem (a utility Mech picked, reached or left a building; twice a second for its time left) |
+| `base-repaired` | `{ side, hp, maxHp, amount }` | damageOps (a utility Mech's Wrench arm) |
 | `mech-evolved` | `{ side, instanceId, x, topY, fromAge, toAge, cost }` | MechSystem (a Mech on the lane took its side's newer age; feedback) |
 | `mech-ability-used` | `{ side, moduleId, kind, x, radius, toX? }` | MechSystem (a module fired; feedback) |
 | `weapon-fx` | `{ side, kind, x, y, points?, radius? }` (`kind`: flame, chain, pull, knockback, leap, land, drone, troops, stun; `points` x, y pairs) | CombatSystem, laneOps, MechSystem (Mech weapon and part feedback) |
@@ -2063,3 +2071,43 @@ decisions made, anything the owner needs to confirm.
   time switch). Checked: `mechparts.mjs` (refused before the final age,
   6x HP and wider in it, refused a second time), a screenshot of a
   Future Titan on the lane (about half the screen tall), build passes.
+- 2026-09-30 (Mech expansion, step 6: the utility Mech): owner: "no when
+  working at building cant attack, yes can switch, its a part based
+  switch" (it can't be attacked while working; it can switch buildings;
+  a design is a utility Mech because of its parts).
+  - Parts (PROPOSED numbers, art in five ages): Cargo crawler (legs, +600
+    HP, slow, works 30 s longer; level 2), Workshop core (torso, a free
+    level of its building every 30 s of work; level 3), Foreman (head,
+    +50% output), Wrench arm (repairs the base 0.4% of max HP per second),
+    Crane arm (that building's upgrades 20% cheaper each; research too at
+    the Forge), Rush order (module: a free level now, 45 s cooldown; level
+    4). Foreman, Wrench and Crane are open from the start.
+  - Three or more utility parts (`MECH_UTILITY.minParts`) make a utility
+    Mech: it has no fight in it, walks back from the gate (twice as fast
+    off the lane) to the building you click, or the first built one of
+    Mine, Forge, Library, Barracks, Shrine, Market, and works there for
+    75 s plus its parts' extra. Every utility Mech gives its building +25%
+    output (Mine gold, Library XP, Market trade). Choice: it is off the
+    lane its whole life (walking back too), so nothing targets, hits or
+    blocks it (`Unit.offLane`, `onLane` checks in every targeting loop).
+    Clicking another building sends it there (crafting progress resets).
+    When its life runs out it powers down behind the base: `retireUnit`
+    marks it dead with `retired` on `unit-died`, so nobody is paid and no
+    kill or loss counts; the Mech slot frees up.
+  - BuildingSystem reads `MechState.assist` for output and prices
+    (`buildingPrice` replaces the raw upgrade cost in the system and the
+    Buildings tab; the AIs keep the raw price, they never have one) and
+    grants free levels through `grant-building-level-requested`.
+  - UI: the worked building shows "Mech at work 75s" / "Mech on the way";
+    the Hangar button shows its time left; the Buildings and Research
+    cards redraw with the new prices; the hangar's build sheet says
+    "Utility: works 75 s at a building (click one to send it)" or how
+    many utility parts a design has; the role tag is Utility. Utility
+    designs can't duel.
+  - Checked: `node tools/checks/utility.mjs` (it walks to the Mine and
+    works; Mine income x1.75; Mine upgrade 55 -> 45; an enemy beside it
+    can't hurt it; the base is repaired; a click sends it to the Forge;
+    Rush order gives a free Forge level; it powers down and nobody is
+    paid), a screenshot of it at the Mine with the Buildings tab, and
+    every other Mech check; typecheck and build pass.
+

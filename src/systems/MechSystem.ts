@@ -1,7 +1,8 @@
 import { AGE_COUNT } from '@config/ages.config';
-import { LANE_Y } from '@config/constants';
+import { activeBuildingIds, buildingX, type BuildingId } from '@config/buildings.config';
+import { BASE_X, LANE_Y } from '@config/constants';
 import { feature } from '@config/features.config';
-import { MECH, type MechAbility, type MechDesign } from '@config/mech.config';
+import { MECH, MECH_UTILITY, type MechAbility, type MechDesign } from '@config/mech.config';
 import type { Base } from '@entities/Base';
 import type { ProjectileFactory } from '@entities/ProjectileFactory';
 import { UnitState, type Unit } from '@entities/Unit';
@@ -11,7 +12,7 @@ import { findUnitDefinition } from '@entities/unitDefinitions';
 import { addGold, trySpendGold } from '@state/economyOps';
 import type { MatchState, SideState } from '@state/GameState';
 import { laneDir, otherSide, SIDES, type Side } from '@state/types';
-import { dealSplashDamage, drainUnit } from '@systems/damageOps';
+import { dealSplashDamage, drainUnit, repairBase, retireUnit } from '@systems/damageOps';
 import type { SpawnPointCheck } from '@systems/SpawnSystem';
 import { shotLine } from '@systems/shotLine';
 import { applyModifier, clearSideModifier, grantShield, setSideModifier, stunUnit } from '@systems/statusOps';
@@ -86,6 +87,8 @@ const TROOP_SPACING = 18;
 /** Cooldown events are sent at most this often while a module recharges, sim ms. */
 const ABILITY_ANNOUNCE_MS = 200;
 const ABILITY_IDLE_ANNOUNCE_MS = 500;
+/** A utility Mech's time left is announced this often, sim ms. */
+const ASSIST_ANNOUNCE_MS = 500;
 /** Cover and regen (combo and set bonuses) refresh this often, sim ms. */
 const SUPPORT_TICK_MS = 250;
 /** The Command set's HP bonus on the side's other units. */
@@ -108,12 +111,18 @@ const ALLY_HP_ID = 'mech-command-hp';
  * (`MECH.evolveShare` of the price difference). And the Special module: `mech-ability-requested` is checked here and
  * the ability fired (smoke, overdrive, leap, overload, dome, EMP, orbital).
  *
+ * A utility Mech (enough utility parts) doesn't fight: it walks back to a
+ * building (clicked, or picked by priority), works there off the lane
+ * where nothing can hit it, and powers down when its life runs out
+ * (`MECH_UTILITY`; `runUtility`).
+ *
  * Listens for: `build-mech-requested`, `mech-ability-requested`,
- * `unit-died` (its Mech fell; salvage).
+ * `mech-assist-requested`, `unit-died` (its Mech fell; salvage).
  * Emits: `mech-changed` (build start, every frame while building, spawn,
- * fall), `mech-ability-changed`, `mech-ability-used`, `mech-evolved`, `weapon-fx`,
- * `unit-spawned`; `gold-changed` through economyOps; damage and status
- * events through damageOps / statusOps.
+ * fall), `mech-ability-changed`, `mech-ability-used`, `mech-evolved`,
+ * `mech-assist-changed`, `grant-building-level-requested`, `weapon-fx`,
+ * `unit-spawned`; `gold-changed` through economyOps; damage, repair and
+ * status events through damageOps / statusOps.
  */
 export class MechSystem {
   private readonly state: MatchState;
@@ -131,6 +140,8 @@ export class MechSystem {
   private announcedRemaining: Record<Side, number> = { player: 0, enemy: 0 };
   /** Next cover / regen refresh (sim ms). */
   private supportTickAt = 0;
+  /** When each side's utility Mech last announced its work (sim ms). */
+  private assistAnnouncedAt: Record<Side, number> = { player: -Infinity, enemy: -Infinity };
   /** Sides whose Command-set HP bonus is on. */
   private allyHpOn: Record<Side, boolean> = { player: false, enemy: false };
 
@@ -149,6 +160,7 @@ export class MechSystem {
     this.cleanups = [
       on(Events.BuildMechRequested, (payload) => this.onBuildRequested(payload)),
       on(Events.MechAbilityRequested, ({ side }) => this.onAbilityRequested(side)),
+      on(Events.MechAssistRequested, ({ side, buildingId }) => this.onAssistRequested(side, buildingId)),
       on(Events.UnitDied, (payload) => this.onUnitDied(payload)),
     ];
   }
@@ -220,6 +232,10 @@ export class MechSystem {
   private onUnitDied({ side, unitId, instanceId, killerSide, x }: EventPayloads[typeof Events.UnitDied]): void {
     if (isMechUnitId(unitId)) {
       this.state[side].mech.alive = false;
+      if (this.state[side].mech.assist) {
+        this.state[side].mech.assist = null;
+        this.announceAssist(side, null, true);
+      }
       const unit = this.units.findByInstanceId(instanceId);
       // A carrier that never stopped drops its troops where it fell.
       if (unit?.definition.mech?.troops && !unit.troopsDropped) this.dropTroops(unit, x);
@@ -243,6 +259,10 @@ export class MechSystem {
 
   private runParts(unit: Unit, deltaMs: number, nowMs: number): void {
     const parts = unit.definition.mech!;
+    if (parts.utility) {
+      this.runUtility(unit, parts.utility, deltaMs, nowMs);
+      return;
+    }
     if (unit.leap) {
       this.flyLeap(unit, nowMs);
       return;
@@ -291,6 +311,111 @@ export class MechSystem {
     const me = this.state[side];
     const diff = designCost(design, me.age) - designCost(design, fromAge);
     return Math.max(0, Math.round((diff * MECH.evolveShare * me.traits.mechCost) / 5) * 5);
+  }
+
+  /* ---- The utility Mech (Mech expansion section 7) ------------------------------------------- */
+
+  /**
+   * A utility Mech walks back to its building (off the lane: nothing targets
+   * it), works there until its life runs out, then powers down. While it
+   * works, `MechState.assist` tells BuildingSystem what it does to that
+   * building; the Wrench arm repairs the base and the Workshop core crafts
+   * free levels here.
+   */
+  private runUtility(unit: Unit, u: NonNullable<NonNullable<Unit['definition']['mech']>['utility']>, deltaMs: number, nowMs: number): void {
+    const side = unit.side;
+    const mech = this.state[side].mech;
+    if (!unit.offLane) {
+      // Just out of the gate: its life starts, and it heads for a building.
+      unit.offLane = true;
+      unit.workUntil = nowMs + u.lifetimeMs;
+      const wanted = mech.assist?.buildingId;
+      mech.assist = { buildingId: wanted && this.isAssistable(wanted) ? wanted : this.autoBuilding(side), working: false, output: u.output, discount: u.discount };
+      this.announceAssist(side, unit, true);
+    }
+    const assist = mech.assist!;
+    if (nowMs >= unit.workUntil) {
+      mech.assist = null;
+      retireUnit(unit);
+      this.announceAssist(side, null, true);
+      return;
+    }
+    const targetX = this.buildingPosition(side, assist.buildingId as BuildingId);
+    const gap = targetX - unit.x;
+    if (Math.abs(gap) > 2) {
+      if (assist.working) {
+        assist.working = false;
+        this.announceAssist(side, unit, true);
+      }
+      const step = Math.min(Math.abs(gap), (unit.getStat('speed') * MECH_UTILITY.walkMult * deltaMs) / 1000);
+      unit.x += Math.sign(gap) * step;
+      unit.unitState = UnitState.Walking;
+      // Face the way it walks (its art faces the lane).
+      unit.setFlipX((side === 'player') === gap < 0);
+      this.announceAssist(side, unit, false);
+      return;
+    }
+    unit.unitState = UnitState.Idle;
+    unit.setFlipX(side === 'enemy');
+    if (!assist.working) {
+      assist.working = true;
+      this.announceAssist(side, unit, true);
+    }
+    if (nowMs >= unit.workAnimAt) {
+      unit.workAnimAt = nowMs + MECH_UTILITY.workAnimMs;
+      unit.playAttack();
+    }
+    if (u.repairPerSec > 0) {
+      const base = this.bases[side];
+      repairBase(base, (base.maxHp * u.repairPerSec * deltaMs) / 1000);
+    }
+    if (u.craftEveryMs) {
+      unit.craftMs += deltaMs;
+      if (unit.craftMs >= u.craftEveryMs) {
+        unit.craftMs -= u.craftEveryMs;
+        emit(Events.GrantBuildingLevelRequested, { side, buildingId: assist.buildingId as BuildingId });
+      }
+    }
+    this.announceAssist(side, unit, false);
+  }
+
+  /** Clicking a building sends the utility Mech there (switching mid-life is fine). */
+  private onAssistRequested(side: Side, buildingId: BuildingId): void {
+    const mech = this.state[side].mech;
+    if (this.state.phase !== 'playing' || !this.isAssistable(buildingId) || !mech.assist) return;
+    const unit = this.mechOf(side);
+    if (!unit?.definition.mech?.utility || mech.assist.buildingId === buildingId) return;
+    mech.assist = { ...mech.assist, buildingId, working: false };
+    unit.craftMs = 0;
+    this.announceAssist(side, unit, true);
+  }
+
+  private isAssistable(id: string): boolean {
+    return (activeBuildingIds() as readonly string[]).includes(id);
+  }
+
+  /** The building a utility Mech goes to by itself: the first built one in priority order, else the first there is. */
+  private autoBuilding(side: Side): BuildingId {
+    const me = this.state[side];
+    const ids = MECH_UTILITY.priority.filter((id) => this.isAssistable(id)) as BuildingId[];
+    return ids.find((id) => me.buildings[id] > 0) ?? ids[0] ?? 'mine';
+  }
+
+  private buildingPosition(side: Side, id: BuildingId): number {
+    return buildingX(side, BASE_X[side], Math.max(0, activeBuildingIds().indexOf(id)));
+  }
+
+  /** `mech-assist-changed` when something changes, and twice a second for the time left. */
+  private announceAssist(side: Side, unit: Unit | null, force: boolean): void {
+    if (!force && this.nowMs - this.assistAnnouncedAt[side] < ASSIST_ANNOUNCE_MS) return;
+    this.assistAnnouncedAt[side] = this.nowMs;
+    const assist = this.state[side].mech.assist;
+    emit(Events.MechAssistChanged, {
+      side,
+      buildingId: (assist?.buildingId as BuildingId | undefined) ?? null,
+      working: assist?.working ?? false,
+      remainingMs: unit ? Math.max(0, unit.workUntil - this.nowMs) : 0,
+    });
   }
 
   /** Bulwark: allies just behind the Mech take less damage (refreshed a few times a second). */
@@ -461,6 +586,14 @@ export class MechSystem {
         used(target.x, ability.radius, target.x);
         return true;
       }
+      case 'rush': {
+        // Only while a utility Mech is at work: its building levels up now.
+        const assist = this.state[side].mech.assist;
+        if (!assist?.working) return false;
+        emit(Events.GrantBuildingLevelRequested, { side, buildingId: assist.buildingId as BuildingId });
+        used(unit.x, 40);
+        return true;
+      }
     }
   }
 
@@ -510,7 +643,7 @@ export class MechSystem {
     let best: Unit | null = null;
     let bestAhead = Infinity;
     for (const other of this.units.activeUnits) {
-      if (other.side === unit.side || !other.isAlive || other.airborne) continue;
+      if (other.side === unit.side || !other.onLane || other.airborne) continue;
       const ahead = (other.x - unit.x) * dir;
       if (ahead < -unit.halfWidth || this.gap(unit, other) > reach) continue;
       if (ahead < bestAhead) {
@@ -529,7 +662,7 @@ export class MechSystem {
 
   private *enemiesWithin(x: number, radius: number, side: Side): Generator<Unit> {
     for (const other of this.units.activeUnits) {
-      if (other.side !== side && other.isAlive && Math.abs(other.x - x) - other.halfWidth <= radius) yield other;
+      if (other.side !== side && other.onLane && Math.abs(other.x - x) - other.halfWidth <= radius) yield other;
     }
   }
 

@@ -140,7 +140,7 @@ export class SpecialSystem {
     const enemy = otherSide(side);
     this.candidates.length = 0;
     for (const unit of this.units.activeUnits) {
-      if (unit.side === enemy && unit.isAlive) this.candidates.push(unit);
+      if (unit.side === enemy && unit.onLane) this.candidates.push(unit);
     }
     if (this.candidates.length === 0) return null;
     return this.candidates[Phaser.Math.Between(0, this.candidates.length - 1)] ?? null;
