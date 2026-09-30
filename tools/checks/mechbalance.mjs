@@ -24,6 +24,12 @@ const VARIANTS = [
   ['railgun', { right: 'railgun' }],
   ['grapple', { right: 'grapple' }],
   ['wrecker', { left: 'wrecker' }],
+  // Combos and full sets.
+  ['bastion set', { legs: 'treads', torso: 'hull', head: 'taunt', left: 'shield', right: 'blade', module: 'dome' }],
+  ['dual wield', { left: 'blade', right: 'blade' }],
+  ['assault set', { legs: 'stompers', left: 'blade', right: 'wrecker', module: 'leap' }],
+  ['arsenal set', { torso: 'armory', head: 'scope', left: 'minigun', right: 'launcher', module: 'overdrive' }],
+  ['energy set', { torso: 'reactor', left: 'tesla', right: 'railgun', module: 'emp' }],
 ];
 
 const { browser, page, errors } = await openGame();

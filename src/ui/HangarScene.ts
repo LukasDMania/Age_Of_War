@@ -4,8 +4,9 @@ import { mechSlotAnchors } from '@/art/mechDraw';
 import type { RigAnim } from '@/art/rigFigure';
 import { getAge } from '@config/ages.config';
 import { baseMaxHp, GAME_HEIGHT, GAME_WIDTH, SCENE_KEYS } from '@config/constants';
-import { MECH_OPTIONS, MECH_SLOT_NAMES, MECH_SLOTS, type MechDesign, type MechSlot } from '@config/mech.config';
+import { MECH_OPTIONS, MECH_SETS, MECH_SLOT_NAMES, MECH_SLOTS, type MechDesign, type MechSlot } from '@config/mech.config';
 import {
+  designBonuses,
   designRoles,
   designStatCaps,
   designStats,
@@ -145,6 +146,8 @@ export class HangarScene extends Phaser.Scene {
   private costText!: Phaser.GameObjects.Text;
   private sheetText!: Phaser.GameObjects.Text;
   private rolesText!: Phaser.GameObjects.Text;
+  /** Active pair combos and set progress. */
+  private bonusText!: Phaser.GameObjects.Text;
   private buildButton!: UiButton;
   private buildLabel!: Phaser.GameObjects.Text;
   private buildProgress!: Phaser.GameObjects.Graphics;
@@ -500,6 +503,9 @@ export class HangarScene extends Phaser.Scene {
     this.sheetText = this.add.text(x + 14, y, '', { ...text(13, UiTextColors.parchment), lineSpacing: 3 }).setOrigin(0, 0);
     y += 44;
     this.rolesText = this.add.text(x + 14, y, '', { ...text(13, UiTextColors.gold, '600'), wordWrap: { width: SHEET_W - 28 } }).setOrigin(0, 0);
+    this.bonusText = this.add
+      .text(x + 14, y + 24, '', { ...text(12, UiTextColors.parchment), lineSpacing: 2, wordWrap: { width: SHEET_W - 28 } })
+      .setOrigin(0, 0);
     // Build button.
     const bh = 46;
     this.buildButton = new UiButton(this, x + SHEET_W / 2, PANEL_BOTTOM - 14 - bh / 2, SHEET_W - 28, bh, {
@@ -624,7 +630,29 @@ export class HangarScene extends Phaser.Scene {
     );
     const roles = designRoles(shown);
     this.rolesText.setText(roles.length ? `Roles: ${roles.join(' · ')}` : 'Roles: none (unarmed)');
+    this.refreshBonuses(shown);
     this.refreshBuild();
+  }
+
+  /** Combos (new ones from the hovered part marked +) and each set's pieces toward its next step. */
+  private refreshBonuses(shown: MechDesign): void {
+    const now = designBonuses(this.design);
+    const next = designBonuses(shown);
+    const lines: string[] = [];
+    for (const combo of next.combos) {
+      const fresh = !now.combos.includes(combo);
+      lines.push(`${fresh ? '+ ' : ''}${combo.name}: ${combo.about}`);
+    }
+    for (const set of next.sets) {
+      const info = MECH_SETS[set.id];
+      const step = info.steps[set.active - 1];
+      const goal = set.next ?? info.steps[info.steps.length - 1]!.pieces;
+      lines.push(`${info.name} (${set.pieces}/${goal})${step ? `: ${step.about}` : ''}`);
+    }
+    this.bonusText.setText(lines.length ? lines.slice(0, 7).join('\n') : 'No combos or sets yet');
+    this.bonusText.setScale(1);
+    const room = PANEL_BOTTOM - 80 - this.bonusText.y;
+    if (this.bonusText.height > room) this.bonusText.setScale(room / this.bonusText.height);
   }
 
   private refreshBlueprints(): void {

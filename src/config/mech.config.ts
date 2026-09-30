@@ -310,3 +310,161 @@ export const MECH_LAUNCHER_MUZZLES: Readonly<Record<LegsId, { near: { x: number;
 
 /** Every unit id of a Mech starts with this (`entities/mechDesign.ts`). */
 export const MECH_ID_PREFIX = 'mech:';
+
+/* ---- Pair combos and set bonuses (Mech expansion section 3) --------------------------------- */
+
+/**
+ * What a combo or set step does to the Mech, as data. `arm` changes pick
+ * weapons by id or by kind (`melee`, `ranged`, `any`); `mech` flags add to
+ * the part behaviors `MechSystem` runs. `entities/mechDesign.ts` applies
+ * them when a design becomes a unit.
+ */
+export type MechBonus =
+  | { kind: 'hp'; mult: number }
+  | { kind: 'armor'; mult: number }
+  | { kind: 'damage'; mult: number }
+  | { kind: 'cost'; mult: number }
+  | { kind: 'buildTime'; mult: number }
+  | { kind: 'aura'; radiusMult?: number; healMult?: number }
+  | {
+      kind: 'arm';
+      arm: ArmId | 'melee' | 'ranged' | 'any';
+      rangeMult?: number;
+      damageMult?: number;
+      cooldownMult?: number;
+      baseDamageMult?: number;
+      burnDurationMult?: number;
+      chainJumps?: number;
+      /** Every nth hit stuns for `stunMs`. */
+      stunEvery?: number;
+      stunMs?: number;
+      /** Every nth attack hits every enemy in reach. */
+      sweepEvery?: number;
+      /** A spin-up gun keeps its spin between bursts. */
+      spinKeep?: boolean;
+      /** Cooldown x this while the Mech walks. */
+      walkingCooldownMult?: number;
+      /** A pulled enemy also takes this arm's blow (`blade` etc.). */
+      pullHitWith?: ArmId;
+      lifesteal?: number;
+      /** The first attack of a fight hits x this. */
+      firstHitMult?: number;
+      /** Every nth hit slows the target (x0.7 for 1.5 s). */
+      slowEvery?: number;
+    }
+  | {
+      kind: 'mech';
+      slowImmune?: boolean;
+      knockbackImmune?: boolean;
+      /** Allies just behind the Mech take x `mult` damage. */
+      cover?: { range: number; mult: number };
+      /** Melee attackers take back this share of what they deal. */
+      thorns?: number;
+      /** Nearby enemies must attack it (if it has no Taunt beacon). */
+      taunt?: { radius: number };
+      /** Every `everyMs`, a gun arm fires an extra salvo of `shots`. */
+      salvo?: { everyMs: number; shots: number };
+      /** Allies this close regain `perSec` of their max HP per second. */
+      regen?: { radius: number; perSec: number };
+      /** The side's other units get x `mult` max HP while it is out. */
+      allyHp?: number;
+      /** Dropped troops get x `damage` for `ms`. */
+      troopBuff?: { damage: number; ms: number };
+      /** Kills this close pay `goldMult` extra (stacks with a Salvage scanner). */
+      killGold?: { radius: number; goldMult: number };
+      /** The leap's landing damage x this. */
+      leapDamageMult?: number;
+    };
+
+/** A part a combo needs: an arm counts in either hand. */
+export type ComboPart = { slot: 'legs'; id: LegsId } | { slot: 'torso'; id: TorsoId } | { slot: 'head'; id: HeadId } | { slot: 'arm'; id: ArmId } | { slot: 'module'; id: ModuleId };
+
+export interface MechCombo {
+  id: string;
+  name: string;
+  about: string;
+  /** Both must be on the design (the same arm twice means both hands). */
+  parts: readonly [ComboPart, ComboPart];
+  bonuses: readonly MechBonus[];
+}
+
+export const MECH_COMBOS: readonly MechCombo[] = [
+  { id: 'dual-wield', name: 'Dual wield', about: 'Every 4th blow is a spin that hits everyone in reach', parts: [{ slot: 'arm', id: 'blade' }, { slot: 'arm', id: 'blade' }], bonuses: [{ kind: 'arm', arm: 'blade', sweepEvery: 4 }] },
+  { id: 'shield-bash', name: 'Shield bash', about: 'Every 3rd Fist blow stuns briefly', parts: [{ slot: 'arm', id: 'fist' }, { slot: 'arm', id: 'shield' }], bonuses: [{ kind: 'arm', arm: 'fist', stunEvery: 3, stunMs: 800 }] },
+  { id: 'bulwark', name: 'Bulwark', about: 'Armor x0.8; allies just behind take 15% less', parts: [{ slot: 'arm', id: 'shield' }, { slot: 'arm', id: 'shield' }], bonuses: [{ kind: 'armor', mult: 0.8 }, { kind: 'mech', cover: { range: 90, mult: 0.85 } }] },
+  { id: 'artillery-lock', name: 'Artillery lock', about: 'Launcher reach +30%', parts: [{ slot: 'arm', id: 'launcher' }, { slot: 'head', id: 'scope' }], bonuses: [{ kind: 'arm', arm: 'launcher', rangeMult: 1.3 }] },
+  { id: 'crossfire', name: 'Crossfire', about: 'The Minigun keeps its spin between bursts', parts: [{ slot: 'arm', id: 'minigun' }, { slot: 'arm', id: 'launcher' }], bonuses: [{ kind: 'arm', arm: 'minigun', spinKeep: true }] },
+  { id: 'firestorm', name: 'Firestorm', about: 'Burns last twice as long', parts: [{ slot: 'arm', id: 'flamer' }, { slot: 'torso', id: 'reactor' }], bonuses: [{ kind: 'arm', arm: 'flamer', burnDurationMult: 2 }] },
+  { id: 'conductor', name: 'Conductor', about: 'Lightning jumps once more', parts: [{ slot: 'arm', id: 'tesla' }, { slot: 'torso', id: 'armory' }], bonuses: [{ kind: 'arm', arm: 'tesla', chainJumps: 1 }] },
+  { id: 'hook-and-cut', name: 'Hook and cut', about: 'A pulled enemy also takes a Blade hit', parts: [{ slot: 'arm', id: 'grapple' }, { slot: 'arm', id: 'blade' }], bonuses: [{ kind: 'arm', arm: 'grapple', pullHitWith: 'blade' }] },
+  { id: 'demolisher', name: 'Demolisher', about: 'Drill x4 vs bases', parts: [{ slot: 'arm', id: 'drill' }, { slot: 'legs', id: 'stompers' }], bonuses: [{ kind: 'arm', arm: 'drill', baseDamageMult: 4 }] },
+  { id: 'juggernaut', name: 'Juggernaut', about: 'No knockback, no slows', parts: [{ slot: 'legs', id: 'treads' }, { slot: 'torso', id: 'hull' }], bonuses: [{ kind: 'mech', slowImmune: true, knockbackImmune: true }] },
+  { id: 'skirmisher', name: 'Skirmisher', about: 'The Launcher fires 25% faster on the move', parts: [{ slot: 'legs', id: 'striders' }, { slot: 'arm', id: 'launcher' }], bonuses: [{ kind: 'arm', arm: 'launcher', walkingCooldownMult: 0.75 }] },
+  { id: 'death-from-above', name: 'Death from above', about: 'The landing splash doubles', parts: [{ slot: 'legs', id: 'jump' }, { slot: 'arm', id: 'fist' }], bonuses: [{ kind: 'mech', leapDamageMult: 2 }] },
+  { id: 'field-medic', name: 'Field medic', about: 'Healing +50%', parts: [{ slot: 'head', id: 'beacon' }, { slot: 'arm', id: 'shield' }], bonuses: [{ kind: 'aura', healMult: 1.5 }] },
+  { id: 'rally-point', name: 'Rally point', about: 'Dropped troops +15% damage for 10 s', parts: [{ slot: 'head', id: 'crest' }, { slot: 'torso', id: 'carrier' }], bonuses: [{ kind: 'mech', troopBuff: { damage: 1.15, ms: 10_000 } }] },
+];
+
+export interface MechSetStep {
+  pieces: number;
+  about: string;
+  bonuses: readonly MechBonus[];
+}
+
+export interface MechSet {
+  name: string;
+  /** In order of `pieces`. */
+  steps: readonly MechSetStep[];
+}
+
+/** Set bonuses: parts with the same `set` tag (the module counts too, both arms each). */
+export const MECH_SETS: Readonly<Record<MechSetId, MechSet>> = {
+  bastion: {
+    name: 'Bastion',
+    steps: [
+      { pieces: 2, about: '+10% HP', bonuses: [{ kind: 'hp', mult: 1.1 }] },
+      { pieces: 3, about: 'Reflects 10% of melee damage', bonuses: [{ kind: 'mech', thorns: 0.1 }] },
+      { pieces: 4, about: 'Taunts nearby enemies, -10% damage taken', bonuses: [{ kind: 'mech', taunt: { radius: 120 } }, { kind: 'armor', mult: 0.9 }] },
+    ],
+  },
+  assault: {
+    name: 'Assault',
+    steps: [
+      { pieces: 2, about: '+10% melee damage', bonuses: [{ kind: 'arm', arm: 'melee', damageMult: 1.1 }] },
+      { pieces: 3, about: 'Melee lifesteal 5%', bonuses: [{ kind: 'arm', arm: 'melee', lifesteal: 0.05 }] },
+      { pieces: 4, about: 'Charges in: the first blow of a fight hits x2', bonuses: [{ kind: 'arm', arm: 'melee', firstHitMult: 2 }] },
+    ],
+  },
+  arsenal: {
+    name: 'Arsenal',
+    steps: [
+      { pieces: 2, about: 'Guns +10% reach', bonuses: [{ kind: 'arm', arm: 'ranged', rangeMult: 1.1 }] },
+      { pieces: 3, about: 'Guns fire 15% faster', bonuses: [{ kind: 'arm', arm: 'ranged', cooldownMult: 0.87 }] },
+      { pieces: 4, about: 'An extra salvo every 12 s', bonuses: [{ kind: 'mech', salvo: { everyMs: 12_000, shots: 2 } }] },
+    ],
+  },
+  energy: {
+    name: 'Tesla',
+    steps: [
+      { pieces: 2, about: '+10% damage', bonuses: [{ kind: 'damage', mult: 1.1 }] },
+      { pieces: 3, about: 'Every 4th hit slows', bonuses: [{ kind: 'arm', arm: 'any', slowEvery: 4 }] },
+      { pieces: 4, about: 'Lightning jumps once more', bonuses: [{ kind: 'arm', arm: 'tesla', chainJumps: 1 }] },
+    ],
+  },
+  command: {
+    name: 'Command',
+    steps: [
+      { pieces: 2, about: 'Aura reach +20%', bonuses: [{ kind: 'aura', radiusMult: 1.2 }] },
+      { pieces: 3, about: 'Your other units +5% HP while it is out', bonuses: [{ kind: 'mech', allyHp: 1.05 }] },
+      { pieces: 4, about: 'Allies near it regenerate', bonuses: [{ kind: 'mech', regen: { radius: 150, perSec: 0.01 } }] },
+    ],
+  },
+  scrapper: {
+    name: 'Scrapper',
+    steps: [
+      { pieces: 2, about: '-10% cost', bonuses: [{ kind: 'cost', mult: 0.9 }] },
+      { pieces: 3, about: '-15% build time', bonuses: [{ kind: 'buildTime', mult: 0.85 }] },
+      { pieces: 4, about: '+20% kill gold near it', bonuses: [{ kind: 'mech', killGold: { radius: 250, goldMult: 0.2 } }] },
+    ],
+  },
+};

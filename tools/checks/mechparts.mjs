@@ -68,7 +68,7 @@ let after = await byId(ids.enemies[0]);
 check('wrecking ball knocks back', (await seen()).includes('knockback'), `x ${before} -> ${after?.x}`);
 
 // Grapple: pulls the back one forward.
-ids = await setup(M('walker', 'frame', 'visor', 'shield', 'grapple'), 400, 'stone-slinger', [560, 640]);
+ids = await setup(M('walker', 'frame', 'visor', 'shield', 'grapple'), 400, 'stone-mammoth-rider', [560, 640]);
 await fx();
 await step(800);
 after = await byId(ids.enemies[1]);
@@ -120,7 +120,7 @@ check('hangar bay launches a drone', (await seen()).includes('drone'));
 ids = await setup(M('walker', 'overcharge', 'visor', 'shield', 'shield'), 400, 'stone-clubber', []);
 await step(90000);
 const oc = await byId(ids.mech);
-check('overcharge drains to its floor only', oc && Math.abs(oc.hp / oc.maxHp - 0.3) < 0.02, oc && `${Math.round(oc.hp)}/${oc.maxHp}`);
+check('overcharge drains to its floor only (50%)', oc && Math.abs(oc.hp / oc.maxHp - 0.5) < 0.02, oc && `${Math.round(oc.hp)}/${oc.maxHp}`);
 
 // Salvage: extra gold.
 ids = await setup(M('walker', 'frame', 'salvage', 'fist', 'shield'), 400, 'stone-clubber', [480]);
@@ -158,4 +158,45 @@ for (const [module, enemyXs, enemy] of [
   const cd = await page.evaluate(() => window.__aow.state.player.mech.abilityReadyAt - window.__aow.snapshot().elapsedMs);
   check(`module ${module} fires`, (await seen()).includes(`ability:${module}`) && cd > 5000, `cooldown left ${Math.round(cd)}`);
 }
+
+// Combos and sets (section 3).
+const bonuses = await page.evaluate(async () => {
+  const md = await import('/src/entities/mechDesign.ts');
+  const d = (x) => ({ legs: 'walker', torso: 'frame', head: 'visor', left: 'fist', right: 'launcher', module: 'none', ...x });
+  const names = (x) => md.designBonuses(d(x)).combos.map((c) => c.id);
+  const sets = (x) => md.designBonuses(d(x)).sets.map((s) => `${s.id}:${s.pieces}/${s.active}`);
+  return {
+    dual: names({ left: 'blade', right: 'blade' }),
+    oneBlade: names({ left: 'blade' }),
+    bash: names({ right: 'shield' }),
+    scrapperSets: sets({}),
+    scrapperCost: [md.designCost(d({}), 0), md.designCost(d({ legs: 'striders' }), 0)],
+    bulwarkArmor: md.mechDefinition(d({ left: 'shield', right: 'shield' }), 0).armor,
+    conductor: md.mechDefinition(d({ left: 'tesla', torso: 'armory' }), 0).attack?.chain?.jumps,
+  };
+});
+check('Dual wield needs a blade in both hands', bonuses.dual.includes('dual-wield') && !bonuses.oneBlade.includes('dual-wield'), JSON.stringify(bonuses.dual));
+check('Shield bash on fist + shield', bonuses.bash.includes('shield-bash'));
+check('Scrapper set counts the default parts', bonuses.scrapperSets[0] === 'scrapper:4/3', JSON.stringify(bonuses.scrapperSets));
+check('Bulwark: armor 0.9 x 0.9 x 0.8', Math.abs(bonuses.bulwarkArmor - 0.648) < 0.001, String(bonuses.bulwarkArmor));
+check('Conductor: +1 jump (3 -> 4)', bonuses.conductor === 4, String(bonuses.conductor));
+
+// Shield bash stuns in a real lane.
+ids = await setup(M('walker', 'frame', 'visor', 'fist', 'shield'), 400, 'stone-mammoth-rider', [480]);
+await fx();
+await step(6000);
+check('Shield bash stuns', (await seen()).includes('stun'));
+
+// Hook and cut: the grapple's pull also deals the blade's blow.
+ids = await setup(M('walker', 'frame', 'visor', 'blade', 'grapple'), 400, 'stone-mammoth-rider', [560, 640]);
+await step(700);
+const hooked = await byId(ids.enemies[1]);
+check('Hook and cut: pulled enemy takes grapple + blade', hooked && hooked.maxHp - hooked.hp >= 45 + 22, hooked && `${hooked.maxHp - hooked.hp} damage`);
+
+// Command set 3: other units get +5% HP while the Mech is out.
+ids = await setup(M('walker', 'carrier', 'crest', 'fist', 'shield', 'orbital'), 400, 'stone-clubber', []);
+await page.evaluate(() => window.__aow.spawn('stone-clubber', 'player'));
+await step(300);
+const club = (await units()).find((u) => u.side === 'player' && u.unitId === 'stone-clubber');
+check('Command set: allies +5% HP', club && Math.abs(club.maxHp - 90 * 1.05) < 0.5, club && String(club.maxHp));
 await finish(browser, errors);

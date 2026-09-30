@@ -11,7 +11,8 @@ import type { MatchState, SideState } from '@state/GameState';
 import { laneDir, otherSide, SIDES, type Side } from '@state/types';
 import { dealSplashDamage, drainUnit } from '@systems/damageOps';
 import type { SpawnPointCheck } from '@systems/SpawnSystem';
-import { applyModifier, grantShield, stunUnit } from '@systems/statusOps';
+import { shotLine } from '@systems/shotLine';
+import { applyModifier, clearSideModifier, grantShield, setSideModifier, stunUnit } from '@systems/statusOps';
 import { emit, Events, on, type EventPayloads } from '@utils/EventBus';
 
 /** Why a Mech can't be built right now. */
@@ -67,6 +68,10 @@ const TROOP_SPACING = 18;
 /** Cooldown events are sent at most this often while a module recharges, sim ms. */
 const ABILITY_ANNOUNCE_MS = 200;
 const ABILITY_IDLE_ANNOUNCE_MS = 1000;
+/** Cover and regen (combo and set bonuses) refresh this often, sim ms. */
+const SUPPORT_TICK_MS = 250;
+/** The Command set's HP bonus on the side's other units. */
+const ALLY_HP_ID = 'mech-command-hp';
 
 /**
  * The Mech workshop (owner, 2026-09-27; data in `config/mech.config.ts`).
@@ -105,6 +110,10 @@ export class MechSystem {
   /** The module each side last announced (null: none out). */
   private announcedModule: Record<Side, string | null> = { player: null, enemy: null };
   private announcedRemaining: Record<Side, number> = { player: 0, enemy: 0 };
+  /** Next cover / regen refresh (sim ms). */
+  private supportTickAt = 0;
+  /** Sides whose Command-set HP bonus is on. */
+  private allyHpOn: Record<Side, boolean> = { player: false, enemy: false };
 
   constructor(
     state: MatchState,
@@ -142,10 +151,16 @@ export class MechSystem {
       }
       this.announce(side);
     }
+    const supportTick = nowMs >= this.supportTickAt;
+    if (supportTick) this.supportTickAt = nowMs + SUPPORT_TICK_MS;
+    const allyHp: Record<Side, number | undefined> = { player: undefined, enemy: undefined };
     for (const unit of this.units.activeUnits) {
       if (!unit.isAlive || !unit.definition.mech) continue;
       this.runParts(unit, deltaMs, nowMs);
+      if (supportTick) this.support(unit);
+      if (unit.definition.mech.allyHp) allyHp[unit.side] = unit.definition.mech.allyHp;
     }
+    for (const side of SIDES) this.setAllyHp(side, allyHp[side]);
     for (const side of SIDES) this.announceAbility(side, false);
   }
 
@@ -191,12 +206,15 @@ export class MechSystem {
       this.announceAbility(side, true);
       return;
     }
-    // Salvage scanner: kills near the killer's Mech pay extra.
+    // Salvage scanner and the Scrapper set: kills near the killer's Mech pay extra.
     const mech = this.mechOf(killerSide);
-    const salvage = mech?.definition.mech?.salvage;
-    if (!mech || !salvage || Math.abs(mech.x - x) > salvage.radius) return;
-    const reward = findUnitDefinition(unitId)?.killGold ?? 0;
-    const extra = Math.round(reward * salvage.goldMult);
+    if (!mech) return;
+    const parts = mech.definition.mech;
+    let mult = 0;
+    for (const bonus of [parts?.salvage, parts?.killGold]) {
+      if (bonus && Math.abs(mech.x - x) <= bonus.radius) mult += bonus.goldMult;
+    }
+    const extra = Math.round((findUnitDefinition(unitId)?.killGold ?? 0) * mult);
     if (extra > 0) addGold(this.state, killerSide, extra, 'salvage');
   }
 
@@ -221,6 +239,54 @@ export class MechSystem {
       }
     }
     if (parts.drones && nowMs >= unit.droneReadyAt) this.launchDrone(unit, parts.drones);
+    if (parts.salvo && nowMs >= unit.salvoReadyAt) this.salvo(unit, parts.salvo);
+    if (parts.regen) {
+      for (const ally of this.alliesWithin(unit, parts.regen.radius)) {
+        ally.heal((ally.getStat('maxHp') * parts.regen.perSec * deltaMs) / 1000);
+      }
+    }
+  }
+
+  /** Bulwark: allies just behind the Mech take less damage (refreshed a few times a second). */
+  private support(unit: Unit): void {
+    const cover = unit.definition.mech?.cover;
+    if (!cover) return;
+    const dir = laneDir(unit.side);
+    for (const ally of this.units.activeUnits) {
+      if (ally === unit || ally.side !== unit.side || !ally.isAlive) continue;
+      const behind = (unit.x - ally.x) * dir - unit.halfWidth - ally.halfWidth;
+      if (behind < -ally.halfWidth || behind > cover.range) continue;
+      applyModifier(ally, { id: 'mech-cover', source: 'mech', stat: 'damageTaken', mult: cover.mult, expiresAt: this.nowMs + SUPPORT_TICK_MS * 2 });
+    }
+  }
+
+  /** Arsenal set: a gun arm fires a quick extra salvo at what it can reach. */
+  private salvo(unit: Unit, salvo: { everyMs: number; shots: number }): void {
+    const gun = [unit.definition.attack, unit.definition.secondaryAttack].find((a) => a?.projectileKey);
+    if (!gun?.projectileKey) return;
+    const reach = gun.range * unit.statMultiplier('range');
+    const target = this.nearestEnemy(unit, reach);
+    if (!target) return;
+    unit.salvoReadyAt = this.nowMs + salvo.everyMs;
+    const line = shotLine(this.units.activeUnits, this.bases[otherSide(unit.side)], unit, gun.muzzle, reach);
+    const damage = gun.damage * unit.statMultiplier('damage');
+    for (let i = 0; i < salvo.shots; i++) {
+      const p = this.projectiles.launch(gun.projectileKey, unit.side, line.x0, line.y0 + (i - 1) * 4, damage, gun.splashRadius ?? 0);
+      p.aimAt(line.x1, line.y1 + (i - 1) * 6, true);
+      p.sourceSlot = unit.definition.slot;
+    }
+    emit(Events.WeaponFx, { side: unit.side, kind: 'drone', x: line.x0, y: line.y0 });
+  }
+
+  /** Command set: the side's other units get more max HP while the Mech is out. */
+  private setAllyHp(side: Side, mult: number | undefined): void {
+    if (mult !== undefined && !this.allyHpOn[side]) {
+      setSideModifier(this.state, this.units.activeUnits, side, { id: ALLY_HP_ID, source: 'mech', stat: 'maxHp', mult, mech: 'exclude' });
+      this.allyHpOn[side] = true;
+    } else if (mult === undefined && this.allyHpOn[side]) {
+      clearSideModifier(this.state, this.units.activeUnits, side, ALLY_HP_ID);
+      this.allyHpOn[side] = false;
+    }
   }
 
   private launchDrone(unit: Unit, drones: NonNullable<NonNullable<Unit['definition']['mech']>['drones']>): void {
@@ -242,6 +308,8 @@ export class MechSystem {
     for (let i = 0; i < troops.count; i++) {
       const troop = this.units.create(troops.unitId, unit.side);
       troop.x = this.clampX(troop, x - dir * (i * TROOP_SPACING - TROOP_SPACING));
+      const buff = unit.definition.mech?.troopBuff;
+      if (buff) applyModifier(troop, { id: 'mech-rally', source: 'mech', stat: 'damage', mult: buff.damage, expiresAt: this.nowMs + buff.ms });
       emit(Events.UnitSpawned, { side: unit.side, unitId: troops.unitId, instanceId: troop.instanceId });
     }
     emit(Events.WeaponFx, { side: unit.side, kind: 'troops', x, y: unit.centerY });
@@ -405,6 +473,12 @@ export class MechSystem {
       }
     }
     return best;
+  }
+
+  private *alliesWithin(unit: Unit, radius: number): Generator<Unit> {
+    for (const other of this.units.activeUnits) {
+      if (other.side === unit.side && other.isAlive && Math.abs(other.x - unit.x) - other.halfWidth <= radius) yield other;
+    }
   }
 
   private *enemiesWithin(x: number, radius: number, side: Side): Generator<Unit> {

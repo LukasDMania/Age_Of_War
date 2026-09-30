@@ -488,7 +488,10 @@ The brief is `docs/MECH_EXPANSION.md`; its build order is followed here.
   burns and stuns in `statusOps` / `StatusSystem`), HUD module button,
   checks `tools/checks/mechparts.mjs` and `mechbalance.mjs`. Account
   unlock data is on the parts but not enforced until step 4.
-- [ ] 3. Pair combos and set bonuses.
+- [x] 3. Pair combos (14) and set bonuses (6 sets, steps at 2/3/4) as
+  `MechBonus` data in `config/mech.config.ts`, applied in
+  `entities/mechDesign.ts` (`designBonuses`); shown on the hangar's
+  build sheet with set progress.
 - [ ] 4. Account level and part unlocks.
 - [ ] 5. Evolve on age-up.
 - [ ] 6. Utility Mech.
@@ -1937,3 +1940,37 @@ decisions made, anything the owner needs to confirm.
     each weapon, part and module in a real lane), screenshots of the
     artlab (`?mechs`, eight showcase designs, five ages), the hangar arm
     drawer and a lane with an orbital strike and the module button.
+- 2026-09-30 (Mech expansion, step 3: combos and sets):
+  - `MECH_COMBOS` and `MECH_SETS` hold the brief's tables; what each does
+    is a list of `MechBonus` entries (`hp`, `armor`, `damage`, `cost`,
+    `buildTime`, `aura`, `arm` changes by arm id or kind, `mech` flags),
+    so new combos and sets are rows. A combo of the same part twice (Blade
+    + Blade) needs it in both hands; both arms count toward sets, and so
+    does the module.
+  - New effects: `CombatSystem` handles every nth-hit stuns, slows and
+    sweeps, lifesteal, a first-hit charge, Crossfire's kept spin,
+    Skirmisher's faster fire on the move, Hook and cut's extra blow, and
+    thorns (a Mech with them hurts its melee attackers). `MechSystem`
+    handles Bulwark cover, Command HP (a side modifier while the Mech is
+    out) and regen, Arsenal salvos, Rally point's troop buff, Scrapper
+    kill gold (stacks with Salvage). `Unit.weaponUses` counts both
+    weapons.
+  - Choices (PROPOSED): random "sometimes" effects are every-nth-hit
+    (Shield bash every 3rd Fist blow, the Tesla set's slow every 4th hit),
+    so battles stay deterministic; the Tesla set slows only direct hits
+    (not shells in flight); Fist and Visor are tagged Scrapper only (the
+    brief lists them in two sets, but each part has one tag). The default
+    design (Walker, Frame, Visor, Fist) is a 4-piece Scrapper set, so it
+    now costs 470 instead of 520 in the Stone age.
+  - Hangar: the build sheet lists combos (a new one from the hovered part
+    marked +) and each set as "Bastion (3/4): step".
+  - Balance (`mechbalance.mjs`, combo designs added): full sets win with
+    45-84% HP left; the Arsenal and Tesla sets (about 17-21k gold in the
+    Modern age) are the strongest. Toning their set steps down (salvo 3
+    shots / 10 s -> 2 / 12 s, slow every 3rd -> 4th hit) hardly moved
+    them, so it is the parts and the harness: it sends the stream one unit
+    at a time (6 alive at most), which favors ranged splash Mechs, and a
+    Mech at the enemy gate blocks the spawn. For the owner: a fairer test
+    (a whole wave at once) before deeper tuning.
+  - Checked: typecheck, build, `mechparts.mjs` (29 checks, 8 new for
+    combos and sets), hangar screenshot of the build sheet.

@@ -4,6 +4,7 @@ import {
   MECH,
   MECH_ARMS,
   MECH_BODY_SLOTS,
+  MECH_COMBOS,
   MECH_HEADS,
   MECH_ID_PREFIX,
   MECH_LAUNCHER_MUZZLES,
@@ -11,10 +12,15 @@ import {
   MECH_MODULES,
   MECH_OPTIONS,
   MECH_PROJECTILES,
+  MECH_SETS,
   MECH_SLOTS,
   MECH_TORSOS,
+  type ArmId,
   type ArmPart,
+  type ComboPart,
   type MechAbility,
+  type MechBonus,
+  type MechCombo,
   type MechDesign,
   type MechSetId,
   type MechSlot,
@@ -117,15 +123,80 @@ export function designTier(design: MechDesign): number {
   return MECH_SLOTS.reduce((sum, slot) => sum + mechPart(design, slot).tier, 0);
 }
 
+/** A set's progress on a design: pieces worn and how many steps are active. */
+export interface SetProgress {
+  id: MechSetId;
+  pieces: number;
+  /** Steps reached (0: none yet). */
+  active: number;
+  /** Pieces the next step needs, or null at the top. */
+  next: number | null;
+}
+
+export interface DesignBonuses {
+  combos: MechCombo[];
+  /** Every set with at least one piece, most pieces first. */
+  sets: SetProgress[];
+  /** Everything active, combos first. */
+  bonuses: MechBonus[];
+}
+
+function hasComboPart(design: MechDesign, part: ComboPart): number {
+  switch (part.slot) {
+    case 'arm':
+      return (design.left === part.id ? 1 : 0) + (design.right === part.id ? 1 : 0);
+    default:
+      return design[part.slot] === part.id ? 1 : 0;
+  }
+}
+
+const bonusCache = new Map<string, DesignBonuses>();
+
+/** The pair combos and set steps a design has (Mech expansion section 3). */
+export function designBonuses(design: MechDesign): DesignBonuses {
+  const key = MECH_SLOTS.map((slot) => design[slot]).join(':');
+  const cached = bonusCache.get(key);
+  if (cached) return cached;
+  const combos = MECH_COMBOS.filter((combo) => {
+    const [a, b] = combo.parts;
+    // The same part twice (Blade + Blade) needs it in both hands.
+    if (a.slot === b.slot && a.id === b.id) return hasComboPart(design, a) >= 2;
+    return hasComboPart(design, a) > 0 && hasComboPart(design, b) > 0;
+  });
+  const counts = new Map<MechSetId, number>();
+  for (const slot of MECH_SLOTS) {
+    const set = mechPart(design, slot).set;
+    if (set) counts.set(set, (counts.get(set) ?? 0) + 1);
+  }
+  const sets: SetProgress[] = [...counts.entries()]
+    .map(([id, pieces]) => {
+      const steps = MECH_SETS[id].steps;
+      const active = steps.filter((step) => pieces >= step.pieces).length;
+      return { id, pieces, active, next: steps[active]?.pieces ?? null };
+    })
+    .sort((a, b) => b.pieces - a.pieces);
+  const bonuses: MechBonus[] = [
+    ...combos.flatMap((c) => c.bonuses),
+    ...sets.flatMap((s) => MECH_SETS[s.id].steps.slice(0, s.active).flatMap((step) => step.bonuses)),
+  ];
+  const result = { combos, sets, bonuses };
+  bonusCache.set(key, result);
+  return result;
+}
+
+function bonusMult(design: MechDesign, kind: 'hp' | 'armor' | 'damage' | 'cost' | 'buildTime'): number {
+  return designBonuses(design).bonuses.reduce((m, b) => (b.kind === kind ? m * b.mult : m), 1);
+}
+
 /** Gold to build a design in an age (rounded to 5). */
 export function designCost(design: MechDesign, age: number): number {
   const parts = MECH_SLOTS.reduce((sum, slot) => sum + mechPart(design, slot).cost, 0);
   const mult = 1 + MECH.tierCost * (designTier(design) - MECH_BODY_SLOTS.length);
-  return Math.round((parts * mult * getAge(age).scale) / 5) * 5;
+  return Math.round((parts * mult * getAge(age).scale * bonusMult(design, 'cost')) / 5) * 5;
 }
 
 export function designBuildMs(design: MechDesign): number {
-  return MECH.buildMs + MECH.buildPerTierMs * (designTier(design) - MECH_BODY_SLOTS.length);
+  return Math.round((MECH.buildMs + MECH.buildPerTierMs * (designTier(design) - MECH_BODY_SLOTS.length)) * bonusMult(design, 'buildTime'));
 }
 
 /** The first slot whose part needs a higher Forge level than `forgeLevel`, or null. */
@@ -133,7 +204,18 @@ export function lockedSlot(design: MechDesign, forgeLevel: number): MechSlot | n
   return MECH_SLOTS.find((slot) => (mechPart(design, slot).forge ?? 0) > forgeLevel) ?? null;
 }
 
-function armAttack(arm: ArmPart, design: MechDesign, age: number, hand: 'near' | 'far'): UnitAttack | null {
+/** An arm bonus's target: the arm by id, or by kind. */
+function armMatches(target: ArmId | 'melee' | 'ranged' | 'any', id: ArmId, arm: ArmPart): boolean {
+  const a = arm.attack;
+  if (!a) return false;
+  if (target === 'any') return true;
+  if (target === 'ranged') return a.ranged === true;
+  if (target === 'melee') return !a.ranged && !a.pull;
+  return target === id;
+}
+
+function armAttack(id: ArmId, design: MechDesign, age: number, hand: 'near' | 'far', withBonuses = true): UnitAttack | null {
+  const arm: ArmPart = MECH_ARMS[id];
   const a = arm.attack;
   if (!a) return null;
   const torso = MECH_TORSOS[design.torso];
@@ -164,14 +246,53 @@ function armAttack(arm: ArmPart, design: MechDesign, age: number, hand: 'near' |
   if (a.pierce) attack.pierce = true;
   if (a.pull) attack.pull = true;
   if (a.knockback) attack.knockback = a.knockback;
+  if (!withBonuses) return attack;
+  const damageAll = bonusMult(design, 'damage');
+  if (damageAll !== 1) attack.damage = Math.round(attack.damage * damageAll);
+  for (const b of designBonuses(design).bonuses) {
+    if (b.kind !== 'arm' || !armMatches(b.arm, id, arm)) continue;
+    if (b.rangeMult) attack.range = Math.round(attack.range * b.rangeMult);
+    if (b.damageMult) attack.damage = Math.round(attack.damage * b.damageMult);
+    if (b.cooldownMult) {
+      attack.cooldownMs = Math.round(attack.cooldownMs * b.cooldownMult);
+      if (attack.spinUp) attack.spinUp.fastCooldownMs = Math.round(attack.spinUp.fastCooldownMs * b.cooldownMult);
+    }
+    if (b.baseDamageMult) attack.baseDamageMult = b.baseDamageMult;
+    if (b.burnDurationMult && attack.burn) attack.burn.durationMs = Math.round(attack.burn.durationMs * b.burnDurationMult);
+    if (b.chainJumps && attack.chain) attack.chain.jumps += b.chainJumps;
+    if (b.stunEvery) {
+      attack.stunEvery = b.stunEvery;
+      attack.stunMs = b.stunMs ?? 800;
+    }
+    if (b.sweepEvery) attack.sweepEvery = b.sweepEvery;
+    if (b.spinKeep) attack.spinKeep = true;
+    if (b.walkingCooldownMult) attack.walkingCooldownMult = b.walkingCooldownMult;
+    if (b.pullHitWith) attack.pullHit = armAttack(b.pullHitWith, design, age, hand, false)?.damage ?? 0;
+    if (b.lifesteal) attack.lifesteal = (attack.lifesteal ?? 0) + b.lifesteal;
+    if (b.firstHitMult) attack.firstHitMult = b.firstHitMult;
+    if (b.slowEvery) attack.slowEvery = b.slowEvery;
+  }
   return attack;
 }
 
 function aura(design: MechDesign, age: number): UtilityEffect | undefined {
   const a = MECH_HEADS[design.head].aura;
   if (!a) return undefined;
-  if (a.kind === 'heal') return { ...a, amount: Math.round(a.amount * getAge(age).scale) };
-  return { ...a };
+  let reach = 1;
+  let heal = 1;
+  for (const b of designBonuses(design).bonuses) {
+    if (b.kind !== 'aura') continue;
+    reach *= b.radiusMult ?? 1;
+    heal *= b.healMult ?? 1;
+  }
+  switch (a.kind) {
+    case 'heal':
+      return { ...a, radius: Math.round(a.radius * reach), amount: Math.round(a.amount * getAge(age).scale * heal) };
+    case 'slow':
+      return { ...a, range: Math.round(a.range * reach) };
+    case 'buff':
+      return { ...a, radius: Math.round(a.radius * reach) };
+  }
 }
 
 /** A module's ability with its damage and shield in the age's scale. */
@@ -211,6 +332,20 @@ function behavior(design: MechDesign, age: number): MechBehavior | undefined {
   if (head.taunt) b.taunt = { ...head.taunt };
   if (head.salvage) b.salvage = { ...head.salvage };
   if (module.ability) b.ability = { moduleId: design.module, ability: scaledAbility(module.ability, age) };
+  for (const bonus of designBonuses(design).bonuses) {
+    if (bonus.kind !== 'mech') continue;
+    if (bonus.slowImmune) b.slowImmune = true;
+    if (bonus.knockbackImmune) b.knockbackImmune = true;
+    if (bonus.cover) b.cover = { ...bonus.cover };
+    if (bonus.thorns) b.thorns = (b.thorns ?? 0) + bonus.thorns;
+    if (bonus.taunt && !b.taunt) b.taunt = { ...bonus.taunt };
+    if (bonus.salvo) b.salvo = { ...bonus.salvo };
+    if (bonus.regen) b.regen = { ...bonus.regen };
+    if (bonus.allyHp) b.allyHp = bonus.allyHp;
+    if (bonus.troopBuff) b.troopBuff = { ...bonus.troopBuff };
+    if (bonus.killGold) b.killGold = { ...bonus.killGold };
+    if (bonus.leapDamageMult && b.leap) b.leap.damage = Math.round(b.leap.damage * bonus.leapDamageMult);
+  }
   return Object.keys(b).length > 0 ? b : undefined;
 }
 
@@ -223,10 +358,10 @@ export function mechDefinition(design: MechDesign, age: number): UnitDefinition 
   if (cached) return cached;
   const scale = getAge(age).scale;
   const parts = MECH_SLOTS.map((slot) => mechPart(design, slot));
-  const hp = MECH.coreHp + parts.reduce((sum, p) => sum + (p.hp ?? 0), 0);
-  const armor = parts.reduce((mult, p) => mult * (p.armor ?? 1), 1);
+  const hp = (MECH.coreHp + parts.reduce((sum, p) => sum + (p.hp ?? 0), 0)) * bonusMult(design, 'hp');
+  const armor = parts.reduce((mult, p) => mult * (p.armor ?? 1), 1) * bonusMult(design, 'armor');
   // Main attack: the shorter reach (it decides where the Mech stops).
-  const attacks = [armAttack(MECH_ARMS[design.left], design, age, 'near'), armAttack(MECH_ARMS[design.right], design, age, 'far')]
+  const attacks = [armAttack(design.left, design, age, 'near'), armAttack(design.right, design, age, 'far')]
     .filter((a): a is UnitAttack => a !== null)
     .sort((a, b) => a.range - b.range);
   const [main, second] = attacks;

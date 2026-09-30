@@ -88,6 +88,8 @@ export class Unit extends Phaser.GameObjects.Sprite {
   /** Attacks and shots made (Conquest traits: first strike, every nth shot pierces). */
   attacksMade = 0;
   shotsFired = 0;
+  /** Weapon uses of either weapon (Mech combo and set bonuses count these). */
+  weaponUses = 0;
   /**
    * Absorb pool: damage takes this down before HP (Phase 7). Granted through
    * `statusOps.grantShield`, spent in `damageOps`.
@@ -118,6 +120,7 @@ export class Unit extends Phaser.GameObjects.Sprite {
   /** Mech part timers (sim ms): the next jump-legs leap and the next drone. */
   leapReadyAt = 0;
   droneReadyAt = 0;
+  salvoReadyAt = 0;
   /** Troop carrier: the troops are out. */
   troopsDropped = false;
   /** Footprint on the lane: the placeholder's size, whatever art is shown. */
@@ -184,6 +187,7 @@ export class Unit extends Phaser.GameObjects.Sprite {
     this.killerTurret = -1;
     this.attacksMade = 0;
     this.shotsFired = 0;
+    this.weaponUses = 0;
     this.kills = 0;
     this.rank = 0;
     this.incomeRamp = -1;
@@ -194,6 +198,7 @@ export class Unit extends Phaser.GameObjects.Sprite {
     this.leap = null;
     this.leapReadyAt = 0;
     this.droneReadyAt = 0;
+    this.salvoReadyAt = 0;
     this.troopsDropped = false;
     this.flashUntil = 0;
     this.restoreTint();

@@ -8,12 +8,17 @@ import { laneDir, otherSide, type Side } from '@state/types';
 import { dealBaseDamage, dealSplashDamage, dealUnitDamage } from '@systems/damageOps';
 import { knockBack, pullTo } from '@systems/laneOps';
 import { shotLine } from '@systems/shotLine';
-import { applyBurn } from '@systems/statusOps';
+import { applyBurn, applyModifier, stunUnit } from '@systems/statusOps';
 
 /** A spin-up weapon (minigun) winds down after this long without firing, sim ms. */
 const SPIN_RESET_MS = 1200;
 /** A grapple doesn't bother with an enemy already this close, px (edge to edge). */
 const PULL_MIN_GAP = 24;
+/** A Dual wield spin reaches this much past the weapon's reach, px. */
+const SWEEP_EXTRA = 8;
+/** The Tesla set's slow: speed and attack rate x this, for this long. */
+const BONUS_SLOW = 0.7;
+const BONUS_SLOW_MS = 1500;
 import { emit, Events } from '@utils/EventBus';
 
 /**
@@ -128,6 +133,9 @@ export class CombatSystem {
 
   /** One use of a weapon, by what kind it is. */
   private useWeapon(unit: Unit, attack: UnitAttack, damage: number, reach: number, targetUnit: Unit | null, targetBase: Base | null): void {
+    // Assault set: the first blow of the unit's life charges in.
+    if (attack.firstHitMult && unit.weaponUses === 0) damage *= attack.firstHitMult;
+    unit.weaponUses++;
     if (attack.pull) {
       this.grapple(unit, attack, damage, reach);
       return;
@@ -152,7 +160,8 @@ export class CombatSystem {
   private cooldown(unit: Unit, attack: UnitAttack, base: number, nowMs: number): number {
     const spin = attack.spinUp;
     if (!spin) return base;
-    if (unit.spinSince < 0 || nowMs - unit.spinLastShot > SPIN_RESET_MS) unit.spinSince = nowMs;
+    // Crossfire keeps the spin between bursts.
+    if (unit.spinSince < 0 || (!attack.spinKeep && nowMs - unit.spinLastShot > SPIN_RESET_MS)) unit.spinSince = nowMs;
     unit.spinLastShot = nowMs;
     const k = Math.min(1, (nowMs - unit.spinSince) / Math.max(1, spin.rampMs));
     const fast = spin.fastCooldownMs * (base / Math.max(1, attack.cooldownMs));
@@ -168,7 +177,7 @@ export class CombatSystem {
       if (other.side === unit.side || !other.isAlive) continue;
       const gap = this.gapTo(unit, other);
       if (gap === null || gap > far) continue;
-      dealUnitDamage(other, damage, unit.side);
+      this.afterHit(unit, attack, other, dealUnitDamage(other, damage, unit.side));
       if (attack.burn) applyBurn(other, attack.burn.dps * unit.statMultiplier('damage'), this.nowMs + attack.burn.durationMs, unit.side);
     }
     const base = this.enemyBaseInReach(unit, far);
@@ -186,7 +195,8 @@ export class CombatSystem {
     for (let i = 0; i <= chain.jumps && current; i++) {
       hit.add(current);
       points.push(current.x, current.centerY);
-      dealUnitDamage(current, amount, unit.side);
+      const dealt = dealUnitDamage(current, amount, unit.side);
+      this.afterHit(unit, attack, current, dealt);
       amount *= chain.falloff;
       let next: Unit | null = null;
       let best = Infinity;
@@ -210,6 +220,30 @@ export class CombatSystem {
     this.announce(unit, attack);
     pullTo(target, unit, this.bases);
     dealUnitDamage(target, damage, unit.side);
+    // Hook and cut: the blade finishes the job.
+    if (attack.pullHit) dealUnitDamage(target, attack.pullHit * unit.statMultiplier('damage'), unit.side);
+    this.afterHit(unit, attack, target, 0);
+  }
+
+  /** Combo and set effects of a hit on a unit: stuns, slows, lifesteal, and the target's thorns. */
+  private afterHit(unit: Unit, attack: UnitAttack, target: Unit, dealt: number): void {
+    const n = unit.weaponUses;
+    if (attack.stunEvery && n % attack.stunEvery === 0) {
+      stunUnit(target, attack.stunMs ?? 800, this.nowMs);
+      emit(Events.WeaponFx, { side: unit.side, kind: 'stun', x: target.x, y: target.centerY, points: [target.x, target.centerY] });
+    }
+    if (attack.slowEvery && n % attack.slowEvery === 0) {
+      const expiresAt = this.nowMs + BONUS_SLOW_MS;
+      applyModifier(target, { id: 'mech-slow', source: 'mech', stat: 'speed', mult: BONUS_SLOW, expiresAt, hostile: true });
+      applyModifier(target, { id: 'mech-slow-attack', source: 'mech', stat: 'attackCooldown', mult: 1 / BONUS_SLOW, expiresAt, hostile: true });
+    }
+    if (attack.lifesteal && dealt > 0) {
+      const healed = unit.heal(dealt * attack.lifesteal);
+      if (healed > 0) emit(Events.UnitHealed, { side: unit.side, instanceId: unit.instanceId, amount: healed, x: unit.x, topY: unit.topY });
+    }
+    // Bastion set: melee attackers take some of it back.
+    const thorns = target.definition.mech?.thorns;
+    if (thorns && dealt > 0 && !attack.projectileKey && unit.isAlive) dealUnitDamage(unit, dealt * thorns, target.side);
   }
 
   /** Melee: damage lands immediately. */
@@ -223,7 +257,18 @@ export class CombatSystem {
     const traits = this.state[unit.side].traits;
     const baseMult = traits.baseDamage[unit.definition.slot] ?? 1;
     if (targetUnit) {
+      // Dual wield: every nth blow is a spin through everyone in reach.
+      if (attack.sweepEvery && unit.weaponUses % attack.sweepEvery === 0) {
+        const reach = attack === unit.definition.secondaryAttack ? attack.range * unit.statMultiplier('range') : unit.getStat('range');
+        for (const other of this.units.activeUnits) {
+          if (other === targetUnit || other.side === unit.side || !other.isAlive) continue;
+          const gap = Math.abs(other.x - unit.x) - unit.halfWidth - other.halfWidth;
+          if (gap <= reach + SWEEP_EXTRA) dealUnitDamage(other, damage, unit.side);
+        }
+        emit(Events.AreaHit, { side: unit.side, x: unit.x, radius: unit.halfWidth + reach + SWEEP_EXTRA });
+      }
       const dealt = dealUnitDamage(targetUnit, damage, unit.side);
+      this.afterHit(unit, attack, targetUnit, dealt);
       const steal = traits.lifesteal[unit.definition.slot];
       if (steal && dealt > 0) {
         const healed = unit.heal(dealt * steal);
@@ -250,7 +295,9 @@ export class CombatSystem {
     if (!targetUnit && !targetBase) return;
     // A grapple waits for someone worth pulling.
     if (attack.pull && !this.backMostEnemyInReach(unit, range, true)) return;
-    unit.secondaryReadyAt = nowMs + Math.max(1, this.cooldown(unit, attack, attack.cooldownMs * unit.statMultiplier('attackCooldown'), nowMs));
+    // Skirmisher: faster on the move.
+    const walking = attack.walkingCooldownMult && unit.unitState === UnitState.Walking ? attack.walkingCooldownMult : 1;
+    unit.secondaryReadyAt = nowMs + Math.max(1, this.cooldown(unit, attack, attack.cooldownMs * unit.statMultiplier('attackCooldown') * walking, nowMs));
     const damage = attack.damage * unit.statMultiplier('damage');
     this.useWeapon(unit, attack, damage, range, targetUnit, targetBase);
   }

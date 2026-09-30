@@ -104,6 +104,24 @@ export interface UnitAttack {
   knockback?: number;
   /** Shoots the back-most enemy in reach, over the ones in front. */
   targetBack?: boolean;
+  /* Mech combo and set bonuses (`MechBonus` in config/mech.config.ts). */
+  /** Every nth hit stuns the target for `stunMs`. */
+  stunEvery?: number;
+  stunMs?: number;
+  /** Every nth attack hits every enemy in reach. */
+  sweepEvery?: number;
+  /** A spin-up gun keeps its spin between bursts. */
+  spinKeep?: boolean;
+  /** Cooldown x this while the attacker walks (a secondary weapon). */
+  walkingCooldownMult?: number;
+  /** A pulled enemy also takes this much damage. */
+  pullHit?: number;
+  /** Heals the attacker by this share of the damage dealt. */
+  lifesteal?: number;
+  /** The first attack of the unit's life hits x this. */
+  firstHitMult?: number;
+  /** Every nth hit slows the target. */
+  slowEvery?: number;
 }
 
 /**
@@ -120,6 +138,14 @@ export interface MechBehavior {
   troops?: { unitId: string; count: number };
   taunt?: { radius: number };
   salvage?: { radius: number; goldMult: number };
+  /* Combo and set bonuses. */
+  cover?: { range: number; mult: number };
+  thorns?: number;
+  salvo?: { everyMs: number; shots: number };
+  regen?: { radius: number; perSec: number };
+  allyHp?: number;
+  troopBuff?: { damage: number; ms: number };
+  killGold?: { radius: number; goldMult: number };
   /** The Special module's active ability (damage and shields already scaled). */
   ability?: { moduleId: string; ability: MechAbility };
 }

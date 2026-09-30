@@ -879,6 +879,10 @@ built, archetype runs since 2026-09-28).
   module slot with an active ability on the War cry button, as in
   `docs/MECH_EXPANSION.md` sections 2 and 4 (numbers PROPOSED, tuned in
   the session log). Walking speed from legs now works (it was ignored).
+- **Combos and sets (built 2026-09-30, expansion step 3):** 14 pair
+  combos and 6 sets as in the brief, applied when the Mech is built and
+  listed on the hangar's build sheet. "Sometimes" effects are every nth
+  hit (PROPOSED).
 - **Expansion agreed 2026-09-29 (being built, Phase 21):** hangar UI, 7 parts per
   slot, pair combos and sets, an optional Special module slot, account
   unlocks, evolve on age-up, Mech vs Mech, a utility Mech and a Titan
