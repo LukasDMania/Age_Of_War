@@ -498,7 +498,9 @@ The brief is `docs/MECH_EXPANSION.md`; its build order is followed here.
   (MechSystem refuses unopened parts), hangar locks with progress,
   game-over lines, `__aow.unlockAll()` / `__aow.accountXp(n)`, check
   `tools/checks/account.mjs`.
-- [ ] 5. Evolve on age-up.
+- [x] 5. Evolve on age-up: `MechSystem.evolve`, `Unit.setDefinition`
+  (new stats and art, same HP ratio), `mech-evolved` with a flare and
+  "EVOLVED!".
 - [ ] 6. Utility Mech.
 - [ ] 7. Mech vs Mech mode.
 - [ ] 8. Titan (experimental).
@@ -589,7 +591,8 @@ validates and acts):
 | `siege-changed` | `{ mult }` (every unit's siege damage multiplier) | ConquestSystem (prototype; each minute of siege in a Conquest battle) |
 | `shot-bounced` | `{ side, fromX, fromY, toX, toY }` | `systems/damageOps` `dealBounceDamage` (feedback: a turret shot ricocheted; Conquest's Ricochet) |
 | `mech-changed` | `{ side, alive, build }` (`build` `{ unitId, remainingMs, totalMs }` or null) | MechSystem (build started, every frame while building, walked out, fell) |
-| `mech-ability-changed` | `{ side, moduleId, remainingMs, totalMs }` (`moduleId` null: no Mech with a module out) | MechSystem (module shown or gone, 5x/s while recharging, 1x/s otherwise) |
+| `mech-ability-changed` | `{ side, moduleId, remainingMs, totalMs }` (`moduleId` null: no Mech with a module out) | MechSystem (module shown or gone, 5x/s while recharging, 2x/s otherwise) |
+| `mech-evolved` | `{ side, instanceId, x, topY, fromAge, toAge, cost }` | MechSystem (a Mech on the lane took its side's newer age; feedback) |
 | `mech-ability-used` | `{ side, moduleId, kind, x, radius, toX? }` | MechSystem (a module fired; feedback) |
 | `weapon-fx` | `{ side, kind, x, y, points?, radius? }` (`kind`: flame, chain, pull, knockback, leap, land, drone, troops, stun; `points` x, y pairs) | CombatSystem, laneOps, MechSystem (Mech weapon and part feedback) |
 
@@ -2005,3 +2008,15 @@ decisions made, anything the owner needs to confirm.
     a win's XP, Big army opening the carrier, level 2 opening the scope
     and flamethrower), `mech.mjs`, `mechparts.mjs`, hangar screenshot.
     Not checked: the game-over panel's new lines by eye.
+- 2026-09-30 (Mech expansion, step 5: evolve on age-up): a Mech on the
+  lane older than its side's age takes the new age (look, HP, damage;
+  the design stays) for 25% of the price difference (`MECH.evolveShare`,
+  PROPOSED; Conquest's Mech cost trait applies), as soon as the side can
+  pay, never mid-leap. Choice: it waits for the gold rather than being
+  offered (no button); 140 gold for the default design Stone -> Castle.
+  `Unit.setDefinition` swaps a live unit's definition and art keeping its
+  HP ratio, modifiers and position. Effect: flare, sparks, gold, two
+  rings, "EVOLVED!". Checked: `mechparts.mjs` (waits for gold, then
+  mech:0 -> mech:1 for exactly the price, HP ratio kept), screenshots of
+  the Stone golem becoming the iron knight. The module button now
+  re-announces twice a second so a HUD rebuilt by the age-up catches up.

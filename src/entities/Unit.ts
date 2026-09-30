@@ -153,23 +153,7 @@ export class Unit extends Phaser.GameObjects.Sprite {
     this.instanceId = instanceId;
     this.modifiers.length = 0;
     this.shield = 0;
-    const placeholder = this.scene.textures.getFrame(textureKeyFor(definition.spriteKey, side));
-    this.bodyWidth = placeholder.width;
-    this.bodyHeight = placeholder.height;
-    // Headless runs (AI training) draw nothing: skip the art sheets.
-    this.art = HEADLESS_SIM ? null : (unitArtFor(definition.id) ?? null);
-    this.anims.stop();
-    if (this.art) {
-      ensureRigArt(this.scene, definition.id, side);
-      this.setTexture(unitArtKey(definition.id, 'walk', side), this.art.standFrame);
-      this.setScale(this.art.scale).setOrigin(flipOriginX(this.art.originX ?? 0.5, side === 'enemy'), this.art.footY);
-      this.baseTint = side === 'enemy' ? (this.art.enemyTint ?? null) : null;
-    } else {
-      this.setTexture(textureKeyFor(definition.spriteKey, side));
-      this.setScale(1).setOrigin(0.5, 1);
-      this.baseTint = null;
-    }
-    this.setFlipX(side === 'enemy');
+    this.applyArt();
     // Support units are drawn behind combat units, which may walk through them.
     this.setDepth(definition.role === 'combat' ? 1 : 0.9);
     this.setPosition(x, LANE_Y);
@@ -206,6 +190,42 @@ export class Unit extends Phaser.GameObjects.Sprite {
     this.hpBarDirty = true;
     this.setActive(true).setVisible(true);
     this.syncBar();
+  }
+
+  /**
+   * Swaps what the unit is while it stays on the lane (a Mech evolving on
+   * age-up): new stats and art, the same HP ratio, position, modifiers and
+   * timers. Bookkeeping only; `MechSystem` decides when.
+   */
+  setDefinition(definition: UnitDefinition): void {
+    const ratio = this.hp / Math.max(1, this.getStat('maxHp'));
+    this.definition = definition;
+    this.applyArt();
+    this.hp = Math.max(1, ratio * this.getStat('maxHp'));
+    this.hpBarDirty = true;
+    this.restoreTint();
+  }
+
+  /** Footprint, texture, scale and tint from the definition's art. */
+  private applyArt(): void {
+    const { definition, side } = this;
+    const placeholder = this.scene.textures.getFrame(textureKeyFor(definition.spriteKey, side));
+    this.bodyWidth = placeholder.width;
+    this.bodyHeight = placeholder.height;
+    // Headless runs (AI training) draw nothing: skip the art sheets.
+    this.art = HEADLESS_SIM ? null : (unitArtFor(definition.id) ?? null);
+    this.anims.stop();
+    if (this.art) {
+      ensureRigArt(this.scene, definition.id, side);
+      this.setTexture(unitArtKey(definition.id, 'walk', side), this.art.standFrame);
+      this.setScale(this.art.scale).setOrigin(flipOriginX(this.art.originX ?? 0.5, side === 'enemy'), this.art.footY);
+      this.baseTint = side === 'enemy' ? (this.art.enemyTint ?? null) : null;
+    } else {
+      this.setTexture(textureKeyFor(definition.spriteKey, side));
+      this.setScale(1).setOrigin(0.5, 1);
+      this.baseTint = null;
+    }
+    this.setFlipX(side === 'enemy');
   }
 
   /** Puts the unit back "in the pool": invisible and inert. */

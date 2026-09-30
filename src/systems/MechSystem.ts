@@ -4,7 +4,7 @@ import type { Base } from '@entities/Base';
 import type { ProjectileFactory } from '@entities/ProjectileFactory';
 import { UnitState, type Unit } from '@entities/Unit';
 import type { UnitFactory } from '@entities/UnitFactory';
-import { accountLockedSlot, designCost, isMechUnitId, isValidDesign, lockedSlot, mechDefinition } from '@entities/mechDesign';
+import { accountLockedSlot, designCost, isMechUnitId, parseMechId, isValidDesign, lockedSlot, mechDefinition } from '@entities/mechDesign';
 import { findUnitDefinition } from '@entities/unitDefinitions';
 import { addGold, trySpendGold } from '@state/economyOps';
 import type { MatchState, SideState } from '@state/GameState';
@@ -68,7 +68,7 @@ const LEAP_BASE_MARGIN = 20;
 const TROOP_SPACING = 18;
 /** Cooldown events are sent at most this often while a module recharges, sim ms. */
 const ABILITY_ANNOUNCE_MS = 200;
-const ABILITY_IDLE_ANNOUNCE_MS = 1000;
+const ABILITY_IDLE_ANNOUNCE_MS = 500;
 /** Cover and regen (combo and set bonuses) refresh this often, sim ms. */
 const SUPPORT_TICK_MS = 250;
 /** The Command set's HP bonus on the side's other units. */
@@ -87,13 +87,14 @@ const ALLY_HP_ID = 'mech-command-hp';
  * front line; the Hangar bay launches drones; the Overcharge core burns the
  * Mech's own HP; the Troop carrier drops melee troops when the Mech first
  * stops to fight or falls; the Salvage scanner pays extra kill gold near
- * it. And the Special module: `mech-ability-requested` is checked here and
+ * it. It evolves into the side's new age after an age-up
+ * (`MECH.evolveShare` of the price difference). And the Special module: `mech-ability-requested` is checked here and
  * the ability fired (smoke, overdrive, leap, overload, dome, EMP, orbital).
  *
  * Listens for: `build-mech-requested`, `mech-ability-requested`,
  * `unit-died` (its Mech fell; salvage).
  * Emits: `mech-changed` (build start, every frame while building, spawn,
- * fall), `mech-ability-changed`, `mech-ability-used`, `weapon-fx`,
+ * fall), `mech-ability-changed`, `mech-ability-used`, `mech-evolved`, `weapon-fx`,
  * `unit-spawned`; `gold-changed` through economyOps; damage and status
  * events through damageOps / statusOps.
  */
@@ -162,6 +163,7 @@ export class MechSystem {
       if (unit.definition.mech.allyHp) allyHp[unit.side] = unit.definition.mech.allyHp;
     }
     for (const side of SIDES) this.setAllyHp(side, allyHp[side]);
+    for (const side of SIDES) this.evolve(side);
     for (const side of SIDES) this.announceAbility(side, false);
   }
 
@@ -246,6 +248,31 @@ export class MechSystem {
         ally.heal((ally.getStat('maxHp') * parts.regen.perSec * deltaMs) / 1000);
       }
     }
+  }
+
+  /**
+   * Evolve on age-up: a Mech older than its side's age takes the new age
+   * (look, HP and damage; the same design) for `MECH.evolveShare` of the
+   * price difference, as soon as the side can pay. Not while leaping.
+   */
+  private evolve(side: Side): void {
+    const me = this.state[side];
+    const unit = this.mechOf(side);
+    if (!unit || unit.airborne || unit.definition.age >= me.age) return;
+    const parsed = parseMechId(unit.definition.id);
+    if (!parsed) return;
+    const cost = this.evolveCost(side, parsed.design, parsed.age);
+    if (me.gold < cost || (cost > 0 && !trySpendGold(this.state, side, cost, 'purchase'))) return;
+    const fromAge = unit.definition.age;
+    unit.setDefinition(mechDefinition(parsed.design, me.age));
+    emit(Events.MechEvolved, { side, instanceId: unit.instanceId, x: unit.x, topY: unit.topY, fromAge, toAge: me.age, cost });
+  }
+
+  /** Gold for a side's Mech of `design`, built in `fromAge`, to take the side's age now. */
+  evolveCost(side: Side, design: MechDesign, fromAge: number): number {
+    const me = this.state[side];
+    const diff = designCost(design, me.age) - designCost(design, fromAge);
+    return Math.max(0, Math.round((diff * MECH.evolveShare * me.traits.mechCost) / 5) * 5);
   }
 
   /** Bulwark: allies just behind the Mech take less damage (refreshed a few times a second). */

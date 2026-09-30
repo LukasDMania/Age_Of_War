@@ -199,4 +199,24 @@ await page.evaluate(() => window.__aow.spawn('stone-clubber', 'player'));
 await step(300);
 const club = (await units()).find((u) => u.side === 'player' && u.unitId === 'stone-clubber');
 check('Command set: allies +5% HP', club && Math.abs(club.maxHp - 90 * 1.05) < 0.5, club && String(club.maxHp));
+
+// Evolve on age-up (4b): waits for gold, then takes the new age for 25% of the price difference.
+ids = await setup(M('walker', 'frame', 'visor', 'fist', 'launcher'), 400, 'stone-clubber', []);
+const evolve = await page.evaluate(async () => {
+  const a = window.__aow;
+  const md = await import('/src/entities/mechDesign.ts');
+  const design = { legs: 'walker', torso: 'frame', head: 'visor', left: 'fist', right: 'launcher', module: 'none' };
+  a.state.player.xp = 99999;
+  a.ageUp('player');
+  a.state.player.gold = 0;
+  a.step(500);
+  const before = a.snapshot().units.find((u) => u.unitId.startsWith('mech:'));
+  const cost = Math.round(((md.designCost(design, 1) - md.designCost(design, 0)) * 0.25) / 5) * 5;
+  a.state.player.gold = cost + 7;
+  a.step(200);
+  const after = a.snapshot().units.find((u) => u.unitId.startsWith('mech:'));
+  return { before: before.unitId, after: after.unitId, hpRatio: after.hp / after.maxHp, gold: a.state.player.gold, cost };
+});
+check('evolve waits for gold', evolve.before.startsWith('mech:0:'), evolve.before);
+check('evolve takes the new age and charges 25% of the difference', evolve.after.startsWith('mech:1:') && evolve.gold === 7 && evolve.hpRatio > 0.99, JSON.stringify(evolve));
 await finish(browser, errors);

@@ -249,6 +249,18 @@ export class ImpactEffects {
     this.cleanups = [
       on(Events.WeaponFx, (p) => this.onWeaponFx(p)),
       on(Events.MechAbilityUsed, (p) => this.onMechAbility(p)),
+      on(Events.MechEvolved, ({ x, topY }) => {
+        if (this.muted) return;
+        // The transformation: a flare, sparks up the body, gold and two rings.
+        const mid = (topY + LANE_Y) / 2;
+        this.pop('fx-flare', x, mid, 150, 0xfff0b0, 520, { grow: 1.4 });
+        this.burst('sparks', 18, x, mid, 30, 50);
+        this.burst('gold', 16, x, topY + 10, 30, 20);
+        this.ring(x, 70, 0xf2c744, 480);
+        this.scene.time.delayedCall(180, () => {
+          if (!this.muted) this.ring(x, 110, 0xfff0b0, 600);
+        });
+      }),
       on(Events.ProjectileImpact, (p) => this.onImpact(p)),
       on(Events.UnitStruck, (p) => this.onStruck(p)),
       on(Events.TurretFired, ({ turretId, x, y }) => this.onTurretFired(turretId, x, y)),

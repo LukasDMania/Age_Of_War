@@ -46,6 +46,7 @@ export const Events = {
   UnitQueueChanged: 'unit-queue-changed',
   MechChanged: 'mech-changed',
   MechAbilityChanged: 'mech-ability-changed',
+  MechEvolved: 'mech-evolved',
   MechAbilityUsed: 'mech-ability-used',
   /** Feedback for Mech weapons and part effects (flames, lightning, pulls, leaps...). */
   WeaponFx: 'weapon-fx',
@@ -118,6 +119,8 @@ export interface EventPayloads {
   /** The Mech workshop: build this design (in the side's current age). */
   [Events.BuildMechRequested]: { side: Side; design: MechDesign };
   [Events.MechAbilityRequested]: { side: Side };
+  /** A Mech on the lane took its side's newer age (Mech expansion 4b); `cost` was paid. */
+  [Events.MechEvolved]: { side: Side; instanceId: number; x: number; topY: number; fromAge: number; toAge: number; cost: number };
   /** The side's Mech module: which one is out (null: no Mech with a module) and its cooldown. */
   [Events.MechAbilityChanged]: { side: Side; moduleId: string | null; remainingMs: number; totalMs: number };
   /** A module fired (feedback): `x` where, `radius` its reach, `toX` a leap's landing or a strike's target. */

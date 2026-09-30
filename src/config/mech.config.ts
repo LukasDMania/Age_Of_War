@@ -287,6 +287,12 @@ export const MECH = {
   bodyWidth: 64,
   bodyHeight: 112,
   spriteKey: 'unit-player-mech',
+  /**
+   * Evolve on age-up (Mech expansion 4b): a Mech on the lane takes its
+   * side's new age for this share of the price difference, as soon as the
+   * side can pay it (PROPOSED 25%).
+   */
+  evolveShare: 0.25,
   /** Only the player builds Mechs (owner: a player-only unit). */
   sides: ['player'],
 } as const;

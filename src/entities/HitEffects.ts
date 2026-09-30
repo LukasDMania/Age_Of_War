@@ -112,6 +112,7 @@ export class HitEffects {
       on(Events.AgeChanged, ({ side }) => {
         if (side === 'player') this.scene.cameras.main.flash(AGE_UP_FLASH_MS, 255, 240, 200);
       }),
+      on(Events.MechEvolved, ({ x, topY }) => this.showFloatingText('EVOLVED!', '#f7cf5a', x, topY - 14)),
       on(Events.UnitHealed, ({ amount, x, topY }) => this.showFloatingText(`+${Math.round(amount)}`, HEAL_NUMBER_COLOR, x, topY)),
       on(Events.UnitPromoted, ({ rank, x, topY }) => this.showFloatingText(rank >= 3 ? 'ELITE!' : 'RANK UP!', '#f7cf5a', x, topY - 10)),
       on(Events.UtilityPulse, ({ kind, x, radius }) => this.showRing(x, radius, PULSE_COLOR[kind], PULSE_DURATION_MS)),

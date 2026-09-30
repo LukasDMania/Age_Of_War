@@ -886,6 +886,9 @@ built, archetype runs since 2026-09-28).
 - **Account unlocks (built 2026-09-30, expansion step 4):** an account
   level per browser from finished matches; wild parts open by level or
   achievement (table in the session log, numbers PROPOSED).
+- **Evolve on age-up (built 2026-09-30, step 4b):** a Mech on the lane
+  takes your new age for 25% of the price difference once you can pay
+  (PROPOSED), with a short transformation effect.
 - **Expansion agreed 2026-09-29 (being built, Phase 21):** hangar UI, 7 parts per
   slot, pair combos and sets, an optional Special module slot, account
   unlocks, evolve on age-up, Mech vs Mech, a utility Mech and a Titan
