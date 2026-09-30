@@ -25,7 +25,7 @@ import {
 import { accountLevel, loadAccount, lockedPartKeys, unlockText, type AccountProgress } from '@state/accountProgress';
 import type { MatchState } from '@state/GameState';
 import type { MechState, Side } from '@state/types';
-import { mechBuildMs, mechForgeLevel, mechPrice, mechRejection, type MechRejection } from '@systems/MechSystem';
+import { mechBuildMs, mechForgeLevel, mechPrice, mechRejection, titanOpen, type MechRejection } from '@systems/MechSystem';
 import { addPanel, applyUiTheme, UI_FONT, UI_TITLE_FONT, UiColors, UiTextColors, UiTextures } from '@ui/kenneyUi';
 import { keyHint, KeyboardControls } from '@ui/keymap';
 import { MechBlueprints, BLUEPRINT_COUNT } from '@ui/mechBlueprints';
@@ -179,6 +179,10 @@ export class HangarScene extends Phaser.Scene {
   private drawnKey = '';
   /** Mech vs Mech from the menu (no match behind the hangar). */
   private duel = false;
+  /** Build as a Titan (experimental; final age, once per match). */
+  private titan = false;
+  private titanButton!: UiButton;
+  private titanLabel!: Phaser.GameObjects.Text;
   private zones: Phaser.GameObjects.Zone[] = [];
 
   constructor() {
@@ -209,6 +213,7 @@ export class HangarScene extends Phaser.Scene {
     this.blueprintButtons = [];
     this.drawnKey = '';
     this.zones = [];
+    this.titan = false;
   }
 
   create(): void {
@@ -352,12 +357,12 @@ export class HangarScene extends Phaser.Scene {
   }
 
   private build(): boolean {
-    if (mechRejection(this.state, this.side, this.design) !== null) return false;
+    if (mechRejection(this.state, this.side, this.design, this.titan) !== null) return false;
     if (this.duel) {
       this.fight();
       return true;
     }
-    emit(Events.BuildMechRequested, { side: this.side, design: { ...this.design } });
+    emit(Events.BuildMechRequested, { side: this.side, design: { ...this.design }, ...(this.titan ? { titan: true } : {}) });
     this.buildButton.press();
     return true;
   }
@@ -575,6 +580,17 @@ export class HangarScene extends Phaser.Scene {
     y += 8;
     // Build sheet.
     this.add.text(x + 14, y + 10, 'Cost', text(13, BLUE_TEXT, '600')).setOrigin(0, 0.5);
+    // The Titan (experimental): in the final age, build this design once as a Titan.
+    this.titanButton = new UiButton(this, x + 120, y + 10, 96, 24, {
+      onPress: () => {
+        this.titan = !this.titan;
+        this.refreshStats();
+      },
+      tint: UiColors.panelDark,
+      hoverTint: UiColors.panelHover,
+    });
+    this.titanLabel = this.add.text(0, 0, '', text(12, UiTextColors.parchment, '600')).setOrigin(0.5);
+    this.titanButton.add(this.titanLabel);
     this.costText = this.add.text(x + SHEET_W - 14, y + 10, '', { fontFamily: UI_TITLE_FONT, fontSize: '22px', color: UiTextColors.gold }).setOrigin(1, 0.5);
     y += 28;
     this.sheetText = this.add.text(x + 14, y, '', { ...text(13, UiTextColors.parchment), lineSpacing: 3 }).setOrigin(0, 0);
@@ -710,7 +726,7 @@ export class HangarScene extends Phaser.Scene {
     const shown = this.previewDesign();
     const me = this.state[this.side];
     this.sheetText.setText(
-      [`Build time  ${Math.round(mechBuildMs(me, shown) / 1000)} s`, `Toughness  ${Math.round(next.hp / Math.max(0.05, 1 - next.armor)).toLocaleString('en-US')} effective HP`].join('\n'),
+      [`Build time  ${Math.round(mechBuildMs(me, shown, this.titan) / 1000)} s`, `Toughness  ${Math.round(next.hp / Math.max(0.05, 1 - next.armor)).toLocaleString('en-US')} effective HP`].join('\n'),
     );
     const roles = designRoles(shown);
     this.rolesText.setText(roles.length ? `Roles: ${roles.join(' · ')}` : 'Roles: none (unarmed)');
@@ -748,9 +764,14 @@ export class HangarScene extends Phaser.Scene {
     if (!this.buildButton) return;
     const me = this.state[this.side];
     const shown = this.previewDesign();
-    const cost = mechPrice(me, shown);
+    const canTitan = !this.duel && titanOpen(me);
+    if (!canTitan) this.titan = false;
+    this.titanButton.container.setVisible(canTitan);
+    this.titanButton.setSelected(this.titan);
+    this.titanLabel.setText(this.titan ? 'TITAN: on' : 'Titan: off').setColor(this.titan ? UiTextColors.gold : UiTextColors.parchment);
+    const cost = mechPrice(me, shown, this.titan);
     this.costText.setText(cost.toLocaleString('en-US')).setColor(me.gold >= cost ? UiTextColors.gold : RED_TEXT);
-    const rejection = mechRejection(this.state, this.side, this.design);
+    const rejection = mechRejection(this.state, this.side, this.design, this.titan);
     this.buildButton.setEnabled(rejection === null);
     this.buildProgress.clear();
     const build = this.mech.build;
@@ -767,6 +788,7 @@ export class HangarScene extends Phaser.Scene {
       'player-only': 'Not for this side',
       invalid: 'Unknown part',
       locked: 'Needs a Forge level',
+      'titan-unavailable': 'Titan: final age, once',
       'account-locked': 'Part not unlocked yet',
       building: 'Building',
       alive: 'Mech in battle',

@@ -117,7 +117,7 @@ export type QueuedUnitInfo = QueuedUnit;
 export interface EventPayloads {
   [Events.BuyUnitRequested]: { side: Side; unitId: string };
   /** The Mech workshop: build this design (in the side's current age). */
-  [Events.BuildMechRequested]: { side: Side; design: MechDesign };
+  [Events.BuildMechRequested]: { side: Side; design: MechDesign; titan?: boolean };
   [Events.MechAbilityRequested]: { side: Side };
   /** A Mech on the lane took its side's newer age (Mech expansion 4b); `cost` was paid. */
   [Events.MechEvolved]: { side: Side; instanceId: number; x: number; topY: number; fromAge: number; toAge: number; cost: number };

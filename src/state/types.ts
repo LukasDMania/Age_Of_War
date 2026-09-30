@@ -32,6 +32,8 @@ export interface MechState {
   alive: boolean;
   /** Sim time (ms) when its Special module can be used again. */
   abilityReadyAt?: number;
+  /** The Titan (experimental) was built this match: once only. */
+  titanBuilt?: boolean;
 }
 
 /** Match state machine. See `MatchSystem` (Phase 2). */

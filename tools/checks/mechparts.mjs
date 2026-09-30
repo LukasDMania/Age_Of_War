@@ -219,4 +219,32 @@ const evolve = await page.evaluate(async () => {
 });
 check('evolve waits for gold', evolve.before.startsWith('mech:0:'), evolve.before);
 check('evolve takes the new age and charges 25% of the difference', evolve.after.startsWith('mech:1:') && evolve.gold === 7 && evolve.hpRatio > 0.99, JSON.stringify(evolve));
+
+// The Titan (experimental): final age only, once per match, much bigger.
+const titan = await page.evaluate(async () => {
+  window.__aow.restart({ ai: 'off' });
+  await new Promise((r) => setTimeout(r, 400));
+  const a = window.__aow;
+  const design = { legs: 'walker', torso: 'frame', head: 'visor', left: 'fist', right: 'launcher', module: 'none' };
+  a.addGold(9e6);
+  a.bus.emit('build-mech-requested', { side: 'player', design, titan: true });
+  const early = a.state.player.mech.build !== null;
+  for (let i = 0; i < 4; i++) {
+    a.state.player.xp = 1e9;
+    a.ageUp('player');
+  }
+  a.bus.emit('build-mech-requested', { side: 'player', design, titan: true });
+  const unitId = a.state.player.mech.build?.unitId;
+  a.step(120000);
+  const unit = a.snapshot().units.find((u) => u.unitId === unitId);
+  const md = await import('/src/entities/mechDesign.ts');
+  const plain = md.mechDefinition(design, 4);
+  if (unit) a.kill(unit.id);
+  a.step(100);
+  a.bus.emit('build-mech-requested', { side: 'player', design, titan: true });
+  return { early, unitId, hp: unit?.maxHp, plainHp: plain.hp, width: unit?.width, again: a.state.player.mech.build !== null };
+});
+check('no Titan before the final age', !titan.early);
+check('a Titan in the final age: 6x HP, wider', titan.unitId?.endsWith(':titan') && titan.hp === titan.plainHp * 6 && titan.width > 100, JSON.stringify(titan));
+check('only one Titan per match', !titan.again);
 await finish(browser, errors);

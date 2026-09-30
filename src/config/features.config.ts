@@ -18,7 +18,8 @@ export type FeatureId =
   | 'warCry'
   | 'conquest'
   | 'moneyUnitRework'
-  | 'ageCatchUp';
+  | 'ageCatchUp'
+  | 'titan';
 
 export interface FeatureInfo {
   label: string;
@@ -60,6 +61,11 @@ export const FEATURES_INFO: Readonly<Record<FeatureId, FeatureInfo>> = {
   ageCatchUp: {
     label: 'Age catch-up',
     about: 'The side behind in age gets +50% kill XP and +35% turret damage per age behind; a lagging AI follows within about 1-2 minutes.',
+    default: true,
+  },
+  titan: {
+    label: 'Mech Titan',
+    about: 'In the final age, build your Mech once as a Titan: a huge, very expensive version of the design (the hangar\'s Titan switch).',
     default: true,
   },
   conquest: {

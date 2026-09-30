@@ -408,7 +408,7 @@ export function generatePlaceholderTextures(scene: Phaser.Scene): void {
     const palette = SIDE_PALETTE[side];
 
     // Every Mech design shares one footprint texture (its art is drawn per design).
-    for (const def of [...UNIT_DEFINITIONS, mechDefinition(DEFAULT_MECH_DESIGN, 0)]) {
+    for (const def of [...UNIT_DEFINITIONS, mechDefinition(DEFAULT_MECH_DESIGN, 0), mechDefinition(DEFAULT_MECH_DESIGN, 0, true)]) {
       const { w, h } = unitSize(def);
       build(textureKeyFor(def.spriteKey, side), w, h, () =>
         drawUnit(g, def, palette),

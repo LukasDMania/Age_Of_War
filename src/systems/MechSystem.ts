@@ -1,4 +1,6 @@
+import { AGE_COUNT } from '@config/ages.config';
 import { LANE_Y } from '@config/constants';
+import { feature } from '@config/features.config';
 import { MECH, type MechAbility, type MechDesign } from '@config/mech.config';
 import type { Base } from '@entities/Base';
 import type { ProjectileFactory } from '@entities/ProjectileFactory';
@@ -16,19 +18,33 @@ import { applyModifier, clearSideModifier, grantShield, setSideModifier, stunUni
 import { emit, Events, on, type EventPayloads } from '@utils/EventBus';
 
 /** Why a Mech can't be built right now. */
-export type MechRejection = 'not-playing' | 'player-only' | 'invalid' | 'account-locked' | 'locked' | 'building' | 'alive' | 'cannot-afford';
+export type MechRejection =
+  | 'not-playing'
+  | 'player-only'
+  | 'invalid'
+  | 'account-locked'
+  | 'locked'
+  | 'titan-unavailable'
+  | 'building'
+  | 'alive'
+  | 'cannot-afford';
 
 /** Why the Mech's module can't be used right now. */
 export type MechAbilityRejection = 'not-playing' | 'no-mech' | 'no-module' | 'cooling-down' | 'airborne';
 
 /** What a design costs a side now (its age; Conquest traits can change it). */
-export function mechPrice(side: SideState, design: MechDesign): number {
-  return Math.round((designCost(design, side.age) * side.traits.mechCost) / 5) * 5;
+export function mechPrice(side: SideState, design: MechDesign, titan = false): number {
+  return Math.round((mechDefinition(design, side.age, titan).cost * side.traits.mechCost) / 5) * 5;
 }
 
 /** How long a design takes a side to build, ms. */
-export function mechBuildMs(side: SideState, design: MechDesign): number {
-  return Math.round(mechDefinition(design, side.age).trainTimeMs * side.traits.mechBuildTime);
+export function mechBuildMs(side: SideState, design: MechDesign, titan = false): number {
+  return Math.round(mechDefinition(design, side.age, titan).trainTimeMs * side.traits.mechBuildTime);
+}
+
+/** Whether a side may build its Titan now (feature on, the final age, not built yet this match). */
+export function titanOpen(side: SideState): boolean {
+  return feature('titan') && side.age >= AGE_COUNT - 1 && !side.mech.titanBuilt;
 }
 
 /** The Forge level the side's parts count as (Conquest's Blueprints lower their needs). */
@@ -40,16 +56,17 @@ export function mechForgeLevel(side: SideState): number {
  * Why `side` can't build `design` now, or null if it can. Shared by the
  * system and the hangar (which greys its Build button with it).
  */
-export function mechRejection(state: MatchState, side: Side, design: MechDesign): MechRejection | null {
+export function mechRejection(state: MatchState, side: Side, design: MechDesign, titan = false): MechRejection | null {
   if (state.phase !== 'playing') return 'not-playing';
   if (!(MECH.sides as readonly Side[]).includes(side)) return 'player-only';
   if (!isValidDesign(design)) return 'invalid';
   const me = state[side];
   if (accountLockedSlot(design, me.mechLocked) !== null) return 'account-locked';
   if (lockedSlot(design, mechForgeLevel(me)) !== null) return 'locked';
+  if (titan && !titanOpen(me)) return 'titan-unavailable';
   if (me.mech.build) return 'building';
   if (me.mech.alive) return 'alive';
-  if (me.gold < mechPrice(me, design)) return 'cannot-afford';
+  if (me.gold < mechPrice(me, design, titan)) return 'cannot-afford';
   return null;
 }
 
@@ -184,12 +201,13 @@ export class MechSystem {
 
   /* ---- Building ------------------------------------------------------------------------------ */
 
-  private onBuildRequested({ side, design }: EventPayloads[typeof Events.BuildMechRequested]): void {
-    if (mechRejection(this.state, side, design) !== null) return;
+  private onBuildRequested({ side, design, titan = false }: EventPayloads[typeof Events.BuildMechRequested]): void {
+    if (mechRejection(this.state, side, design, titan) !== null) return;
     const me = this.state[side];
-    const definition = mechDefinition(design, me.age);
-    if (!trySpendGold(this.state, side, mechPrice(me, design), 'purchase')) return;
-    const buildMs = mechBuildMs(me, design);
+    const definition = mechDefinition(design, me.age, titan);
+    if (!trySpendGold(this.state, side, mechPrice(me, design, titan), 'purchase')) return;
+    if (titan) me.mech.titanBuilt = true;
+    const buildMs = mechBuildMs(me, design, titan);
     me.mech.build = { unitId: definition.id, remainingMs: buildMs, totalMs: buildMs };
     this.announce(side);
   }

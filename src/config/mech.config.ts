@@ -314,6 +314,26 @@ export const MECH_LAUNCHER_MUZZLES: Readonly<Record<LegsId, { near: { x: number;
   jump: { near: { x: 61, y: -61 }, far: { x: 56, y: -72 } },
 };
 
+/**
+ * The Titan finale (Mech expansion section 6, EXPERIMENTAL, feature
+ * `titan`): in the final age only, once per match, the hangar can build the
+ * design as a Titan: `scale` times the Mech's size, `hp` / `damage` times
+ * its HP and damage, `cost` times its price, `buildTime` times its build.
+ * Its art is drawn at 1/`artDownsample` resolution and scaled up (sheets
+ * that big would be too heavy). PROPOSED.
+ */
+export const TITAN = {
+  scale: 2.8,
+  hp: 6,
+  damage: 3,
+  cost: 4,
+  buildTime: 2,
+  artDownsample: 2,
+  spriteKey: 'unit-player-titan',
+  /** Unit id suffix. */
+  idSuffix: ':titan',
+} as const;
+
 /** Every unit id of a Mech starts with this (`entities/mechDesign.ts`). */
 export const MECH_ID_PREFIX = 'mech:';
 

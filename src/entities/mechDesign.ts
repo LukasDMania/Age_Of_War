@@ -15,6 +15,7 @@ import {
   MECH_SETS,
   MECH_SLOTS,
   MECH_TORSOS,
+  TITAN,
   type ArmId,
   type ArmPart,
   type ComboPart,
@@ -56,14 +57,15 @@ export function isMechUnitId(id: string): boolean {
   return id.startsWith(MECH_ID_PREFIX);
 }
 
-export function mechUnitId(design: MechDesign, age: number): string {
-  return `${MECH_ID_PREFIX}${age}:${MECH_SLOTS.map((slot) => design[slot]).join(':')}`;
+export function mechUnitId(design: MechDesign, age: number, titan = false): string {
+  return `${MECH_ID_PREFIX}${age}:${MECH_SLOTS.map((slot) => design[slot]).join(':')}${titan ? TITAN.idSuffix : ''}`;
 }
 
 /** The design and age of a Mech unit id, or null if it isn't a valid one. Ids without a module (older) read as `none`. */
-export function parseMechId(id: string): { design: MechDesign; age: number } | null {
+export function parseMechId(id: string): { design: MechDesign; age: number; titan: boolean } | null {
   if (!isMechUnitId(id)) return null;
-  const [ageText, ...parts] = id.slice(MECH_ID_PREFIX.length).split(':');
+  const titan = id.endsWith(TITAN.idSuffix);
+  const [ageText, ...parts] = id.slice(MECH_ID_PREFIX.length, titan ? -TITAN.idSuffix.length : undefined).split(':');
   const age = Number(ageText);
   if (!Number.isInteger(age) || age < 0 || age >= AGES.length) return null;
   if (parts.length === MECH_BODY_SLOTS.length) parts.push('none');
@@ -74,7 +76,7 @@ export function parseMechId(id: string): { design: MechDesign; age: number } | n
     if (!MECH_OPTIONS[slot].includes(part)) return null;
     design[slot] = part;
   }
-  return { design: design as MechDesign, age };
+  return { design: design as MechDesign, age, titan };
 }
 
 /** Whether every part of a design exists (designs from storage or requests). */
@@ -362,9 +364,9 @@ function behavior(design: MechDesign, age: number): MechBehavior | undefined {
 
 const cache = new Map<string, UnitDefinition>();
 
-/** The unit definition of a design built in `age`. */
-export function mechDefinition(design: MechDesign, age: number): UnitDefinition {
-  const id = mechUnitId(design, age);
+/** The unit definition of a design built in `age` (as a Titan: bigger, tougher, pricier). */
+export function mechDefinition(design: MechDesign, age: number, titan = false): UnitDefinition {
+  const id = mechUnitId(design, age, titan);
   const cached = cache.get(id);
   if (cached) return cached;
   const scale = getAge(age).scale;
@@ -378,21 +380,30 @@ export function mechDefinition(design: MechDesign, age: number): UnitDefinition 
   const [main, second] = attacks;
   const cost = designCost(design, age);
   const walk = MECH_LEGS[design.legs].speed ?? 1;
+  if (titan) {
+    for (const a of [main, second]) {
+      if (!a) continue;
+      a.damage = Math.round(a.damage * TITAN.damage);
+      if (a.muzzle) a.muzzle = { x: Math.round(a.muzzle.x * TITAN.scale), y: Math.round(a.muzzle.y * TITAN.scale) };
+      if (a.splashRadius) a.splashRadius = Math.round(a.splashRadius * 1.5);
+    }
+  }
+  const price = titan ? Math.round((cost * TITAN.cost) / 5) * 5 : cost;
   const definition: UnitDefinition = {
     id,
-    name: 'Mech',
+    name: titan ? 'Titan' : 'Mech',
     age,
     slot: 3,
     role: 'combat',
-    spriteKey: MECH.spriteKey,
-    bodyWidth: MECH.bodyWidth,
-    bodyHeight: MECH.bodyHeight,
-    cost,
-    trainTimeMs: designBuildMs(design),
-    hp: Math.round(hp * scale),
+    spriteKey: titan ? TITAN.spriteKey : MECH.spriteKey,
+    bodyWidth: titan ? Math.round(MECH.bodyWidth * TITAN.scale * 0.8) : MECH.bodyWidth,
+    bodyHeight: titan ? Math.round(MECH.bodyHeight * TITAN.scale) : MECH.bodyHeight,
+    cost: price,
+    trainTimeMs: Math.round(designBuildMs(design) * (titan ? TITAN.buildTime : 1)),
+    hp: Math.round(hp * scale * (titan ? TITAN.hp : 1)),
     speed: Math.round(UNIT_WALK_SPEED * walk),
-    killGold: Math.round(cost * MECH.killGold),
-    killXp: Math.round(cost * MECH.killXp),
+    killGold: Math.round(price * MECH.killGold),
+    killXp: Math.round(price * MECH.killXp),
     ...(walk !== 1 ? { walkSpeedMult: walk } : {}),
     ...(armor < 1 ? { armor: Math.round(armor * 1000) / 1000 } : {}),
     ...(main ? { attack: main } : {}),
@@ -402,6 +413,7 @@ export function mechDefinition(design: MechDesign, age: number): UnitDefinition 
   if (utility) definition.utility = utility;
   const mech = behavior(design, age);
   if (mech) definition.mech = mech;
+  if (titan) definition.mech = { ...definition.mech, knockbackImmune: true };
   cache.set(id, definition);
   return definition;
 }
@@ -409,7 +421,7 @@ export function mechDefinition(design: MechDesign, age: number): UnitDefinition 
 /** The definition behind a Mech unit id, or undefined. */
 export function mechDefinitionFromId(id: string): UnitDefinition | undefined {
   const parsed = parseMechId(id);
-  return parsed ? mechDefinition(parsed.design, parsed.age) : undefined;
+  return parsed ? mechDefinition(parsed.design, parsed.age, parsed.titan) : undefined;
 }
 
 /** Damage per second of one attack (a spin-up weapon at full speed counts half-way). */

@@ -3,10 +3,10 @@
 Handoff document. Read `CLAUDE.md` (rules) and `docs/GAME_DESIGN.md` (what
 we're building) first, then work through the phases below **in order**.
 
-**Current status (2026-09-28):** Phases 0 to 20 are done (15 and 16 are
-log-only). Everything is on main (pushed 2026-09-28 at the owner's
-request, from the branch `claude/youthful-ptolemy-su6zli`). Nothing is
-waiting half-built.
+**Current status (2026-09-30):** Phases 0 to 20 are done (15 and 16 are
+log-only). Phase 21 (the Mech expansion, `docs/MECH_EXPANSION.md`) is on
+the branch `claude/relaxed-bohr-o99qdj`: steps 1-5, 7 and 8 are built;
+step 6 (utility Mech) waits on the owner's answers.
 
 ### Start here (new agent)
 
@@ -506,7 +506,10 @@ The brief is `docs/MECH_EXPANSION.md`; its build order is followed here.
   (age picker, every Forge part open, account locks apply) -> Fight;
   `GameSceneData.duel`, `systems/MechDuelAI.ts`, a trimmed HUD; check
   `tools/checks/duel.mjs`.
-- [ ] 8. Titan (experimental).
+- [x] 8. Titan (EXPERIMENTAL, feature `titan`, on by default): the
+  hangar's Titan switch in the final age builds the design once per
+  match at 2.8x size, 6x HP, 3x damage, 4x price, 2x build time
+  (`TITAN` in `config/mech.config.ts`).
 
 ---
 
@@ -2047,3 +2050,16 @@ decisions made, anything the owner needs to confirm.
   - Step 6 (utility Mech) is not built: the brief asks the owner first
     whether it can be attacked while working, whether it can switch
     buildings, and whether it is a hangar mode or implied by its parts.
+- 2026-09-30 (Mech expansion, step 8: the Titan, EXPERIMENTAL): feature
+  switch `titan` (Experiments panel, on by default). In the final age the
+  hangar shows a "Titan: off/on" switch by the price; on, Build makes the
+  design as a Titan (`build-mech-requested` gets `titan: true`), once per
+  match (`MechState.titanBuilt`), still the side's one Mech. A Titan is
+  the same design at 2.8x size (footprint 143 x 314 px), 6x HP, 3x
+  damage, 1.5x splash, 4x price, 2x build time, no knockback (`TITAN`,
+  PROPOSED); unit id suffix `:titan`. Its art is the Mech drawing at
+  half resolution scaled up (full-size sheets would be ~75 MB). The
+  hangar's stat bars still show the normal Mech (only price and build
+  time switch). Checked: `mechparts.mjs` (refused before the final age,
+  6x HP and wider in it, refused a second time), a screenshot of a
+  Future Titan on the lane (about half the screen tall), build passes.

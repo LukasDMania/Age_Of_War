@@ -2,7 +2,7 @@ import Phaser from 'phaser';
 import { drawMechDesign, type MechLook } from '@/art/mechDraw';
 import type { RigAnim } from '@/art/rigFigure';
 import { RIG_SUPERSAMPLE, rigArt, type RigBox, type UnitArt } from '@config/unitArt.config';
-import { MECH, type MechSlot } from '@config/mech.config';
+import { MECH, TITAN, type MechSlot } from '@config/mech.config';
 import { parseMechId } from '@entities/mechDesign';
 
 /**
@@ -34,7 +34,10 @@ export function mechUnitArt(unitId: string): UnitArt | undefined {
   const parsed = parseMechId(unitId);
   if (!parsed) return undefined;
   const look: MechLook = { ...parsed.design, age: parsed.age };
-  const art = rigArt('mech', LIVE, DIE, PX_PER_UNIT, MECH.attackRate, ICON);
+  // A Titan: the same drawing, bigger; drawn at lower resolution and scaled up.
+  const down = parsed.titan ? TITAN.artDownsample : 1;
+  const art = rigArt('mech', LIVE, DIE, (PX_PER_UNIT * (parsed.titan ? TITAN.scale : 1)) / down, MECH.attackRate, ICON);
+  art.scale *= down;
   art.rig = { ...art.rig!, draw: (c, team, anim, u) => drawMechDesign(c, look, team, anim, u) };
   cache.set(unitId, art);
   return art;
