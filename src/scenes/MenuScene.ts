@@ -24,6 +24,7 @@ import {
 import { UiButton } from '@ui/UiButton';
 import { bindingsLabel, keyHint } from '@ui/keymap';
 import type { ControlsSceneData } from '@ui/ControlsScene';
+import type { HangarSceneData } from '@ui/HangarScene';
 import { ExperimentsPanel } from '@ui/experimental/ExperimentsPanel';
 import { feature } from '@config/features.config';
 import { baseArtKey, BASE_SUPERSAMPLE, ensureBaseArt } from '@utils/BaseArt';
@@ -183,7 +184,7 @@ export class MenuScene extends Phaser.Scene {
         650,
         [
           `Slot keys ${keyHint('slot-1')}-${keyHint('slot-5')} act on the open tab  ·  Tabs ${(['tab-units', 'tab-turrets', 'tab-buildings', 'tab-research', 'tab-workshop'] as const).map((id) => keyHint(id)).join(' ')}  ·  Armies ${keyHint('army-1')}-${keyHint('army-8')}  ·  Special ${keyHint('special')}  ·  Age up ${keyHint('age-up')}  ·  Pause ${bindingsLabel('pause')}`,
-          `Destroy the enemy base, keep yours standing.  Menu: 1-3 difficulty, Q/E AI profile, Enter to play${feature('conquest') ? ', C Conquest' : ''}, K Controls`,
+          `Destroy the enemy base, keep yours standing.  Menu: 1-3 difficulty, Q/E AI profile, Enter to play${feature('conquest') ? ', C Conquest' : ''}, D Mech duel, K Controls`,
         ],
         { fontFamily: UI_FONT, fontSize: '15px', color: UiTextColors.parchment, align: 'center', lineSpacing: 8 },
       )
@@ -208,6 +209,16 @@ export class MenuScene extends Phaser.Scene {
       );
       this.input.keyboard?.on('keydown-C', () => this.openConquest());
     }
+
+    // Mech vs Mech (Mech expansion): design a Mech in the hangar, then fight one.
+    const duel = new UiButton(this, cx - 300, 486, 200, 56, { onPress: () => this.openDuel(), tint: UiColors.panelDark, framed: true });
+    duel.add(
+      this.add
+        .text(0, -6, 'MECH DUEL', { fontFamily: UI_TITLE_FONT, fontSize: '26px', color: UiTextColors.gold, stroke: UiTextColors.stroke, strokeThickness: 5 })
+        .setOrigin(0.5),
+      this.add.text(0, 17, 'D  ·  Mech vs Mech', { fontFamily: UI_FONT, fontSize: '12px', fontStyle: '600', color: UiTextColors.parchment }).setOrigin(0.5),
+    );
+    this.input.keyboard?.on('keydown-D', () => this.openDuel());
 
     const keys = this.input.keyboard;
     keys?.on('keydown-LEFT', () => this.step(-1));
@@ -294,6 +305,11 @@ export class MenuScene extends Phaser.Scene {
     if (this.scene.isActive(SCENE_KEYS.controls)) return;
     this.scene.launch(SCENE_KEYS.controls, { from: SCENE_KEYS.menu } satisfies ControlsSceneData);
     this.scene.pause();
+  }
+
+  private openDuel(): void {
+    if (this.experiments?.isOpen) return;
+    this.scene.start(SCENE_KEYS.hangar, { duel: { age: 0 } } satisfies HangarSceneData);
   }
 
   private openConquest(): void {

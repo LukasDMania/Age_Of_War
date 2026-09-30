@@ -474,3 +474,18 @@ export const MECH_SETS: Readonly<Record<MechSetId, MechSet>> = {
     ],
   },
 };
+
+/**
+ * Mech vs Mech (Mech expansion section 6): a separate mode where you design
+ * a Mech in the hangar and fight one other Mech; only Mechs fight. The
+ * enemy's design is random within `costBand` of yours (it may use any
+ * part: an allowed exception to "player-only", limited to this mode). One
+ * round (v1). The enemy fires its module when yours is within
+ * `enemyAbilityRange`. PROPOSED.
+ */
+export const MECH_DUEL = {
+  costBand: 0.15,
+  /** Random designs tried when looking for a fair opponent. */
+  samples: 400,
+  enemyAbilityRange: 220,
+} as const;

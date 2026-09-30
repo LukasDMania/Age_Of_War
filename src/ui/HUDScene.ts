@@ -45,6 +45,8 @@ export interface HudSceneData {
   enemyProfile?: string;
   /** Playtest background currently shown (Phase 15). */
   backgroundName: string;
+  /** Mech vs Mech: no buying, only the bars, pause and the Mech's module. */
+  duel?: boolean;
   /**
    * Set when the HUD rebuilds itself in the new age's look after the player
    * ages up (2026-09-26): what it can't read back from the match state.
@@ -201,7 +203,7 @@ export class HUDScene extends Phaser.Scene {
       own.maxAge,
     );
 
-    addThemedPanel(this, PANEL_LEFT + PANEL_WIDTH / 2, PANEL_TOP + PANEL_HEIGHT / 2, PANEL_WIDTH, PANEL_HEIGHT, { alpha: 0.96 });
+    const bottomPanel = addThemedPanel(this, PANEL_LEFT + PANEL_WIDTH / 2, PANEL_TOP + PANEL_HEIGHT / 2, PANEL_WIDTH, PANEL_HEIGHT, { alpha: 0.96 });
     this.unitPanel = new UnitBuyPanel(this, HUD_SIDE, PANEL_LEFT, PANEL_TOP, {
       gold: own.gold,
       age: own.age,
@@ -284,6 +286,18 @@ export class HUDScene extends Phaser.Scene {
       .setOrigin(0.5);
     backgroundButton.add(this.backgroundText);
     this.showBackgroundName(this.backgroundName);
+    if (this.data0.duel) {
+      // Mech vs Mech: nothing to buy, build or age; the module button stays.
+      bottomPanel.setVisible(false);
+      for (const panel of [this.unitPanel, this.turretPanel, this.buildingPanel, this.researchPanel]) panel.setVisible(false);
+      for (const tab of TAB_ORDER) this.tabs[tab].container.setVisible(false);
+      this.hangarButton.container.setVisible(false);
+      this.tabHint.setVisible(false);
+      this.specialButton.setVisible(false);
+      this.ageUpButton.setVisible(false);
+      this.warCryButton?.destroy();
+      this.warCryButton = null;
+    }
     this.keys = new KeyboardControls(this, () => this.keyContexts());
     this.bindKeys();
     this.setLocked(this.state.phase !== 'playing');
@@ -405,6 +419,11 @@ export class HUDScene extends Phaser.Scene {
 
   private bindKeys(): void {
     const k = this.keys;
+    if (this.data0.duel) {
+      // Mech vs Mech: only the module.
+      k.on('war-cry', () => this.mechAbilityButton.press());
+      return;
+    }
     const step = (by: number): TabKey => TAB_ORDER[(TAB_ORDER.indexOf(this.activeTab) + by + TAB_ORDER.length) % TAB_ORDER.length] ?? 'units';
     k.on('tab-next', () => this.showTab(step(1)));
     k.on('tab-prev', () => this.showTab(step(-1)));

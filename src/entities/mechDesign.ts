@@ -510,3 +510,28 @@ export function designRoles(design: MechDesign): MechRole[] {
   if (head.salvage) roles.push('Utility');
   return roles;
 }
+
+/**
+ * A random design whose cost in `age` is within `band` of `targetCost`
+ * (the closest of `samples` tries if none is). `rand` returns 0..1.
+ */
+export function randomDesign(rand: () => number, age: number, targetCost: number, band: number, samples: number): MechDesign {
+  const pick = (slot: MechSlot): string => {
+    const options = MECH_OPTIONS[slot];
+    return options[Math.floor(rand() * options.length)] ?? options[0]!;
+  };
+  let best: MechDesign | null = null;
+  let bestGap = Infinity;
+  for (let i = 0; i < samples; i++) {
+    const design = Object.fromEntries(MECH_SLOTS.map((slot) => [slot, pick(slot)])) as unknown as MechDesign;
+    // A duel needs a weapon on each side.
+    if (!MECH_ARMS[design.left].attack && !MECH_ARMS[design.right].attack) continue;
+    const gap = Math.abs(designCost(design, age) / Math.max(1, targetCost) - 1);
+    if (gap < bestGap) {
+      best = design;
+      bestGap = gap;
+    }
+    if (gap <= band && rand() < 0.5) return design;
+  }
+  return best ?? { legs: 'walker', torso: 'frame', head: 'visor', left: 'fist', right: 'launcher', module: 'none' };
+}

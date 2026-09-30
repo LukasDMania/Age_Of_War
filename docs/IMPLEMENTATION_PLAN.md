@@ -501,8 +501,11 @@ The brief is `docs/MECH_EXPANSION.md`; its build order is followed here.
 - [x] 5. Evolve on age-up: `MechSystem.evolve`, `Unit.setDefinition`
   (new stats and art, same HP ratio), `mech-evolved` with a flare and
   "EVOLVED!".
-- [ ] 6. Utility Mech.
-- [ ] 7. Mech vs Mech mode.
+- [ ] 6. Utility Mech (waiting on the owner's answers to the brief's open questions).
+- [x] 7. Mech vs Mech: menu D / MECH DUEL -> the hangar in duel mode
+  (age picker, every Forge part open, account locks apply) -> Fight;
+  `GameSceneData.duel`, `systems/MechDuelAI.ts`, a trimmed HUD; check
+  `tools/checks/duel.mjs`.
 - [ ] 8. Titan (experimental).
 
 ---
@@ -2020,3 +2023,27 @@ decisions made, anything the owner needs to confirm.
   mech:0 -> mech:1 for exactly the price, HP ratio kept), screenshots of
   the Stone golem becoming the iron knight. The module button now
   re-announces twice a second so a HUD rebuilt by the age-up catches up.
+- 2026-09-30 (Mech expansion, step 7: Mech vs Mech):
+  - Menu: a MECH DUEL button (key D) opens the hangar in duel mode: a
+    stand-in state (the chosen age, every Forge part open, the account's
+    locks still apply), age arrows beside the title, Build becomes
+    "Fight!", Esc goes back to the menu.
+  - Fight starts `GameScene` with `duel: { player, enemy, age }`: both
+    sides in that age (locked there), no AI, no gold; each side's Mech
+    walks out at the start. The enemy design is random, within 15% of
+    your design's price (`MECH_DUEL`, PROPOSED; any part, an allowed
+    exception to "player-only" limited to this mode).
+    `systems/MechDuelAI.ts` fires the enemy's module when your Mech is
+    within 220 px, through `mech-ability-requested`. When a Mech falls,
+    its base falls with it (base damage through damageOps), so the
+    normal game-over runs; "play again" replays the same pairing.
+  - HUD in a duel: only the top bars, pause/speed and the module button
+    (W). Duels don't give account XP (PROPOSED: easy to farm).
+  - Checked: `node tools/checks/duel.mjs` (menu -> hangar -> Castle age ->
+    Fight: two Castle Mechs and nothing else; the round ends with one
+    base down), screenshots; `mech.mjs`, `mechparts.mjs`, `account.mjs`
+    still pass; build passes. Not checked: the game-over panel after a
+    duel by eye (headless timing), best of three (later).
+  - Step 6 (utility Mech) is not built: the brief asks the owner first
+    whether it can be attacked while working, whether it can switch
+    buildings, and whether it is a hangar mode or implied by its parts.

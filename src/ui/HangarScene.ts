@@ -4,10 +4,15 @@ import { mechSlotAnchors } from '@/art/mechDraw';
 import type { RigAnim } from '@/art/rigFigure';
 import { getAge } from '@config/ages.config';
 import { baseMaxHp, GAME_HEIGHT, GAME_WIDTH, SCENE_KEYS } from '@config/constants';
-import { MECH_OPTIONS, MECH_SETS, MECH_SLOT_NAMES, MECH_SLOTS, type MechDesign, type MechSlot } from '@config/mech.config';
+import { AGE_COUNT } from '@config/ages.config';
+import type { GameSceneData } from '@/scenes/GameScene';
+import { createGameState } from '@state/GameState';
+import { MECH_DUEL, MECH_OPTIONS, MECH_SETS, MECH_SLOT_NAMES, MECH_SLOTS, type MechDesign, type MechSlot } from '@config/mech.config';
 import {
   accountLockedSlot,
   designBonuses,
+  designCost,
+  randomDesign,
   partKey,
   designRoles,
   designStatCaps,
@@ -17,7 +22,7 @@ import {
   type MechStatKey,
   type MechStats,
 } from '@entities/mechDesign';
-import { accountLevel, loadAccount, unlockText, type AccountProgress } from '@state/accountProgress';
+import { accountLevel, loadAccount, lockedPartKeys, unlockText, type AccountProgress } from '@state/accountProgress';
 import type { MatchState } from '@state/GameState';
 import type { MechState, Side } from '@state/types';
 import { mechBuildMs, mechForgeLevel, mechPrice, mechRejection, type MechRejection } from '@systems/MechSystem';
@@ -30,10 +35,18 @@ import { ensureHangarBackdrop } from '@utils/HangarArt';
 import { drawMechPreview, mechPreviewFit } from '@utils/MechArt';
 import { TEAM_COLORS } from '@utils/RigArt';
 
-export interface HangarSceneData {
-  state: MatchState;
-  side: Side;
-}
+/**
+ * Over a match: that match's state and the side. For Mech vs Mech (from
+ * the menu): `duel` and no state; the hangar makes a stand-in one (the
+ * age chosen here, every Forge part open, the account's locks) and Fight
+ * starts the duel.
+ */
+export type HangarSceneData = { state: MatchState; side: Side; duel?: undefined } | { duel: { age: number }; state?: undefined; side?: undefined };
+
+/** Gold the duel's stand-in state has (price is only a rating there). */
+const DUEL_GOLD = 1e9;
+/** Every Forge part is open in a duel. */
+const DUEL_FORGE = 99;
 
 /* Layout (1280 x 720). */
 const TOP_H = 52;
@@ -164,6 +177,8 @@ export class HangarScene extends Phaser.Scene {
   private animStart = 0;
   private lastDraw = -Infinity;
   private drawnKey = '';
+  /** Mech vs Mech from the menu (no match behind the hangar). */
+  private duel = false;
   private zones: Phaser.GameObjects.Zone[] = [];
 
   constructor() {
@@ -171,10 +186,16 @@ export class HangarScene extends Phaser.Scene {
   }
 
   init(data: HangarSceneData): void {
-    this.state = data.state;
-    this.side = data.side;
     this.blueprints = new MechBlueprints();
     this.account = loadAccount();
+    this.duel = data.duel !== undefined;
+    if (data.duel) {
+      this.side = 'player';
+      this.state = this.duelState(data.duel.age);
+    } else {
+      this.state = data.state;
+      this.side = data.side;
+    }
     this.design = this.blueprints.design;
     this.slot = 'legs';
     this.hover = null;
@@ -271,7 +292,37 @@ export class HangarScene extends Phaser.Scene {
   /* ---- Actions ------------------------------------------------------------------------------ */
 
   private close(): void {
-    this.scene.stop();
+    if (this.duel) this.scene.start(SCENE_KEYS.menu);
+    else this.scene.stop();
+  }
+
+  /** Mech vs Mech: a stand-in match state for the hangar's rules and prices. */
+  private duelState(age: number): MatchState {
+    const state = createGameState();
+    state.phase = 'playing';
+    const me = state.player;
+    me.age = age;
+    me.gold = DUEL_GOLD;
+    me.buildings.forge = DUEL_FORGE;
+    me.mechLocked = lockedPartKeys(this.account);
+    return state;
+  }
+
+  /** Mech vs Mech: another age for the duel (arrows in the top bar). */
+  private duelAge(by: number): void {
+    const age = (this.state.player.age + by + AGE_COUNT) % AGE_COUNT;
+    this.state.player.age = age;
+    applyUiTheme(age);
+    this.caps = designStatCaps(age);
+    this.backdrop.setTexture(ensureHangarBackdrop(this, age));
+    this.refreshAll();
+  }
+
+  /** Mech vs Mech: fight a random Mech of about the same price, in the chosen age. */
+  private fight(): void {
+    const age = this.state.player.age;
+    const enemy = randomDesign(Math.random, age, designCost(this.design, age), MECH_DUEL.costBand, MECH_DUEL.samples);
+    this.scene.start(SCENE_KEYS.game, { duel: { player: { ...this.design }, enemy, age } } satisfies GameSceneData);
   }
 
   private selectSlot(slot: MechSlot, animate = true): void {
@@ -302,6 +353,10 @@ export class HangarScene extends Phaser.Scene {
 
   private build(): boolean {
     if (mechRejection(this.state, this.side, this.design) !== null) return false;
+    if (this.duel) {
+      this.fight();
+      return true;
+    }
     emit(Events.BuildMechRequested, { side: this.side, design: { ...this.design } });
     this.buildButton.press();
     return true;
@@ -338,8 +393,16 @@ export class HangarScene extends Phaser.Scene {
     this.titleText = this.add
       .text(20, TOP_H / 2, '', { fontFamily: UI_TITLE_FONT, fontSize: '26px', color: UiTextColors.title, stroke: '#000', strokeThickness: 5 })
       .setOrigin(0, 0.5);
-    this.add.text(430, TOP_H / 2, 'Gold', text(14, BLUE_TEXT, '600')).setOrigin(0, 0.5);
+    this.add.text(430, TOP_H / 2, this.duel ? '' : 'Gold', text(14, BLUE_TEXT, '600')).setOrigin(0, 0.5);
     this.goldText = this.add.text(470, TOP_H / 2, '', { fontFamily: UI_TITLE_FONT, fontSize: '22px', color: UiTextColors.gold }).setOrigin(0, 0.5);
+    if (this.duel) {
+      // The duel's age: arrows beside the title.
+      for (const [x, label, by] of [[382, '<', -1], [420, '>', 1]] as const) {
+        const b = new UiButton(this, x, TOP_H / 2, 32, 32, { onPress: () => this.duelAge(by), tint: UiColors.panelDark });
+        b.add(this.add.text(0, -1, label, text(16, UiTextColors.parchment, '600')).setOrigin(0.5));
+      }
+      this.goldText.setVisible(false);
+    }
     this.baseText = this.add.text(600, TOP_H / 2, '', text(14, UiTextColors.parchment, '600')).setOrigin(0, 0.5);
     const lv = accountLevel(this.account.xp);
     this.add
@@ -347,11 +410,15 @@ export class HangarScene extends Phaser.Scene {
       .setOrigin(1, 0.5);
     const close = new UiButton(this, GAME_WIDTH - 110, TOP_H / 2, 196, 36, { onPress: () => this.close(), tint: UiColors.panelDark, framed: true });
     const key = keyHint('tab-workshop');
-    close.add(this.add.text(0, 0, `Back to battle${key ? ` (${key})` : ''}`, text(15, UiTextColors.parchment, '600')).setOrigin(0.5));
+    close.add(this.add.text(0, 0, this.duel ? 'Back to menu (Esc)' : `Back to battle${key ? ` (${key})` : ''}`, text(15, UiTextColors.parchment, '600')).setOrigin(0.5));
     this.goldText.setText(String(Math.floor(this.state[this.side].gold)));
   }
 
   private showBase(hp: number, maxHp: number): void {
+    if (this.duel) {
+      this.baseText.setText('Mech vs Mech: design yours, then Fight');
+      return;
+    }
     const low = hp < maxHp * 0.35;
     this.baseText.setText(`Base ${Math.ceil(hp).toLocaleString('en-US')}  ·  the battle goes on`).setColor(low ? RED_TEXT : UiTextColors.parchment);
   }
@@ -584,7 +651,7 @@ export class HangarScene extends Phaser.Scene {
 
   private refreshAll(): void {
     const age = this.state[this.side].age;
-    this.titleText.setText(`Hangar · ${getAge(age).name} Age`);
+    this.titleText.setText(this.duel ? `Duel · ${getAge(age).name}` : `Hangar · ${getAge(age).name} Age`);
     for (const slot of MECH_SLOTS) {
       const c = this.callouts.get(slot);
       if (!c) continue;
@@ -706,6 +773,7 @@ export class HangarScene extends Phaser.Scene {
       'cannot-afford': 'Need gold',
     };
     const key = keyHint('mech-build');
-    this.buildLabel.setText(rejection === null ? `Build${key ? ` (${key})` : ''}` : labels[rejection]);
+    const go = this.duel ? 'Fight!' : 'Build';
+    this.buildLabel.setText(rejection === null ? `${go}${key ? ` (${key})` : ''}` : labels[rejection]);
   }
 }

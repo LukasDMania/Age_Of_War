@@ -71,6 +71,11 @@ export class AgeUpButton {
     this.refresh();
   }
 
+  /** Hidden in Mech vs Mech (nothing to fire or age). */
+  setVisible(visible: boolean): void {
+    this.button.container.setVisible(visible);
+  }
+
   setLocked(locked: boolean): void {
     this.locked = locked;
     this.refresh();

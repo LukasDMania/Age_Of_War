@@ -67,7 +67,7 @@ import { TurretSystem } from '@systems/TurretSystem';
 import { UtilitySystem } from '@systems/UtilitySystem';
 import { addGold, addXp } from '@state/economyOps';
 import { createGameState, type MatchState } from '@state/GameState';
-import { otherSide, type Side } from '@state/types';
+import { otherSide, SIDES, type Side } from '@state/types';
 import type { HudSceneData } from '@ui/HUDScene';
 import type { OverlaySceneData } from '@ui/OverlayScene';
 import { KeyboardControls } from '@ui/keymap';
@@ -80,6 +80,9 @@ import { emit, eventBus, Events, on } from '@utils/EventBus';
 import { ensureRigArt, ensureRigArtForAge, releaseMechArt, releaseRigArtOutside, rigArtBytes } from '@utils/RigArt';
 import { HEADLESS_SIM } from '@utils/runtimeFlags';
 import { AccountTracker } from '@systems/AccountTracker';
+import { MechDuelAI } from '@systems/MechDuelAI';
+import { isMechUnitId, mechDefinition } from '@entities/mechDesign';
+import type { MechDesign } from '@config/mech.config';
 import { loadAccount, lockedPartKeys, saveAccount } from '@state/accountProgress';
 
 /** Options for starting (or restarting) a match. */
@@ -114,6 +117,11 @@ export interface GameSceneData {
     /** The chapter's age: both sides are locked to it (no age-ups past it). */
     maxAge?: number;
   };
+  /**
+   * Mech vs Mech (Mech expansion): only these two Mechs fight, in this age.
+   * No AI, no buying; the side whose Mech falls loses (its base falls with it).
+   */
+  duel?: { player: MechDesign; enemy: MechDesign; age: number };
 }
 
 /** Anything that plays a side by emitting requests. */
@@ -210,6 +218,17 @@ export class GameScene extends Phaser.Scene {
 
   create(): void {
     this.state = createGameState();
+    const duel = this.sceneData.duel;
+    if (duel) {
+      this.aiSetting = 'off';
+      for (const side of SIDES) {
+        const me = this.state[side];
+        me.age = duel.age;
+        me.maxAge = duel.age;
+        me.baseHp = baseMaxHp(duel.age);
+        me.gold = 0;
+      }
+    }
     const maxAge = this.sceneData.conquest?.maxAge;
     if (maxAge !== undefined) {
       this.state.player.maxAge = maxAge;
@@ -251,7 +270,7 @@ export class GameScene extends Phaser.Scene {
     this.utility = new UtilitySystem(this.units, this.projectiles);
     this.stats = new StatsSystem();
     // The account (Mech parts opened across games): only for matches a person plays.
-    const personPlays = !HEADLESS_SIM && this.playerAiSetting === null;
+    const personPlays = !HEADLESS_SIM && this.playerAiSetting === null && !duel;
     this.account = personPlays ? new AccountTracker(this.units) : null;
     if (personPlays) this.state.player.mechLocked = lockedPartKeys(loadAccount());
     this.buildingSystem = new BuildingSystem(this.state, this.units);
@@ -362,8 +381,31 @@ export class GameScene extends Phaser.Scene {
         this.sceneData.conquest?.label ??
         (this.aiSetting === 'off' ? '' : (findAiProfile(this.sceneData.profile ?? DEFAULT_AI_PROFILE)?.label ?? '')),
       backgroundName: this.background.name,
+      ...(duel ? { duel: true } : {}),
     } satisfies HudSceneData);
     this.match.start();
+    if (duel) this.startDuel(duel);
+  }
+
+  /** Mech vs Mech: both Mechs walk out of their gates; the enemy's module gets a small AI. */
+  private startDuel(duel: NonNullable<GameSceneData['duel']>): void {
+    for (const side of SIDES) {
+      const definition = mechDefinition(side === 'player' ? duel.player : duel.enemy, duel.age);
+      ensureRigArt(this, definition.id, side);
+      const unit = this.units.create(definition.id, side);
+      const mech = this.state[side].mech;
+      mech.alive = true;
+      mech.abilityReadyAt = this.match.elapsedMs;
+      emit(Events.UnitSpawned, { side, unitId: definition.id, instanceId: unit.instanceId });
+    }
+    const brain = new MechDuelAI(this.state, this.units);
+    this.experiments.push({ update: (now) => brain.update(now), destroy: () => undefined });
+    // The side whose Mech falls loses: its base goes with it.
+    this.cleanups.push(
+      on(Events.UnitDied, ({ side, unitId }) => {
+        if (isMechUnitId(unitId) && this.match.phase === 'playing') dealBaseDamage(this.bases[side], this.bases[side].maxHp * 10);
+      }),
+    );
   }
 
   update(time: number, delta: number): void {
