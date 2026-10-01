@@ -4,9 +4,10 @@ Handoff document. Read `CLAUDE.md` (rules) and `docs/GAME_DESIGN.md` (what
 we're building) first, then work through the phases below **in order**.
 
 **Current status (2026-09-30):** Phases 0 to 20 are done (15 and 16 are
-log-only). Phase 21 (the Mech expansion, `docs/MECH_EXPANSION.md`) is on
-the branch `claude/relaxed-bohr-o99qdj`: all eight steps are built
-(waiting for the owner's playtest).
+log-only). Phase 21 (the Mech expansion, `docs/MECH_EXPANSION.md`): all
+eight steps are built and on main (pushed 2026-10-01 at the owner's
+request, from `claude/relaxed-bohr-o99qdj`), waiting for the owner's
+playtest.
 
 ### Start here (new agent)
 
