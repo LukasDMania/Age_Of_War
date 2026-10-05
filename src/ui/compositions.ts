@@ -1,28 +1,19 @@
 import { ARMY_COUNT } from '@config/keybindings.config';
-import { getAge } from '@config/ages.config';
-import { UNIT_QUEUE_LIMIT } from '@config/constants';
 import { getUnitDefinition } from '@entities/unitDefinitions';
 import type { SideState } from '@state/GameState';
-import type { Side } from '@state/types';
-import { emit, Events } from '@utils/EventBus';
+import type { Army, ArmyEntry, UnitSlot } from '@state/types';
 
 /**
  * Unit compositions ("armies", owner 2026-09-27: like StarCraft control
  * groups, "shift+f2 = 2 melee 3 rangers in queue"). An army is a list of
  * slots and counts, **by slot** so it works in every age (LOCKED, owner).
- * Queuing one buys its units in order through `buy-unit-requested`, like
- * clicks, and **stops** at the first unit it can't afford or when the
- * training queue is full (LOCKED, owner). Kept per browser; UI only.
+ * Queuing one is a single `queue-army-requested` (one command, so it works
+ * the same in lockstep multiplayer); `SpawnSystem` buys its units in order
+ * and **stops** at the first unit it can't afford or when the training
+ * queue is full (LOCKED, owner). Kept per browser.
  */
 
-export type UnitSlot = 1 | 2 | 3 | 4 | 5;
-
-export interface ArmyEntry {
-  slot: UnitSlot;
-  count: number;
-}
-
-export type Army = readonly ArmyEntry[];
+export type { Army, ArmyEntry, UnitSlot };
 
 /** Names by slot, the same in every age (design section 3). */
 export const SLOT_ROLES: Readonly<Record<UnitSlot, string>> = { 1: 'Melee', 2: 'Ranged', 3: 'Heavy', 4: 'Money', 5: 'Utility' };
@@ -105,35 +96,4 @@ export function armyFromQueue(side: SideState): Army {
   let army: Army = [];
   for (const entry of side.trainingQueue) army = withUnit(army, getUnitDefinition(entry.unitId).slot as UnitSlot);
   return army;
-}
-
-export interface QueueResult {
-  queued: number;
-  wanted: number;
-  /** Why it stopped early, or null when every unit went in. */
-  stoppedBy: 'gold' | 'queue' | null;
-}
-
-/**
- * Buys an army's units in order for `side` (the current age's unit in each
- * slot) and stops at the first one it can't afford or when the queue is
- * full. `SpawnSystem` still decides each purchase.
- */
-export function queueArmy(side: Side, state: SideState, army: Army): QueueResult {
-  const wanted = unitCount(army);
-  let queued = 0;
-  for (const entry of army) {
-    const unitId = getAge(state.age).unitIds[entry.slot - 1];
-    if (!unitId) continue;
-    for (let i = 0; i < entry.count; i++) {
-      if (state.trainingQueue.length >= UNIT_QUEUE_LIMIT) return { queued, wanted, stoppedBy: 'queue' };
-      const before = state.trainingQueue.length;
-      emit(Events.BuyUnitRequested, { side, unitId });
-      if (state.trainingQueue.length === before) {
-        return { queued, wanted, stoppedBy: state.trainingQueue.length >= UNIT_QUEUE_LIMIT ? 'queue' : 'gold' };
-      }
-      queued++;
-    }
-  }
-  return { queued, wanted, stoppedBy: null };
 }

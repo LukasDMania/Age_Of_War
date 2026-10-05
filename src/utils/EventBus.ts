@@ -13,11 +13,13 @@
 import Phaser from 'phaser';
 import type { MechDesign } from '@config/mech.config';
 import type { BuildingId, PerkChoice, ResearchId } from '@config/buildings.config';
-import type { MatchPhase, ModifiableStat, QueuedUnit, Side } from '@state/types';
+import type { ArmyEntry, MatchPhase, ModifiableStat, QueuedUnit, Side } from '@state/types';
 
 export const Events = {
   // Requests
   BuyUnitRequested: 'buy-unit-requested',
+  /** An army composition (hotkey): SpawnSystem buys its units in order, answered by `army-queued`. */
+  QueueArmyRequested: 'queue-army-requested',
   BuildMechRequested: 'build-mech-requested',
   /** Use the Mech's Special module (the War cry button while a Mech with one is out). */
   MechAbilityRequested: 'mech-ability-requested',
@@ -48,6 +50,9 @@ export const Events = {
   XpChanged: 'xp-changed',
   UnitSpawned: 'unit-spawned',
   UnitQueueChanged: 'unit-queue-changed',
+  ArmyQueued: 'army-queued',
+  /** Lockstep multiplayer: the two browsers' battles no longer match. */
+  DesyncDetected: 'desync-detected',
   MechChanged: 'mech-changed',
   MechAbilityChanged: 'mech-ability-changed',
   MechEvolved: 'mech-evolved',
@@ -123,6 +128,11 @@ export type QueuedUnitInfo = QueuedUnit;
 
 export interface EventPayloads {
   [Events.BuyUnitRequested]: { side: Side; unitId: string };
+  [Events.QueueArmyRequested]: { side: Side; army: readonly ArmyEntry[] };
+  /** How a queued army went: units bought of those wanted, and why it stopped early (null: all went in). */
+  [Events.ArmyQueued]: { side: Side; queued: number; wanted: number; stoppedBy: 'gold' | 'queue' | null };
+  /** `turn` is the lockstep turn whose state hashes differ. */
+  [Events.DesyncDetected]: { turn: number; local: string; remote: string };
   /** The Mech workshop: build this design (in the side's current age). */
   [Events.BuildMechRequested]: { side: Side; design: MechDesign; titan?: boolean };
   [Events.MechAbilityRequested]: { side: Side };
@@ -311,10 +321,23 @@ export type EventName = keyof EventPayloads;
 /** The underlying emitter. Prefer the typed helpers below. */
 export const eventBus = new Phaser.Events.EventEmitter();
 
+/**
+ * Lockstep multiplayer (`LockstepSystem`): sees every event first and returns
+ * true to hold it back (a player command to be run on a later tick in both
+ * browsers, or a request multiplayer doesn't allow).
+ */
+export type EventGate = (event: EventName, payload: unknown) => boolean;
+let gate: EventGate | null = null;
+
+export function setEventGate(next: EventGate | null): void {
+  gate = next;
+}
+
 export function emit<K extends EventName>(
   event: K,
   payload: EventPayloads[K],
 ): void {
+  if (gate?.(event, payload)) return;
   eventBus.emit(event, payload);
 }
 

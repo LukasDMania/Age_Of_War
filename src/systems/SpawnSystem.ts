@@ -33,8 +33,8 @@ export type BuyRejection =
  * The spawn point check is passed in as a function so this system does not
  * hold a reference to `LaneSystem`.
  *
- * Listens for: `buy-unit-requested`.
- * Emits: `unit-spawned`, `unit-queue-changed` (on buy, on spawn, and every
+ * Listens for: `buy-unit-requested`, `queue-army-requested`.
+ * Emits: `unit-spawned`, `army-queued`, `unit-queue-changed` (on buy, on spawn, and every
  * frame while the front unit is training so the HUD can show progress), and
  * `gold-changed` through economyOps.
  */
@@ -48,7 +48,11 @@ export class SpawnSystem {
     this.state = state;
     this.units = units;
     this.isSpawnPointClear = isSpawnPointClear;
-    this.unsubscribe = on(Events.BuyUnitRequested, (payload) => this.onBuyRequested(payload));
+    const offs = [
+      on(Events.BuyUnitRequested, (payload) => this.onBuyRequested(payload)),
+      on(Events.QueueArmyRequested, (payload) => this.onQueueArmy(payload)),
+    ];
+    this.unsubscribe = () => offs.forEach((off) => off());
   }
 
   /** `deltaMs` is simulation time; call only while the match is playing. */
@@ -96,6 +100,28 @@ export class SpawnSystem {
     const trainMs = definition.trainTimeMs * buildingEffects(me).trainTime * me.traits.trainTime[definition.slot];
     this.state[side].trainingQueue.push({ unitId, remainingMs: trainMs });
     this.emitQueue(side);
+  }
+
+  /** Buys an army's units in order (the current age's unit per slot); stops at the first refusal. */
+  private onQueueArmy({ side, army }: EventPayloads[typeof Events.QueueArmyRequested]): void {
+    const me = this.state[side];
+    const wanted = army.reduce((n, entry) => n + entry.count, 0);
+    let queued = 0;
+    let stoppedBy: EventPayloads[typeof Events.ArmyQueued]['stoppedBy'] = null;
+    outer: for (const entry of army) {
+      const unitId = getAge(me.age).unitIds[entry.slot - 1];
+      if (!unitId) continue;
+      for (let i = 0; i < entry.count; i++) {
+        const before = me.trainingQueue.length;
+        if (before < UNIT_QUEUE_LIMIT) this.onBuyRequested({ side, unitId });
+        if (me.trainingQueue.length === before) {
+          stoppedBy = me.trainingQueue.length >= UNIT_QUEUE_LIMIT ? 'queue' : 'gold';
+          break outer;
+        }
+        queued++;
+      }
+    }
+    emit(Events.ArmyQueued, { side, queued, wanted, stoppedBy });
   }
 
   private train(side: Side, deltaMs: number): void {

@@ -920,14 +920,23 @@ Owner (2026-10-05): "lets get started on multiplayer". Decisions, LOCKED:
   Cloudflare Worker with a Durable Object per room.
 - **Disconnect:** the match pauses for both players for up to about 30 s
   (PROPOSED) for a reconnect; after that the missing player forfeits.
+- **Experiment switches:** the host's switches apply to the match (owner,
+  2026-10-05: "host's switches").
+- **Mech parts:** Mech vs Mech has every part open; in a normal battle each
+  player has their own account's unlocks (owner, 2026-10-05: "Mech v mech
+  mode should be all unlocked, normal battle should be ur own
+  progression").
+- **No pausing, speed-up or restart** in an online match (one battle for
+  two people; PROPOSED until the owner says otherwise). Input delay is
+  100-150 ms (3-tick turns, 2 turns ahead; PROPOSED).
 
 Groundwork built (Phase 22 step 1): the fixed tick (`SIM_STEP_MS`), a seed
 per match (`MatchState.seed`, `utils/Rng.ts`) for everything random that
 changes the battle (doctrine offers, the AIs), and a state hash
-(`systems/stateHash.ts`). Open questions for later steps: the experiment
-switches are per browser, so the host's switches will have to be sent to
-the guest at match start; a Mech design (and account locks) is each
-player's own and goes over in the match setup; trig in turret aim
+(`systems/stateHash.ts`). Step 2: the command queue (`LockstepSystem`)
+and the match setup message. Open questions for later steps: the guest
+plays the right-hand (enemy) side, so the HUD has to follow the local
+side; whether online matches give account XP; trig in turret aim
 (`Math.sin`/`cos`/`atan2`) may differ in its last bit between browser
 engines (Chrome vs Firefox), which the hash check would catch.
 

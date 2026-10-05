@@ -86,3 +86,14 @@ export interface SideModifier {
   /** `only`: just the side's Mech; `exclude`: everything but the Mech. */
   mech?: 'only' | 'exclude';
 }
+
+/** A unit slot: 1 melee, 2 ranged, 3 heavy, 4 money, 5 utility (design section 3). */
+export type UnitSlot = 1 | 2 | 3 | 4 | 5;
+
+/** Part of an army composition (hotkey armies): `count` units of the current age's `slot`. */
+export interface ArmyEntry {
+  slot: UnitSlot;
+  count: number;
+}
+
+export type Army = readonly ArmyEntry[];

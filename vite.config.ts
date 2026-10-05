@@ -74,6 +74,7 @@ export default defineConfig({
       '@ui': path.resolve(__dirname, 'src/ui'),
       '@state': path.resolve(__dirname, 'src/state'),
       '@utils': path.resolve(__dirname, 'src/utils'),
+      '@net': path.resolve(__dirname, 'src/net'),
     },
   },
 });

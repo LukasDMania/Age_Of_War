@@ -36,6 +36,12 @@ export class PreloadScene extends Phaser.Scene {
       this.scene.start(SCENE_KEYS.gallery);
       return;
     }
+    // Dev-only: `?loopback=80` plays lockstep against a pretend opponent 80 ms away.
+    if (import.meta.env.DEV && params.has('loopback')) {
+      const latencyMs = Number(params.get('loopback')) || 0;
+      void import('@/dev/loopback').then(({ loopbackMatch }) => this.scene.start(SCENE_KEYS.game, loopbackMatch({ latencyMs })));
+      return;
+    }
     // `?ai=easy|normal|hard|off` skips the menu and starts a match against
     // that enemy (handy for testing); otherwise the title menu comes first.
     const ai = params.get('ai');

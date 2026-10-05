@@ -35,7 +35,8 @@
       "@systems/*": ["src/systems/*"],
       "@ui/*": ["src/ui/*"],
       "@state/*": ["src/state/*"],
-      "@utils/*": ["src/utils/*"]
+      "@utils/*": ["src/utils/*"],
+      "@net/*": ["src/net/*"]
     }
   },
   "include": ["src"]

@@ -5,8 +5,9 @@ we're building) first, then work through the phases below **in order**.
 
 **Current status (2026-10-05):** Phases 0 to 21 are done (15 and 16 are
 log-only; 21, the Mech expansion, waits for the owner's playtest).
-Phase 22, 1v1 multiplayer, is in progress: step 1 (determinism
-groundwork) is built; step 2 (the command queue) is next.
+Phase 22, 1v1 multiplayer, is in progress: steps 1 (determinism
+groundwork) and 2 (the command queue, loopback) are built; step 3 (the
+local relay and a lobby) is next.
 
 ### Start here (new agent)
 
@@ -21,7 +22,7 @@ groundwork) is built; step 2 (the command queue) is next.
    `node tools/checks/paths.mjs`, `node tools/checks/effects.mjs` (saves
    slow-motion screenshots of every effect to `tools/checks/out/`),
    `node tools/checks/muzzles.mjs` (after changing ranged art).
-4. **Next up: Phase 22 step 2** (multiplayer command queue), unless the
+4. **Next up: Phase 22 step 3** (multiplayer relay and lobby), unless the
    owner says otherwise. Phase 21's work is waiting for the owner's
    playtest. Candidates the owner has mentioned or that are half-planned:
    a Mech refit on the lane (GAME_DESIGN 15), more Mech parts unlocked
@@ -532,10 +533,16 @@ a disconnect.
   `tools/checks/determinism.mjs` (same seed, frames cut differently ->
   same hashes every 10 s, two AI pairings), `tools/checks/desync-diff.mjs`
   (finds what drifted).
-- [ ] 2. Command queue: the player's `*-requested` events become commands
-  stamped with the tick they run on (a few ticks ahead) and run at the
-  start of that tick on both sides; a loopback mode in one page; match
-  setup (seed, experiment switches, Mech designs) as one message.
+- [x] 2. Command queue: `systems/LockstepSystem.ts` holds back the local
+  player's command requests through an event bus gate (`setEventGate`),
+  sends them per turn (`config/multiplayer.config.ts`: 3-tick turns, 2
+  turns ahead) and runs both sides' commands at the start of their turn;
+  a turn waits for the other side's message. Messages and `MatchSetup`
+  (seed, the host's switches, Mech locks, duel) in `net/protocol.ts`;
+  `net/transport.ts` (`Transport`, `LoopbackTransport`); replays from the
+  command log; hash exchange and `desync-detected`. Army hotkeys are one
+  request now (`queue-army-requested` -> `army-queued`). Dev:
+  `?loopback=80`, `__aow.lockstep()`. Check `tools/checks/lockstep.mjs`.
 - [ ] 3. Local relay (Node, WebSocket, room codes) and a lobby screen
   (host / join by code); hash exchange and a desync message; pause on a
   lost connection, forfeit after the timeout.
@@ -563,6 +570,7 @@ validates and acts):
 | Event | Payload | Handled by |
 | --- | --- | --- |
 | `buy-unit-requested` | `{ side, unitId }` | SpawnSystem |
+| `queue-army-requested` | `{ side, army: { slot, count }[] }` | SpawnSystem (buys in order, stops at the first refusal; one command in lockstep) |
 | `buy-slot-requested` | `{ side }` | TurretSystem |
 | `buy-turret-requested` | `{ side, slotIndex, turretId }` | TurretSystem |
 | `upgrade-turret-requested` | `{ side, slotIndex }` | TurretSystem |
@@ -595,6 +603,8 @@ validates and acts):
 | `xp-changed` | `{ side, xp, xpToNext }` (`xpToNext` is null in the final age) | `state/economyOps` helpers |
 | `unit-spawned` | `{ side, unitId, instanceId }` | SpawnSystem (bought units and debug spawns) |
 | `unit-queue-changed` | `{ side, queue }` | SpawnSystem (on buy, on spawn, and every frame while the front unit trains) |
+| `army-queued` | `{ side, queued, wanted, stoppedBy: 'gold' \| 'queue' \| null }` | SpawnSystem (answer to `queue-army-requested`; the HUD's hint) |
+| `desync-detected` | `{ turn, local, remote }` (the two state hashes at the start of `turn`) | LockstepSystem (once per match) |
 | `unit-died` | `{ side, unitId, instanceId, killerSide, x, killerTurret?, retired? }` (`killerTurret`: the slot of the turret that scored it; `retired`: it left without being killed, a utility Mech powering down: no rewards, no kill) | CasualtySystem (end of frame, for every unit `damageOps` marked dead) |
 | `unit-damaged` | `{ side, instanceId, amount, absorbed, x, topY }` | `systems/damageOps` (any damage source) |
 | `area-hit` | `{ side, x, radius }` | `systems/damageOps` (splash landed; `side` dealt it) |
@@ -2164,3 +2174,46 @@ decisions made, anything the owner needs to confirm.
     in headless Chromium (about 18 fps there).
   - Not checked: cross-engine (Firefox) runs; only Chromium is installed
     here.
+- 2026-10-05 (Phase 22 step 2, the lockstep command queue): owner: "host's
+  switches, every part open", then "Mech v mech mode should be all
+  unlocked, normal battle should be ur own progression" (GAME_DESIGN 15).
+  - `LockstepSystem`: an event bus gate (new `setEventGate` in
+    `utils/EventBus.ts`) sees every emit first. Command requests
+    (`COMMAND_EVENTS` in `net/protocol.ts`) given outside a tick are held:
+    the local side's are queued, the other side's dropped; requests made
+    inside a tick (systems, AIs) pass, since both browsers make them.
+    Pause, resume, restart and game speed are refused. At each turn start
+    (every 3 ticks) the queued commands go out for turn n + 2 and that
+    turn's commands run, player's side first. A click therefore waits 2-3
+    turns (100-150 ms). A turn starts only with both sides' messages in;
+    GameScene waits otherwise and keeps at most 250 ms to catch up with.
+    The other side's commands are forced onto its own side.
+  - Hashes every 100 turns (5 s) ride along; a mismatch emits
+    `desync-detected` once (new event).
+  - Army hotkeys: `queueArmy` read the queue right after each
+    `buy-unit-requested`, which can't work when commands wait for their
+    turn, so an army is now one `queue-army-requested` that SpawnSystem
+    works through, answered by `army-queued` for the HUD's hint (new
+    events). Same behaviour in a normal match. `ArmyEntry` / `Army` /
+    `UnitSlot` moved to `state/types.ts`.
+  - `MatchSetup` (`GameSceneData.lockstep.setup`): seed, the host's switches
+    (`setMatchFeatures` in `config/features.config.ts` wins over this
+    browser's until the match ends; `featureSnapshot` is what a host
+    sends), Mech locks per side, the duel. A lockstep match has no AI
+    unless `ai` asks for one, no duel AI, and no account tracking (account
+    XP from online matches is not decided yet).
+  - New alias `@net/*` (`src/net/`: `protocol.ts`, `transport.ts`).
+    `LoopbackTransport` is a pretend opponent in the page (latency, scripted
+    commands, a corrupted hash); `src/dev/loopback.ts` and `?loopback=80`.
+  - Checked: `node tools/checks/lockstep.mjs` (a click is held and runs
+    tick-exactly at turn n + 3; an army is one command and queues 2; pause
+    refused; a remote command claiming our side runs for theirs, on its
+    turn; a 14-milestone loopback match with 54 command turns replays from
+    its log to identical hashes; a corrupted hash raises
+    `desync-detected`; with 80 ms delay the match runs in real time and a
+    click lands). A screenshot of `?loopback=80` with two units queued by
+    keys. determinism, mech, duel, paths, utility, account and mechparts
+    checks pass; typecheck and build pass.
+  - For step 3: the HUD is fixed to the player side (`HUD_SIDE`), so the
+    guest (enemy side, right) needs a side-aware HUD, building clicks and
+    camera; pause / speed buttons should hide in a lockstep match.

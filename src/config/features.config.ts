@@ -88,9 +88,26 @@ function loadOverrides(): Partial<Record<FeatureId, boolean>> {
 
 const overrides = loadOverrides();
 
-/** Whether a prototype is on (default, or the player's choice in the menu). */
+/**
+ * Lockstep multiplayer: the host's switches, for the match being played
+ * (owner, 2026-10-05: "host's switches"). Wins over this browser's choices
+ * until cleared.
+ */
+let matchFeatures: Readonly<Record<FeatureId, boolean>> | null = null;
+
+/** Whether a prototype is on (the match's switches, else default or the player's choice in the menu). */
 export function feature(id: FeatureId): boolean {
-  return overrides[id] ?? FEATURES_INFO[id].default;
+  return matchFeatures?.[id] ?? overrides[id] ?? FEATURES_INFO[id].default;
+}
+
+/** Every switch as this browser has it (what a multiplayer host sends). */
+export function featureSnapshot(): Record<FeatureId, boolean> {
+  return Object.fromEntries(FEATURE_IDS.map((id) => [id, overrides[id] ?? FEATURES_INFO[id].default])) as Record<FeatureId, boolean>;
+}
+
+/** Sets the switches for one match (multiplayer), or clears them with null. */
+export function setMatchFeatures(features: Readonly<Record<FeatureId, boolean>> | null): void {
+  matchFeatures = features;
 }
 
 /** Turns a prototype on or off for this browser (used by the menu). */

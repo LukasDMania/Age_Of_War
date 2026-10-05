@@ -83,6 +83,11 @@ import { HEADLESS_SIM } from '@utils/runtimeFlags';
 import { AccountTracker } from '@systems/AccountTracker';
 import { MechDuelAI } from '@systems/MechDuelAI';
 import { hashMatch } from '@systems/stateHash';
+import { LockstepSystem } from '@systems/LockstepSystem';
+import type { MatchSetup, TurnRecord } from '@net/protocol';
+import type { Transport } from '@net/transport';
+import { setMatchFeatures } from '@config/features.config';
+import { MAX_CATCH_UP_MS } from '@config/multiplayer.config';
 import { isMechUnitId, mechDefinition } from '@entities/mechDesign';
 import type { MechDesign } from '@config/mech.config';
 import { loadAccount, lockedPartKeys, saveAccount } from '@state/accountProgress';
@@ -129,6 +134,19 @@ export interface GameSceneData {
    * No AI, no buying; the side whose Mech falls loses (its base falls with it).
    */
   duel?: { player: MechDesign; enemy: MechDesign; age: number };
+  /**
+   * Lockstep multiplayer (Phase 22): the shared setup (its seed, switches,
+   * Mech locks and duel win over the fields above), the side this browser
+   * plays and the link to the other player; or, with `localSide` null and
+   * `replay`, a replay of a match's command log. Nobody plays the enemy
+   * unless `ai` asks for it (loopback checks).
+   */
+  lockstep?: {
+    setup: MatchSetup;
+    localSide: Side | null;
+    transport: Transport | null;
+    replay?: readonly TurnRecord[];
+  };
 }
 
 /** Anything that plays a side by emitting requests. */
@@ -194,6 +212,8 @@ export class GameScene extends Phaser.Scene {
   private aiIncome: AiIncomeSystem[] = [];
   /** Dev builds, human player only: records the match to playtest-logs/. */
   private logger: MatchLogger | null = null;
+  /** Lockstep multiplayer (or a replay); null in a normal match. */
+  private lockstep: LockstepSystem | null = null;
   private ground!: Phaser.GameObjects.Graphics;
   private laneLine!: Phaser.GameObjects.Graphics;
   private backdrop!: Backdrop;
@@ -216,7 +236,7 @@ export class GameScene extends Phaser.Scene {
   /** Runs before `create` on every start and restart: reset per-match fields. */
   init(data: GameSceneData = {}): void {
     this.sceneData = data;
-    this.aiSetting = data.ai ?? DEFAULT_AI_DIFFICULTY;
+    this.aiSetting = data.ai ?? (data.lockstep ? 'off' : DEFAULT_AI_DIFFICULTY);
     this.playerAiSetting = data.playerAi ?? null;
     this.simSpeed = 1;
     this.simCarryMs = 0;
@@ -224,8 +244,11 @@ export class GameScene extends Phaser.Scene {
   }
 
   create(): void {
-    this.state = createGameState(this.sceneData.seed);
-    const duel = this.sceneData.duel;
+    const net = this.sceneData.lockstep;
+    // Both browsers play with the host's switches.
+    setMatchFeatures(net?.setup.features ?? null);
+    this.state = createGameState(net?.setup.seed ?? this.sceneData.seed);
+    const duel = net ? net.setup.duel : this.sceneData.duel;
     if (duel) {
       this.aiSetting = 'off';
       for (const side of SIDES) {
@@ -277,9 +300,10 @@ export class GameScene extends Phaser.Scene {
     this.utility = new UtilitySystem(this.units, this.projectiles);
     this.stats = new StatsSystem();
     // The account (Mech parts opened across games): only for matches a person plays.
-    const personPlays = !HEADLESS_SIM && this.playerAiSetting === null && !duel;
+    const personPlays = !HEADLESS_SIM && this.playerAiSetting === null && !duel && !net;
     this.account = personPlays ? new AccountTracker(this.units) : null;
     if (personPlays) this.state.player.mechLocked = lockedPartKeys(loadAccount());
+    if (net) for (const side of SIDES) this.state[side].mechLocked = [...net.setup.mechLocked[side]];
     this.buildingSystem = new BuildingSystem(this.state, this.units);
     this.aiIncome = [];
     if (this.aiSetting !== 'off') {
@@ -380,6 +404,14 @@ export class GameScene extends Phaser.Scene {
 
     this.refreshRigArt();
     this.events.once(Phaser.Scenes.Events.SHUTDOWN, () => this.teardown());
+    this.lockstep = net
+      ? new LockstepSystem({
+          localSide: net.localSide,
+          transport: net.transport,
+          ...(net.replay ? { replay: net.replay } : {}),
+          hash: () => hashMatch(this.state, this.match.tick, this.units.activeUnits, this.projectiles.activeProjectiles),
+        })
+      : null;
     if (HEADLESS_SIM) {
       // Automated runs: simulate only (no HUD, nothing drawn).
       this.cameras.main.setVisible(false);
@@ -410,8 +442,10 @@ export class GameScene extends Phaser.Scene {
       mech.abilityReadyAt = this.match.elapsedMs;
       emit(Events.UnitSpawned, { side, unitId: definition.id, instanceId: unit.instanceId });
     }
-    const brain = new MechDuelAI(this.state, this.units);
-    this.experiments.push({ update: (now) => brain.update(now), destroy: () => undefined });
+    if (!this.sceneData.lockstep) {
+      const brain = new MechDuelAI(this.state, this.units);
+      this.experiments.push({ update: (now) => brain.update(now), destroy: () => undefined });
+    }
     // The side whose Mech falls loses: its base goes with it.
     this.cleanups.push(
       on(Events.UnitDied, ({ side, unitId, retired }) => {
@@ -515,7 +549,17 @@ export class GameScene extends Phaser.Scene {
   private stepSim(ms: number): void {
     this.simCarryMs += ms;
     while (this.simCarryMs >= SIM_STEP_MS && this.match.phase === 'playing') {
-      this.tick(SIM_STEP_MS);
+      const lockstep = this.lockstep;
+      if (lockstep) {
+        // Waiting for the other player's turn: keep a little time to catch up with.
+        if (!lockstep.ready(this.match.tick)) {
+          this.simCarryMs = Math.min(this.simCarryMs, MAX_CATCH_UP_MS);
+          return;
+        }
+        lockstep.runTick(this.match.tick, () => this.tick(SIM_STEP_MS));
+      } else {
+        this.tick(SIM_STEP_MS);
+      }
       this.simCarryMs -= SIM_STEP_MS;
     }
     if (this.match.phase !== 'playing') this.simCarryMs = 0;
@@ -784,6 +828,7 @@ export class GameScene extends Phaser.Scene {
       },
       hash: () => hashMatch(this.state, this.match.tick, this.units.activeUnits, this.projectiles.activeProjectiles),
       tick: () => this.match.tick,
+      lockstep: () => (this.lockstep ? { log: this.lockstep.log, desynced: this.lockstep.desynced, ready: this.lockstep.ready(this.match.tick) } : null),
       restart: (data = {}) => this.scene.restart(data),
       projectileCount: () => this.projectiles.activeProjectiles.size,
       projectilePoolSize: () => this.projectiles.createdCount,
@@ -869,6 +914,9 @@ export class GameScene extends Phaser.Scene {
   private teardown(): void {
     for (const off of this.cleanups) off();
     this.cleanups = [];
+    this.lockstep?.destroy();
+    this.lockstep = null;
+    setMatchFeatures(null);
     this.scene.stop(SCENE_KEYS.hud);
     this.scene.stop(SCENE_KEYS.hangar);
     this.scene.stop(SCENE_KEYS.overlay);

@@ -30,9 +30,9 @@ import { UiButton } from '@ui/UiButton';
 import { UnitBuyPanel } from '@ui/UnitBuyPanel';
 import type { HangarSceneData } from '@ui/HangarScene';
 import { MechAbilityButton } from '@ui/MechAbilityButton';
-import { emit, Events, on } from '@utils/EventBus';
+import { emit, Events, on, type EventPayloads } from '@utils/EventBus';
 import { ageGap } from '@systems/ageCatchUp';
-import { armyFromQueue, armyLabel, getArmy, queueArmy, setArmy } from '@ui/compositions';
+import { armyFromQueue, armyLabel, getArmy, setArmy } from '@ui/compositions';
 import { keyHint, KeyboardControls } from '@ui/keymap';
 import type { PressModifiers } from '@ui/UiButton';
 
@@ -126,6 +126,8 @@ const TAB_ORDER: readonly TabKey[] = ['units', 'turrets', 'buildings', 'research
 export class HUDScene extends Phaser.Scene {
   private state!: MatchState;
   private cleanups: (() => void)[] = [];
+  /** The army hotkey last pressed, until `army-queued` says how it went. */
+  private pendingArmy: number | null = null;
   private ageText!: Phaser.GameObjects.Text;
   private enemyAgeText!: Phaser.GameObjects.Text;
   /** Who plays the enemy (difficulty, profile), right of the enemy's age. */
@@ -188,6 +190,7 @@ export class HUDScene extends Phaser.Scene {
   }
 
   create(): void {
+    this.pendingArmy = null;
     const own = this.state[HUD_SIDE];
     // The HUD wears the player's age (palette, pattern, trim).
     applyUiTheme(own.age);
@@ -332,6 +335,7 @@ export class HUDScene extends Phaser.Scene {
         this.ageUpButton.setXp(xp);
       }),
       on(Events.BaseDamaged, ({ side, hp, maxHp }) => this.showBaseHp(side, hp, maxHp)),
+      on(Events.ArmyQueued, (payload) => this.showArmyQueued(payload)),
       on(Events.UnitQueueChanged, ({ side, queue }) => {
         if (side === HUD_SIDE) this.unitPanel.setQueue(queue);
       }),
@@ -496,9 +500,16 @@ export class HUDScene extends Phaser.Scene {
       this.flashHint(`Army ${index + 1} is empty: set it up under Controls (pause menu)`, '#f0c080');
       return;
     }
-    const result = queueArmy(HUD_SIDE, this.state[HUD_SIDE], army);
-    const why = result.stoppedBy === 'gold' ? ' (not enough gold)' : result.stoppedBy === 'queue' ? ' (queue full)' : '';
-    this.flashHint(`Army ${index + 1}: ${result.queued} of ${result.wanted} queued${why}`, result.stoppedBy ? '#f0c080' : '#8fe08f');
+    this.pendingArmy = index;
+    emit(Events.QueueArmyRequested, { side: HUD_SIDE, army });
+  }
+
+  /** `army-queued`: says how the army last asked for went. */
+  private showArmyQueued({ side, queued, wanted, stoppedBy }: EventPayloads[typeof Events.ArmyQueued]): void {
+    if (side !== HUD_SIDE || this.pendingArmy === null) return;
+    const why = stoppedBy === 'gold' ? ' (not enough gold)' : stoppedBy === 'queue' ? ' (queue full)' : '';
+    this.flashHint(`Army ${this.pendingArmy + 1}: ${queued} of ${wanted} queued${why}`, stoppedBy ? '#f0c080' : '#8fe08f');
+    this.pendingArmy = null;
   }
 
   /** Saves what is training now as army `index`. */

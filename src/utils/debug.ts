@@ -3,6 +3,7 @@
  * browser console or an automated check. Only installed when
  * `import.meta.env.DEV` is true, so it never ships in a production build.
  */
+import type { TurnRecord } from '@net/protocol';
 import type { BuildingId, ResearchId } from '@config/buildings.config';
 import type { AiDifficultyName } from '@config/ai.config';
 import type { GameSceneData } from '@/scenes/GameScene';
@@ -72,6 +73,8 @@ export interface DebugHandle {
   /** Fingerprint of the battle right now (`systems/stateHash.ts`), and the tick it is at. */
   hash(): string;
   tick(): number;
+  /** Lockstep multiplayer: the commands run so far, whether a desync was seen, whether the next tick may run. */
+  lockstep(): { log: readonly TurnRecord[]; desynced: boolean; ready: boolean } | null;
   /** Starts a fresh match (the no-singletons rule makes this safe). */
   restart(data?: GameSceneData): void;
   /** Projectiles currently in flight. */

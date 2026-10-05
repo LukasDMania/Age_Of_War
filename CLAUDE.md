@@ -112,7 +112,7 @@ These come from the locked design, so the code must not contradict them:
   Don't silence errors with `any`. If a type is awkward, the data shape
   probably needs a proper interface.
 - Use the path aliases (`@entities/*`, `@systems/*`, `@ui/*`, `@state/*`,
-  `@utils/*`, `@config/*`) instead of deep relative imports. `tsconfig.json`
+  `@utils/*`, `@config/*`, `@net/*`) instead of deep relative imports. `tsconfig.json`
   and `vite.config.ts` must stay in sync when adding an alias.
 - No external sprites or audio yet. Unit, turret, base and projectile textures
   come from `utils/PlaceholderArt.ts`; gameplay code refers only to sprite keys
@@ -148,7 +148,9 @@ These come from the locked design, so the code must not contradict them:
   screenshots), `muzzles.mjs` (re-measure shot origins after changing
   ranged art), `determinism.mjs` (lockstep: a seeded match replays to the
   same state hashes; run it after touching game rules, and keep anything
-  random that changes the battle on `utils/Rng.ts`, never `Math.random`). `__aow.fxTimeScale(k)` slows the effects for review.
+  random that changes the battle on `utils/Rng.ts`, never `Math.random`),
+  `lockstep.mjs` (the multiplayer command queue against a loopback
+  opponent; `?loopback=80` tries it by hand). `__aow.fxTimeScale(k)` slows the effects for review.
 - Report honestly what you ran and what you didn't.
 
 ## Repo notes
