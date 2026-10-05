@@ -1,3 +1,4 @@
+import { Rng } from '@utils/Rng';
 import {
   aiBuildingCap,
   AI_RICH_GOLD_MULT,
@@ -113,6 +114,9 @@ export class UtilityAI {
   /** What it did (or wanted) last think, for the debug handle. */
   lastDecision = '';
 
+  /** Seeded, so a replay of the match makes the same choices. */
+  private readonly rng: Rng;
+
   constructor(
     state: MatchState,
     side: Side,
@@ -126,6 +130,7 @@ export class UtilityAI {
     this.units = units;
     this.bases = bases;
     this.difficulty = difficulty;
+    this.rng = Rng.derive(state.seed, `ai-${side}`);
     this.g = genome;
   }
 
@@ -368,7 +373,7 @@ export class UtilityAI {
     }
     if (total <= 0) return null;
     // Sampled, so it isn't predictable, but strongly favours the best slot.
-    let roll = Math.random() * total;
+    let roll = this.rng.next() * total;
     for (const [slot, w] of weights) {
       roll -= w;
       if (roll <= 0) return slot;

@@ -21,6 +21,7 @@ import {
   LANE_COLOR,
   LANE_Y,
   MAX_FRAME_DELTA_MS,
+  SIM_STEP_MS,
   SCENE_KEYS,
 } from '@config/constants';
 import { Backdrop } from '@entities/Backdrop';
@@ -81,6 +82,7 @@ import { ensureRigArt, ensureRigArtForAge, releaseMechArt, releaseRigArtOutside,
 import { HEADLESS_SIM } from '@utils/runtimeFlags';
 import { AccountTracker } from '@systems/AccountTracker';
 import { MechDuelAI } from '@systems/MechDuelAI';
+import { hashMatch } from '@systems/stateHash';
 import { isMechUnitId, mechDefinition } from '@entities/mechDesign';
 import type { MechDesign } from '@config/mech.config';
 import { loadAccount, lockedPartKeys, saveAccount } from '@state/accountProgress';
@@ -92,6 +94,11 @@ export interface GameSceneData {
    * sandbox play). Defaults to `DEFAULT_AI_DIFFICULTY`.
    */
   ai?: AiDifficultyName | 'off';
+  /**
+   * Seed for the match's randomness (`MatchState.seed`); random when left
+   * out. Lockstep multiplayer and replays pass the same seed to both runs.
+   */
+  seed?: number;
   /** Dev and tuning only: an AI also plays the player's side (AI vs AI). */
   playerAi?: AiDifficultyName;
   /**
@@ -129,9 +136,6 @@ interface AiBrain {
   update(nowMs: number): void;
   lastDecision?: string;
 }
-
-/** Fixed step used by the dev-only `__aow.step()` fast-forward. */
-const DEBUG_STEP_MS = 1000 / 60;
 
 /** Real ms after an age change before the next age's unit art is drawn ahead of time. */
 const RIG_ART_PREDRAW_DELAY_MS = 2000;
@@ -201,6 +205,8 @@ export class GameScene extends Phaser.Scene {
   private sceneData: GameSceneData = {};
   private debugModifierCount = 0;
   private simSpeed = 1;
+  /** Frame time not yet spent on a whole tick (see `stepSim`). */
+  private simCarryMs = 0;
   private cleanups: (() => void)[] = [];
 
   constructor() {
@@ -213,11 +219,12 @@ export class GameScene extends Phaser.Scene {
     this.aiSetting = data.ai ?? DEFAULT_AI_DIFFICULTY;
     this.playerAiSetting = data.playerAi ?? null;
     this.simSpeed = 1;
+    this.simCarryMs = 0;
     this.cleanups = [];
   }
 
   create(): void {
-    this.state = createGameState();
+    this.state = createGameState(this.sceneData.seed);
     const duel = this.sceneData.duel;
     if (duel) {
       this.aiSetting = 'off';
@@ -422,8 +429,6 @@ export class GameScene extends Phaser.Scene {
     this.backdrop.update(this.cameras.main.scrollX, time, thump);
     this.impacts.updateTrails(this.projectiles.activeProjectiles, time, delta);
     if (this.match.phase !== 'playing') return;
-    // Fixed-size sub-steps, so a high playtest speed doesn't make units skip
-    // past each other in one giant step.
     this.stepSim(Math.min(delta, MAX_FRAME_DELTA_MS) * this.simSpeed);
   }
 
@@ -489,7 +494,7 @@ export class GameScene extends Phaser.Scene {
       : null;
     if (feature('ageDoctrines')) {
       this.experiments.push(new DoctrineSystem(this.state, this.units, () => this.match.elapsedMs));
-      for (const side of aiSides) this.experiments.push(new DoctrineAi(side, this.units));
+      for (const side of aiSides) this.experiments.push(new DoctrineAi(side, this.units, this.state.seed));
     }
     if (feature('warCry')) {
       const warCry = new WarCrySystem(this.state, this.units, () => this.match.elapsedMs);
@@ -501,14 +506,19 @@ export class GameScene extends Phaser.Scene {
     }
   }
 
-  /** Dev only: runs `ms` of simulation at once in fixed steps, without rendering. */
+  /**
+   * Spends `ms` of time on whole `SIM_STEP_MS` ticks and carries the rest, so
+   * the battle never depends on the frame rate (lockstep multiplayer needs
+   * both browsers to step identically). A high playtest speed runs more
+   * ticks per frame, never bigger ones.
+   */
   private stepSim(ms: number): void {
-    let left = ms;
-    while (left > 0 && this.match.phase === 'playing') {
-      const dt = Math.min(DEBUG_STEP_MS, left);
-      this.tick(dt);
-      left -= dt;
+    this.simCarryMs += ms;
+    while (this.simCarryMs >= SIM_STEP_MS && this.match.phase === 'playing') {
+      this.tick(SIM_STEP_MS);
+      this.simCarryMs -= SIM_STEP_MS;
     }
+    if (this.match.phase !== 'playing') this.simCarryMs = 0;
   }
 
   private drawBackground(): void {
@@ -772,6 +782,8 @@ export class GameScene extends Phaser.Scene {
         this.effects.muted = HEADLESS_SIM;
         this.impacts.muted = HEADLESS_SIM;
       },
+      hash: () => hashMatch(this.state, this.match.tick, this.units.activeUnits, this.projectiles.activeProjectiles),
+      tick: () => this.match.tick,
       restart: (data = {}) => this.scene.restart(data),
       projectileCount: () => this.projectiles.activeProjectiles.size,
       projectilePoolSize: () => this.projectiles.createdCount,

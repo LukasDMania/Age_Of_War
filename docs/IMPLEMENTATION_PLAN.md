@@ -3,11 +3,10 @@
 Handoff document. Read `CLAUDE.md` (rules) and `docs/GAME_DESIGN.md` (what
 we're building) first, then work through the phases below **in order**.
 
-**Current status (2026-09-30):** Phases 0 to 20 are done (15 and 16 are
-log-only). Phase 21 (the Mech expansion, `docs/MECH_EXPANSION.md`): all
-eight steps are built and on main (pushed 2026-10-01 at the owner's
-request, from `claude/relaxed-bohr-o99qdj`), waiting for the owner's
-playtest.
+**Current status (2026-10-05):** Phases 0 to 21 are done (15 and 16 are
+log-only; 21, the Mech expansion, waits for the owner's playtest).
+Phase 22, 1v1 multiplayer, is in progress: step 1 (determinism
+groundwork) is built; step 2 (the command queue) is next.
 
 ### Start here (new agent)
 
@@ -22,7 +21,8 @@ playtest.
    `node tools/checks/paths.mjs`, `node tools/checks/effects.mjs` (saves
    slow-motion screenshots of every effect to `tools/checks/out/`),
    `node tools/checks/muzzles.mjs` (after changing ranged art).
-4. **Next up: ask the owner.** Phase 20's work is waiting for the owner's
+4. **Next up: Phase 22 step 2** (multiplayer command queue), unless the
+   owner says otherwise. Phase 21's work is waiting for the owner's
    playtest. Candidates the owner has mentioned or that are half-planned:
    a Mech refit on the lane (GAME_DESIGN 15), more Mech parts unlocked
    through Conquest or research ("we can lock unlocking more parts behind
@@ -515,6 +515,32 @@ The brief is `docs/MECH_EXPANSION.md`; its build order is followed here.
   hangar's Titan switch in the final age builds the design once per
   match at 2.8x size, 6x HP, 3x damage, 4x price, 2x build time
   (`TITAN` in `config/mech.config.ts`).
+
+## Phase 22: 1v1 multiplayer (in progress)
+
+Owner (2026-10-05): "lets get started on multiplayer". Decisions in
+GAME_DESIGN section 15 ("1v1 multiplayer"): lockstep, the normal match and
+Mech vs Mech, a local relay first and then Cloudflare, pause-then-forfeit on
+a disconnect.
+
+- [x] 1. Determinism groundwork: the battle steps in whole 60 Hz ticks
+  (`SIM_STEP_MS`, `GameScene.stepSim` carries leftover frame time;
+  `MatchSystem.tick`), a seed per match (`MatchState.seed`,
+  `GameSceneData.seed`, `utils/Rng.ts`) for the special's targets and
+  landing spots, doctrine offers and the AIs, and a state hash
+  (`systems/stateHash.ts`, `__aow.hash()` / `__aow.tick()`). Checks:
+  `tools/checks/determinism.mjs` (same seed, frames cut differently ->
+  same hashes every 10 s, two AI pairings), `tools/checks/desync-diff.mjs`
+  (finds what drifted).
+- [ ] 2. Command queue: the player's `*-requested` events become commands
+  stamped with the tick they run on (a few ticks ahead) and run at the
+  start of that tick on both sides; a loopback mode in one page; match
+  setup (seed, experiment switches, Mech designs) as one message.
+- [ ] 3. Local relay (Node, WebSocket, room codes) and a lobby screen
+  (host / join by code); hash exchange and a desync message; pause on a
+  lost connection, forfeit after the timeout.
+- [ ] 4. Cloudflare Worker relay (a Durable Object per room) and static
+  hosting for the game.
 
 ---
 
@@ -2111,4 +2137,30 @@ decisions made, anything the owner needs to confirm.
     Rush order gives a free Forge level; it powers down and nobody is
     paid), a screenshot of it at the Mine with the Buildings tab, and
     every other Mech check; typecheck and build pass.
-
+- 2026-10-05 (Phase 22 step 1, multiplayer groundwork): owner: "lets get
+  started on multiplayer"; answers: "normal, and mech mode", lockstep,
+  local relay then Cloudflare, pause then forfeit (GAME_DESIGN section 15;
+  multiplayer leaves the DEFERRED list).
+  - Fixed tick: `GameScene.stepSim` now spends frame time on whole
+    `SIM_STEP_MS` ticks and carries the rest (it used to run a last,
+    shorter step, so the battle depended on how time was cut into frames).
+    A playtest speed runs more ticks per frame. `__aow.step(ms)` goes
+    through the same carry.
+  - Seeds: `MatchState.seed` (random unless `GameSceneData.seed` gives
+    one); each consumer takes its own `Rng.derive(seed, label)` so one
+    doesn't shift another's sequence. Moved off `Math.random` /
+    `Phaser.Math.Between`: the special's target and landing spot (this was
+    the desync the new check found), doctrine offers, both AIs and the
+    doctrine AI. Visual effects and Conquest's map stay on `Math.random`.
+  - `systems/stateHash.ts`: FNV-1a over both SideStates, every unit and
+    every projectile, in pool order.
+  - Checked: `node tools/checks/determinism.mjs` (classic AIs and utility
+    AIs, seeded, run three times each: one tick per step, uneven chunks of
+    4-250 ms, another seed; identical hashes at every 10 s milestone, a
+    different match with another seed). Both matches end in the first two
+    ages, so later ages are only covered by the code reading so far. mech,
+    duel, paths, utility and account checks pass; typecheck and build
+    pass. Real-time play: the same frame-to-tick rate as before the change
+    in headless Chromium (about 18 fps there).
+  - Not checked: cross-engine (Firefox) runs; only Chromium is installed
+    here.

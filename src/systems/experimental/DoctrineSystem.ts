@@ -1,3 +1,4 @@
+import { Rng } from '@utils/Rng';
 import { DOCTRINE_CHOICES, DOCTRINES, type Doctrine } from '@config/experiments.config';
 import type { UnitFactory } from '@entities/UnitFactory';
 import type { MatchState } from '@state/GameState';
@@ -33,8 +34,12 @@ export class DoctrineSystem {
   private readonly clock: () => number;
   private readonly cleanups: (() => void)[];
 
+  /** Seeded: both lockstep browsers (and a replay) offer the same doctrines. */
+  private readonly rng: Rng;
+
   constructor(state: MatchState, units: UnitFactory, clock: () => number) {
     this.state = state;
+    this.rng = Rng.derive(state.seed, 'doctrines');
     this.units = units;
     this.clock = clock;
     this.cleanups = [
@@ -69,7 +74,7 @@ export class DoctrineSystem {
     const pool = DOCTRINES.filter((d) => !this.chosen[side].includes(d.id)).map((d) => d.id);
     const options: string[] = [];
     while (options.length < DOCTRINE_CHOICES && pool.length > 0) {
-      options.push(pool.splice(Math.floor(Math.random() * pool.length), 1)[0]!);
+      options.push(pool.splice(this.rng.int(pool.length), 1)[0]!);
     }
     if (options.length === 0) return;
     this.offers[side] = options;
@@ -105,8 +110,11 @@ export class DoctrineAi {
   private readonly units: UnitFactory;
   private readonly cleanups: (() => void)[];
 
-  constructor(side: Side, units: UnitFactory) {
+  private readonly rng: Rng;
+
+  constructor(side: Side, units: UnitFactory, seed: number) {
     this.side = side;
+    this.rng = Rng.derive(seed, `doctrine-ai-${side}`);
     this.units = units;
     this.cleanups = [
       on(Events.DoctrineOffered, ({ side, options }) => {
@@ -130,7 +138,7 @@ export class DoctrineAi {
     for (const id of options) {
       const d = findDoctrine(id);
       if (!d) continue;
-      const score = d.effects.reduce((s, e) => s + (e.slots ? e.slots.reduce((t, slot) => t + (value[slot] ?? 0), 0) : total * 0.6), 0) * (0.8 + Math.random() * 0.4);
+      const score = d.effects.reduce((s, e) => s + (e.slots ? e.slots.reduce((t, slot) => t + (value[slot] ?? 0), 0) : total * 0.6), 0) * (0.8 + this.rng.next() * 0.4);
       if (score > bestScore) {
         best = id;
         bestScore = score;

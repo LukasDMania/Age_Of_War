@@ -69,6 +69,9 @@ export interface DebugHandle {
    * rendering. Much faster than `setSpeed` for automated checks and tuning.
    */
   step(ms: number): void;
+  /** Fingerprint of the battle right now (`systems/stateHash.ts`), and the tick it is at. */
+  hash(): string;
+  tick(): number;
   /** Starts a fresh match (the no-singletons rule makes this safe). */
   restart(data?: GameSceneData): void;
   /** Projectiles currently in flight. */

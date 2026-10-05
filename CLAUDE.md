@@ -146,7 +146,9 @@ These come from the locked design, so the code must not contradict them:
 - Browser checks live in `tools/checks/` (Playwright against the dev
   server): `mech.mjs`, `paths.mjs`, `effects.mjs` (slow-motion effect
   screenshots), `muzzles.mjs` (re-measure shot origins after changing
-  ranged art). `__aow.fxTimeScale(k)` slows the effects for review.
+  ranged art), `determinism.mjs` (lockstep: a seeded match replays to the
+  same state hashes; run it after touching game rules, and keep anything
+  random that changes the battle on `utils/Rng.ts`, never `Math.random`). `__aow.fxTimeScale(k)` slows the effects for review.
 - Report honestly what you ran and what you didn't.
 
 ## Repo notes

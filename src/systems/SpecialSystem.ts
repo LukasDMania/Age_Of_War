@@ -1,4 +1,3 @@
-import Phaser from 'phaser';
 import { buildingEffects } from '@systems/BuildingSystem';
 import { getAge, type SpecialConfig } from '@config/ages.config';
 import { getProjectileFlight } from '@config/projectiles.config';
@@ -9,6 +8,7 @@ import type { UnitFactory } from '@entities/UnitFactory';
 import type { MatchState } from '@state/GameState';
 import { laneDir, otherSide, SIDES, type Side } from '@state/types';
 import { emit, Events, on } from '@utils/EventBus';
+import { Rng } from '@utils/Rng';
 
 /** Why a special request was turned down. */
 export type SpecialRejection = 'not-playing' | 'cooling-down';
@@ -57,11 +57,15 @@ export class SpecialSystem {
   private readonly unsubscribe: () => void;
 
   /** `clock` returns the simulation time (`MatchSystem.elapsedMs`). */
+  /** Seeded: targets and landing spots must match in both lockstep browsers. */
+  private readonly rng: Rng;
+
   constructor(state: MatchState, units: UnitFactory, projectiles: ProjectileFactory, clock: () => number) {
     this.state = state;
     this.units = units;
     this.projectiles = projectiles;
     this.clock = clock;
+    this.rng = Rng.derive(state.seed, 'special');
     this.unsubscribe = on(Events.SpecialRequested, ({ side }) => this.onRequested(side));
   }
 
@@ -123,17 +127,22 @@ export class SpecialSystem {
       const fallMs = (Math.hypot(STRIKE_DRIFT_X, STRIKE_LAND_Y - STRIKE_START_Y) / flight.speed) * 1000;
       const lead =
         target.unitState === UnitState.Walking ? (laneDir(target.side) * target.getStat('speed') * fallMs) / 1000 : 0;
-      landX = target.x + lead + Phaser.Math.FloatBetween(-special.radius / 2, special.radius / 2);
+      landX = target.x + lead + this.between(-special.radius / 2, special.radius / 2);
     } else {
       // Nobody to hit: somewhere on the enemy's half of the lane.
       const middle = GAME_WIDTH / 2;
       const enemySpawn = SPAWN_X[otherSide(side)];
-      landX = Phaser.Math.FloatBetween(Math.min(middle, enemySpawn), Math.max(middle, enemySpawn));
+      landX = this.between(Math.min(middle, enemySpawn), Math.max(middle, enemySpawn));
     }
     const startX = landX - dir * STRIKE_DRIFT_X;
     this.projectiles
       .launch(special.projectileKey, side, startX, STRIKE_START_Y, special.damage * buildingEffects(this.state[side]).specialDamage, special.radius)
       .aimAt(landX, STRIKE_LAND_Y);
+  }
+
+  /** A seeded float in [min, max). */
+  private between(min: number, max: number): number {
+    return min + this.rng.next() * (max - min);
   }
 
   private randomEnemy(side: Side): Unit | null {
@@ -143,7 +152,7 @@ export class SpecialSystem {
       if (unit.side === enemy && unit.onLane) this.candidates.push(unit);
     }
     if (this.candidates.length === 0) return null;
-    return this.candidates[Phaser.Math.Between(0, this.candidates.length - 1)] ?? null;
+    return this.candidates[this.rng.int(this.candidates.length)] ?? null;
   }
 
   private emitCooldown(side: Side, remainingMs: number): void {

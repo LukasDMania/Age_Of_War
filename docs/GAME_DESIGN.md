@@ -287,9 +287,9 @@ PROPOSED details:
 - Multiple lanes, campaign, survival/roguelite modes. (2026-09-26: the
   owner asked for roguelite experiments; Conquest mode exists as a
   switchable prototype, section 13.)
-- 1v1 multiplayer (owner, 2026-09-27: "leave it for now"). Feasibility and
-  hosting notes in section 15; keep new game rules deterministic and
-  driven by `*-requested` events so it stays possible.
+- (1v1 multiplayer was here until 2026-10-05; the owner started it, see
+  section 15. Keep new game rules deterministic and driven by
+  `*-requested` events.)
 
 ## 10. Open questions and tunables
 
@@ -905,7 +905,33 @@ built, archetype runs since 2026-09-28).
   unlocks, evolve on age-up, Mech vs Mech, a utility Mech and a Titan
   (experimental). See `docs/MECH_EXPANSION.md`.
 
-### 1v1 multiplayer (DEFERRED, notes for later)
+### 1v1 multiplayer (started 2026-10-05)
+
+Owner (2026-10-05): "lets get started on multiplayer". Decisions, LOCKED:
+
+- **Modes:** the normal 1v1 match and Mech vs Mech. Conquest, AI
+  opponents and anything per-browser (account locks aside) stay
+  single-player.
+- **Netcode: lockstep.** Both browsers run the same battle on a fixed
+  60 Hz tick and exchange only commands (the `*-requested` events),
+  scheduled a few ticks ahead; a state hash is compared now and then to
+  catch a desync.
+- **Relay:** a local Node relay (room codes) for testing first, then a
+  Cloudflare Worker with a Durable Object per room.
+- **Disconnect:** the match pauses for both players for up to about 30 s
+  (PROPOSED) for a reconnect; after that the missing player forfeits.
+
+Groundwork built (Phase 22 step 1): the fixed tick (`SIM_STEP_MS`), a seed
+per match (`MatchState.seed`, `utils/Rng.ts`) for everything random that
+changes the battle (doctrine offers, the AIs), and a state hash
+(`systems/stateHash.ts`). Open questions for later steps: the experiment
+switches are per browser, so the host's switches will have to be sent to
+the guest at match start; a Mech design (and account locks) is each
+player's own and goes over in the match setup; trig in turret aim
+(`Math.sin`/`cos`/`atan2`) may differ in its last bit between browser
+engines (Chrome vs Firefox), which the hash check would catch.
+
+Earlier notes (2026-09-27):
 
 - Fits the code: every player action is already a `*-requested` command
   with a side, and the battle is nearly deterministic (randomness only in

@@ -14,6 +14,8 @@ import { emit, Events, on } from '@utils/EventBus';
 export class MatchSystem {
   /** Simulation time in ms, counted only while the match is playing. */
   elapsedMs = 0;
+  /** Simulation ticks run so far (each `SIM_STEP_MS` long); lockstep schedules commands by tick. */
+  tick = 0;
 
   private readonly state: MatchState;
   private readonly cleanups: (() => void)[];
@@ -48,9 +50,11 @@ export class MatchSystem {
     else if (this.state.phase === 'paused') this.resume();
   }
 
-  /** Advances the simulation clock. Call once per frame with the frame time. */
+  /** Advances the simulation clock by one tick. */
   update(deltaMs: number): void {
-    if (this.state.phase === 'playing') this.elapsedMs += deltaMs;
+    if (this.state.phase !== 'playing') return;
+    this.elapsedMs += deltaMs;
+    this.tick++;
   }
 
   destroy(): void {

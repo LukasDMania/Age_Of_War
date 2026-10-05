@@ -1,3 +1,4 @@
+import { Rng } from '@utils/Rng';
 import {
   aiBuildingCap,
   AI_RICH_GOLD_MULT,
@@ -92,6 +93,9 @@ export class AIController {
   /** Simulation time of the current think, for the opening limits. */
   private now = 0;
 
+  /** Seeded, so a replay of the match makes the same choices. */
+  private readonly rng: Rng;
+
   constructor(
     state: MatchState,
     side: Side,
@@ -104,6 +108,7 @@ export class AIController {
     this.units = units;
     this.bases = bases;
     this.difficulty = difficulty;
+    this.rng = Rng.derive(state.seed, `ai-${side}`);
   }
 
   /** `nowMs` is the simulation clock. */
@@ -312,7 +317,7 @@ export class AIController {
   private randomSlot(): 1 | 2 | 3 {
     const heavy = this.heavyAllowed ? AI_UNIT_MIX[3] : 0;
     const total = AI_UNIT_MIX[1] + AI_UNIT_MIX[2] + heavy;
-    let roll = Math.random() * total;
+    let roll = this.rng.next() * total;
     for (const slot of [1, 2, 3] as const) {
       roll -= slot === 3 ? heavy : AI_UNIT_MIX[slot];
       if (roll <= 0) return slot;

@@ -63,6 +63,14 @@ export const SUPPORT_STAGGER = 38;
  */
 export const MAX_FRAME_DELTA_MS = 100;
 
+/**
+ * The simulation's fixed tick (multiplayer groundwork, 2026-10-05): the battle
+ * always advances in whole 60 Hz steps, whatever the frame rate, so two
+ * browsers (lockstep) or a replay step through exactly the same states.
+ * Frame time left over carries to the next frame.
+ */
+export const SIM_STEP_MS = 1000 / 60;
+
 /* ---- Match start ------------------------------------------------------ */
 
 /** PROPOSED. Starting hit points of each base. */

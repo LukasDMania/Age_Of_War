@@ -16,6 +16,7 @@ import {
 import { AGE_COUNT } from '@config/ages.config';
 import type { MatchPhase, MechState, QueuedUnit, SideModifier } from '@state/types';
 import { defaultTraits, type SideTraits } from '@state/traits';
+import { randomSeed } from '@utils/Rng';
 
 export type { MatchPhase, QueuedUnit, Side } from '@state/types';
 
@@ -75,6 +76,12 @@ export interface SideState {
 
 export interface MatchState {
   phase: MatchPhase;
+  /**
+   * Seed for everything random that changes the battle (`Rng.derive(seed,
+   * label)` per consumer). Lockstep multiplayer gives both browsers the same
+   * seed; a replay with the same seed and commands plays out the same.
+   */
+  seed: number;
   player: SideState;
   enemy: SideState;
 }
@@ -104,9 +111,10 @@ export function createSideState(): SideState {
  * Builds a brand-new match state. A factory rather than a singleton so a
  * restart is just "create another one" with nothing leaking across matches.
  */
-export function createGameState(): MatchState {
+export function createGameState(seed: number = randomSeed()): MatchState {
   return {
     phase: 'pre-game',
+    seed,
     player: createSideState(),
     enemy: createSideState(),
   };
