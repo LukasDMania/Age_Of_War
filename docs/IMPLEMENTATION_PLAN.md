@@ -26,8 +26,8 @@ groundwork) is built; step 2 (the command queue) is next.
    playtest. Candidates the owner has mentioned or that are half-planned:
    a Mech refit on the lane (GAME_DESIGN 15), more Mech parts unlocked
    through Conquest or research ("we can lock unlocking more parts behind
-   other things"), a Workshop commander, 1v1 multiplayer (DEFERRED, hosting
-   notes in GAME_DESIGN 15). Don't start any of them without asking.
+   other things"), a Workshop commander. Don't start any of them without
+   asking.
 
 ### Where the newest systems live
 
