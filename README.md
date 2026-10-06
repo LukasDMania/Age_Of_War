@@ -44,22 +44,38 @@ was created on another operating system, delete it first, then run
 
 ## Playing online (1v1)
 
-For now the relay that pairs players runs on one player's PC (a hosted
-relay comes later). On that PC:
+In the game: press **O** (Online) in the menu. One player hosts (**H**) and
+gets a 4-letter room code; the other joins (**J**) and types it. The host
+picks the mode first (**M**: a normal battle or a Mech duel, arrows for the
+duel's age) and plays the left side.
 
-```bash
-npm run relay            # the relay, port 8787
-npx vite --host          # the game, reachable from other machines
-```
+### Putting it online (Cloudflare, free)
 
-Both players open the game from that PC (`http://<its address>:5173`; the
-lobby then finds the relay on the same machine), press **O** (Online) in
-the menu, and one hosts (**H**) while the other joins (**J**) with the
-4-letter room code. The host picks the mode first (**M**: a normal battle
-or a Mech duel, arrows for the duel's age) and plays the left side. To use a
-relay somewhere else, add `?relay=ws://host:port` to the URL. Without
-another person, `?loopback=80` (dev) plays the online rules against a
-pretend opponent 80 ms away.
+One Cloudflare Worker serves the game and runs the relay that pairs
+players (`wrangler.toml`, `tools/relay/worker.mjs`). Once:
+
+1. Make a free account at https://dash.cloudflare.com/sign-up.
+2. In the project folder: `npm install`, then `npx wrangler login` (a
+   browser window asks you to allow it).
+3. `npm run deploy`. It builds the game and uploads it; the first time,
+   Cloudflare may ask you to pick a `workers.dev` subdomain in its dashboard
+   (Workers & Pages). It prints the address, like
+   `https://age-of-war.<you>.workers.dev`: send that to a friend.
+
+After changing the game, `npm run deploy` again; both players then reload
+the page (different versions refuse to play each other). `npx wrangler
+tail` shows the relay's log (rooms hosted, joined, dropped). The free plan
+covers friends-scale play (noted 2026-09-27: 100,000 requests a day, and
+WebSocket messages count 20 to 1; a match sends about 60 messages a
+second, so roughly 9 hours of play a day).
+
+### Without Cloudflare (same network)
+
+On one PC: `npm run relay` (port 8787) and `npx vite --host`. Both players
+open `http://<that PC's address>:5173`; the lobby finds the relay on the
+same machine. `?relay=ws://host:port/relay` points the lobby at another
+relay. Without another person, `?loopback=80` (dev) plays the online rules
+against a pretend opponent 80 ms away.
 
 ## Trying it out
 

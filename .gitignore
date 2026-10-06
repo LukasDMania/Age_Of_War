@@ -13,3 +13,6 @@ training/*/state.json
 
 # Browser check screenshots (tools/checks)
 tools/checks/out/
+
+# wrangler dev state
+.wrangler/

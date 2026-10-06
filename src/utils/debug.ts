@@ -74,7 +74,7 @@ export interface DebugHandle {
   hash(): string;
   tick(): number;
   /** Lockstep multiplayer: the commands run so far, whether a desync was seen, whether the next tick may run. */
-  lockstep(): { log: readonly TurnRecord[]; desynced: boolean; ready: boolean; hashesCompared: number } | null;
+  lockstep(): { log: readonly TurnRecord[]; desynced: boolean; ready: boolean; hashesCompared: number; pending: string[] } | null;
   /** Starts a fresh match (the no-singletons rule makes this safe). */
   restart(data?: GameSceneData): void;
   /** Projectiles currently in flight. */

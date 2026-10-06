@@ -4,7 +4,10 @@
  * them. Plain JS with no server library, so the Node relay (server.mjs) and
  * the Cloudflare Worker (step 4) can share it.
  *
- * A socket here is anything with `send(text)` and `close()`.
+ * A socket here is anything with `send(text)` and `close()`. The Node relay
+ * keeps every room in one `Rooms`; the Worker has one Durable Object per
+ * room code, each with its own `Rooms` that only ever holds that code
+ * (`newCode`).
  *
  * Client -> relay (JSON):
  *   { relay: 'host' }                          open a room, play the left side
@@ -18,7 +21,7 @@
  *   { relay: 'rejoined', side, lastFrom }      back; resend what came after `lastFrom`
  *   { relay: 'peer-joined' | 'peer-left' | 'peer-back' | 'peer-quit' }
  *   { relay: 'msg', seq, data }                from the other player
- *   { relay: 'error', reason }                 'no-room' | 'full' | 'bad-token' | 'bad-message'
+ *   { relay: 'error', reason }                 'no-room' | 'full' | 'taken' | 'bad-token' | 'bad-message'
  *
  * No message is lost to a dropped connection: each direction is numbered,
  * the relay keeps the recent ones, and a rejoin replays what the player
@@ -34,7 +37,7 @@ export const ROOM_HOLD_MS = 60_000;
 const SIDES = ['player', 'enemy'];
 const other = (side) => (side === 'player' ? 'enemy' : 'player');
 
-function randomCode() {
+export function randomCode() {
   let code = '';
   for (let i = 0; i < 4; i++) code += CODE_LETTERS[Math.floor(Math.random() * CODE_LETTERS.length)];
   return code;
@@ -49,7 +52,9 @@ function newSlot() {
 }
 
 export class Rooms {
-  constructor({ now = () => Date.now(), log = () => {} } = {}) {
+  /** `newCode`: the code for the next hosted room (default random, unused). */
+  constructor({ now = () => Date.now(), log = () => {}, newCode = null } = {}) {
+    this.newCode = newCode;
     this.rooms = new Map();
     /** socket -> { code, side } */
     this.seats = new Map();
@@ -109,8 +114,15 @@ export class Rooms {
   }
 
   host(socket) {
-    let code = randomCode();
-    while (this.rooms.has(code)) code = randomCode();
+    let code;
+    if (this.newCode) {
+      code = this.newCode();
+      // The Worker picked a code that is already a room: the client tries another.
+      if (this.rooms.has(code)) return this.send(socket, { relay: 'error', reason: 'taken' });
+    } else {
+      code = randomCode();
+      while (this.rooms.has(code)) code = randomCode();
+    }
     const room = { code, slots: { player: newSlot(), enemy: newSlot() }, emptySince: null };
     this.rooms.set(code, room);
     this.seat(socket, room, 'player');
@@ -191,8 +203,9 @@ export class Rooms {
   send(socket, message) {
     try {
       socket.send(JSON.stringify(message));
-    } catch {
-      // closed under us: the close handler cleans up
+    } catch (error) {
+      // Closed under us: the close handler cleans up.
+      this.log(`send failed: ${error}`);
     }
   }
 }

@@ -5,9 +5,9 @@ we're building) first, then work through the phases below **in order**.
 
 **Current status (2026-10-05):** Phases 0 to 21 are done (15 and 16 are
 log-only; 21, the Mech expansion, waits for the owner's playtest).
-Phase 22, 1v1 multiplayer, is in progress: steps 1-3 are built (it can be
-played on a LAN or through a tunnel with `npm run relay`); step 4 (a
-hosted relay on Cloudflare) is next. The standard game speed is 2x.
+Phase 22, 1v1 multiplayer: all four steps are built; the owner deploys it
+to Cloudflare (`npm run deploy`, README) and playtests. The standard game
+speed is 2x.
 
 ### Start here (new agent)
 
@@ -22,8 +22,8 @@ hosted relay on Cloudflare) is next. The standard game speed is 2x.
    `node tools/checks/paths.mjs`, `node tools/checks/effects.mjs` (saves
    slow-motion screenshots of every effect to `tools/checks/out/`),
    `node tools/checks/muzzles.mjs` (after changing ranged art).
-4. **Next up: Phase 22 step 4** (Cloudflare relay and hosting), unless the
-   owner says otherwise. Phase 21's work is waiting for the owner's
+4. **Next up: ask the owner.** Phase 22 (online 1v1) waits for the
+   owner's deploy and playtest; open questions in GAME_DESIGN 15. Phase 21's work is waiting for the owner's
    playtest. Candidates the owner has mentioned or that are half-planned:
    a Mech refit on the lane (GAME_DESIGN 15), more Mech parts unlocked
    through Conquest or research ("we can lock unlocking more parts behind
@@ -553,8 +553,12 @@ a disconnect.
   opponent-left / reconnecting banner, forfeit after the window, quit =
   forfeit, desync = no result), online duel through the hangar. Also the
   2x standard speed (`GAME_SPEED`). Check `tools/checks/online.mjs`.
-- [ ] 4. Cloudflare Worker relay (a Durable Object per room) and static
-  hosting for the game.
+- [x] 4. Cloudflare Worker (`wrangler.toml`, `tools/relay/worker.mjs`):
+  `dist/` as static assets and `/relay` routed to a Durable Object per
+  room code running `rooms.mjs`; `npm run deploy`. The built game's lobby
+  uses `/relay` on its own site. Tested under `wrangler dev`; the real
+  deploy waits for the owner's Cloudflare account (README, "Putting it
+  online").
 
 ---
 
@@ -2283,3 +2287,32 @@ decisions made, anything the owner needs to confirm.
     loses the match (the seat waits 30 s, but the game state is gone; a
     replay from the command log could restore it later); cross-browser
     (Firefox) determinism untested.
+- 2026-10-06 (Phase 22 step 4, Cloudflare): owner: "If it's free happy to
+  make one" (a Cloudflare account).
+  - One Worker for the game and the relay: `wrangler.toml` (assets from
+    `dist/`, Durable Object class `RelayRoom`, SQLite-backed as the free
+    plan requires, though nothing is stored), `tools/relay/worker.mjs`
+    (`/relay?host=1` picks a random code, `/relay?code=ABCD` joins or
+    rejoins; a Durable Object per code runs a `Rooms` that only holds that
+    code via `newCode`; a clash answers `taken` and the client asks again).
+    `npm run deploy` = build + `wrangler deploy` (wrangler is a new dev
+    dependency).
+  - RelayClient puts host / code in the URL (the Node relay ignores it).
+    The lobby's relay: `?relay=`, else `/relay` on the site in a built
+    game, else port 8787 in dev.
+  - Found under `wrangler dev`: when a player's socket dropped, the room
+    stopped delivering to the other player unless the Durable Object
+    answers the close (`server.close(1000)` in the close handler).
+  - Checked under `npx wrangler dev --port 8788`: `RELAY_URL=ws://127.0.0.1:
+    8788/relay node tools/checks/online.mjs` passed 3 times in a row (plus 7
+    passing debug runs of its first half); one run right after the close
+    fix failed the reconnect part and didn't happen again; the cause wasn't
+    pinned down (a wrangler reload during the run is possible). Node-ws and
+    browser WebSocket scripts against the Worker (both sides sending 30 a
+    second, a drop and a rejoin) lost nothing in 9 runs. The production
+    build served by the Worker: two pages paired through the same-origin
+    relay and played (screenshot), no debug handle in production. The
+    Node relay's online check, lockstep, determinism, duel and mech checks
+    pass; typecheck and build pass.
+  - Not checked: a real deploy (needs the owner's account) and play
+    between two real machines.

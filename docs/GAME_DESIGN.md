@@ -927,7 +927,9 @@ Owner (2026-10-05): "lets get started on multiplayer". Decisions, LOCKED:
   scheduled a few ticks ahead; a state hash is compared now and then to
   catch a desync.
 - **Relay:** a local Node relay (room codes) for testing first, then a
-  Cloudflare Worker with a Durable Object per room.
+  Cloudflare Worker with a Durable Object per room. Built 2026-10-06: one
+  Worker serves the game and the relay (`npm run deploy`, free plan; the
+  owner makes the account and deploys).
 - **Disconnect:** the match pauses for both players for up to about 30 s
   (PROPOSED) for a reconnect; after that the missing player forfeits.
 - **Experiment switches:** the host's switches apply to the match (owner,

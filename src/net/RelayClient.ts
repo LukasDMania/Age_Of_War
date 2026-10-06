@@ -21,6 +21,8 @@ export type LinkStatus =
 /** Messages kept for a resend after a reconnect (about 2 minutes of turns). */
 const KEEP_SENT = 4000;
 const RETRY_MS = 1000;
+/** Tries at hosting when the hosted relay's random code is already a room. */
+const HOST_ATTEMPTS = 5;
 
 type RelayReply =
   | { relay: 'room' | 'joined'; code: string; side: Side; token: string }
@@ -61,13 +63,22 @@ export class RelayClient implements Transport {
   }
 
   /** Opens a room; resolves with its code. */
-  host(): Promise<string> {
-    return this.open({ relay: 'host' }).then(() => this.code);
+  async host(): Promise<string> {
+    // The hosted relay picks the code; on the rare clash with a live room, ask again.
+    for (let attempt = 1; ; attempt++) {
+      try {
+        await this.open(this.address('host=1'), { relay: 'host' });
+        return this.code;
+      } catch (error) {
+        if (!(error instanceof Error && error.message === 'taken') || attempt >= HOST_ATTEMPTS) throw error;
+      }
+    }
   }
 
   /** Joins room `code`; rejects with the relay's reason ('no-room', 'full'). */
   join(code: string): Promise<void> {
-    return this.open({ relay: 'join', code: code.toUpperCase() });
+    const room = code.toUpperCase();
+    return this.open(this.address(`code=${room}`), { relay: 'join', code: room });
   }
 
   send(message: NetMessage): void {
@@ -107,11 +118,19 @@ export class RelayClient implements Transport {
   }
 
   /** First connection: resolves once the relay seats us. */
-  private open(hello: object): Promise<void> {
+  /**
+   * The relay URL for a connection. The hosted relay routes by it (a room
+   * per code); the local one ignores the query.
+   */
+  private address(query: string): string {
+    return `${this.url}${this.url.includes('?') ? '&' : '?'}${query}`;
+  }
+
+  private open(url: string, hello: object): Promise<void> {
     return new Promise((resolve, reject) => {
       let socket: WebSocket;
       try {
-        socket = new WebSocket(this.url);
+        socket = new WebSocket(url);
       } catch (error) {
         reject(error instanceof Error ? error : new Error(String(error)));
         return;
@@ -198,7 +217,7 @@ export class RelayClient implements Transport {
     if (this.closed) return;
     let socket: WebSocket;
     try {
-      socket = new WebSocket(this.url);
+      socket = new WebSocket(this.address(`code=${this.code}`));
     } catch {
       this.scheduleRejoin();
       return;

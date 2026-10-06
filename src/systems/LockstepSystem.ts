@@ -76,6 +76,14 @@ export class LockstepSystem {
     return Math.floor(tick / TURN_TICKS);
   }
 
+  /** Debug: the next turns this browser holds messages for, and from which sides. */
+  pendingTurns(): string[] {
+    return [...this.turns.entries()]
+      .sort(([a], [b]) => a - b)
+      .slice(0, 6)
+      .map(([turn, sides]) => `${turn}:${SIDES.filter((s) => sides[s] !== undefined).join('+')}`);
+  }
+
   /** Whether tick `tick` may run: a turn's first tick needs both sides' messages for that turn. */
   ready(tick: number): boolean {
     if (tick % TURN_TICKS !== 0 || this.replay) return true;

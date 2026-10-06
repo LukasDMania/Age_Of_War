@@ -3,16 +3,21 @@
 // other, plays a battle (clicks from both sides, a dropped connection that
 // comes back, the hash exchange), then a quit (the other side wins), then a
 // Mech duel. `node tools/checks/online.mjs`
+// RELAY_URL=ws://localhost:8788/relay uses a relay that is already running
+// instead (the Cloudflare Worker under `npx wrangler dev --port 8788`).
 import { spawn } from 'node:child_process';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { BASE, check, finish, OUT, pw } from './_lib.mjs';
 
 const RELAY_PORT = 8790;
+const RELAY_URL = process.env.RELAY_URL ?? `ws://localhost:${RELAY_PORT}/relay`;
 const here = path.dirname(fileURLToPath(import.meta.url));
-const relay = spawn(process.execPath, [path.join(here, '..', 'relay', 'server.mjs')], { env: { ...process.env, PORT: String(RELAY_PORT) }, stdio: ['ignore', 'pipe', 'pipe'] });
 const relayLog = [];
-relay.stdout.on('data', (d) => relayLog.push(String(d).trim()));
+const relay = process.env.RELAY_URL
+  ? { kill: () => {} }
+  : spawn(process.execPath, [path.join(here, '..', 'relay', 'server.mjs')], { env: { ...process.env, PORT: String(RELAY_PORT) }, stdio: ['ignore', 'pipe', 'pipe'] });
+relay.stdout?.on('data', (d) => relayLog.push(String(d).trim()));
 await new Promise((r) => setTimeout(r, 500));
 
 const browser = await pw.chromium.launch({
@@ -33,7 +38,7 @@ async function openPage() {
   const page = await context.newPage();
   await page.route('**/__playtest-log', (r) => r.fulfill({ status: 200, body: 'x' }));
   page.on('pageerror', (e) => errors.push(e.stack ?? e.message));
-  await page.goto(`${BASE}/?relay=ws://localhost:${RELAY_PORT}`);
+  await page.goto(`${BASE}/?relay=${encodeURIComponent(RELAY_URL)}`);
   await page.waitForFunction(() => document.querySelector('canvas'), null, { timeout: 60000 });
   await page.waitForTimeout(2500);
   await page.mouse.click(640, 300);

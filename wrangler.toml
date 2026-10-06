@@ -1,0 +1,19 @@
+# Cloudflare Worker: the game (static files from dist/) and the online relay
+# (Phase 22 step 4). `npm run deploy` builds and deploys; see README,
+# "Playing online". Free plan: Durable Objects must be SQLite-backed
+# (`new_sqlite_classes`), though the relay keeps everything in memory.
+name = "age-of-war"
+main = "tools/relay/worker.mjs"
+compatibility_date = "2025-09-01"
+
+[assets]
+directory = "./dist"
+binding = "ASSETS"
+
+[[durable_objects.bindings]]
+name = "RELAY"
+class_name = "RelayRoom"
+
+[[migrations]]
+tag = "v1"
+new_sqlite_classes = ["RelayRoom"]

@@ -296,7 +296,9 @@ export class LobbyScene extends Phaser.Scene {
   private fail(error: unknown): void {
     const reason = error instanceof Error ? error.message : String(error);
     const why: Record<string, string> = {
-      'relay-unreachable': `Can't reach the relay at ${relayUrl()}.\nStart it with "npm run relay" on the host's PC.`,
+      'relay-unreachable': import.meta.env.DEV
+        ? `Can't reach the relay at ${relayUrl()}.\nStart it with "npm run relay" on the host's PC.`
+        : `Can't reach the relay at ${relayUrl()}.`,
       'no-room': `There is no room ${this.code}.`,
       full: `Room ${this.code} already has two players.`,
       'peer-quit': 'Your opponent left.',
@@ -440,8 +442,14 @@ export class LobbyScene extends Phaser.Scene {
   }
 }
 
-/** The relay: `?relay=ws://...`, else the relay port on the machine the game came from. */
+/**
+ * The relay: `?relay=ws://...`; else, in the hosted game, /relay on the
+ * site itself (the Cloudflare Worker); in development the local relay
+ * (`npm run relay`) on the machine the game came from.
+ */
 function relayUrl(): string {
   const param = new URLSearchParams(window.location.search).get('relay');
-  return param ?? `ws://${window.location.hostname || 'localhost'}:${RELAY_PORT}`;
+  if (param) return param;
+  if (!import.meta.env.DEV) return `${window.location.protocol === 'https:' ? 'wss' : 'ws'}://${window.location.host}/relay`;
+  return `ws://${window.location.hostname || 'localhost'}:${RELAY_PORT}/relay`;
 }

@@ -876,7 +876,7 @@ export class GameScene extends Phaser.Scene {
       },
       hash: () => hashMatch(this.state, this.match.tick, this.units.activeUnits, this.projectiles.activeProjectiles),
       tick: () => this.match.tick,
-      lockstep: () => (this.lockstep ? { log: this.lockstep.log, desynced: this.lockstep.desynced, ready: this.lockstep.ready(this.match.tick), hashesCompared: this.lockstep.hashesCompared } : null),
+      lockstep: () => (this.lockstep ? { log: this.lockstep.log, desynced: this.lockstep.desynced, ready: this.lockstep.ready(this.match.tick), hashesCompared: this.lockstep.hashesCompared, pending: this.lockstep.pendingTurns() } : null),
       restart: (data = {}) => this.scene.restart(data),
       projectileCount: () => this.projectiles.activeProjectiles.size,
       projectilePoolSize: () => this.projectiles.createdCount,
