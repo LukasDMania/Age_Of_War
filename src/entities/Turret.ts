@@ -1,5 +1,5 @@
 import Phaser from 'phaser';
-import { BASE_X, TURRET_DAMAGE_MULT, TURRET_SLOT_LAYOUT } from '@config/constants';
+import { BASE_X, GAME_SPEED, TURRET_DAMAGE_MULT, TURRET_SLOT_LAYOUT } from '@config/constants';
 import { TURRET_MOTION, type TurretArtId, type TurretMotion } from '@/art/turretDraw';
 import { getTurretDefinition, type TurretDefinition } from '@entities/turretDefinitions';
 import { researchMult } from '@config/buildings.config';
@@ -145,9 +145,10 @@ export class Turret extends Phaser.GameObjects.Image {
   }
 
   preUpdate(_time: number, delta: number): void {
-    const step = (TURN_RATE * delta) / 1000;
+    // Turning, recoil and swings keep pace with the standard game speed.
+    const step = (TURN_RATE * delta * GAME_SPEED) / 1000;
     this.aim += Phaser.Math.Clamp(this.aimTarget - this.aim, -step, step);
-    this.placeHead(this.scene.time.now - this.firedAt);
+    this.placeHead((this.scene.time.now - this.firedAt) * GAME_SPEED);
   }
 
   override destroy(fromScene?: boolean): void {

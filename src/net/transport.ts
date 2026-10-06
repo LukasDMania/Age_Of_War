@@ -37,7 +37,7 @@ export class LoopbackTransport implements Transport {
   }
 
   send(message: NetMessage): void {
-    if (this.closed) return;
+    if (this.closed || message.kind !== 'turn') return;
     const reply: TurnMessage = { kind: 'turn', turn: message.turn, commands: this.options.commandsFor?.(message.turn) ?? [] };
     if (message.hash) reply.hash = { turn: message.hash.turn, value: this.options.corruptHash ? `x${message.hash.value}` : message.hash.value };
     const latency = this.options.latencyMs ?? 0;

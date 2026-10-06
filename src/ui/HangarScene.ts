@@ -44,7 +44,19 @@ import { TEAM_COLORS } from '@utils/RigArt';
  * age chosen here, every Forge part open, the account's locks) and Fight
  * starts the duel.
  */
-export type HangarSceneData = { state: MatchState; side: Side; duel?: undefined } | { duel: { age: number }; state?: undefined; side?: undefined };
+export type HangarSceneData =
+  | { state: MatchState; side: Side; duel?: undefined }
+  | { duel: { age: number; online?: OnlineDuelHooks }; state?: undefined; side?: undefined };
+
+/**
+ * Mech vs Mech online (Phase 22): the lobby's age is fixed, every part is
+ * open (owner, 2026-10-05), Fight hands the design back to the lobby and
+ * Esc goes back to it.
+ */
+export interface OnlineDuelHooks {
+  fight(design: MechDesign): void;
+  back(): void;
+}
 
 /** Gold the duel's stand-in state has (price is only a rating there). */
 const DUEL_GOLD = 1e9;
@@ -182,6 +194,8 @@ export class HangarScene extends Phaser.Scene {
   private drawnKey = '';
   /** Mech vs Mech from the menu (no match behind the hangar). */
   private duel = false;
+  /** Mech vs Mech online: the lobby's hooks (null otherwise). */
+  private online: OnlineDuelHooks | null = null;
   /** Build as a Titan (experimental; final age, once per match). */
   private titan = false;
   private titanButton!: UiButton;
@@ -196,6 +210,7 @@ export class HangarScene extends Phaser.Scene {
     this.blueprints = new MechBlueprints();
     this.account = loadAccount();
     this.duel = data.duel !== undefined;
+    this.online = data.duel?.online ?? null;
     if (data.duel) {
       this.side = 'player';
       this.state = this.duelState(data.duel.age);
@@ -300,7 +315,10 @@ export class HangarScene extends Phaser.Scene {
   /* ---- Actions ------------------------------------------------------------------------------ */
 
   private close(): void {
-    if (this.duel) this.scene.start(SCENE_KEYS.menu);
+    if (this.online) {
+      this.online.back();
+      this.scene.stop();
+    } else if (this.duel) this.scene.start(SCENE_KEYS.menu);
     else this.scene.stop();
   }
 
@@ -312,7 +330,8 @@ export class HangarScene extends Phaser.Scene {
     me.age = age;
     me.gold = DUEL_GOLD;
     me.buildings.forge = DUEL_FORGE;
-    me.mechLocked = lockedPartKeys(this.account);
+    // Online every part is open (owner, 2026-10-05); offline the account's locks apply.
+    me.mechLocked = this.online ? [] : lockedPartKeys(this.account);
     return state;
   }
 
@@ -328,6 +347,11 @@ export class HangarScene extends Phaser.Scene {
 
   /** Mech vs Mech: fight a random Mech of about the same price, in the chosen age. */
   private fight(): void {
+    if (this.online) {
+      this.online.fight({ ...this.design });
+      this.scene.stop();
+      return;
+    }
     const age = this.state.player.age;
     const enemy = randomDesign(Math.random, age, designCost(this.design, age), MECH_DUEL.costBand, MECH_DUEL.samples);
     this.scene.start(SCENE_KEYS.game, { duel: { player: { ...this.design }, enemy, age } } satisfies GameSceneData);
@@ -405,14 +429,14 @@ export class HangarScene extends Phaser.Scene {
       .setOrigin(0, 0.5);
     this.add.text(430, TOP_H / 2, this.duel ? '' : 'Gold', text(14, BLUE_TEXT, '600')).setOrigin(0, 0.5);
     this.goldText = this.add.text(470, TOP_H / 2, '', { fontFamily: UI_TITLE_FONT, fontSize: '22px', color: UiTextColors.gold }).setOrigin(0, 0.5);
-    if (this.duel) {
-      // The duel's age: arrows beside the title.
+    if (this.duel && !this.online) {
+      // The duel's age: arrows beside the title (online the host chose it in the lobby).
       for (const [x, label, by] of [[382, '<', -1], [420, '>', 1]] as const) {
         const b = new UiButton(this, x, TOP_H / 2, 32, 32, { onPress: () => this.duelAge(by), tint: UiColors.panelDark });
         b.add(this.add.text(0, -1, label, text(16, UiTextColors.parchment, '600')).setOrigin(0.5));
       }
-      this.goldText.setVisible(false);
     }
+    if (this.duel) this.goldText.setVisible(false);
     this.baseText = this.add.text(600, TOP_H / 2, '', text(14, UiTextColors.parchment, '600')).setOrigin(0, 0.5);
     const lv = accountLevel(this.account.xp);
     this.add
@@ -420,7 +444,7 @@ export class HangarScene extends Phaser.Scene {
       .setOrigin(1, 0.5);
     const close = new UiButton(this, GAME_WIDTH - 110, TOP_H / 2, 196, 36, { onPress: () => this.close(), tint: UiColors.panelDark, framed: true });
     const key = keyHint('tab-workshop');
-    close.add(this.add.text(0, 0, this.duel ? 'Back to menu (Esc)' : `Back to battle${key ? ` (${key})` : ''}`, text(15, UiTextColors.parchment, '600')).setOrigin(0.5));
+    close.add(this.add.text(0, 0, this.online ? 'Back to lobby (Esc)' : this.duel ? 'Back to menu (Esc)' : `Back to battle${key ? ` (${key})` : ''}`, text(15, UiTextColors.parchment, '600')).setOrigin(0.5));
     this.goldText.setText(String(Math.floor(this.state[this.side].gold)));
   }
 

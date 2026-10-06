@@ -54,6 +54,8 @@ export interface Command {
  */
 export interface MatchSetup {
   seed: number;
+  /** Turns between sending commands and running them, from the lobby's ping (`inputDelayFor`). */
+  inputDelayTurns: number;
   /** The host's experiment switches (owner, 2026-10-05). */
   features: Record<FeatureId, boolean>;
   /**
@@ -79,7 +81,42 @@ export interface TurnMessage {
   hash?: { turn: number; value: string };
 }
 
-export type NetMessage = TurnMessage;
+/** Lobby: the guest introduces itself (its own Mech locks for a normal battle). */
+export interface HelloMessage {
+  kind: 'hello';
+  version: number;
+  mechLocked: string[];
+}
+
+/** Lobby: the host starts the match; both start from this setup. */
+export interface SetupMessage {
+  kind: 'setup';
+  setup: MatchSetup;
+}
+
+/** Lobby: the host measures the round trip to pick the input delay. */
+export interface PingMessage {
+  kind: 'ping' | 'pong';
+  id: number;
+}
+
+/** Lobby: what the host chose (sent once the guest is in): a normal battle, or Mech vs Mech in an age. */
+export interface LobbyMessage {
+  kind: 'lobby';
+  mode: 'battle' | 'duel';
+  age: number;
+}
+
+/** Lobby: Mech vs Mech, the guest's design. */
+export interface DesignMessage {
+  kind: 'design';
+  design: MechDesign;
+}
+
+export type NetMessage = TurnMessage | HelloMessage | SetupMessage | PingMessage | LobbyMessage | DesignMessage;
+
+/** Both browsers must run the same game build; bumped when messages or rules change. */
+export const PROTOCOL_VERSION = 1;
 
 /** A side's commands for one turn, as run (a match's command log, for replays). */
 export interface TurnRecord {

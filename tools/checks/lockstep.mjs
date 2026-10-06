@@ -36,8 +36,12 @@ async function start(make, arg, live = false) {
 }
 
 const unitIds = await page.evaluate(async () => (await import('/src/config/ages.config.ts')).getAge(0).unitIds);
+const { TURN_TICKS, DELAY } = await page.evaluate(async () => {
+  const c = await import('/src/config/multiplayer.config.ts');
+  return { TURN_TICKS: c.TURN_TICKS, DELAY: c.INPUT_DELAY.default };
+});
 
-// 1. A command waits for its turn: given during turn n, it is sent at the start of turn n + 1, for turn n + 3.
+// 1. A command waits for its turn: it goes out at the next turn start (turn n), for turn n + delay.
 await start((m, seed) => m.loopbackMatch({ ai: 'off', seed }), SEED);
 const delay = await page.evaluate((unit) => {
   const a = window.__aow;
@@ -49,9 +53,10 @@ const delay = await page.evaluate((unit) => {
   while (a.snapshot().sides.player.queue.length === 0 && a.tick() < 200) a.step(tickMs);
   return { given, held, ranAfter: a.tick() };
 }, unitIds[0]);
-const expectedRun = (Math.floor(delay.given / 3) + 3) * 3;
+// `given` ticks have run, so the next turn to start is ceil(given / TURN_TICKS).
+const expectedRun = (Math.ceil(delay.given / TURN_TICKS) + DELAY) * TURN_TICKS;
 check('a click is held back, not acted on at once', delay.held === 0);
-check('it runs at the start of turn n + 3 (tick-exact)', delay.ranAfter === expectedRun + 1, JSON.stringify({ ...delay, expectedRun }));
+check('it runs at the start of the next turn + delay (tick-exact)', delay.ranAfter === expectedRun + 1, JSON.stringify({ ...delay, expectedRun }));
 
 // 2. An army hotkey is one command and still queues several units.
 // Through the typed emit, as the HUD does (the raw `__aow.bus.emit` skips the gate).
@@ -82,12 +87,12 @@ await start(
   (m, { seed, unit }) => m.loopbackMatch({ ai: 'off', seed, commandsFor: (turn) => (turn === 50 ? [{ e: 'buy-unit-requested', p: { side: 'player', unitId: unit } }] : []) }),
   { seed: SEED, unit: unitIds[0] },
 );
-const remote = await page.evaluate(() => {
+const remote = await page.evaluate((turnTicks) => {
   const a = window.__aow;
-  while (a.tick() < 152) a.step(1000 / 60);
+  while (a.tick() < 50 * turnTicks + 2) a.step(1000 / 60);
   const s = a.snapshot().sides;
   return { player: s.player.queue.length, enemy: s.enemy.queue.length, log: a.lockstep().log };
-});
+}, TURN_TICKS);
 check('a remote command claiming our side runs for the other side', remote.player === 0 && remote.enemy === 1, JSON.stringify(remote));
 check('...on its turn (50)', remote.log.length === 1 && remote.log[0].turn === 50 && remote.log[0].side === 'enemy');
 
@@ -100,7 +105,7 @@ const played = await (async () => {
       const a = window.__aow;
       const hashes = [];
       for (let m = 1; m <= milestones && a.snapshot().phase === 'playing'; m++) {
-        for (let t = 0; t < 600 && a.snapshot().phase === 'playing'; t++) {
+        while (a.tick() < m * 600 && a.snapshot().phase === 'playing') {
           // The player clicks now and then: units, a turret, an army.
           if (a.tick() % 173 === 0) a.buy(units[(a.tick() / 173) % 3]);
           if (a.tick() === 1500) a.buyTurret(0, 'stone-spear-thrower');
@@ -137,15 +142,18 @@ const firstDiff = played.hashes.findIndex((h, i) => h !== replayed[i]);
 check('the command log replays to identical hashes', firstDiff === -1, firstDiff === -1 ? '' : `milestone ${firstDiff + 1}: ${played.hashes[firstDiff]} vs ${replayed[firstDiff]}`);
 
 // 6. A wrong hash from the other side is a desync.
-await start((m, seed) => m.loopbackMatch({ ai: 'off', seed, corruptHash: true }), SEED);
-const desync = await page.evaluate(async () => {
+// Listen before the match starts: the first hash goes out on its first tick.
+await page.evaluate(async () => {
   const bus = await import('/src/utils/EventBus.ts');
-  let seen = null;
-  const off = bus.on('desync-detected', (e) => (seen = e));
+  window.__desyncSeen = null;
+  window.__desyncOff = bus.on('desync-detected', (e) => (window.__desyncSeen = e));
+});
+await start((m, seed) => m.loopbackMatch({ ai: 'off', seed, corruptHash: true }), SEED);
+const desync = await page.evaluate(() => {
   const a = window.__aow;
-  while (a.tick() < 400) a.step(1000 / 60);
-  off();
-  return { seen, flag: a.lockstep().desynced };
+  while (a.tick() < 100) a.step(1000 / 60);
+  window.__desyncOff();
+  return { seen: window.__desyncSeen, flag: a.lockstep().desynced };
 });
 check('a wrong hash is reported as a desync (desync-detected)', desync.flag && desync.seen?.turn === 0, JSON.stringify(desync));
 

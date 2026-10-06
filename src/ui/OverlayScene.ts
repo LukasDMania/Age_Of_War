@@ -1,7 +1,7 @@
 import Phaser from 'phaser';
 import { AI_DIFFICULTIES, type AiDifficultyName } from '@config/ai.config';
 import { getAge } from '@config/ages.config';
-import { GAME_HEIGHT, GAME_WIDTH, SCENE_KEYS } from '@config/constants';
+import { GAME_HEIGHT, GAME_SPEED, GAME_WIDTH, SCENE_KEYS } from '@config/constants';
 import type { AccountResult } from '@systems/AccountTracker';
 import type { SideStats } from '@systems/StatsSystem';
 import { addThemedPanel, UI_FONT, UI_TITLE_FONT, UiTextColors } from '@ui/kenneyUi';
@@ -19,6 +19,12 @@ export interface MatchSummary {
   player: SideStats;
   /** What the match did for the account (Mech unlocks); absent in AI-only runs. */
   account?: AccountResult | null;
+  /** Online: the opponent's name (no "Play again": the match was shared). */
+  opponent?: string;
+  /** Why it ended when no base fell (a forfeit, a lost connection, out of sync). */
+  note?: string;
+  /** Nobody won (online: the games went out of sync). */
+  noResult?: boolean;
 }
 
 /** `conquest`: a Conquest campaign battle (prototype), which can't be restarted. */
@@ -72,8 +78,10 @@ export class OverlayScene extends Phaser.Scene {
     panel.add(addThemedPanel(this, 0, 0, PANEL_WIDTH, height, { alpha: 0.97 }));
 
     const top = -height / 2;
-    const title = data.kind === 'paused' ? 'PAUSED' : data.summary.won ? 'VICTORY' : 'DEFEAT';
-    const titleColor = data.kind === 'paused' ? UiTextColors.parchment : data.summary.won ? '#8fe08f' : '#f08a80';
+    const title =
+      data.kind === 'paused' ? 'PAUSED' : data.summary.noResult ? 'NO RESULT' : data.summary.won ? 'VICTORY' : 'DEFEAT';
+    const titleColor =
+      data.kind === 'paused' || data.summary.noResult ? UiTextColors.parchment : data.summary.won ? '#8fe08f' : '#f08a80';
     panel.add(
       this.add
         .text(0, top + 50, title, {
@@ -111,10 +119,12 @@ export class OverlayScene extends Phaser.Scene {
             controls,
             { label: 'Main menu', onPress: () => emit(Events.QuitToMenuRequested, {}) },
           ]
-        : [
-            { label: 'Play again', onPress: () => emit(Events.RestartRequested, {}) },
-            { label: 'Main menu', onPress: () => emit(Events.QuitToMenuRequested, {}) },
-          ];
+        : data.summary.opponent !== undefined
+          ? [{ label: 'Main menu', onPress: () => emit(Events.QuitToMenuRequested, {}) }]
+          : [
+              { label: 'Play again', onPress: () => emit(Events.RestartRequested, {}) },
+              { label: 'Main menu', onPress: () => emit(Events.QuitToMenuRequested, {}) },
+            ];
     const gap = 16;
     const rowWidth = buttons.length * BUTTON_WIDTH + (buttons.length - 1) * gap;
     const buttonY = height / 2 - 20 - BUTTON_HEIGHT / 2;
@@ -132,6 +142,8 @@ export class OverlayScene extends Phaser.Scene {
     const keys = new KeyboardControls(this, () => ['overlay']);
     if (data.conquest) {
       keys.on('overlay-resume', () => (data.kind === 'paused' ? emit(Events.ResumeRequested, {}) : toCampaign()));
+    } else if (data.kind === 'gameover' && data.summary.opponent !== undefined) {
+      keys.on('overlay-menu', () => emit(Events.QuitToMenuRequested, {})).on('overlay-resume', () => emit(Events.QuitToMenuRequested, {}));
     } else {
       keys
         .on('overlay-restart', () => emit(Events.RestartRequested, {}))
@@ -150,10 +162,12 @@ function formatTime(ms: number): string {
 }
 
 function summaryLines(s: MatchSummary): string[] {
-  const enemy = s.enemyController === 'off' ? 'no AI' : `${AI_DIFFICULTIES[s.enemyController].label} AI`;
+  const enemy = s.opponent ?? (s.enemyController === 'off' ? 'no AI' : `${AI_DIFFICULTIES[s.enemyController].label} AI`);
   return [
-    `Match time ${formatTime(s.durationMs)}  ·  vs ${enemy}`,
-    `You: ${getAge(s.playerAge).name} Age  ·  Enemy: ${getAge(s.enemyAge).name} Age`,
+    ...(s.note ? [s.note] : []),
+    // Real time: the game runs at GAME_SPEED.
+    `Match time ${formatTime(s.durationMs / GAME_SPEED)}  ·  vs ${enemy}`,
+    `You: ${getAge(s.playerAge).name} Age  ·  ${s.opponent !== undefined ? 'Opponent' : 'Enemy'}: ${getAge(s.enemyAge).name} Age`,
     `Units trained ${s.player.unitsTrained}  ·  Kills ${s.player.kills}  ·  Lost ${s.player.losses}`,
     `Gold earned ${Math.round(s.player.goldEarned)}  ·  Turrets built ${s.player.turretsBuilt}`,
     ...accountLines(s.account ?? null),

@@ -64,6 +64,16 @@ export const SUPPORT_STAGGER = 38;
 export const MAX_FRAME_DELTA_MS = 100;
 
 /**
+ * The standard game speed (owner, 2026-10-06: "make the standard game speed
+ * of everything 2x"): the battle runs this many simulation ms per real ms,
+ * so units, cooldowns, training, income and ages all go twice as fast while
+ * every number in config stays as it was. The playtest speeds (`GAME_SPEEDS`,
+ * shown as "1x" upward) multiply on top. Unit animations and turret swings
+ * follow it; quick effects (flashes, particles) stay in real time.
+ */
+export const GAME_SPEED = 2;
+
+/**
  * The simulation's fixed tick (multiplayer groundwork, 2026-10-05): the battle
  * always advances in whole 60 Hz steps, whatever the frame rate, so two
  * browsers (lockstep) or a replay step through exactly the same states.
@@ -215,6 +225,8 @@ export const SCENE_KEYS = {
   overlay: 'OverlayScene',
   /** Conquest campaign screen (prototype, feature `conquest`). */
   conquest: 'ConquestScene',
+  /** Online lobby: host or join a room, then the match setup (Phase 22). */
+  lobby: 'LobbyScene',
   /** Key bindings and unit compositions, on top of the menu or the pause panel. */
   controls: 'ControlsScene',
   /** Dev-only texture viewer, reachable with `?gallery` in the URL. */

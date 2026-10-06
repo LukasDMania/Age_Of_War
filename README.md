@@ -42,6 +42,25 @@ was created on another operating system, delete it first, then run
 `npm install`. Other scripts: `npm run build` (typecheck + production build),
 `npm run typecheck`, `npm run preview`.
 
+## Playing online (1v1)
+
+For now the relay that pairs players runs on one player's PC (a hosted
+relay comes later). On that PC:
+
+```bash
+npm run relay            # the relay, port 8787
+npx vite --host          # the game, reachable from other machines
+```
+
+Both players open the game from that PC (`http://<its address>:5173`; the
+lobby then finds the relay on the same machine), press **O** (Online) in
+the menu, and one hosts (**H**) while the other joins (**J**) with the
+4-letter room code. The host picks the mode first (**M**: a normal battle
+or a Mech duel, arrows for the duel's age) and plays the left side. To use a
+relay somewhere else, add `?relay=ws://host:port` to the URL. Without
+another person, `?loopback=80` (dev) plays the online rules against a
+pretend opponent 80 ms away.
+
 ## Trying it out
 
 The title menu comes first: pick Easy, Normal or Hard (click, or

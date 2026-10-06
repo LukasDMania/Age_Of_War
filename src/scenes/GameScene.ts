@@ -20,6 +20,7 @@ import {
   GAME_WIDTH,
   LANE_COLOR,
   LANE_Y,
+  GAME_SPEED,
   MAX_FRAME_DELTA_MS,
   SIM_STEP_MS,
   SCENE_KEYS,
@@ -70,7 +71,7 @@ import { addGold, addXp } from '@state/economyOps';
 import { createGameState, type MatchState } from '@state/GameState';
 import { otherSide, SIDES, type Side } from '@state/types';
 import type { HudSceneData } from '@ui/HUDScene';
-import type { OverlaySceneData } from '@ui/OverlayScene';
+import type { MatchSummary, OverlaySceneData } from '@ui/OverlayScene';
 import { KeyboardControls } from '@ui/keymap';
 import {
   installDebugHandle,
@@ -84,6 +85,7 @@ import { AccountTracker } from '@systems/AccountTracker';
 import { MechDuelAI } from '@systems/MechDuelAI';
 import { hashMatch } from '@systems/stateHash';
 import { LockstepSystem } from '@systems/LockstepSystem';
+import { OnlineMatchSystem, type OnlineLink } from '@systems/OnlineMatchSystem';
 import type { MatchSetup, TurnRecord } from '@net/protocol';
 import type { Transport } from '@net/transport';
 import { setMatchFeatures } from '@config/features.config';
@@ -143,6 +145,10 @@ export interface GameSceneData {
    */
   lockstep?: {
     setup: MatchSetup;
+    /** Online: the opponent's name for the HUD and the result panel. */
+    opponent?: string;
+    /** Online: connection news (the RelayClient), for the pause-then-forfeit rules. */
+    link?: OnlineLink;
     localSide: Side | null;
     transport: Transport | null;
     replay?: readonly TurnRecord[];
@@ -214,6 +220,9 @@ export class GameScene extends Phaser.Scene {
   private logger: MatchLogger | null = null;
   /** Lockstep multiplayer (or a replay); null in a normal match. */
   private lockstep: LockstepSystem | null = null;
+  /** Online: the connection rules; and whether the last frame waited on the opponent's turn. */
+  private online: OnlineMatchSystem | null = null;
+  private lockstepStalled = false;
   private ground!: Phaser.GameObjects.Graphics;
   private laneLine!: Phaser.GameObjects.Graphics;
   private backdrop!: Backdrop;
@@ -225,6 +234,8 @@ export class GameScene extends Phaser.Scene {
   private sceneData: GameSceneData = {};
   private debugModifierCount = 0;
   private simSpeed = 1;
+  /** The side this browser plays: the player's, except the guest's online (the enemy side). */
+  private localSide: Side = 'player';
   /** Frame time not yet spent on a whole tick (see `stepSim`). */
   private simCarryMs = 0;
   private cleanups: (() => void)[] = [];
@@ -239,6 +250,7 @@ export class GameScene extends Phaser.Scene {
     this.aiSetting = data.ai ?? (data.lockstep ? 'off' : DEFAULT_AI_DIFFICULTY);
     this.playerAiSetting = data.playerAi ?? null;
     this.simSpeed = 1;
+    this.localSide = data.lockstep?.localSide ?? 'player';
     this.simCarryMs = 0;
     this.cleanups = [];
   }
@@ -344,7 +356,7 @@ export class GameScene extends Phaser.Scene {
       }),
       // The scenery follows the player's age (placeholder recolor, Phase 8).
       on(Events.AgeChanged, ({ side }) => {
-        if (side === 'player') this.paintScenery();
+        if (side === this.localSide) this.paintScenery();
         this.refreshRigArt();
       }),
       on(Events.RestartRequested, () => this.restartMatch()),
@@ -386,14 +398,19 @@ export class GameScene extends Phaser.Scene {
     // builds the cheats (gold and XP for the player, an instant age-up).
     // The hangar takes Esc (close) while it is open.
     this.keys = new KeyboardControls(this, () => (this.scene.isActive(SCENE_KEYS.hangar) ? [] : ['always']))
-      .on('pause', () => this.match.togglePause())
+      // Online, one battle for two people: no pausing or speeding up.
+      .on('pause', () => {
+        if (!this.sceneData.lockstep) this.match.togglePause();
+      })
       .on('speed', () => {
+        if (this.sceneData.lockstep) return;
         const next = GAME_SPEEDS[(GAME_SPEEDS.indexOf(this.simSpeed) + 1) % GAME_SPEEDS.length] ?? 1;
         this.setSimSpeed(next);
       })
       .on('background', () => this.cycleBackground());
-    if (import.meta.env.DEV) {
-      this.installDebug();
+    if (import.meta.env.DEV) this.installDebug();
+    // The cheat keys change one browser's battle only: not in a lockstep match.
+    if (import.meta.env.DEV && !this.sceneData.lockstep) {
       this.keys
         .on('dev-gold', () => addGold(this.state, 'player', DEBUG_CHEATS.gold, 'cheat'))
         .on('dev-xp', () => addXp(this.state, 'player', DEBUG_CHEATS.xp))
@@ -408,10 +425,13 @@ export class GameScene extends Phaser.Scene {
       ? new LockstepSystem({
           localSide: net.localSide,
           transport: net.transport,
+          inputDelayTurns: net.setup.inputDelayTurns,
           ...(net.replay ? { replay: net.replay } : {}),
           hash: () => hashMatch(this.state, this.match.tick, this.units.activeUnits, this.projectiles.activeProjectiles),
         })
       : null;
+    this.online = net?.link ? new OnlineMatchSystem(net.link, (won, note) => this.endOnline(won, note)) : null;
+    this.lockstepStalled = false;
     if (HEADLESS_SIM) {
       // Automated runs: simulate only (no HUD, nothing drawn).
       this.cameras.main.setVisible(false);
@@ -426,6 +446,8 @@ export class GameScene extends Phaser.Scene {
         (this.aiSetting === 'off' ? '' : (findAiProfile(this.sceneData.profile ?? DEFAULT_AI_PROFILE)?.label ?? '')),
       backgroundName: this.background.name,
       ...(duel ? { duel: true } : {}),
+      side: this.localSide,
+      ...(net?.transport ? { online: { opponent: net.opponent ?? 'Online' } } : {}),
     } satisfies HudSceneData);
     this.match.start();
     if (duel) this.startDuel(duel);
@@ -462,8 +484,9 @@ export class GameScene extends Phaser.Scene {
     this.cameras.main.scrollY = thump;
     this.backdrop.update(this.cameras.main.scrollX, time, thump);
     this.impacts.updateTrails(this.projectiles.activeProjectiles, time, delta);
+    this.online?.update(time, this.lockstepStalled);
     if (this.match.phase !== 'playing') return;
-    this.stepSim(Math.min(delta, MAX_FRAME_DELTA_MS) * this.simSpeed);
+    this.stepSim(Math.min(delta, MAX_FRAME_DELTA_MS) * GAME_SPEED * this.simSpeed);
   }
 
   /**
@@ -552,8 +575,9 @@ export class GameScene extends Phaser.Scene {
       const lockstep = this.lockstep;
       if (lockstep) {
         // Waiting for the other player's turn: keep a little time to catch up with.
-        if (!lockstep.ready(this.match.tick)) {
-          this.simCarryMs = Math.min(this.simCarryMs, MAX_CATCH_UP_MS);
+        this.lockstepStalled = !lockstep.ready(this.match.tick);
+        if (this.lockstepStalled) {
+          this.simCarryMs = Math.min(this.simCarryMs, MAX_CATCH_UP_MS * GAME_SPEED);
           return;
         }
         lockstep.runTick(this.match.tick, () => this.tick(SIM_STEP_MS));
@@ -614,7 +638,7 @@ export class GameScene extends Phaser.Scene {
    */
   private paintScenery(): void {
     const def = this.background;
-    const { sky, ground } = getAge(this.state.player.age).visuals;
+    const { sky, ground } = getAge(this.state[this.localSide].age).visuals;
     this.cameras.main.setBackgroundColor(sky);
     this.ground.clear();
     this.laneLine.setVisible(def.ground === 'strip');
@@ -666,28 +690,51 @@ export class GameScene extends Phaser.Scene {
 
   /** The base crumbles at once; the game-over panel follows a moment later. */
   private onBaseDestroyed(side: Side): void {
-    this.logger?.finish(side === 'enemy' ? 'won' : 'lost');
+    this.online?.matchOver();
+    this.showResult(side !== this.localSide);
+  }
+
+  /** Online: the match ends off the lane (a forfeit, a lost connection; `won` null: a desync, no result). */
+  private endOnline(won: boolean | null, note: string): void {
+    if (this.match.phase !== 'playing' && this.match.phase !== 'paused') return;
+    this.match.finish();
+    this.showResult(won ?? false, note, won === null);
+  }
+
+  /**
+   * The match is over: `won` from this browser's side. `note` says why when
+   * it wasn't a base falling (online: a forfeit, a lost connection).
+   */
+  private showResult(won: boolean, note?: string, noResult = false): void {
+    const me = this.localSide;
+    const foe = otherSide(me);
+    const side = won ? foe : me;
+    this.logger?.finish(won ? 'won' : 'lost');
     if (this.isConquest) {
-      const me = this.state.player;
-      finishBattle(side === 'enemy', Math.max(0, me.baseHp) / baseMaxHp(me.age));
+      const own = this.state.player;
+      finishBattle(won, Math.max(0, own.baseHp) / baseMaxHp(own.age));
     }
-    this.bases[side].setTint(0x4a4a4a);
+    if (!noResult) this.bases[side].setTint(0x4a4a4a);
     const account =
       this.account?.finish({
-        won: side === 'enemy',
+        won,
         durationMs: this.match.elapsedMs,
         kills: this.stats.for('player').kills,
         conquest: this.isConquest,
       }) ?? null;
     this.time.delayedCall(GAME_OVER_DELAY_MS, () => {
-      const summary = {
-        won: side === 'enemy',
+      const net = this.sceneData.lockstep;
+      const summary: MatchSummary = {
+        won,
         durationMs: this.match.elapsedMs,
-        playerAge: this.state.player.age,
-        enemyAge: this.state.enemy.age,
+        playerAge: this.state[me].age,
+        enemyAge: this.state[foe].age,
         enemyController: this.aiSetting,
-        player: this.stats.for('player'),
+        player: this.stats.for(me),
         account,
+        ...(net?.transport ? { opponent: net.opponent ?? 'Online' } : {}),
+        ...(note ? { note } : {}),
+        ...(noResult ? { noResult } : {}),
       };
       this.scene.launch(SCENE_KEYS.overlay, { kind: 'gameover', summary, conquest: this.isConquest } satisfies OverlaySceneData);
     });
@@ -712,9 +759,9 @@ export class GameScene extends Phaser.Scene {
 
   /** The player's buildings show a "PERK!" badge while a perk waits to be picked. */
   private showPerkBadges(): void {
-    const me = this.state.player;
+    const me = this.state[this.localSide];
     for (const id of activeBuildingIds()) {
-      this.buildingViews.player[id]?.setPerkPending(perksPending(me.buildings[id], me.buildingPerks[id].length) > 0);
+      this.buildingViews[this.localSide][id]?.setPerkPending(perksPending(me.buildings[id], me.buildingPerks[id].length) > 0);
     }
   }
 
@@ -723,7 +770,7 @@ export class GameScene extends Phaser.Scene {
     activeBuildingIds().forEach((id, index) => {
       const view = new Building(this, side, id, buildingX(side, BASE_X[side], index));
       // A click sends the player's utility Mech here (MechSystem checks there is one).
-      if (side === 'player') view.onPress(() => emit(Events.MechAssistRequested, { side, buildingId: id }));
+      if (side === this.localSide) view.onPress(() => emit(Events.MechAssistRequested, { side, buildingId: id }));
       view.setLevel(this.state[side].buildings[id]);
       views[id] = view;
     });
@@ -769,7 +816,8 @@ export class GameScene extends Phaser.Scene {
     this.tweens.killTweensOf(camera);
     this.tweens.add({
       targets: camera,
-      scrollX: target === 'buildings' ? -scrollMargin() : 0,
+      // Your own buildings: behind the left base, or the right one online as the guest.
+      scrollX: target === 'buildings' ? (this.localSide === 'player' ? -scrollMargin() : scrollMargin()) : 0,
       duration: CAMERA_PAN_MS,
       ease: 'Sine.easeInOut',
     });
@@ -828,7 +876,7 @@ export class GameScene extends Phaser.Scene {
       },
       hash: () => hashMatch(this.state, this.match.tick, this.units.activeUnits, this.projectiles.activeProjectiles),
       tick: () => this.match.tick,
-      lockstep: () => (this.lockstep ? { log: this.lockstep.log, desynced: this.lockstep.desynced, ready: this.lockstep.ready(this.match.tick) } : null),
+      lockstep: () => (this.lockstep ? { log: this.lockstep.log, desynced: this.lockstep.desynced, ready: this.lockstep.ready(this.match.tick), hashesCompared: this.lockstep.hashesCompared } : null),
       restart: (data = {}) => this.scene.restart(data),
       projectileCount: () => this.projectiles.activeProjectiles.size,
       projectilePoolSize: () => this.projectiles.createdCount,
@@ -914,6 +962,8 @@ export class GameScene extends Phaser.Scene {
   private teardown(): void {
     for (const off of this.cleanups) off();
     this.cleanups = [];
+    this.online?.destroy();
+    this.online = null;
     this.lockstep?.destroy();
     this.lockstep = null;
     setMatchFeatures(null);

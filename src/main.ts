@@ -14,6 +14,7 @@ import { HUDScene } from '@ui/HUDScene';
 import { OverlayScene } from '@ui/OverlayScene';
 import { ControlsScene } from '@ui/ControlsScene';
 import { HangarScene } from '@ui/HangarScene';
+import { LobbyScene } from '@ui/LobbyScene';
 import { loadLayoutLabels } from '@ui/keymap';
 import { applyRenderScale, installCrispText, RENDER_SCALE } from '@utils/renderScale';
 import { HEADLESS_SIM } from '@utils/runtimeFlags';
@@ -37,7 +38,7 @@ const config: Phaser.Types.Core.GameConfig = {
   },
   // Later scenes render on top: the HUD over the game, the pause/game-over
   // overlay over the HUD.
-  scene: [BootScene, PreloadScene, MenuScene, ConquestScene, GameScene, HUDScene, HangarScene, OverlayScene, ControlsScene, TextureGalleryScene],
+  scene: [BootScene, PreloadScene, MenuScene, LobbyScene, ConquestScene, GameScene, HUDScene, HangarScene, OverlayScene, ControlsScene, TextureGalleryScene],
 };
 
 const game = new Phaser.Game(config);

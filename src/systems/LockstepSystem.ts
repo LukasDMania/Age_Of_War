@@ -1,4 +1,4 @@
-import { HASH_EVERY_TURNS, INPUT_DELAY_TURNS, TURN_TICKS } from '@config/multiplayer.config';
+import { HASH_EVERY_TURNS, TURN_TICKS } from '@config/multiplayer.config';
 import { BLOCKED_EVENTS, isCommandEvent, type Command, type NetMessage, type TurnMessage, type TurnRecord } from '@net/protocol';
 import type { Transport } from '@net/transport';
 import { otherSide, SIDES, type Side } from '@state/types';
@@ -11,6 +11,8 @@ export interface LockstepOptions {
   transport: Transport | null;
   /** Replay: the command log of an earlier match (both sides). */
   replay?: readonly TurnRecord[];
+  /** Turns between sending commands and running them (`MatchSetup.inputDelayTurns`). */
+  inputDelayTurns: number;
   /** The battle's state hash right now (`systems/stateHash.ts`). */
   hash: () => string;
 }
@@ -24,7 +26,7 @@ export interface LockstepOptions {
  *   the other side and those multiplayer forbids (`BLOCKED_EVENTS`).
  *   Requests made inside a tick (systems, AIs) pass: both browsers make them.
  * - Commands given during turn n - 1 are sent at the start of turn n, for
- *   turn n + `INPUT_DELAY_TURNS`.
+ *   turn n + the match's input delay (`MatchSetup.inputDelayTurns`).
  *   Each turn starts by running that turn's commands, player's side first,
  *   so both browsers run them on the same tick in the same order.
  * - A turn may start only when both sides' messages for it are in
@@ -39,10 +41,13 @@ export class LockstepSystem {
   /** Commands run so far, both sides, non-empty turns only (a replay feeds this back). */
   readonly log: TurnRecord[] = [];
   desynced = false;
+  /** Hash pairs compared so far (checks: the exchange works). */
+  hashesCompared = 0;
 
   private readonly localSide: Side | null;
   private readonly transport: Transport | null;
   private readonly hash: () => string;
+  private readonly inputDelayTurns: number;
   private readonly replay: boolean;
   /** Commands given this turn, sent at the next turn start. */
   private pending: Command[] = [];
@@ -59,7 +64,8 @@ export class LockstepSystem {
     this.hash = options.hash;
     this.replay = options.replay !== undefined;
     // The first turns run before any message could arrive: nobody has commands for them.
-    for (let turn = 0; turn < INPUT_DELAY_TURNS; turn++) this.turns.set(turn, { player: [], enemy: [] });
+    this.inputDelayTurns = options.inputDelayTurns;
+    for (let turn = 0; turn < this.inputDelayTurns; turn++) this.turns.set(turn, { player: [], enemy: [] });
     for (const record of options.replay ?? []) this.record(record.turn, record.side, record.commands);
     this.offMessage = this.transport?.onMessage((message) => this.receive(message)) ?? (() => undefined);
     setEventGate((event, payload) => this.gate(event, payload));
@@ -106,7 +112,7 @@ export class LockstepSystem {
 
   private startTurn(turn: number): void {
     if (this.localSide !== null && this.transport) {
-      const message: TurnMessage = { kind: 'turn', turn: turn + INPUT_DELAY_TURNS, commands: this.pending };
+      const message: TurnMessage = { kind: 'turn', turn: turn + this.inputDelayTurns, commands: this.pending };
       this.pending = [];
       this.record(message.turn, this.localSide, message.commands);
       if (turn % HASH_EVERY_TURNS === 0) {
@@ -153,6 +159,7 @@ export class LockstepSystem {
     if (local === undefined || remote === undefined) return;
     this.localHashes.delete(turn);
     this.remoteHashes.delete(turn);
+    this.hashesCompared++;
     if (local !== remote && !this.desynced) {
       this.desynced = true;
       emit(Events.DesyncDetected, { turn, local, remote });

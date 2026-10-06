@@ -905,6 +905,16 @@ built, archetype runs since 2026-09-28).
   unlocks, evolve on age-up, Mech vs Mech, a utility Mech and a Titan
   (experimental). See `docs/MECH_EXPANSION.md`.
 
+### Standard game speed 2x (owner, 2026-10-06)
+
+"In general I wanna make the standard game speed of everything 2x": the
+battle runs two game ms per real ms (`GAME_SPEED` in `config/constants.ts`),
+online too. Every config number (speeds, cooldowns, training, income, XP)
+stays as it was; the whole match just takes half the real time. The
+playtest speeds (1x-8x button) multiply on top. Unit animations and turret
+swings follow the 2x; short effects stay in real time. The game-over panel
+shows real time.
+
 ### 1v1 multiplayer (started 2026-10-05)
 
 Owner (2026-10-05): "lets get started on multiplayer". Decisions, LOCKED:
@@ -927,16 +937,27 @@ Owner (2026-10-05): "lets get started on multiplayer". Decisions, LOCKED:
   mode should be all unlocked, normal battle should be ur own
   progression").
 - **No pausing, speed-up or restart** in an online match (one battle for
-  two people; PROPOSED until the owner says otherwise). Input delay is
-  100-150 ms (3-tick turns, 2 turns ahead; PROPOSED).
+  two people; owner, 2026-10-06: "No speedup is okay").
+- **Input delay** (owner asked 2026-10-06 whether 100-150 ms is a minimum):
+  picked per match from the lobby's ping, the one-way trip plus 20 ms in
+  33 ms turns, 1 to 8 turns; a click lands after 1-2 turns more than that
+  minimum (LAN about 33-67 ms, a typical internet game 67-133 ms). Lower
+  than the network allows makes both games hitch (PROPOSED numbers,
+  `config/multiplayer.config.ts`).
+- **Sides:** the host plays the left side, the guest the right; each HUD
+  shows its own side top left and the opponent top right (owner,
+  2026-10-06: "right side is okay").
+- **Lobby** (step 3): menu O; Host shows a 4-letter code, Join types it;
+  the host picks a normal battle or a Mech duel and its age. In a duel
+  both pick a Mech in the hangar (every part open). Leaving a match is a
+  forfeit; "Play again" isn't offered online.
 
 Groundwork built (Phase 22 step 1): the fixed tick (`SIM_STEP_MS`), a seed
 per match (`MatchState.seed`, `utils/Rng.ts`) for everything random that
 changes the battle (doctrine offers, the AIs), and a state hash
 (`systems/stateHash.ts`). Step 2: the command queue (`LockstepSystem`)
-and the match setup message. Open questions for later steps: the guest
-plays the right-hand (enemy) side, so the HUD has to follow the local
-side; whether online matches give account XP; trig in turret aim
+and the match setup message. Step 3: the relay, the lobby and the
+connection rules. Open questions: whether online matches give account XP; trig in turret aim
 (`Math.sin`/`cos`/`atan2`) may differ in its last bit between browser
 engines (Chrome vs Firefox), which the hash check would catch.
 

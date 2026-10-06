@@ -1,7 +1,7 @@
 import { UNIT_WALK_SPEED } from '@config/constants';
 import { flipOriginX } from '@utils/spriteOrigin';
 import Phaser from 'phaser';
-import { LANE_Y } from '@config/constants';
+import { GAME_SPEED, LANE_Y } from '@config/constants';
 import { unitArtKey, type UnitArt } from '@config/unitArt.config';
 import { unitArtFor } from '@entities/unitArt';
 import type { UnitAttack, UnitDefinition } from '@entities/unitDefinitions';
@@ -166,6 +166,8 @@ export class Unit extends Phaser.GameObjects.Sprite {
     this.modifiers.length = 0;
     this.shield = 0;
     this.applyArt();
+    // Walk cycles and swings keep pace with the standard game speed.
+    this.anims.timeScale = GAME_SPEED;
     // Support units are drawn behind combat units, which may walk through them.
     this.setDepth(definition.role === 'combat' ? 1 : 0.9);
     this.setPosition(x, LANE_Y);

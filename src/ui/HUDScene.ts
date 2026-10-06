@@ -6,7 +6,7 @@ import { AGE_BANNER_MS, AGE_CATCH_UP, baseMaxHp, GAME_HEIGHT, GAME_SPEEDS, GAME_
 import { ARMY_COUNT, type KeyActionId, type KeyContext } from '@config/keybindings.config';
 import { xpToNextAge } from '@state/economyOps';
 import type { MatchState } from '@state/GameState';
-import type { Side } from '@state/types';
+import { otherSide, type Side } from '@state/types';
 import { mineGoldPerSec } from '@systems/BuildingSystem';
 import { AgeUpButton } from '@ui/AgeUpButton';
 import { BuildingPanel } from '@ui/BuildingPanel';
@@ -48,6 +48,16 @@ export interface HudSceneData {
   /** Mech vs Mech: no buying, only the bars, pause and the Mech's module. */
   duel?: boolean;
   /**
+   * The side this HUD plays (default the player's). Online the guest plays
+   * the enemy side; its own panel stays top left, the opponent top right.
+   */
+  side?: Side;
+  /**
+   * Online (lockstep) match: the opponent's name for the top-right panel,
+   * and no pause or speed buttons (one battle for two people).
+   */
+  online?: { opponent: string };
+  /**
    * Set when the HUD rebuilds itself in the new age's look after the player
    * ages up (2026-09-26): what it can't read back from the match state.
    */
@@ -68,8 +78,6 @@ function capitalize(text: string): string {
   return text.charAt(0).toUpperCase() + text.slice(1);
 }
 
-/** The side this HUD belongs to. The enemy only appears as a base HP bar. */
-const HUD_SIDE: Side = 'player';
 
 const MARGIN = 16;
 const TOP_PANEL_WIDTH = 380;
@@ -173,6 +181,9 @@ export class HUDScene extends Phaser.Scene {
   private tabHint!: Phaser.GameObjects.Text;
   private hintFlash: Phaser.Time.TimerEvent | null = null;
   private data0!: HudSceneData;
+  /** The side this HUD plays, and the other one (only shown as age and base HP). */
+  private side: Side = 'player';
+  private foe: Side = 'enemy';
   private lastSpecial = { remainingMs: 0, totalMs: 1 };
 
   constructor() {
@@ -181,6 +192,8 @@ export class HUDScene extends Phaser.Scene {
 
   init(data: HudSceneData): void {
     this.data0 = data;
+    this.side = data.side ?? 'player';
+    this.foe = otherSide(this.side);
     this.state = data.state;
     this.enemyController = data.enemyController;
     this.backgroundName = data.backgroundName;
@@ -191,14 +204,14 @@ export class HUDScene extends Phaser.Scene {
 
   create(): void {
     this.pendingArmy = null;
-    const own = this.state[HUD_SIDE];
+    const own = this.state[this.side];
     // The HUD wears the player's age (palette, pattern, trim).
     applyUiTheme(own.age);
-    this.baseBars = { player: this.buildTopLeft(), enemy: this.buildTopRight() };
+    this.baseBars = { [this.side]: this.buildTopLeft(), [this.foe]: this.buildTopRight() } as Record<Side, HudBar>;
     this.buildCatchUpNotices();
     this.ageUpButton = new AgeUpButton(
       this,
-      HUD_SIDE,
+      this.side,
       MARGIN + TOP_PANEL_WIDTH + 8 + AGE_UP_WIDTH / 2,
       12 + TOP_LEFT_HEIGHT / 2,
       AGE_UP_WIDTH,
@@ -209,40 +222,40 @@ export class HUDScene extends Phaser.Scene {
     );
 
     const bottomPanel = addThemedPanel(this, PANEL_LEFT + PANEL_WIDTH / 2, PANEL_TOP + PANEL_HEIGHT / 2, PANEL_WIDTH, PANEL_HEIGHT, { alpha: 0.96 });
-    this.unitPanel = new UnitBuyPanel(this, HUD_SIDE, PANEL_LEFT, PANEL_TOP, {
+    this.unitPanel = new UnitBuyPanel(this, this.side, PANEL_LEFT, PANEL_TOP, {
       gold: own.gold,
       age: own.age,
       queue: own.trainingQueue,
       traits: own.traits,
     });
-    this.turretPanel = new TurretPanel(this, HUD_SIDE, PANEL_LEFT, PANEL_TOP, {
+    this.turretPanel = new TurretPanel(this, this.side, PANEL_LEFT, PANEL_TOP, {
       gold: own.gold,
       age: own.age,
       unlockedSlots: own.unlockedSlots,
       turrets: own.turrets,
     });
-    this.buildingPanel = new BuildingPanel(this, HUD_SIDE, own, PANEL_LEFT, PANEL_TOP);
-    this.researchPanel = new ResearchPanel(this, HUD_SIDE, own, PANEL_LEFT, PANEL_TOP);
+    this.buildingPanel = new BuildingPanel(this, this.side, own, PANEL_LEFT, PANEL_TOP);
+    this.researchPanel = new ResearchPanel(this, this.side, own, PANEL_LEFT, PANEL_TOP);
     this.specialButton = new SpecialButton(
       this,
-      HUD_SIDE,
+      this.side,
       PANEL_LEFT + PANEL_WIDTH + SIDE_GAP + SIDE_BUTTON_SIZE / 2,
       PANEL_TOP + PANEL_HEIGHT / 2,
       SIDE_BUTTON_SIZE,
       own.age,
     );
     this.warCryButton = feature('warCry')
-      ? new WarCryButton(this, HUD_SIDE, PANEL_LEFT + PANEL_WIDTH + SIDE_GAP * 2 + SIDE_BUTTON_SIZE + 48, PANEL_TOP + PANEL_HEIGHT / 2, 96)
+      ? new WarCryButton(this, this.side, PANEL_LEFT + PANEL_WIDTH + SIDE_GAP * 2 + SIDE_BUTTON_SIZE + 48, PANEL_TOP + PANEL_HEIGHT / 2, 96)
       : null;
     this.mechAbilityButton = new MechAbilityButton(
       this,
-      HUD_SIDE,
+      this.side,
       PANEL_LEFT + PANEL_WIDTH + SIDE_GAP * 2 + SIDE_BUTTON_SIZE + 48,
       PANEL_TOP + PANEL_HEIGHT / 2,
       96,
       (shown) => this.warCryButton?.setVisible(!shown),
     );
-    this.doctrinePopup = feature('ageDoctrines') ? new DoctrinePopup(this, HUD_SIDE) : null;
+    this.doctrinePopup = feature('ageDoctrines') ? new DoctrinePopup(this, this.side) : null;
     this.tabs = {
       units: this.buildTab(0, 'Units', 'units'),
       turrets: this.buildTab(1, 'Turrets', 'turrets'),
@@ -291,6 +304,12 @@ export class HUDScene extends Phaser.Scene {
       .setOrigin(0.5);
     backgroundButton.add(this.backgroundText);
     this.showBackgroundName(this.backgroundName);
+    if (this.data0.online) {
+      // One battle for two people: nobody pauses or speeds it up.
+      this.pauseButton.container.setVisible(false);
+      this.speedButton.container.setVisible(false);
+      this.buildOnlineBanner();
+    }
     if (this.data0.duel) {
       // Mech vs Mech: nothing to buy, build or age; the module button stays.
       bottomPanel.setVisible(false);
@@ -321,27 +340,26 @@ export class HUDScene extends Phaser.Scene {
     // One-time read of the starting values; events keep them current.
     this.showAge(own.age);
     this.showGold(own.gold);
-    this.showXp(own.xp, xpToNextAge(this.state, HUD_SIDE));
-    this.showBaseHp('player', this.state.player.baseHp, baseMaxHp(this.state.player.age));
-    this.showBaseHp('enemy', this.state.enemy.baseHp, baseMaxHp(this.state.enemy.age));
+    this.showXp(own.xp, xpToNextAge(this.state, this.side));
+    for (const side of [this.side, this.foe]) this.showBaseHp(side, this.state[side].baseHp, baseMaxHp(this.state[side].age));
 
     this.cleanups.push(
       on(Events.GoldChanged, ({ side, gold }) => {
-        if (side === HUD_SIDE) this.showGold(gold);
+        if (side === this.side) this.showGold(gold);
       }),
       on(Events.XpChanged, ({ side, xp, xpToNext }) => {
-        if (side !== HUD_SIDE) return;
+        if (side !== this.side) return;
         this.showXp(xp, xpToNext);
         this.ageUpButton.setXp(xp);
       }),
       on(Events.BaseDamaged, ({ side, hp, maxHp }) => this.showBaseHp(side, hp, maxHp)),
       on(Events.ArmyQueued, (payload) => this.showArmyQueued(payload)),
       on(Events.UnitQueueChanged, ({ side, queue }) => {
-        if (side === HUD_SIDE) this.unitPanel.setQueue(queue);
+        if (side === this.side) this.unitPanel.setQueue(queue);
       }),
       on(Events.AgeChanged, ({ side, age }) => {
         this.showBaseHp(side, this.state[side].baseHp, baseMaxHp(age));
-        if (side !== HUD_SIDE) {
+        if (side !== this.side) {
           this.showEnemyAge(age);
           this.showCatchUp();
           this.announceEnemyAge(age);
@@ -357,39 +375,39 @@ export class HUDScene extends Phaser.Scene {
       }),
       on(Events.SiegeChanged, ({ mult }) => this.showSiege(mult)),
       on(Events.SpecialCooldownChanged, ({ side, remainingMs, totalMs }) => {
-        if (side !== HUD_SIDE) return;
+        if (side !== this.side) return;
         this.lastSpecial = { remainingMs, totalMs };
         this.specialButton.setCooldown(remainingMs, totalMs);
       }),
       on(Events.SlotUnlocked, ({ side, slotIndex }) => {
-        if (side === HUD_SIDE) this.turretPanel.setUnlockedSlots(slotIndex + 1);
+        if (side === this.side) this.turretPanel.setUnlockedSlots(slotIndex + 1);
       }),
       on(Events.TurretBuilt, ({ side, slotIndex }) => {
-        if (side === HUD_SIDE) this.turretPanel.setTurret(slotIndex, this.state[side].turrets[slotIndex] ?? null);
+        if (side === this.side) this.turretPanel.setTurret(slotIndex, this.state[side].turrets[slotIndex] ?? null);
       }),
       on(Events.TurretUpgraded, ({ side, slotIndex }) => {
-        if (side === HUD_SIDE) this.turretPanel.setTurret(slotIndex, this.state[side].turrets[slotIndex] ?? null);
+        if (side === this.side) this.turretPanel.setTurret(slotIndex, this.state[side].turrets[slotIndex] ?? null);
       }),
       on(Events.TurretSold, ({ side, slotIndex }) => {
-        if (side === HUD_SIDE) this.turretPanel.setTurret(slotIndex, null);
+        if (side === this.side) this.turretPanel.setTurret(slotIndex, null);
       }),
       on(Events.EconomyChanged, ({ side, economyUnits, incomePerSec, damageMult, speedMult }) => {
-        if (side !== HUD_SIDE) return;
+        if (side !== this.side) return;
         this.lastEconomy = { units: economyUnits, incomePerSec, damageMult, speedMult };
         this.refreshIncome();
       }),
       on(Events.BuildingUpgraded, ({ side }) => {
-        if (side !== HUD_SIDE) return;
+        if (side !== this.side) return;
         this.buildingPanel.rebuild();
         this.researchPanel.rebuild();
         this.refreshIncome();
       }),
       on(Events.MechChanged, ({ side, alive, build }) => {
-        if (side === HUD_SIDE) this.showMech(alive, build);
+        if (side === this.side) this.showMech(alive, build);
       }),
       // A utility Mech at a building: its time left on the hangar button; that building's prices change.
       on(Events.MechAssistChanged, ({ side, buildingId, working, remainingMs }) => {
-        if (side !== HUD_SIDE) return;
+        if (side !== this.side) return;
         const label = buildingId ? `${working ? 'Works' : 'Mech'} ${Math.ceil(remainingMs / 1000)}s` : 'Hangar';
         if (this.hangarLabel.text !== label) this.hangarLabel.setText(label);
         // Prices change when it arrives, leaves or moves on: redraw the cards then.
@@ -403,10 +421,10 @@ export class HUDScene extends Phaser.Scene {
       }),
       on(Events.BaseRepaired, ({ side, hp, maxHp }) => this.showBaseHp(side, hp, maxHp)),
       on(Events.ResearchCompleted, ({ side }) => {
-        if (side === HUD_SIDE) this.researchPanel.rebuild();
+        if (side === this.side) this.researchPanel.rebuild();
       }),
       on(Events.BuildingPerkChosen, ({ side }) => {
-        if (side !== HUD_SIDE) return;
+        if (side !== this.side) return;
         this.buildingPanel.rebuild();
         this.researchPanel.rebuild();
         this.refreshIncome();
@@ -501,12 +519,38 @@ export class HUDScene extends Phaser.Scene {
       return;
     }
     this.pendingArmy = index;
-    emit(Events.QueueArmyRequested, { side: HUD_SIDE, army });
+    emit(Events.QueueArmyRequested, { side: this.side, army });
+  }
+
+  /** Online: a line under the top bar while the battle waits on a player or a connection. */
+  private buildOnlineBanner(): void {
+    const banner = this.add
+      .text(GAME_WIDTH / 2, 92, '', {
+        fontFamily: UI_TITLE_FONT,
+        fontSize: '22px',
+        color: '#ffd27a',
+        stroke: UiTextColors.stroke,
+        strokeThickness: 5,
+        align: 'center',
+      })
+      .setOrigin(0.5)
+      .setDepth(50);
+    this.cleanups.push(
+      on(Events.OnlineStatusChanged, ({ status, secondsLeft }) => {
+        const text: Record<typeof status, string> = {
+          ok: '',
+          waiting: 'Waiting for your opponent...',
+          'opponent-left': `Your opponent lost their connection\nWaiting ${secondsLeft} s for them to come back`,
+          reconnecting: `Connection lost: reconnecting (${secondsLeft} s)`,
+        };
+        banner.setText(text[status]);
+      }),
+    );
   }
 
   /** `army-queued`: says how the army last asked for went. */
   private showArmyQueued({ side, queued, wanted, stoppedBy }: EventPayloads[typeof Events.ArmyQueued]): void {
-    if (side !== HUD_SIDE || this.pendingArmy === null) return;
+    if (side !== this.side || this.pendingArmy === null) return;
     const why = stoppedBy === 'gold' ? ' (not enough gold)' : stoppedBy === 'queue' ? ' (queue full)' : '';
     this.flashHint(`Army ${this.pendingArmy + 1}: ${queued} of ${wanted} queued${why}`, stoppedBy ? '#f0c080' : '#8fe08f');
     this.pendingArmy = null;
@@ -514,7 +558,7 @@ export class HUDScene extends Phaser.Scene {
 
   /** Saves what is training now as army `index`. */
   private saveArmy(index: number): void {
-    const army = armyFromQueue(this.state[HUD_SIDE]);
+    const army = armyFromQueue(this.state[this.side]);
     if (army.length === 0) {
       this.flashHint('Nothing in training to save', '#f0c080');
       return;
@@ -616,14 +660,18 @@ export class HUDScene extends Phaser.Scene {
       })
       .setOrigin(0, 0.5);
     const profile = this.data0.enemyProfile && this.data0.enemyProfile !== 'Classic' ? ` · ${this.data0.enemyProfile}` : '';
-    const controller = this.enemyController === 'off' ? 'No AI' : `${capitalize(this.enemyController)} AI${profile}`;
+    const controller = this.data0.online
+      ? this.data0.online.opponent
+      : this.enemyController === 'off'
+        ? 'No AI'
+        : `${capitalize(this.enemyController)} AI${profile}`;
     this.enemyControllerText = this.add
       .text(left + TOP_PANEL_WIDTH - 16, top + 22, controller, { fontFamily: UI_FONT, fontSize: '14px', color: UiTextColors.dim })
       .setOrigin(1, 0.5);
     this.label(left + 16, top + 52, 'Base');
     const barLeft = left + BAR_LEFT_OFFSET;
     const barWidth = TOP_PANEL_WIDTH - BAR_LEFT_OFFSET - 16;
-    this.showEnemyAge(this.state.enemy.age);
+    this.showEnemyAge(this.state[this.foe].age);
     return new HudBar(this, barLeft, top + 52, barWidth, BAR_HEIGHT, { colorByRatio: true });
   }
 
@@ -662,7 +710,7 @@ export class HUDScene extends Phaser.Scene {
         .text(TAB_WIDTH / 2 - 6, 0, keyHint('tab-workshop'), { fontFamily: UI_FONT, fontSize: '10px', color: UiTextColors.dim })
         .setOrigin(1, 0.5),
     );
-    const mech = this.state[HUD_SIDE].mech;
+    const mech = this.state[this.side].mech;
     this.showMech(mech.alive, mech.build);
   }
 
@@ -675,7 +723,7 @@ export class HUDScene extends Phaser.Scene {
   /** Full-screen Mech hangar over the battle (Mech expansion); B again or Esc closes it. */
   private openHangar(): void {
     if (this.locked || this.scene.isActive(SCENE_KEYS.hangar)) return;
-    this.scene.launch(SCENE_KEYS.hangar, { state: this.state, side: HUD_SIDE } satisfies HangarSceneData);
+    this.scene.launch(SCENE_KEYS.hangar, { state: this.state, side: this.side } satisfies HangarSceneData);
   }
 
   private showTab(key: TabKey, moveCamera = true): void {
@@ -800,25 +848,25 @@ export class HUDScene extends Phaser.Scene {
       strokeThickness: 3,
     });
     this.catchUpTexts = {
-      player: this.add.text(MARGIN + 12, 12 + TOP_LEFT_HEIGHT + 8, '', style('#ffd27a')),
-      enemy: this.add.text(GAME_WIDTH - MARGIN - 12, 12 + 74 + 8, '', style(UiTextColors.dim)).setOrigin(1, 0),
-    };
+      [this.side]: this.add.text(MARGIN + 12, 12 + TOP_LEFT_HEIGHT + 8, '', style('#ffd27a')),
+      [this.foe]: this.add.text(GAME_WIDTH - MARGIN - 12, 12 + 74 + 8, '', style(UiTextColors.dim)).setOrigin(1, 0),
+    } as Record<Side, Phaser.GameObjects.Text>;
     this.showCatchUp();
   }
 
   private showCatchUp(): void {
-    const player = ageGap(this.state, 'player');
-    const enemy = ageGap(this.state, 'enemy');
-    this.catchUpTexts.player.setText(
+    const player = ageGap(this.state, this.side);
+    const enemy = ageGap(this.state, this.foe);
+    this.catchUpTexts[this.side].setText(
       player > 0
         ? `Behind in age: +${Math.round(AGE_CATCH_UP.killXpPerAge * player * 100)}% kill XP, turrets +${Math.round(AGE_CATCH_UP.turretDamagePerAge * player * 100)}%`
         : '',
     );
-    this.catchUpTexts.enemy.setText(enemy > 0 ? 'Behind in age: catching up' : '');
+    this.catchUpTexts[this.foe].setText(enemy > 0 ? 'Behind in age: catching up' : '');
   }
 
   private showEnemyAge(age: number): void {
-    this.enemyAgeText.setText(`Enemy · ${getAge(age).name} Age`);
+    this.enemyAgeText.setText(`${this.data0.online ? 'Opponent' : 'Enemy'} · ${getAge(age).name} Age`);
     // Long labels (Renaissance, Conquest battles) shrink to fit beside the age.
     const room = TOP_PANEL_WIDTH - 32 - 12 - this.enemyAgeText.width;
     const label = this.enemyControllerText;
@@ -843,7 +891,7 @@ export class HUDScene extends Phaser.Scene {
   /** Income line: Mine plus money units, and the money units' army penalty. */
   private refreshIncome(): void {
     const { units, incomePerSec, damageMult, speedMult } = this.lastEconomy;
-    const mine = mineGoldPerSec(this.state[HUD_SIDE]);
+    const mine = mineGoldPerSec(this.state[this.side]);
     const total = mine + incomePerSec;
     this.incomeText
       .setText(total > 0 ? `+${total.toFixed(1)} gold/s` : 'no income')

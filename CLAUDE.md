@@ -150,7 +150,9 @@ These come from the locked design, so the code must not contradict them:
   same state hashes; run it after touching game rules, and keep anything
   random that changes the battle on `utils/Rng.ts`, never `Math.random`),
   `lockstep.mjs` (the multiplayer command queue against a loopback
-  opponent; `?loopback=80` tries it by hand). `__aow.fxTimeScale(k)` slows the effects for review.
+  opponent; `?loopback=80` tries it by hand), `online.mjs` (two browsers
+  through its own relay: lobby, sides, a dropped connection, a forfeit, an
+  online duel). `npm run relay` runs the local relay (`tools/relay/`). `__aow.fxTimeScale(k)` slows the effects for review.
 - Report honestly what you ran and what you didn't.
 
 ## Repo notes

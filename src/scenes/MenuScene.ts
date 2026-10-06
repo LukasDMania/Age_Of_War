@@ -184,7 +184,7 @@ export class MenuScene extends Phaser.Scene {
         650,
         [
           `Slot keys ${keyHint('slot-1')}-${keyHint('slot-5')} act on the open tab  ·  Tabs ${(['tab-units', 'tab-turrets', 'tab-buildings', 'tab-research', 'tab-workshop'] as const).map((id) => keyHint(id)).join(' ')}  ·  Armies ${keyHint('army-1')}-${keyHint('army-8')}  ·  Special ${keyHint('special')}  ·  Age up ${keyHint('age-up')}  ·  Pause ${bindingsLabel('pause')}`,
-          `Destroy the enemy base, keep yours standing.  Menu: 1-3 difficulty, Q/E AI profile, Enter to play${feature('conquest') ? ', C Conquest' : ''}, D Mech duel, K Controls`,
+          `Destroy the enemy base, keep yours standing.  Menu: 1-3 difficulty, Q/E AI profile, Enter to play${feature('conquest') ? ', C Conquest' : ''}, D Mech duel, O Online, K Controls`,
         ],
         { fontFamily: UI_FONT, fontSize: '15px', color: UiTextColors.parchment, align: 'center', lineSpacing: 8 },
       )
@@ -198,6 +198,10 @@ export class MenuScene extends Phaser.Scene {
     const controls = new UiButton(this, GAME_WIDTH - 280, 40, 170, 44, { onPress: () => this.openControls(), framed: true });
     controls.add(this.add.text(0, 0, 'Controls', { fontFamily: UI_TITLE_FONT, fontSize: '19px', color: UiTextColors.parchment }).setOrigin(0.5));
     this.input.keyboard?.on('keydown-K', () => this.openControls());
+    // Online 1v1 (Phase 22): host or join a room.
+    const online = new UiButton(this, GAME_WIDTH - 460, 40, 170, 44, { onPress: () => this.openLobby(), tint: UiColors.ready, framed: true });
+    online.add(this.add.text(0, 0, 'Online (O)', { fontFamily: UI_TITLE_FONT, fontSize: '19px', color: UiTextColors.parchment }).setOrigin(0.5));
+    this.input.keyboard?.on('keydown-O', () => this.openLobby());
     // Conquest campaign (prototype, feature `conquest`).
     if (feature('conquest')) {
       const conquest = new UiButton(this, cx + 300, 486, 200, 56, { onPress: () => this.openConquest(), tint: UiColors.panelDark, framed: true });
@@ -310,6 +314,11 @@ export class MenuScene extends Phaser.Scene {
   private openDuel(): void {
     if (this.experiments?.isOpen) return;
     this.scene.start(SCENE_KEYS.hangar, { duel: { age: 0 } } satisfies HangarSceneData);
+  }
+
+  private openLobby(): void {
+    if (this.scene.isActive(SCENE_KEYS.controls)) return;
+    this.scene.start(SCENE_KEYS.lobby);
   }
 
   private openConquest(): void {

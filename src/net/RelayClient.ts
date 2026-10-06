@@ -1,0 +1,237 @@
+import { RECONNECT_WINDOW_MS } from '@config/multiplayer.config';
+import type { NetMessage } from '@net/protocol';
+import type { Transport } from '@net/transport';
+import type { Side } from '@state/types';
+
+/** What the connection is doing, for the lobby and the match. */
+export type LinkStatus =
+  /** The other player arrived (host). */
+  | 'peer-joined'
+  /** The other player's connection dropped; the relay holds their seat. */
+  | 'peer-left'
+  | 'peer-back'
+  /** The other player quit (or left the lobby). */
+  | 'peer-quit'
+  /** Our connection dropped; trying to get back in. */
+  | 'reconnecting'
+  | 'reconnected'
+  /** Gave up getting back in (`RECONNECT_WINDOW_MS`), or the relay can't be reached. */
+  | 'lost';
+
+/** Messages kept for a resend after a reconnect (about 2 minutes of turns). */
+const KEEP_SENT = 4000;
+const RETRY_MS = 1000;
+
+type RelayReply =
+  | { relay: 'room' | 'joined'; code: string; side: Side; token: string }
+  | { relay: 'rejoined'; side: Side; lastFrom: number }
+  | { relay: 'peer-joined' | 'peer-left' | 'peer-back' | 'peer-quit' }
+  | { relay: 'msg'; seq: number; data: NetMessage }
+  | { relay: 'error'; reason: string };
+
+/**
+ * The link to the other player through the relay (`tools/relay`; Phase 22
+ * step 3). A `Transport` for the lockstep match; the lobby also uses it for
+ * hello, ping and setup.
+ *
+ * Messages are numbered both ways, so a dropped connection loses nothing:
+ * it rejoins its seat with a token, the relay replays what it missed and
+ * says which of ours it already has; the rest is sent again.
+ */
+export class RelayClient implements Transport {
+  code = '';
+  side: Side = 'player';
+
+  private readonly url: string;
+  private socket: WebSocket | null = null;
+  private token = '';
+  private sentSeq = 0;
+  private readonly sent: { seq: number; data: NetMessage }[] = [];
+  private lastSeen = 0;
+  private readonly handlers = new Set<(message: NetMessage) => void>();
+  /** Messages that came while nobody listened (between the lobby and the match): the next listener gets them. */
+  private readonly unheard: NetMessage[] = [];
+  private readonly statusHandlers = new Set<(status: LinkStatus) => void>();
+  private closed = false;
+  private lostAt = 0;
+  private retry: ReturnType<typeof setTimeout> | null = null;
+
+  constructor(url: string) {
+    this.url = url;
+  }
+
+  /** Opens a room; resolves with its code. */
+  host(): Promise<string> {
+    return this.open({ relay: 'host' }).then(() => this.code);
+  }
+
+  /** Joins room `code`; rejects with the relay's reason ('no-room', 'full'). */
+  join(code: string): Promise<void> {
+    return this.open({ relay: 'join', code: code.toUpperCase() });
+  }
+
+  send(message: NetMessage): void {
+    if (this.closed) return;
+    const entry = { seq: ++this.sentSeq, data: message };
+    this.sent.push(entry);
+    if (this.sent.length > KEEP_SENT) this.sent.splice(0, this.sent.length - KEEP_SENT);
+    this.write({ relay: 'msg', ...entry });
+  }
+
+  onMessage(handler: (message: NetMessage) => void): () => void {
+    this.handlers.add(handler);
+    for (const message of this.unheard.splice(0)) handler(message);
+    return () => this.handlers.delete(handler);
+  }
+
+  onStatus(handler: (status: LinkStatus) => void): () => void {
+    this.statusHandlers.add(handler);
+    return () => this.statusHandlers.delete(handler);
+  }
+
+  /** Dev and checks: drops the connection as a network failure would (it then rejoins). */
+  dropForTest(): void {
+    this.socket?.close();
+  }
+
+  /** Leaves the room for good (the other player is told) and closes. */
+  close(): void {
+    if (this.closed) return;
+    this.write({ relay: 'leave' });
+    this.closed = true;
+    if (this.retry) clearTimeout(this.retry);
+    this.socket?.close();
+    this.socket = null;
+    this.handlers.clear();
+    this.statusHandlers.clear();
+  }
+
+  /** First connection: resolves once the relay seats us. */
+  private open(hello: object): Promise<void> {
+    return new Promise((resolve, reject) => {
+      let socket: WebSocket;
+      try {
+        socket = new WebSocket(this.url);
+      } catch (error) {
+        reject(error instanceof Error ? error : new Error(String(error)));
+        return;
+      }
+      this.socket = socket;
+      let seated = false;
+      socket.onopen = () => socket.send(JSON.stringify(hello));
+      socket.onerror = () => {
+        if (!seated) reject(new Error('relay-unreachable'));
+      };
+      socket.onclose = () => {
+        if (!seated) reject(new Error('relay-unreachable'));
+        else this.dropped(socket);
+      };
+      socket.onmessage = (event) => {
+        const reply = JSON.parse(String(event.data)) as RelayReply;
+        if (!seated) {
+          if (reply.relay === 'room' || reply.relay === 'joined') {
+            seated = true;
+            this.code = reply.code;
+            this.side = reply.side;
+            this.token = reply.token;
+            resolve();
+          } else if (reply.relay === 'error') {
+            reject(new Error(reply.reason));
+            socket.close();
+          }
+          return;
+        }
+        this.handle(reply);
+      };
+    });
+  }
+
+  private handle(reply: RelayReply): void {
+    switch (reply.relay) {
+      case 'msg':
+        if (reply.seq <= this.lastSeen) return; // a replay we already had
+        this.lastSeen = reply.seq;
+        if (this.handlers.size === 0) this.unheard.push(reply.data);
+        for (const handler of [...this.handlers]) handler(reply.data);
+        return;
+      case 'rejoined':
+        for (const entry of this.sent) if (entry.seq > reply.lastFrom) this.write({ relay: 'msg', ...entry });
+        this.status('reconnected');
+        return;
+      case 'peer-joined':
+      case 'peer-left':
+      case 'peer-back':
+      case 'peer-quit':
+        this.status(reply.relay);
+        return;
+      case 'error':
+        // The room is gone (the other player left and the relay closed it): nothing to get back to.
+        if (reply.reason === 'no-room' || reply.reason === 'bad-token') this.giveUp();
+        return;
+      default:
+        return;
+    }
+  }
+
+  /** The connection dropped: rejoin our seat until the window runs out. */
+  private dropped(socket: WebSocket): void {
+    if (this.closed || socket !== this.socket) return;
+    this.socket = null;
+    if (this.lostAt === 0) {
+      this.lostAt = Date.now();
+      this.status('reconnecting');
+    }
+    this.scheduleRejoin();
+  }
+
+  private scheduleRejoin(): void {
+    if (this.closed) return;
+    if (Date.now() - this.lostAt > RECONNECT_WINDOW_MS) {
+      this.giveUp();
+      return;
+    }
+    this.retry = setTimeout(() => this.rejoin(), RETRY_MS);
+  }
+
+  private rejoin(): void {
+    this.retry = null;
+    if (this.closed) return;
+    let socket: WebSocket;
+    try {
+      socket = new WebSocket(this.url);
+    } catch {
+      this.scheduleRejoin();
+      return;
+    }
+    this.socket = socket;
+    socket.onopen = () => {
+      socket.send(JSON.stringify({ relay: 'rejoin', code: this.code, token: this.token, lastSeen: this.lastSeen }));
+    };
+    socket.onmessage = (event) => {
+      const reply = JSON.parse(String(event.data)) as RelayReply;
+      if (reply.relay === 'rejoined') this.lostAt = 0;
+      this.handle(reply);
+    };
+    socket.onclose = () => {
+      if (socket !== this.socket || this.closed) return;
+      this.socket = null;
+      this.scheduleRejoin();
+    };
+  }
+
+  private giveUp(): void {
+    if (this.closed) return;
+    this.status('lost');
+    this.closed = true;
+    this.socket?.close();
+    this.socket = null;
+  }
+
+  private write(message: object): void {
+    if (this.socket?.readyState === WebSocket.OPEN) this.socket.send(JSON.stringify(message));
+  }
+
+  private status(status: LinkStatus): void {
+    for (const handler of [...this.statusHandlers]) handler(status);
+  }
+}

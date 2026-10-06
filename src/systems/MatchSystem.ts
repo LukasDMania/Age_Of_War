@@ -61,6 +61,11 @@ export class MatchSystem {
     for (const off of this.cleanups) off();
   }
 
+  /** Ends the match without a base falling (online: a forfeit, a lost connection, a desync). */
+  finish(): void {
+    this.endMatch();
+  }
+
   private endMatch(): void {
     if (this.state.phase === 'playing') this.transition('gameover');
   }

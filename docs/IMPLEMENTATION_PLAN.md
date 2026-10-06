@@ -5,9 +5,9 @@ we're building) first, then work through the phases below **in order**.
 
 **Current status (2026-10-05):** Phases 0 to 21 are done (15 and 16 are
 log-only; 21, the Mech expansion, waits for the owner's playtest).
-Phase 22, 1v1 multiplayer, is in progress: steps 1 (determinism
-groundwork) and 2 (the command queue, loopback) are built; step 3 (the
-local relay and a lobby) is next.
+Phase 22, 1v1 multiplayer, is in progress: steps 1-3 are built (it can be
+played on a LAN or through a tunnel with `npm run relay`); step 4 (a
+hosted relay on Cloudflare) is next. The standard game speed is 2x.
 
 ### Start here (new agent)
 
@@ -22,7 +22,7 @@ local relay and a lobby) is next.
    `node tools/checks/paths.mjs`, `node tools/checks/effects.mjs` (saves
    slow-motion screenshots of every effect to `tools/checks/out/`),
    `node tools/checks/muzzles.mjs` (after changing ranged art).
-4. **Next up: Phase 22 step 3** (multiplayer relay and lobby), unless the
+4. **Next up: Phase 22 step 4** (Cloudflare relay and hosting), unless the
    owner says otherwise. Phase 21's work is waiting for the owner's
    playtest. Candidates the owner has mentioned or that are half-planned:
    a Mech refit on the lane (GAME_DESIGN 15), more Mech parts unlocked
@@ -543,9 +543,16 @@ a disconnect.
   command log; hash exchange and `desync-detected`. Army hotkeys are one
   request now (`queue-army-requested` -> `army-queued`). Dev:
   `?loopback=80`, `__aow.lockstep()`. Check `tools/checks/lockstep.mjs`.
-- [ ] 3. Local relay (Node, WebSocket, room codes) and a lobby screen
-  (host / join by code); hash exchange and a desync message; pause on a
-  lost connection, forfeit after the timeout.
+- [x] 3. Local relay `tools/relay/` (`rooms.mjs` pairs by 4-letter code and
+  replays missed messages after a reconnect; `server.mjs` on `ws`;
+  `npm run relay`), `net/RelayClient.ts` (numbered messages, rejoin with a
+  token for 30 s), lobby `ui/LobbyScene.ts` (menu O; host / join, mode and
+  duel age, guest hello with its Mech locks, ping -> input delay, setup),
+  the guest plays the right side (HUD, building clicks, camera, scenery,
+  result follow `localSide`), `systems/OnlineMatchSystem.ts` (waiting /
+  opponent-left / reconnecting banner, forfeit after the window, quit =
+  forfeit, desync = no result), online duel through the hangar. Also the
+  2x standard speed (`GAME_SPEED`). Check `tools/checks/online.mjs`.
 - [ ] 4. Cloudflare Worker relay (a Durable Object per room) and static
   hosting for the game.
 
@@ -605,6 +612,7 @@ validates and acts):
 | `unit-queue-changed` | `{ side, queue }` | SpawnSystem (on buy, on spawn, and every frame while the front unit trains) |
 | `army-queued` | `{ side, queued, wanted, stoppedBy: 'gold' \| 'queue' \| null }` | SpawnSystem (answer to `queue-army-requested`; the HUD's hint) |
 | `desync-detected` | `{ turn, local, remote }` (the two state hashes at the start of `turn`) | LockstepSystem (once per match) |
+| `online-status-changed` | `{ status: 'ok' \| 'waiting' \| 'opponent-left' \| 'reconnecting', secondsLeft }` | OnlineMatchSystem (online match; the HUD's banner) |
 | `unit-died` | `{ side, unitId, instanceId, killerSide, x, killerTurret?, retired? }` (`killerTurret`: the slot of the turret that scored it; `retired`: it left without being killed, a utility Mech powering down: no rewards, no kill) | CasualtySystem (end of frame, for every unit `damageOps` marked dead) |
 | `unit-damaged` | `{ side, instanceId, amount, absorbed, x, topY }` | `systems/damageOps` (any damage source) |
 | `area-hit` | `{ side, x, radius }` | `systems/damageOps` (splash landed; `side` dealt it) |
@@ -2217,3 +2225,61 @@ decisions made, anything the owner needs to confirm.
   - For step 3: the HUD is fixed to the player side (`HUD_SIDE`), so the
     guest (enemy side, right) needs a side-aware HUD, building clicks and
     camera; pause / speed buttons should hide in a lockstep match.
+- 2026-10-06 (Phase 22 step 3 and the 2x speed): owner: "right side is
+  okay! Is 100-150ms delay minimum? Can we reduce it without risking other
+  issues? No speedup is okay but in general I wanna make the standard game
+  speed of everything 2x. You can go ahead with step 3".
+  - 2x: `GAME_SPEED = 2` in `config/constants.ts`; GameScene feeds
+    `delta * GAME_SPEED * simSpeed` to the fixed tick. Unit animations
+    (`anims.timeScale`) and turret turning / recoil / swings follow it;
+    effects stay real time. The overlay's match time is real time.
+    `__aow.step(ms)` stays in game ms. Balance numbers are unchanged, so
+    AI training and balance runs (game time) are unaffected.
+  - Input delay (PROPOSED values changed): turns are 4 ticks now (33 real
+    ms at 2x, was 3 ticks = 50 ms); the delay is per match
+    (`MatchSetup.inputDelayTurns`, from the lobby's ping:
+    `inputDelayFor`, the one-way trip + 20 ms, 1-8 turns; the loopback's
+    default is 2). Hashes every 150 turns (5 real s).
+  - Relay: `tools/relay/rooms.mjs` (no server library, for the Worker
+    later) and `server.mjs` (`ws`, new dev dependency); `npm run relay`.
+    Each direction is numbered; the relay keeps the last 4000 messages
+    and a rejoin (token) replays what the player missed and says what it
+    already has. Rooms with nobody connected close after 60 s.
+  - `net/RelayClient.ts`: a `Transport` plus link status
+    (peer-joined/left/back/quit, reconnecting, reconnected, lost); retries
+    every second for `RECONNECT_WINDOW_MS`; holds messages that arrive
+    while nobody listens (between the lobby and the match).
+  - Lobby `ui/LobbyScene.ts` (new scene `lobby`; menu button "Online (O)").
+    New lobby messages in `net/protocol.ts`: hello, lobby, design,
+    ping/pong, setup; `PROTOCOL_VERSION` refuses mismatched builds. The
+    relay URL is `?relay=` or port 8787 on the machine the page came from.
+    Mech duel online: the hangar takes `duel.online` hooks (age fixed,
+    every part open, Fight hands the design back, Esc back to the lobby).
+  - Guest on the right: HUD `side` (own panel top left, "Opponent · age"
+    top right with "Online · host/guest"), GameScene `localSide` for
+    building clicks, perk badges, scenery, the Buildings camera pan and
+    the result. Online the pause / speed buttons are hidden and the pause
+    / speed keys and the dev cheat keys do nothing (the cheats would
+    change one browser's battle).
+  - `systems/OnlineMatchSystem.ts` (new): real-time connection rules;
+    `online-status-changed` (new event) drives a HUD banner ("Waiting for
+    your opponent...", "Your opponent lost their connection / Waiting
+    29 s", "Connection lost: reconnecting"). The match ends off the lane
+    through `MatchSystem.finish()`: opponent gone past the window or quit
+    -> victory with a note; our link lost -> defeat; desync -> "NO
+    RESULT". The game-over panel online offers only Main menu.
+  - Checked: `node tools/checks/online.mjs` (own relay on 8790, two
+    browser contexts: room code, sides, clicks from both sides run
+    identically, the guest can't command the host's side, the guest's
+    connection drops and comes back with both games running on, two hash
+    pairs compared with no desync, a quit gives the host the win, an
+    online Mech duel starts with one Mech per side); screenshots of the
+    lobby, the guest's HUD, the opponent-left banner, the forfeit panel
+    and the duel. Two headless pages draw about 6 frames a second here,
+    so those matches crawl (the check only needs them to move); real
+    browsers weren't tried. lockstep, determinism, mech, duel, paths,
+    utility, account and mechparts checks pass; typecheck and build pass.
+  - Not done: account XP from online matches (undecided); a page reload
+    loses the match (the seat waits 30 s, but the game state is gone; a
+    replay from the command log could restore it later); cross-browser
+    (Firefox) determinism untested.

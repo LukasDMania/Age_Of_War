@@ -53,6 +53,8 @@ export const Events = {
   ArmyQueued: 'army-queued',
   /** Lockstep multiplayer: the two browsers' battles no longer match. */
   DesyncDetected: 'desync-detected',
+  /** Online match: waiting for the opponent, their connection or ours (the HUD's banner). */
+  OnlineStatusChanged: 'online-status-changed',
   MechChanged: 'mech-changed',
   MechAbilityChanged: 'mech-ability-changed',
   MechEvolved: 'mech-evolved',
@@ -133,6 +135,8 @@ export interface EventPayloads {
   [Events.ArmyQueued]: { side: Side; queued: number; wanted: number; stoppedBy: 'gold' | 'queue' | null };
   /** `turn` is the lockstep turn whose state hashes differ. */
   [Events.DesyncDetected]: { turn: number; local: string; remote: string };
+  /** `secondsLeft`: until the missing player forfeits (opponent-left, reconnecting); 0 otherwise. */
+  [Events.OnlineStatusChanged]: { status: 'ok' | 'waiting' | 'opponent-left' | 'reconnecting'; secondsLeft: number };
   /** The Mech workshop: build this design (in the side's current age). */
   [Events.BuildMechRequested]: { side: Side; design: MechDesign; titan?: boolean };
   [Events.MechAbilityRequested]: { side: Side };
