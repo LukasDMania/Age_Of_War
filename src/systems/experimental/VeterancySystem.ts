@@ -36,7 +36,7 @@ export class VeterancySystem {
     let best: Unit | null = null;
     let bestGap: number = VETERANCY.creditRadius;
     for (const unit of this.units.activeUnits) {
-      if (unit.side !== killerSide || !unit.isAlive || !unit.attack) continue;
+      if (unit.side !== killerSide || !unit.isAlive || !unit.attack || unit.raider) continue;
       const gap = Math.max(0, Math.abs(unit.x - x) - unit.halfWidth);
       if (gap <= bestGap) {
         best = unit;

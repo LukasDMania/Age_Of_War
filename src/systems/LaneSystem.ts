@@ -21,13 +21,18 @@ import { laneDir, otherSide, type Side } from '@state/types';
  *
  * No events: movement is not something other systems need to hear about.
  */
+/** The furthest x a unit may walk to (in its direction), or null for no limit (Mech Arena farm). */
+export type HoldLine = (unit: Unit) => number | null;
+
 export class LaneSystem {
   private readonly units: UnitFactory;
   private readonly bases: Record<Side, Base>;
+  private readonly holdLine: HoldLine;
 
-  constructor(units: UnitFactory, bases: Record<Side, Base>) {
+  constructor(units: UnitFactory, bases: Record<Side, Base>, holdLine: HoldLine = () => null) {
     this.units = units;
     this.bases = bases;
+    this.holdLine = holdLine;
   }
 
   /** `deltaMs` is simulation time. */
@@ -111,6 +116,9 @@ export class LaneSystem {
     const enemyBase = this.bases[otherSide(unit.side)];
     const toBase = (enemyBase.frontX - unit.x) * dir;
     room = Math.min(room, toBase - unit.halfWidth - UNIT_SPACING_PX);
+
+    const hold = this.holdLine(unit);
+    if (hold !== null) room = Math.min(room, (hold - unit.x) * dir - unit.halfWidth);
 
     return Math.max(0, room);
   }

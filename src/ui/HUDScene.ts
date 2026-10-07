@@ -2,11 +2,11 @@ import Phaser from 'phaser';
 import { getAge } from '@config/ages.config';
 import type { AiDifficultyName } from '@config/ai.config';
 import { activeBuildingIds, RESEARCH } from '@config/buildings.config';
-import { AGE_BANNER_MS, AGE_CATCH_UP, baseMaxHp, GAME_HEIGHT, GAME_SPEEDS, GAME_WIDTH, SCENE_KEYS } from '@config/constants';
+import { AGE_BANNER_MS, AGE_CATCH_UP, baseMaxHp, GAME_HEIGHT, GAME_SPEED, GAME_SPEEDS, GAME_WIDTH, SCENE_KEYS } from '@config/constants';
 import { ARMY_COUNT, type KeyActionId, type KeyContext } from '@config/keybindings.config';
 import { xpToNextAge } from '@state/economyOps';
 import type { MatchState } from '@state/GameState';
-import { otherSide, type Side } from '@state/types';
+import { otherSide, type ArenaPhase, type Side } from '@state/types';
 import { mineGoldPerSec } from '@systems/BuildingSystem';
 import { AgeUpButton } from '@ui/AgeUpButton';
 import { BuildingPanel } from '@ui/BuildingPanel';
@@ -45,8 +45,8 @@ export interface HudSceneData {
   enemyProfile?: string;
   /** Playtest background currently shown (Phase 15). */
   backgroundName: string;
-  /** Mech vs Mech: no buying, only the bars, pause and the Mech's module. */
-  duel?: boolean;
+  /** Mech Arena (GAME_DESIGN 15): a phase banner, and the buy panels only while farming. */
+  arena?: boolean;
   /**
    * The side this HUD plays (default the player's). Online the guest plays
    * the enemy side; its own panel stays top left, the opponent top right.
@@ -156,6 +156,9 @@ export class HUDScene extends Phaser.Scene {
   private researchPanel!: ResearchPanel;
   /** Opens the hangar (the Mech): a button in the tab row, not a tab. */
   private hangarButton!: UiButton;
+  private bottomPanel!: Phaser.GameObjects.GameObject & Phaser.GameObjects.Components.Visible;
+  /** Mech Arena: the phase now (null outside the arena). */
+  private arenaPhase: ArenaPhase | null = null;
   private hangarLabel!: Phaser.GameObjects.Text;
   /** The utility Mech's building and whether it works there (last seen). */
   private assistKey = '';
@@ -221,7 +224,7 @@ export class HUDScene extends Phaser.Scene {
       own.maxAge,
     );
 
-    const bottomPanel = addThemedPanel(this, PANEL_LEFT + PANEL_WIDTH / 2, PANEL_TOP + PANEL_HEIGHT / 2, PANEL_WIDTH, PANEL_HEIGHT, { alpha: 0.96 });
+    this.bottomPanel = addThemedPanel(this, PANEL_LEFT + PANEL_WIDTH / 2, PANEL_TOP + PANEL_HEIGHT / 2, PANEL_WIDTH, PANEL_HEIGHT, { alpha: 0.96 });
     this.unitPanel = new UnitBuyPanel(this, this.side, PANEL_LEFT, PANEL_TOP, {
       gold: own.gold,
       age: own.age,
@@ -310,18 +313,7 @@ export class HUDScene extends Phaser.Scene {
       this.speedButton.container.setVisible(false);
       this.buildOnlineBanner();
     }
-    if (this.data0.duel) {
-      // Mech vs Mech: nothing to buy, build or age; the module button stays.
-      bottomPanel.setVisible(false);
-      for (const panel of [this.unitPanel, this.turretPanel, this.buildingPanel, this.researchPanel]) panel.setVisible(false);
-      for (const tab of TAB_ORDER) this.tabs[tab].container.setVisible(false);
-      this.hangarButton.container.setVisible(false);
-      this.tabHint.setVisible(false);
-      this.specialButton.setVisible(false);
-      this.ageUpButton.setVisible(false);
-      this.warCryButton?.destroy();
-      this.warCryButton = null;
-    }
+    if (this.data0.arena) this.buildArena();
     this.keys = new KeyboardControls(this, () => this.keyContexts());
     this.bindKeys();
     this.setLocked(this.state.phase !== 'playing');
@@ -458,11 +450,6 @@ export class HUDScene extends Phaser.Scene {
 
   private bindKeys(): void {
     const k = this.keys;
-    if (this.data0.duel) {
-      // Mech vs Mech: only the module.
-      k.on('war-cry', () => this.mechAbilityButton.press());
-      return;
-    }
     const step = (by: number): TabKey => TAB_ORDER[(TAB_ORDER.indexOf(this.activeTab) + by + TAB_ORDER.length) % TAB_ORDER.length] ?? 'units';
     k.on('tab-next', () => this.showTab(step(1)));
     k.on('tab-prev', () => this.showTab(step(-1)));
@@ -522,10 +509,84 @@ export class HUDScene extends Phaser.Scene {
     emit(Events.QueueArmyRequested, { side: this.side, army });
   }
 
+  /**
+   * Mech Arena: a banner with the round, phase, time left and score; the buy
+   * panels only while farming; round results and raider leaks as messages.
+   */
+  private buildArena(): void {
+    this.specialButton.setVisible(false);
+    this.ageUpButton.setVisible(false);
+    const banner = this.add
+      .text(GAME_WIDTH / 2, 128, '', {
+        fontFamily: UI_TITLE_FONT,
+        fontSize: '22px',
+        color: UiTextColors.title,
+        stroke: UiTextColors.stroke,
+        strokeThickness: 5,
+        align: 'center',
+      })
+      .setOrigin(0.5)
+      .setDepth(40);
+    const result = this.add
+      .text(GAME_WIDTH / 2, 300, '', {
+        fontFamily: UI_TITLE_FONT,
+        fontSize: '46px',
+        color: UiTextColors.gold,
+        stroke: UiTextColors.stroke,
+        strokeThickness: 8,
+        align: 'center',
+      })
+      .setOrigin(0.5)
+      .setDepth(45)
+      .setVisible(false);
+    const clock = (ms: number): string => {
+      const s = Math.ceil(ms / GAME_SPEED / 1000);
+      return `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`;
+    };
+    const foeName = this.data0.online ? 'Opponent' : 'Enemy';
+    this.cleanups.push(
+      on(Events.ArenaChanged, ({ phase, round, wins, remainingMs, picked }) => {
+        const score = `You ${wins[this.side]} - ${wins[this.foe]} ${foeName}`;
+        const lines: Record<ArenaPhase, string> = {
+          farm: `Round ${round} · FARM ${clock(remainingMs)} · ${score}\nKill the raiders for gold, then build a Mech`,
+          hangar: `Round ${round} · HANGAR ${clock(remainingMs)} · ${score}\n${picked[this.side] ? 'Your Mech is ready' : 'Build your Mech (B opens the hangar)'}${picked[this.foe] ? ` · ${foeName} is ready` : ''}`,
+          fight: `Round ${round} · FIGHT ${clock(remainingMs)} · ${score}`,
+          'round-over': `Round ${round} · ${score}`,
+        };
+        banner.setText(lines[phase]);
+        if (phase !== this.arenaPhase) {
+          this.arenaPhase = phase;
+          this.setArenaLayout(phase);
+          if (phase === 'farm') result.setVisible(false);
+        }
+      }),
+      on(Events.ArenaRoundEnded, ({ round, winner, matchOver }) => {
+        const text =
+          winner === null ? `Round ${round}: no winner\n(no Mech on the lane)` : winner === this.side ? `Round ${round}: you win!` : `Round ${round}: ${foeName.toLowerCase()} wins`;
+        result.setText(matchOver ? '' : text).setVisible(!matchOver);
+      }),
+      on(Events.RaiderLeaked, ({ side, amount }) => {
+        if (side === this.side && amount > 0) this.flashHint(`A raider got through: -${Math.round(amount)} gold`, '#f08a80');
+      }),
+    );
+  }
+
+  /** Arena layout: buying while farming; only the bars and the Mech's module otherwise. */
+  private setArenaLayout(phase: ArenaPhase): void {
+    const farming = phase === 'farm';
+    this.bottomPanel.setVisible(farming);
+    for (const tab of TAB_ORDER) this.tabs[tab].container.setVisible(farming);
+    this.tabHint.setVisible(farming);
+    this.hangarButton.container.setVisible(phase === 'hangar' || farming);
+    if (farming) this.showTab(this.activeTab, false);
+    else for (const panel of [this.unitPanel, this.turretPanel, this.buildingPanel, this.researchPanel]) panel.setVisible(false);
+  }
+
   /** Online: a line under the top bar while the battle waits on a player or a connection. */
   private buildOnlineBanner(): void {
+    // Below the Mech Arena's round banner when there is one.
     const banner = this.add
-      .text(GAME_WIDTH / 2, 92, '', {
+      .text(GAME_WIDTH / 2, this.data0.arena ? 190 : 92, '', {
         fontFamily: UI_TITLE_FONT,
         fontSize: '22px',
         color: '#ffd27a',
@@ -723,6 +784,10 @@ export class HUDScene extends Phaser.Scene {
   /** Full-screen Mech hangar over the battle (Mech expansion); B again or Esc closes it. */
   private openHangar(): void {
     if (this.locked || this.scene.isActive(SCENE_KEYS.hangar)) return;
+    if (this.arenaPhase !== null && this.arenaPhase !== 'hangar') {
+      this.flashHint('The hangar opens when the farm is over', '#f0c080');
+      return;
+    }
     this.scene.launch(SCENE_KEYS.hangar, { state: this.state, side: this.side } satisfies HangarSceneData);
   }
 

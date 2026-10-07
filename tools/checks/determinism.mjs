@@ -56,6 +56,8 @@ async function run(data, pattern) {
 const scenarios = [
   { label: 'classic AIs', match: { ai: 'normal', playerAi: 'hard', seed: SEED } },
   { label: 'utility AIs', match: { ai: 'hard', playerAi: 'hard', profile: 'economist', playerProfile: 'warlord', seed: SEED + 7 } },
+  // Mech Arena: raider waves, leaks, the hangar picks, the fights and rounds.
+  { label: 'Mech Arena AIs', match: { arena: { age: 0 }, ai: 'normal', playerAi: 'hard', seed: SEED + 3 } },
 ];
 for (const { label, match } of scenarios) {
   const a = await run(match, [1000 / 60]);

@@ -181,7 +181,12 @@ export class Rooms {
     const room = seat && this.rooms.get(seat.code);
     if (!room) return this.send(socket, { relay: 'error', reason: 'no-room' });
     const from = room.slots[seat.side];
-    if (seq <= from.lastFrom) return; // a resend the relay already has
+    // Only the next message in order. A resend it already has is skipped; one
+    // that jumps ahead (sent after a rejoin, before `rejoined` came back) is
+    // dropped too: the client resends everything after `lastFrom`, in order,
+    // when `rejoined` arrives. Taking it would make those earlier ones look
+    // like resends and lose them (found 2026-10-07).
+    if (seq !== from.lastFrom + 1) return;
     from.lastFrom = seq;
     const to = room.slots[other(seat.side)];
     const entry = { seq: ++to.nextSeq, data };

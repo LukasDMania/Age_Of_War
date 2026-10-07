@@ -106,7 +106,7 @@ export function dealBounceDamage(
 
 /** Deals damage to a base; emits `base-destroyed` the moment it falls. */
 export function dealBaseDamage(base: Base, amount: number): void {
-  if (base.isDestroyed || !(amount > 0)) return;
+  if (base.isDestroyed || base.invulnerable || !(amount > 0)) return;
   const hp = base.takeDamage(amount);
   emit(Events.BaseDamaged, { side: base.side, hp, maxHp: base.maxHp, amount });
   if (hp <= 0) emit(Events.BaseDestroyed, { side: base.side });

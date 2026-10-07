@@ -60,24 +60,24 @@ check('it runs at the start of the next turn + delay (tick-exact)', delay.ranAft
 
 // 2. An army hotkey is one command and still queues several units.
 // Through the typed emit, as the HUD does (the raw `__aow.bus.emit` skips the gate).
-const armyGated = await page.evaluate(async () => {
-  const bus = await import('/src/utils/EventBus.ts');
+// (`__aow.request` is the game's own emit; importing EventBus.ts could load a second copy after a hot reload.)
+const armyGated = await page.evaluate(() => {
   const a = window.__aow;
   let result = null;
-  const off = bus.on('army-queued', (e) => (result = e));
+  const listener = (e) => (result = e);
+  a.bus.on('army-queued', listener);
   const before = a.snapshot().sides.player.queue.length;
-  bus.emit('queue-army-requested', { side: 'player', army: [{ slot: 1, count: 2 }] });
+  a.request('queue-army-requested', { side: 'player', army: [{ slot: 1, count: 2 }] });
   const held = a.snapshot().sides.player.queue.length === before && result === null;
   for (let i = 0; i < 12; i++) a.step(1000 / 60);
-  off();
+  a.bus.off('army-queued', listener);
   return { held, result };
 });
 check('army hotkey: held back, then one command queues several units', armyGated.held && armyGated.result?.queued === 2, JSON.stringify(armyGated));
 
 // 3. Pause is refused in a lockstep match.
-const paused = await page.evaluate(async () => {
-  const bus = await import('/src/utils/EventBus.ts');
-  bus.emit('pause-requested', {});
+const paused = await page.evaluate(() => {
+  window.__aow.request('pause-requested', {});
   return window.__aow.snapshot().phase;
 });
 check('pause is refused (both share one battle)', paused === 'playing', paused);
@@ -143,10 +143,11 @@ check('the command log replays to identical hashes', firstDiff === -1, firstDiff
 
 // 6. A wrong hash from the other side is a desync.
 // Listen before the match starts: the first hash goes out on its first tick.
-await page.evaluate(async () => {
-  const bus = await import('/src/utils/EventBus.ts');
+await page.evaluate(() => {
   window.__desyncSeen = null;
-  window.__desyncOff = bus.on('desync-detected', (e) => (window.__desyncSeen = e));
+  const listener = (e) => (window.__desyncSeen = e);
+  window.__aow.bus.on('desync-detected', listener);
+  window.__desyncOff = () => window.__aow.bus.off('desync-detected', listener);
 });
 await start((m, seed) => m.loopbackMatch({ ai: 'off', seed, corruptHash: true }), SEED);
 const desync = await page.evaluate(() => {
@@ -161,9 +162,10 @@ check('a wrong hash is reported as a desync (desync-detected)', desync.flag && d
 await start((m, seed) => m.loopbackMatch({ ai: 'normal', seed, latencyMs: 80 }), SEED, true);
 const t0 = await page.evaluate(() => window.__aow.tick());
 await page.evaluate((unit) => window.__aow.buy(unit), unitIds[0]);
-await page.waitForTimeout(3000);
+// On game progress, not wall time: headless pages here can draw only a few frames a second.
+await page.waitForFunction((t0) => window.__aow.tick() - t0 >= 30, t0, { timeout: 60000, polling: 200 }).catch(() => null);
 const live = await page.evaluate(() => ({ tick: window.__aow.tick(), log: window.__aow.lockstep().log.length, queue: window.__aow.snapshot().sides.player.queue.length }));
-check('with 80 ms delay the match keeps running', live.tick - t0 >= 30, `${live.tick - t0} ticks in 3 s`);
+check('with 80 ms delay the match keeps running', live.tick - t0 >= 30, `${live.tick - t0} ticks`);
 check('...and the click ran', live.log >= 1, JSON.stringify(live));
 
 await finish(browser, errors);

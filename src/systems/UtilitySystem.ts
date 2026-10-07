@@ -138,7 +138,7 @@ export class UtilitySystem {
 
   private *alliesWithin(unit: Unit, radius: number): Generator<Unit> {
     for (const other of this.units.activeUnits) {
-      if (other.side === unit.side && other.isAlive && distanceTo(unit.x, other) <= radius) yield other;
+      if (other.side === unit.side && other.isAlive && !other.raider && distanceTo(unit.x, other) <= radius) yield other;
     }
   }
 

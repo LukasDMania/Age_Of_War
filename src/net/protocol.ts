@@ -1,5 +1,4 @@
 import type { FeatureId } from '@config/features.config';
-import type { MechDesign } from '@config/mech.config';
 import type { Side } from '@state/types';
 import { Events, type EventName, type EventPayloads } from '@utils/EventBus';
 
@@ -64,8 +63,8 @@ export interface MatchSetup {
    * 2026-10-05).
    */
   mechLocked: Record<Side, string[]>;
-  /** Mech vs Mech: both designs and the age. */
-  duel?: { player: MechDesign; enemy: MechDesign; age: number };
+  /** Mech Arena (GAME_DESIGN 15): farm, hangar, fight in this age, best of 3. */
+  arena?: { age: number };
 }
 
 /**
@@ -100,23 +99,17 @@ export interface PingMessage {
   id: number;
 }
 
-/** Lobby: what the host chose (sent once the guest is in): a normal battle, or Mech vs Mech in an age. */
+/** Lobby: what the host chose (sent once the guest is in): a normal battle, or the Mech Arena ('duel') in an age. */
 export interface LobbyMessage {
   kind: 'lobby';
   mode: 'battle' | 'duel';
   age: number;
 }
 
-/** Lobby: Mech vs Mech, the guest's design. */
-export interface DesignMessage {
-  kind: 'design';
-  design: MechDesign;
-}
+export type NetMessage = TurnMessage | HelloMessage | SetupMessage | PingMessage | LobbyMessage;
 
-export type NetMessage = TurnMessage | HelloMessage | SetupMessage | PingMessage | LobbyMessage | DesignMessage;
-
-/** Both browsers must run the same game build; bumped when messages or rules change. */
-export const PROTOCOL_VERSION = 1;
+/** Both browsers must run the same game build; bumped when messages or rules change (2: the Mech Arena). */
+export const PROTOCOL_VERSION = 2;
 
 /** A side's commands for one turn, as run (a match's command log, for replays). */
 export interface TurnRecord {

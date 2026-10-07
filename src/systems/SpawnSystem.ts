@@ -87,6 +87,13 @@ export class SpawnSystem {
     return true;
   }
 
+  /** Empties a side's training queue, unpaid (Mech Arena: the farm is over). */
+  clearQueue(side: Side): void {
+    if (this.state[side].trainingQueue.length === 0) return;
+    this.state[side].trainingQueue.length = 0;
+    this.emitQueue(side);
+  }
+
   destroy(): void {
     this.unsubscribe();
   }

@@ -66,6 +66,8 @@ export class RelayClient implements Transport {
   private retry: ReturnType<typeof setTimeout> | null = null;
   /** When the relay last said anything (or a new connection was tried), and the heartbeat timer. */
   private heardAt = 0;
+  /** Seated and in step with the relay: new messages go out at once (false from a drop until `rejoined`). */
+  private synced = false;
   private heartbeat: ReturnType<typeof setInterval> | null = null;
 
   constructor(url: string) {
@@ -96,7 +98,8 @@ export class RelayClient implements Transport {
     const entry = { seq: ++this.sentSeq, data: message };
     this.sent.push(entry);
     if (this.sent.length > KEEP_SENT) this.sent.splice(0, this.sent.length - KEEP_SENT);
-    this.write({ relay: 'msg', ...entry });
+    // While rejoining, hold it: `rejoined` resends everything the relay lacks, in order.
+    if (this.synced) this.write({ relay: 'msg', ...entry });
   }
 
   onMessage(handler: (message: NetMessage) => void): () => void {
@@ -164,6 +167,7 @@ export class RelayClient implements Transport {
             this.code = reply.code;
             this.side = reply.side;
             this.token = reply.token;
+            this.synced = true;
             this.startHeartbeat();
             resolve();
           } else if (reply.relay === 'error') {
@@ -208,6 +212,7 @@ export class RelayClient implements Transport {
         return;
       case 'rejoined':
         for (const entry of this.sent) if (entry.seq > reply.lastFrom) this.write({ relay: 'msg', ...entry });
+        this.synced = true;
         this.status('reconnected');
         return;
       case 'peer-joined':
@@ -229,6 +234,7 @@ export class RelayClient implements Transport {
   private dropped(socket: WebSocket): void {
     if (this.closed || socket !== this.socket) return;
     this.socket = null;
+    this.synced = false;
     // Clean up a rejoin attempt that hung (the watchdog's case too).
     if (this.retry) clearTimeout(this.retry);
     if (this.lostAt === 0) {

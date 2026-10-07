@@ -1,3 +1,5 @@
+import type { MechDesign } from '@config/mech.config';
+
 /**
  * Small shared vocabulary types. This file imports nothing so that config,
  * state, events and entities can all depend on it without import cycles.
@@ -97,3 +99,41 @@ export interface ArmyEntry {
 }
 
 export type Army = readonly ArmyEntry[];
+
+/** Mech Arena phases (GAME_DESIGN 15): farm, hangar, fight, then a short result pause. */
+export type ArenaPhase = 'farm' | 'hangar' | 'fight' | 'round-over';
+
+/**
+ * Mech Arena state (owned by ArenaSystem): part of `MatchState`, so both
+ * lockstep browsers hold (and hash) the same.
+ */
+export interface ArenaState {
+  age: number;
+  phase: ArenaPhase;
+  round: number;
+  wins: Record<Side, number>;
+  /** Game ms when the phase ends. */
+  phaseEndsAt: number;
+  /** Farm: raider waves spawned so far, and when the next raider is due. */
+  wave: number;
+  nextRaiderAt: number;
+  /** Raiders still to come in the current wave, by unit id (both sides get each). */
+  waveQueue: string[];
+  /** Hangar: each side's chosen Mech (paid), or null. */
+  picks: Record<Side, MechDesign | null>;
+  /** Hangar: what the pick cost (refunded if changed). */
+  paid: Record<Side, number>;
+  /** The side that lost the round before (its starting bonus), or null. */
+  lastLoser: Side | null;
+}
+
+/** What the HUD hears about the arena (`arena-changed`). */
+export interface ArenaView {
+  phase: ArenaPhase;
+  round: number;
+  wins: Record<Side, number>;
+  /** Game ms left in the phase. */
+  remainingMs: number;
+  /** Whether each side has picked its Mech (hangar). */
+  picked: Record<Side, boolean>;
+}

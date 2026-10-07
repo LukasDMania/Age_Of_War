@@ -14,7 +14,7 @@ import {
   type ResearchId,
 } from '@config/buildings.config';
 import { AGE_COUNT } from '@config/ages.config';
-import type { MatchPhase, MechState, QueuedUnit, SideModifier } from '@state/types';
+import type { ArenaState, MatchPhase, MechState, QueuedUnit, Side, SideModifier } from '@state/types';
 import { defaultTraits, type SideTraits } from '@state/traits';
 import { randomSeed } from '@utils/Rng';
 
@@ -84,6 +84,13 @@ export interface MatchState {
   seed: number;
   player: SideState;
   enemy: SideState;
+  /**
+   * Sides that may build a Mech, overriding `MECH.sides` (player only):
+   * online and in the Mech Arena both sides are people. Unset otherwise.
+   */
+  mechSides?: Side[];
+  /** Mech Arena (GAME_DESIGN 15): set for an arena match, owned by ArenaSystem. */
+  arena?: ArenaState;
 }
 
 export function createSideState(): SideState {

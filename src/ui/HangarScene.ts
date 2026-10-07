@@ -4,18 +4,13 @@ import { mechSlotAnchors } from '@/art/mechDraw';
 import type { RigAnim } from '@/art/rigFigure';
 import { getAge } from '@config/ages.config';
 import { baseMaxHp, GAME_HEIGHT, GAME_WIDTH, SCENE_KEYS } from '@config/constants';
-import { AGE_COUNT } from '@config/ages.config';
-import type { GameSceneData } from '@/scenes/GameScene';
-import { createGameState } from '@state/GameState';
-import { MECH_DUEL, MECH_UTILITY, MECH_OPTIONS, MECH_SETS, MECH_SLOT_NAMES, MECH_SLOTS, type MechDesign, type MechSlot } from '@config/mech.config';
+import { MECH_UTILITY, MECH_OPTIONS, MECH_SETS, MECH_SLOT_NAMES, MECH_SLOTS, type MechDesign, type MechSlot } from '@config/mech.config';
 import {
   accountLockedSlot,
   isUtilityDesign,
   mechDefinition,
   utilityParts,
   designBonuses,
-  designCost,
-  randomDesign,
   partKey,
   designRoles,
   designStatCaps,
@@ -25,7 +20,7 @@ import {
   type MechStatKey,
   type MechStats,
 } from '@entities/mechDesign';
-import { accountLevel, loadAccount, lockedPartKeys, unlockText, type AccountProgress } from '@state/accountProgress';
+import { accountLevel, loadAccount, unlockText, type AccountProgress } from '@state/accountProgress';
 import type { MatchState } from '@state/GameState';
 import type { MechState, Side } from '@state/types';
 import { mechBuildMs, mechForgeLevel, mechPrice, mechRejection, titanOpen, type MechRejection } from '@systems/MechSystem';
@@ -39,29 +34,14 @@ import { drawMechPreview, mechPreviewFit } from '@utils/MechArt';
 import { TEAM_COLORS } from '@utils/RigArt';
 
 /**
- * Over a match: that match's state and the side. For Mech vs Mech (from
- * the menu): `duel` and no state; the hangar makes a stand-in one (the
- * age chosen here, every Forge part open, the account's locks) and Fight
- * starts the duel.
+ * Over a match: that match's state and the side. (The old Mech vs Mech mode
+ * that opened it from the menu was replaced by the Mech Arena, 2026-10-07,
+ * where it opens for the arena's hangar phase.)
  */
-export type HangarSceneData =
-  | { state: MatchState; side: Side; duel?: undefined }
-  | { duel: { age: number; online?: OnlineDuelHooks }; state?: undefined; side?: undefined };
-
-/**
- * Mech vs Mech online (Phase 22): the lobby's age is fixed, every part is
- * open (owner, 2026-10-05), Fight hands the design back to the lobby and
- * Esc goes back to it.
- */
-export interface OnlineDuelHooks {
-  fight(design: MechDesign): void;
-  back(): void;
+export interface HangarSceneData {
+  state: MatchState;
+  side: Side;
 }
-
-/** Gold the duel's stand-in state has (price is only a rating there). */
-const DUEL_GOLD = 1e9;
-/** Every Forge part is open in a duel. */
-const DUEL_FORGE = 99;
 
 /* Layout (1280 x 720). */
 const TOP_H = 52;
@@ -193,9 +173,8 @@ export class HangarScene extends Phaser.Scene {
   private lastDraw = -Infinity;
   private drawnKey = '';
   /** Mech vs Mech from the menu (no match behind the hangar). */
-  private duel = false;
-  /** Mech vs Mech online: the lobby's hooks (null otherwise). */
-  private online: OnlineDuelHooks | null = null;
+  /** True while Build is pressing its own button (which calls back into `build`). */
+  private building = false;
   /** Build as a Titan (experimental; final age, once per match). */
   private titan = false;
   private titanButton!: UiButton;
@@ -209,15 +188,8 @@ export class HangarScene extends Phaser.Scene {
   init(data: HangarSceneData): void {
     this.blueprints = new MechBlueprints();
     this.account = loadAccount();
-    this.duel = data.duel !== undefined;
-    this.online = data.duel?.online ?? null;
-    if (data.duel) {
-      this.side = 'player';
-      this.state = this.duelState(data.duel.age);
-    } else {
-      this.state = data.state;
-      this.side = data.side;
-    }
+    this.state = data.state;
+    this.side = data.side;
     this.design = this.blueprints.design;
     this.slot = 'legs';
     this.hover = null;
@@ -315,46 +287,12 @@ export class HangarScene extends Phaser.Scene {
   /* ---- Actions ------------------------------------------------------------------------------ */
 
   private close(): void {
-    if (this.online) {
-      this.online.back();
-      this.scene.stop();
-    } else if (this.duel) this.scene.start(SCENE_KEYS.menu);
-    else this.scene.stop();
+    this.scene.stop();
   }
 
-  /** Mech vs Mech: a stand-in match state for the hangar's rules and prices. */
-  private duelState(age: number): MatchState {
-    const state = createGameState();
-    state.phase = 'playing';
-    const me = state.player;
-    me.age = age;
-    me.gold = DUEL_GOLD;
-    me.buildings.forge = DUEL_FORGE;
-    // Online every part is open (owner, 2026-10-05); offline the account's locks apply.
-    me.mechLocked = this.online ? [] : lockedPartKeys(this.account);
-    return state;
-  }
-
-  /** Mech vs Mech: another age for the duel (arrows in the top bar). */
-  private duelAge(by: number): void {
-    const age = (this.state.player.age + by + AGE_COUNT) % AGE_COUNT;
-    this.state.player.age = age;
-    applyUiTheme(age);
-    this.caps = designStatCaps(age);
-    this.backdrop.setTexture(ensureHangarBackdrop(this, age));
-    this.refreshAll();
-  }
-
-  /** Mech vs Mech: fight a random Mech of about the same price, in the chosen age. */
-  private fight(): void {
-    if (this.online) {
-      this.online.fight({ ...this.design });
-      this.scene.stop();
-      return;
-    }
-    const age = this.state.player.age;
-    const enemy = randomDesign(Math.random, age, designCost(this.design, age), MECH_DUEL.costBand, MECH_DUEL.samples);
-    this.scene.start(SCENE_KEYS.game, { duel: { player: { ...this.design }, enemy, age } } satisfies GameSceneData);
+  /** The Mech Arena's hangar phase: a pick, not a build (no timer, no scaffold). */
+  private get arena(): boolean {
+    return this.state.arena !== undefined;
   }
 
   private selectSlot(slot: MechSlot, animate = true): void {
@@ -385,14 +323,17 @@ export class HangarScene extends Phaser.Scene {
 
   private build(): boolean {
     if (mechRejection(this.state, this.side, this.design, this.titan) !== null) return false;
-    if (this.duel) {
-      // A utility Mech doesn't fight.
-      if (isUtilityDesign(this.design)) return false;
-      this.fight();
-      return true;
-    }
+    // A utility Mech doesn't fight: the arena won't take one.
+    if (this.arena && isUtilityDesign(this.design)) return false;
+    if (this.building) return true;
     emit(Events.BuildMechRequested, { side: this.side, design: { ...this.design }, ...(this.titan ? { titan: true } : {}) });
-    this.buildButton.press();
+    // The button's press flash calls back into here (the key path); the guard stops the loop.
+    this.building = true;
+    try {
+      this.buildButton.press();
+    } finally {
+      this.building = false;
+    }
     return true;
   }
 
@@ -427,16 +368,8 @@ export class HangarScene extends Phaser.Scene {
     this.titleText = this.add
       .text(20, TOP_H / 2, '', { fontFamily: UI_TITLE_FONT, fontSize: '26px', color: UiTextColors.title, stroke: '#000', strokeThickness: 5 })
       .setOrigin(0, 0.5);
-    this.add.text(430, TOP_H / 2, this.duel ? '' : 'Gold', text(14, BLUE_TEXT, '600')).setOrigin(0, 0.5);
+    this.add.text(430, TOP_H / 2, 'Gold', text(14, BLUE_TEXT, '600')).setOrigin(0, 0.5);
     this.goldText = this.add.text(470, TOP_H / 2, '', { fontFamily: UI_TITLE_FONT, fontSize: '22px', color: UiTextColors.gold }).setOrigin(0, 0.5);
-    if (this.duel && !this.online) {
-      // The duel's age: arrows beside the title (online the host chose it in the lobby).
-      for (const [x, label, by] of [[382, '<', -1], [420, '>', 1]] as const) {
-        const b = new UiButton(this, x, TOP_H / 2, 32, 32, { onPress: () => this.duelAge(by), tint: UiColors.panelDark });
-        b.add(this.add.text(0, -1, label, text(16, UiTextColors.parchment, '600')).setOrigin(0.5));
-      }
-    }
-    if (this.duel) this.goldText.setVisible(false);
     this.baseText = this.add.text(600, TOP_H / 2, '', text(14, UiTextColors.parchment, '600')).setOrigin(0, 0.5);
     const lv = accountLevel(this.account.xp);
     this.add
@@ -444,13 +377,13 @@ export class HangarScene extends Phaser.Scene {
       .setOrigin(1, 0.5);
     const close = new UiButton(this, GAME_WIDTH - 110, TOP_H / 2, 196, 36, { onPress: () => this.close(), tint: UiColors.panelDark, framed: true });
     const key = keyHint('tab-workshop');
-    close.add(this.add.text(0, 0, this.online ? 'Back to lobby (Esc)' : this.duel ? 'Back to menu (Esc)' : `Back to battle${key ? ` (${key})` : ''}`, text(15, UiTextColors.parchment, '600')).setOrigin(0.5));
+    close.add(this.add.text(0, 0, `Back to battle${key ? ` (${key})` : ''}`, text(15, UiTextColors.parchment, '600')).setOrigin(0.5));
     this.goldText.setText(String(Math.floor(this.state[this.side].gold)));
   }
 
   private showBase(hp: number, maxHp: number): void {
-    if (this.duel) {
-      this.baseText.setText('Mech vs Mech: design yours, then Fight');
+    if (this.arena) {
+      this.baseText.setText('Mech Arena: pick the Mech you fight with');
       return;
     }
     const low = hp < maxHp * 0.35;
@@ -696,7 +629,7 @@ export class HangarScene extends Phaser.Scene {
 
   private refreshAll(): void {
     const age = this.state[this.side].age;
-    this.titleText.setText(this.duel ? `Duel · ${getAge(age).name}` : `Hangar · ${getAge(age).name} Age`);
+    this.titleText.setText(`Hangar · ${getAge(age).name} Age`);
     for (const slot of MECH_SLOTS) {
       const c = this.callouts.get(slot);
       if (!c) continue;
@@ -799,7 +732,7 @@ export class HangarScene extends Phaser.Scene {
     if (!this.buildButton) return;
     const me = this.state[this.side];
     const shown = this.previewDesign();
-    const canTitan = !this.duel && titanOpen(me);
+    const canTitan = !this.arena && titanOpen(me);
     if (!canTitan) this.titan = false;
     this.titanButton.container.setVisible(canTitan);
     this.titanButton.setSelected(this.titan);
@@ -830,12 +763,12 @@ export class HangarScene extends Phaser.Scene {
       'cannot-afford': 'Need gold',
     };
     const key = keyHint('mech-build');
-    if (this.duel && rejection === null && isUtilityDesign(this.design)) {
+    if (this.arena && rejection === null && isUtilityDesign(this.design)) {
       this.buildButton.setEnabled(false);
-      this.buildLabel.setText('Utility Mechs don\'t duel');
+      this.buildLabel.setText('Utility Mechs don\'t fight');
       return;
     }
-    const go = this.duel ? 'Fight!' : 'Build';
+    const go = this.arena ? 'Pick' : 'Build';
     this.buildLabel.setText(rejection === null ? `${go}${key ? ` (${key})` : ''}` : labels[rejection]);
   }
 }

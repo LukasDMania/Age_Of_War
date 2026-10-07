@@ -13,7 +13,7 @@
 import Phaser from 'phaser';
 import type { MechDesign } from '@config/mech.config';
 import type { BuildingId, PerkChoice, ResearchId } from '@config/buildings.config';
-import type { ArmyEntry, MatchPhase, ModifiableStat, QueuedUnit, Side } from '@state/types';
+import type { ArenaView, ArmyEntry, MatchPhase, ModifiableStat, QueuedUnit, Side } from '@state/types';
 
 export const Events = {
   // Requests
@@ -53,6 +53,12 @@ export const Events = {
   ArmyQueued: 'army-queued',
   /** Lockstep multiplayer: the two browsers' battles no longer match. */
   DesyncDetected: 'desync-detected',
+  /** Mech Arena: the phase, round, score and time left (each second and on every change). */
+  ArenaChanged: 'arena-changed',
+  /** Mech Arena: a raider reached `side`'s base and took `amount` gold. */
+  RaiderLeaked: 'raider-leaked',
+  /** Mech Arena: a round is decided (`winner` null: nobody had a Mech). */
+  ArenaRoundEnded: 'arena-round-ended',
   /** Online match: waiting for the opponent, their connection or ours (the HUD's banner). */
   OnlineStatusChanged: 'online-status-changed',
   MechChanged: 'mech-changed',
@@ -123,6 +129,8 @@ export type GoldSource =
   | 'conquest'
   /** A Mech's Salvage scanner: extra gold for kills near it. */
   | 'salvage'
+  /** Mech Arena: a round's starting gold, gold left over taken away, a raider stealing. */
+  | 'arena'
   | 'cheat';
 
 /** One unit waiting in (or being trained by) a side's training queue. */
@@ -135,6 +143,9 @@ export interface EventPayloads {
   [Events.ArmyQueued]: { side: Side; queued: number; wanted: number; stoppedBy: 'gold' | 'queue' | null };
   /** `turn` is the lockstep turn whose state hashes differ. */
   [Events.DesyncDetected]: { turn: number; local: string; remote: string };
+  [Events.ArenaChanged]: ArenaView;
+  [Events.RaiderLeaked]: { side: Side; amount: number; x: number };
+  [Events.ArenaRoundEnded]: { round: number; winner: Side | null; wins: Record<Side, number>; matchOver: boolean };
   /** `secondsLeft`: until the missing player forfeits (opponent-left, reconnecting); 0 otherwise. */
   [Events.OnlineStatusChanged]: { status: 'ok' | 'waiting' | 'opponent-left' | 'reconnecting'; secondsLeft: number };
   /** The Mech workshop: build this design (in the side's current age). */

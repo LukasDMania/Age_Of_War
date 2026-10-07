@@ -80,6 +80,8 @@ export function grantShield(unit: Unit, amount: number, cap = unit.getStat('maxH
 
 /** Whether a side-wide modifier applies to this unit. */
 export function sideModifierApplies(modifier: SideModifier, unit: Unit): boolean {
+  // Arena raiders belong to nobody: no side's bonuses or penalties.
+  if (unit.raider) return false;
   if (modifier.exemptRoles?.includes(unit.definition.role)) return false;
   if (modifier.mech) {
     const isMech = unit.definition.id.startsWith(MECH_ID_PREFIX);

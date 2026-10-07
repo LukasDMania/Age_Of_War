@@ -2,7 +2,7 @@
 // Starts its own relay on port 8790, hosts in one page and joins from the
 // other, plays a battle (clicks from both sides, a dropped connection that
 // comes back, the hash exchange), then a quit (the other side wins), then a
-// Mech duel. `node tools/checks/online.mjs`
+// Mech Arena start. `node tools/checks/online.mjs`
 // RELAY_URL=ws://localhost:8788/relay uses a relay that is already running
 // instead (the Cloudflare Worker under `npx wrangler dev --port 8788`).
 import { spawn } from 'node:child_process';
@@ -82,7 +82,8 @@ await a.evaluate((u) => window.__aow.buy(u[0], 'player'), unitIds);
 await b.evaluate((u) => window.__aow.buy(u[1], 'enemy'), unitIds);
 // The guest's request for the host's side is refused.
 await b.evaluate((u) => window.__aow.buy(u[0], 'player'), unitIds);
-await a.waitForTimeout(6000);
+// Wait on game progress, not wall time: headless pages here can draw only a few frames a second.
+await Promise.all([a, b].map((p) => p.waitForFunction(() => window.__aow.tick() > 150, null, { timeout: 180000, polling: 500 })));
 const after = await Promise.all([a, b].map((p) => p.evaluate(() => ({ tick: window.__aow.tick(), log: window.__aow.lockstep().log }))));
 const logOf = (x) => JSON.stringify(x.log.map((r) => [r.turn, r.side, r.commands.map((c) => c.p.unitId)]));
 check('both browsers ran the same commands', logOf(after[0]) === logOf(after[1]), `${logOf(after[0])} | ${logOf(after[1])}`);
@@ -99,7 +100,7 @@ await a.screenshot({ path: `${OUT}/online-opponent-left.png` });
 await b.waitForTimeout(4000);
 const resumed = await Promise.all([a, b].map((p) => p.evaluate(() => ({ tick: window.__aow.tick(), phase: window.__aow.snapshot().phase }))));
 // Run until a second hash pair is compared (every 150 turns), or 90 s.
-await a.waitForFunction(() => window.__aow.lockstep().hashesCompared >= 2, null, { timeout: 90000 }).catch(() => null);
+await a.waitForFunction(() => window.__aow.lockstep().hashesCompared >= 2, null, { timeout: 300000, polling: 1000 }).catch(() => null);
 const later = await Promise.all([a, b].map((p) => p.evaluate(() => ({ tick: window.__aow.tick(), ls: window.__aow.lockstep() }))));
 check('after the drop both games run on', later[0].tick > resumed[0].tick + 100 && later[1].tick > resumed[1].tick + 100, JSON.stringify({ resumed, later: later.map((x) => x.tick) }));
 check('hashes were exchanged and match', later[0].ls.hashesCompared >= 2 && !later[0].ls.desynced && !later[1].ls.desynced, `${later[0].ls.hashesCompared} compared`);
@@ -111,21 +112,20 @@ await a.waitForTimeout(3500);
 await a.screenshot({ path: `${OUT}/online-forfeit.png` });
 check('a quit ends the match for the other player', (await a.evaluate(() => window.__aow.snapshot().phase)) === 'gameover');
 
-// 4. Mech vs Mech: both pick in the hangar (R builds / fights), then fight.
+// 4. The Mech Arena (lobby M): both farm the same raiders.
 await a.evaluate(() => window.__aow.bus.emit('quit-to-menu-requested', {}));
 await a.waitForTimeout(1500);
 await b.waitForTimeout(500);
 await pair(a, b, true);
-await Promise.all([waitLobby(a, 'designing'), waitLobby(b, 'designing')]);
-await a.waitForTimeout(1000);
-await a.screenshot({ path: `${OUT}/online-duel-hangar.png` });
-await a.keyboard.press('KeyR');
-await b.keyboard.press('KeyR');
 await Promise.all([inMatch(a), inMatch(b)]);
-await a.waitForTimeout(1500);
-const duel = await Promise.all([a, b].map((p) => p.evaluate(() => window.__aow.snapshot().units.map((u) => `${u.side}:${u.unitId.slice(0, 6)}`))));
-check('the online duel starts with one Mech per side', duel[0].length === 2 && duel[0].some((u) => u.startsWith('player:mech')) && duel[0].some((u) => u.startsWith('enemy:mech')) && JSON.stringify(duel[0]) === JSON.stringify(duel[1]), JSON.stringify(duel));
-await b.screenshot({ path: `${OUT}/online-duel.png` });
+await Promise.all([a, b].map((p) => p.waitForFunction(() => window.__aow.snapshot().units.some((u) => u.raider), null, { timeout: 180000, polling: 500 })));
+const arena = await Promise.all([a, b].map((p) => p.evaluate(() => {
+  const s = window.__aow.snapshot();
+  const ls = window.__aow.lockstep();
+  return { phase: window.__aow.state.arena?.phase, raiders: s.units.filter((u) => u.raider).length, desynced: ls.desynced, tick: window.__aow.tick() };
+})));
+check('the online Mech Arena starts in the farm on both sides, raiders coming', arena.every((x) => x.phase === 'farm' && x.raiders > 0 && !x.desynced), JSON.stringify(arena));
+await b.screenshot({ path: `${OUT}/online-arena-guest.png` });
 
 relay.kill();
 console.log(relayLog.join('\n'));

@@ -2,17 +2,16 @@ import Phaser from 'phaser';
 import { AGE_COUNT, getAge } from '@config/ages.config';
 import { GAME_HEIGHT, GAME_WIDTH, SCENE_KEYS } from '@config/constants';
 import { featureSnapshot } from '@config/features.config';
-import type { MechDesign } from '@config/mech.config';
 import { inputDelayFor, LOBBY_PINGS, RELAY_PORT } from '@config/multiplayer.config';
 import type { GameSceneData } from '@/scenes/GameScene';
 import { PROTOCOL_VERSION, type MatchSetup, type NetMessage } from '@net/protocol';
 import { RelayClient, type LinkStatus } from '@net/RelayClient';
 import { loadAccount, lockedPartKeys } from '@state/accountProgress';
-import type { HangarSceneData } from '@ui/HangarScene';
 import { addThemedPanel, applyUiTheme, UI_FONT, UI_TITLE_FONT, UiColors, UiTextColors } from '@ui/kenneyUi';
 import { UiButton } from '@ui/UiButton';
 import { randomSeed } from '@utils/Rng';
 
+/** 'duel' is the Mech Arena (GAME_DESIGN 15), the lobby's "Mech" mode. */
 type Mode = 'battle' | 'duel';
 
 /** Dev-only handles for the browser checks. */
@@ -27,10 +26,8 @@ type Step =
   /** Guest: typing the room code. */
   | 'entering'
   | 'joining'
-  /** Waiting on the other player (their hello, design or the setup). */
+  /** Waiting on the other player (their hello or the setup). */
   | 'waiting'
-  /** Mech vs Mech: this player is in the hangar. */
-  | 'designing'
   | 'starting'
   | 'error';
 
@@ -42,12 +39,11 @@ const PING_TIMEOUT_MS = 2000;
  * gets a 4-letter code; the guest types it. Then:
  *
  * 1. the guest says hello (its build version and its Mech locks);
- * 2. the host sends its choice (a normal battle, or Mech vs Mech and the age);
- * 3. Mech vs Mech: both pick a Mech in the hangar (every part open), the
- *    guest sends its design;
- * 4. the host pings the guest a few times and picks the input delay from the
+ * 2. the host sends its choice (a normal battle, or the Mech Arena and its
+ *    age; the arena's Mechs are built in the match's hangar phase);
+ * 3. the host pings the guest a few times and picks the input delay from the
  *    round trip (`inputDelayFor`);
- * 5. the host sends the `MatchSetup` and both start the match from it: the
+ * 4. the host sends the `MatchSetup` and both start the match from it: the
  *    host plays the left side, the guest the right.
  *
  * The RelayClient goes on into the match as its transport.
@@ -60,13 +56,10 @@ export class LobbyScene extends Phaser.Scene {
   private client: RelayClient | null = null;
   private note = '';
   private guestLocks: string[] = [];
-  private hostDesign: MechDesign | null = null;
-  private guestDesign: MechDesign | null = null;
   private roundTripMs = 0;
   private pongs = new Map<number, (ms: number) => void>();
   private cleanups: (() => void)[] = [];
   private view!: Phaser.GameObjects.Container;
-  private hangarOpen = false;
 
   constructor() {
     super({ key: SCENE_KEYS.lobby });
@@ -80,12 +73,9 @@ export class LobbyScene extends Phaser.Scene {
     this.client = null;
     this.note = '';
     this.guestLocks = [];
-    this.hostDesign = null;
-    this.guestDesign = null;
     this.roundTripMs = 0;
     this.pongs = new Map();
     this.cleanups = [];
-    this.hangarOpen = false;
   }
 
   create(): void {
@@ -153,12 +143,7 @@ export class LobbyScene extends Phaser.Scene {
         }
         this.guestLocks = message.mechLocked;
         client.send({ kind: 'lobby', mode: this.mode, age: this.age });
-        if (this.mode === 'battle') void this.startAsHost();
-        else this.openHangar();
-        return;
-      case 'design':
-        this.guestDesign = message.design;
-        if (this.hostDesign) void this.startAsHost();
+        void this.startAsHost();
         return;
       case 'pong':
         this.pongs.get(message.id)?.(performance.now());
@@ -167,8 +152,7 @@ export class LobbyScene extends Phaser.Scene {
       case 'lobby':
         this.mode = message.mode;
         this.age = message.age;
-        if (this.mode === 'duel') this.openHangar();
-        else this.render();
+        this.render();
         return;
       case 'ping':
         client.send({ kind: 'pong', id: message.id });
@@ -193,42 +177,6 @@ export class LobbyScene extends Phaser.Scene {
     }
   }
 
-  /** Mech vs Mech: pick a Mech in the hangar, on top of the lobby. */
-  private openHangar(): void {
-    this.go('designing');
-    this.hangarOpen = true;
-    this.scene.launch(SCENE_KEYS.hangar, {
-      duel: {
-        age: this.age,
-        online: {
-          fight: (design) => {
-            this.hangarOpen = false;
-            this.chose(design);
-          },
-          back: () => {
-            this.hangarOpen = false;
-            this.leave();
-          },
-        },
-      },
-    } satisfies HangarSceneData);
-  }
-
-  private chose(design: MechDesign): void {
-    if (this.client?.side === 'enemy') {
-      this.client.send({ kind: 'design', design });
-      this.note = 'Waiting for the host to pick a Mech...';
-      this.go('waiting');
-      return;
-    }
-    this.hostDesign = design;
-    if (this.guestDesign) void this.startAsHost();
-    else {
-      this.note = 'Waiting for your opponent to pick a Mech...';
-      this.go('waiting');
-    }
-  }
-
   /** Host: measure the round trip, then send the setup and start. */
   private async startAsHost(): Promise<void> {
     const client = this.client;
@@ -240,14 +188,14 @@ export class LobbyScene extends Phaser.Scene {
     trips.sort((a, b) => a - b);
     // A high-ish sample, so ordinary jitter doesn't make the game hitch.
     this.roundTripMs = trips[Math.min(trips.length - 1, Math.floor(trips.length * 0.75))] ?? PING_TIMEOUT_MS;
-    const duel = this.mode === 'duel' && this.hostDesign && this.guestDesign;
+    const arena = this.mode === 'duel';
     const setup: MatchSetup = {
       seed: randomSeed(),
       inputDelayTurns: inputDelayFor(this.roundTripMs),
       features: featureSnapshot(),
-      // Each player's own unlocks in a battle; every part open in Mech vs Mech (owner, 2026-10-05).
-      mechLocked: duel ? { player: [], enemy: [] } : { player: lockedPartKeys(loadAccount()), enemy: this.guestLocks },
-      ...(duel ? { duel: { player: this.hostDesign!, enemy: this.guestDesign!, age: this.age } } : {}),
+      // Each player's own unlocks in a battle; every part open in the Mech Arena (owner, 2026-10-05).
+      mechLocked: arena ? { player: [], enemy: [] } : { player: lockedPartKeys(loadAccount()), enemy: this.guestLocks },
+      ...(arena ? { arena: { age: this.age } } : {}),
     };
     client.send({ kind: 'setup', setup });
     this.start(setup);
@@ -277,7 +225,6 @@ export class LobbyScene extends Phaser.Scene {
     for (const off of this.cleanups) off();
     this.cleanups = [];
     this.client = null;
-    this.scene.stop(SCENE_KEYS.hangar);
     if (import.meta.env.DEV) (window as LobbyWindow).__aowNet = client;
     this.scene.start(SCENE_KEYS.game, {
       lockstep: {
@@ -293,7 +240,6 @@ export class LobbyScene extends Phaser.Scene {
   private leave(): void {
     this.client?.close();
     this.client = null;
-    this.scene.stop(SCENE_KEYS.hangar);
     this.scene.start(SCENE_KEYS.menu);
   }
 
@@ -311,8 +257,6 @@ export class LobbyScene extends Phaser.Scene {
     this.note = why[reason] ?? `Something went wrong (${reason}).`;
     this.client?.close();
     this.client = null;
-    this.scene.stop(SCENE_KEYS.hangar);
-    this.hangarOpen = false;
     this.go('error');
   }
 
@@ -324,7 +268,7 @@ export class LobbyScene extends Phaser.Scene {
   /* ---- Input -------------------------------------------------------------------------- */
 
   private onKey(event: KeyboardEvent): void {
-    if (this.hangarOpen || this.step === 'starting') return;
+    if (this.step === 'starting') return;
     const key = event.key;
     if (key === 'Escape') {
       if (this.step === 'entering') this.go('choose');
@@ -384,7 +328,7 @@ export class LobbyScene extends Phaser.Scene {
         .text(cx, cy - 180, 'ONLINE', { fontFamily: UI_TITLE_FONT, fontSize: '54px', color: UiTextColors.title, stroke: UiTextColors.stroke, strokeThickness: 8 })
         .setOrigin(0.5),
     );
-    const modeLabel = this.mode === 'battle' ? 'Battle' : `Mech duel · ${getAge(this.age).name} Age`;
+    const modeLabel = this.mode === 'battle' ? 'Battle' : `Mech arena · ${getAge(this.age).name} Age`;
     switch (this.step) {
       case 'choose':
         this.line(cy - 110, 'Host a room and send the code to a friend, or join theirs.');
@@ -412,7 +356,6 @@ export class LobbyScene extends Phaser.Scene {
         this.line(cy - 20, 'Connecting...');
         break;
       case 'waiting':
-      case 'designing':
       case 'starting':
         if (this.code) this.line(cy - 110, `Room ${this.code} · ${modeLabel}`);
         this.line(cy - 20, this.step === 'starting' ? 'Starting...' : this.note);

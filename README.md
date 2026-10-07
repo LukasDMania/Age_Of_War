@@ -46,8 +46,14 @@ was created on another operating system, delete it first, then run
 
 In the game: press **O** (Online) in the menu. One player hosts (**H**) and
 gets a 4-letter room code; the other joins (**J**) and types it. The host
-picks the mode first (**M**: a normal battle or a Mech duel, arrows for the
-duel's age) and plays the left side.
+picks the mode first (**M**: a normal battle or the Mech Arena, arrows for
+the arena's age) and plays the left side.
+
+**Mech Arena** (menu **D** against the AI, or online): best of 3 rounds.
+Each round: 90 s farming raiders that walk out of the middle at your base
+(kills pay well, a raider that gets through steals gold), then 30 s in the
+hangar to build a Mech with what you farmed (**R**), then the two Mechs
+fight. Two round wins take the match.
 
 ### Putting it online (Cloudflare, free)
 

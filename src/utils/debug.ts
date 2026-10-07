@@ -10,7 +10,7 @@ import type { GameSceneData } from '@/scenes/GameScene';
 import type { SideStats } from '@systems/StatsSystem';
 import type { MatchState, TurretState } from '@state/GameState';
 import type { MatchPhase, ModifiableStat, QueuedUnit, Side } from '@state/types';
-import type { eventBus } from '@utils/EventBus';
+import type { eventBus, EventName } from '@utils/EventBus';
 
 export interface UnitSnapshot {
   id: number;
@@ -26,6 +26,8 @@ export interface UnitSnapshot {
   damage: number;
   modifiers: string[];
   state: string;
+  /** Mech Arena raider. */
+  raider: boolean;
 }
 
 export interface SideSnapshot {
@@ -81,6 +83,12 @@ export interface DebugHandle {
   projectileCount(): number;
   /** Projectile objects ever created by the pool (should level off). */
   projectilePoolSize(): number;
+  /**
+   * Emits any event through the game's own typed `emit` (so a lockstep match
+   * treats it like a click). Checks use it instead of importing EventBus.ts,
+   * which can load a second copy of the module after a hot reload.
+   */
+  request(event: EventName, payload: unknown): void;
   /** Emits `buy-unit-requested`, exactly as a click on the buy panel does. */
   buy(unitId: string, side?: Side): void;
   /** Emits `buy-slot-requested` (unlock the next turret slot). */

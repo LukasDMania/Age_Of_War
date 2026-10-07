@@ -59,7 +59,7 @@ export function mechForgeLevel(side: SideState): number {
  */
 export function mechRejection(state: MatchState, side: Side, design: MechDesign, titan = false): MechRejection | null {
   if (state.phase !== 'playing') return 'not-playing';
-  if (!(MECH.sides as readonly Side[]).includes(side)) return 'player-only';
+  if (!(state.mechSides ?? (MECH.sides as readonly Side[])).includes(side)) return 'player-only';
   if (!isValidDesign(design)) return 'invalid';
   const me = state[side];
   if (accountLockedSlot(design, me.mechLocked) !== null) return 'account-locked';
@@ -214,6 +214,8 @@ export class MechSystem {
   /* ---- Building ------------------------------------------------------------------------------ */
 
   private onBuildRequested({ side, design, titan = false }: EventPayloads[typeof Events.BuildMechRequested]): void {
+    // The Mech Arena picks Mechs in its hangar phase (ArenaSystem).
+    if (this.state.arena) return;
     if (mechRejection(this.state, side, design, titan) !== null) return;
     const me = this.state[side];
     const definition = mechDefinition(design, me.age, titan);

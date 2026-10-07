@@ -100,6 +100,9 @@ export class Base extends Phaser.GameObjects.Image {
   }
 
   /** Max HP grows with the side's age (`BASE_HP_BY_AGE`). */
+  /** Mech Arena: the base can't be hurt (rounds are decided by the Mechs; ArenaSystem sets it). */
+  invulnerable = false;
+
   get maxHp(): number {
     return baseMaxHp(this.sideState.age);
   }

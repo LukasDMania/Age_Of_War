@@ -905,6 +905,46 @@ built, archetype runs since 2026-09-28).
   unlocks, evolve on age-up, Mech vs Mech, a utility Mech and a Titan
   (experimental). See `docs/MECH_EXPANSION.md`.
 
+### Mech Arena: farm, build, fight (owner, 2026-10-07)
+
+Owner: "mech battle is kind of lame now, im thinking its more fun if theres
+a farming stage that gives you limited time to farm money somehow then you
+go to the hangar with that money to build ur mech then u fight". Replaces
+the old Mech duel (menu D, and the lobby's Mech duel mode), online and
+offline. Answers (LOCKED): plan "raiders" ("drop the raiders in the middle
+of the map, with mine going left side his going right side"), normal units
+and turrets to farm with, a raider that gets through steals gold, 90 s
+farm and 30 s hangar, best of 3.
+
+- **Round:** farm (90 s) -> hangar (30 s) -> fight. First to two round
+  wins takes the match. The loser of a round gets extra starting gold in
+  the next one (PROPOSED: +100 x the age factor).
+- **Farm:** each player starts with 150 gold x the age factor (PROPOSED;
+  unspent gold from the round before is lost) and buys units, turrets,
+  buildings as usual. Raiders (the age's melee, ranged and heavy units,
+  tinted purple) appear in waves just off the middle: mine walk left at my
+  base, his walk right at his. Both get the same waves (one every 3 real
+  s, growing; heavies in the second half), up to 1.6x HP and damage at the
+  end. A kill pays 4x its normal bounty (so a good farm pays for a Mech:
+  the cheapest Stone Mech is 470, a typical one about 2,100); a raider
+  that reaches a base steals that much gold instead of hurting it (all
+  PROPOSED). Units hold 120 px short of the
+  middle, so the two farms never touch. No special and no Mech while
+  farming. When it ends, turrets are sold back (normal refund), units and
+  the training queue are gone.
+- **Hangar:** the hangar opens with what you farmed; build one Mech (you
+  can change your mind; the last pick counts, paid for once). Every part
+  is open (online and offline). Nothing built when time runs out: no Mech,
+  you lose the round (PROPOSED).
+- **Fight:** the two Mechs walk out; the one left standing wins the round.
+  After 90 s (PROPOSED) the higher HP share wins. The bases can't be hurt
+  during the arena; the loser's base falls when the match is decided.
+- **Raiders and rules:** raiders are ordinary units of the side they
+  attack, so they need no third side, but they get none of that side's
+  bonuses (research, doctrines, war cry, money-unit penalty).
+- Offline the enemy AI farms with the normal AI and picks a random Mech it
+  can afford.
+
 ### Standard game speed 2x (owner, 2026-10-06)
 
 "In general I wanna make the standard game speed of everything 2x": the

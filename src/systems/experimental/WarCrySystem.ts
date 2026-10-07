@@ -56,7 +56,7 @@ export class WarCrySystem {
     const positions: number[] = [];
     const expiresAt = now + WAR_CRY.durationMs;
     for (const unit of this.units.activeUnits) {
-      if (unit.side !== side || !unit.isAlive) continue;
+      if (unit.side !== side || !unit.isAlive || unit.raider) continue;
       applyModifier(unit, { id: 'war-cry-speed', source: 'war-cry', stat: 'speed', mult: WAR_CRY.speedMult, expiresAt });
       applyModifier(unit, { id: 'war-cry-damage', source: 'war-cry', stat: 'damage', mult: WAR_CRY.damageMult, expiresAt });
       positions.push(unit.x);

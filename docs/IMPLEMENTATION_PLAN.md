@@ -5,9 +5,10 @@ we're building) first, then work through the phases below **in order**.
 
 **Current status (2026-10-05):** Phases 0 to 21 are done (15 and 16 are
 log-only; 21, the Mech expansion, waits for the owner's playtest).
-Phase 22, 1v1 multiplayer: all four steps are built; the owner deploys it
-to Cloudflare (`npm run deploy`, README) and playtests. The standard game
-speed is 2x.
+Phase 22, 1v1 multiplayer, is built and deployed by the owner
+(`https://age-of-war.war-of-age.workers.dev`). Phase 23, the Mech Arena
+(farm -> hangar -> fight, best of 3; replaces the old Mech duel), is
+built and waits for the owner's playtest. The standard game speed is 2x.
 
 ### Start here (new agent)
 
@@ -508,7 +509,8 @@ The brief is `docs/MECH_EXPANSION.md`; its build order is followed here.
   (`MechSystem.runUtility`, `MechState.assist`, `buildingPrice`,
   `retireUnit`), clicks on buildings send it; check
   `tools/checks/utility.mjs`.
-- [x] 7. Mech vs Mech: menu D / MECH DUEL -> the hangar in duel mode
+- [x] 7. (Replaced 2026-10-07 by the Mech Arena, Phase 23; its code is gone.)
+  Mech vs Mech: menu D / MECH DUEL -> the hangar in duel mode
   (age picker, every Forge part open, account locks apply) -> Fight;
   `GameSceneData.duel`, `systems/MechDuelAI.ts`, a trimmed HUD; check
   `tools/checks/duel.mjs`.
@@ -559,6 +561,20 @@ a disconnect.
   uses `/relay` on its own site. Tested under `wrangler dev`; the real
   deploy waits for the owner's Cloudflare account (README, "Putting it
   online").
+
+## Phase 23: Mech Arena (farm, build, fight)
+
+Owner (2026-10-07), design in GAME_DESIGN 15 ("Mech Arena").
+
+- [x] `config/arena.config.ts`, `MatchState.arena` (`ArenaState`),
+  `systems/ArenaSystem.ts` (phases, waves, leaks, picks, fights, rounds),
+  `systems/ArenaAI.ts` (an AI side's hangar pick), raider rules
+  (`Unit.raider`, `LaneSystem` hold line, `sideModifierApplies` and the
+  war cry / auras / veterancy skip raiders, bases invulnerable), HUD
+  banner and phase layouts, the hangar opens for the hangar phase, menu D
+  (offline vs the chosen AI) and the lobby's Mech mode (online). Checks:
+  `tools/checks/arena.mjs`, an arena scenario in `determinism.mjs`, arena
+  sections in `online.mjs` and `online-edge.mjs`.
 
 ---
 
@@ -616,6 +632,9 @@ validates and acts):
 | `unit-queue-changed` | `{ side, queue }` | SpawnSystem (on buy, on spawn, and every frame while the front unit trains) |
 | `army-queued` | `{ side, queued, wanted, stoppedBy: 'gold' \| 'queue' \| null }` | SpawnSystem (answer to `queue-army-requested`; the HUD's hint) |
 | `desync-detected` | `{ turn, local, remote }` (the two state hashes at the start of `turn`) | LockstepSystem (once per match) |
+| `arena-changed` | `{ phase, round, wins, remainingMs, picked }` (`ArenaView`) | ArenaSystem (Mech Arena; every phase change and once a second) |
+| `raider-leaked` | `{ side, amount, x }` (side robbed) | ArenaSystem (a raider reached a base) |
+| `arena-round-ended` | `{ round, winner: Side \| null, wins, matchOver }` | ArenaSystem |
 | `online-status-changed` | `{ status: 'ok' \| 'waiting' \| 'opponent-left' \| 'reconnecting', secondsLeft }` | OnlineMatchSystem (online match; the HUD's banner) |
 | `unit-died` | `{ side, unitId, instanceId, killerSide, x, killerTurret?, retired? }` (`killerTurret`: the slot of the turret that scored it; `retired`: it left without being killed, a utility Mech powering down: no rewards, no kill) | CasualtySystem (end of frame, for every unit `damageOps` marked dead) |
 | `unit-damaged` | `{ side, instanceId, amount, absorbed, x, topY }` | `systems/damageOps` (any damage source) |
@@ -2358,3 +2377,72 @@ decisions made, anything the owner needs to confirm.
   is the battle background until a player picks another with Y (a saved
   pick still wins). Checked with a screenshot in a fresh browser;
   typecheck and build pass.
+- 2026-10-07 (Phase 23, the Mech Arena): owner: "mech battle is kind of
+  lame now, im thinking its more fun if theres a farming stage ... then u
+  go to the hangar with that money to build ur mech then u fight", then
+  "online and offline for testing purposes, go for plan 1 i guess, you can
+  drop the raiders in the middle of the map, with mine going left side his
+  going right side"; answers: normal units + turrets, a leak steals gold,
+  90 s farm / 30 s hangar, best of 3 (GAME_DESIGN 15, "Mech Arena").
+  - `MatchState.arena` (`ArenaState`, hashed with the rest) and
+    `systems/ArenaSystem.ts`: farm -> hangar -> fight -> round-over,
+    round wins, loser bonus, gold reset each farm, `ArenaAI` for AI sides
+    (a random affordable fighting Mech) plus `MechDuelAI` for the fight.
+    Menu D starts it against the chosen AI; the lobby's Mech mode starts it
+    online (`MatchSetup.arena`, `PROTOCOL_VERSION` 2).
+  - Raiders are units of the side they attack, marked `Unit.raider` and
+    tinted, created without `unit-spawned` (no side modifiers; also
+    `sideModifierApplies`, war cry, utility auras and veterancy skip
+    them). Each starts 30 px off the middle on its target's side so the two
+    streams walk apart (units only look ahead). LaneSystem got a hold line
+    (`HoldLine`): players' units stop 120 px short of the middle while
+    farming. Bases are `invulnerable` in the arena until the match is won.
+  - Numbers (PROPOSED, first try): waves every 6 game s (3 real), 1 raider
+    + 1 per 5 waves, heavies from 45% of the farm, up to 1.6x HP/damage;
+    raider kills pay 4x bounty (first try paid 1x: the AIs ended farms
+    with 80-460 gold, below the cheapest Mech, 470; with 4x a hard AI
+    earned ~2,600); start 150 x age scale, loser +100 x scale; fight limit
+    90 real s (higher HP share wins); no Mech picked: that side loses the
+    round (both: nobody wins it).
+  - Mechs online: `MECH.sides` is player only, so the guest couldn't build
+    a Mech in an online battle (found while checking). `MatchState.mechSides`
+    lets both sides build online and in the arena. The arena opens every
+    part with `traits.mechForgeBonus`.
+  - Fixed on the way: the hangar's Build pressed its own button, whose
+    press called Build again (a loop that only stopped because a normal
+    build sets `mech.build`; in the arena it overflowed the stack).
+  - The old Mech duel is gone (hangar duel mode, `GameSceneData.duel`,
+    `MatchSetup.duel`, HUD duel layout, `tools/checks/duel.mjs`, the
+    lobby's design exchange and the hangar's online hooks).
+  - Relay bug found by the online checks (intermittent, also behind the one
+    flaky Worker run on 2026-10-06): after a reconnect the client could
+    send a new message before `rejoined` came back; the relay took it and
+    then dropped the resent older ones as duplicates, so turns were lost
+    and both games stalled. Reproduced with a script (host got g1,g4
+    instead of g1-g4). Fixed both ends: the relay only accepts the next
+    message in order (`rooms.mjs`), and the client holds new messages
+    until `rejoined` (`RelayClient.synced`).
+  - Checks: new `tools/checks/arena.mjs` (farm 150 gold, the hold line,
+    raiders on both halves, leaks, end of farm clears the lane and sells
+    turrets, hangar opens itself, R picks and pays once, the AI picks, both
+    Mechs fight, the hangar closes, a round ends with bases untouched, an
+    AI-vs-AI match ends 2-x with the loser's base down); an arena scenario
+    in `determinism.mjs` (identical hashes over 8 game minutes); arena
+    sections in `online.mjs` (raiders in both online games) and
+    `online-edge.mjs` (an online round: both pick a Mech, both fight, no
+    desync). The online checks now wait on game progress instead of wall
+    time (this container got slower: ~3 frames a second per page), and use
+    a new `__aow.request(event, payload)` instead of importing
+    EventBus.ts (a second module copy after a hot reload silently missed
+    the game).
+  - Results (dev server + `wrangler dev`, this container at ~3 frames a
+    second per headless page): arena 13/13, determinism 10/10 (with the
+    arena scenario), lockstep 13/13, mech, paths, utility, account,
+    mechparts pass; online 10/10 through the Node relay and 10/10 through
+    the Worker; online-edge: all sections pass, the online arena round run
+    on its own after the script was made to farm (both sides farmed ~1,360
+    gold, both picked, both Mechs fought, 19 hash pairs matched).
+    Typecheck and build pass. The online "Waiting for your opponent"
+    banner moves below the arena banner in an arena match (they overlapped).
+  - Not checked: two people on real browsers, and balance by feel (the
+    numbers above are a first try).

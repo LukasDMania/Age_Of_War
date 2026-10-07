@@ -131,6 +131,12 @@ export class Unit extends Phaser.GameObjects.Sprite {
   offLane = false;
   /** Left without being killed (`damageOps.retireUnit`): no rewards. */
   retired = false;
+  /**
+   * Mech Arena raider (GAME_DESIGN 15): a unit of the side it attacks that
+   * belongs to nobody. It gets none of that side's bonuses, and reaching a
+   * base steals gold instead of hurting it (ArenaSystem).
+   */
+  raider = false;
   /** Utility Mech: when it powers down, and its work time toward the next crafted level (sim ms). */
   workUntil = 0;
   craftMs = 0;
@@ -200,6 +206,7 @@ export class Unit extends Phaser.GameObjects.Sprite {
     this.troopsDropped = false;
     this.offLane = false;
     this.retired = false;
+    this.raider = false;
     this.workUntil = 0;
     this.craftMs = 0;
     this.workAnimAt = 0;
@@ -223,6 +230,13 @@ export class Unit extends Phaser.GameObjects.Sprite {
     this.hp = Math.max(1, ratio * this.getStat('maxHp'));
     this.hpBarDirty = true;
     this.restoreTint();
+  }
+
+  /** Marks the unit an arena raider, with its tint (visual and rules flag). */
+  markRaider(tint: number): void {
+    this.raider = true;
+    this.baseTint = tint;
+    this.setTint(tint);
   }
 
   /** Footprint, texture, scale and tint from the definition's art. */

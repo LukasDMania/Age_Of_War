@@ -1,9 +1,10 @@
 // Online 1v1, the cases online.mjs doesn't cover (2026-10-07): a wrong room
 // code, a full room, real key presses from both players, a long match with
-// fighting and hash checks, a desync (no result on both sides), and a player
-// who vanishes for good (they lose after the 30 s window, the other wins).
+// fighting and hash checks, a desync (no result on both sides), a player
+// who vanishes for good (they lose after the 30 s window, the other wins), and
+// a Mech Arena round online (both farm, both pick a Mech, the fight).
 // Starts its own relay like online.mjs (or RELAY_URL=...).
-// `node tools/checks/online-edge.mjs` (about 3 minutes)
+// `node tools/checks/online-edge.mjs` (about 5 minutes)
 import { spawn } from 'node:child_process';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -44,7 +45,13 @@ const toMenu = async (page) => {
   await page.waitForTimeout(800);
 };
 async function openLobby(page) {
-  await page.keyboard.press('KeyO');
+  // A page still loading (others are mid-match on the same machine) can miss the first O.
+  for (let attempt = 0; attempt < 6; attempt++) {
+    await page.mouse.click(640, 300);
+    await page.keyboard.press('KeyO');
+    const ok = await waitLobby(page, 'choose', 5000).then(() => true, () => false);
+    if (ok) return;
+  }
   await waitLobby(page, 'choose');
 }
 async function host(page) {
@@ -85,7 +92,9 @@ await c.close();
 await a.keyboard.press('Digit1');
 await b.keyboard.press('Digit2');
 await b.keyboard.press('KeyS');
-await a.waitForTimeout(5000);
+// Both games must have run all three commands (one may be a few turns behind the other).
+await Promise.all([a, b].map((p) => p.waitForFunction(() => window.__aow.lockstep().log.reduce((n, r) => n + r.commands.length, 0) >= 3, null, { timeout: 60000, polling: 250 })));
+await a.waitForTimeout(1000);
 const keyLogs = await Promise.all([a, b].map((p) => p.evaluate(() => window.__aow.lockstep().log.map((r) => `${r.turn}:${r.side}:${r.commands.map((cmd) => cmd.e).join('+')}`))));
 const flat = keyLogs[0].join(' ');
 check('key presses on both sides run in both games', JSON.stringify(keyLogs[0]) === JSON.stringify(keyLogs[1]), `${keyLogs[0].join(' ')} | ${keyLogs[1].join(' ')}`);
@@ -99,7 +108,7 @@ await b.screenshot({ path: `${OUT}/edge-guest-keys.png` });
 
 // 4. A desync (a dev cheat changes one game only): both end with no result.
 await b.evaluate(() => window.__aow.addGold(500, 'enemy'));
-await Promise.all([a, b].map((p) => p.waitForFunction(() => window.__aow.snapshot().phase === 'gameover', null, { timeout: 120000 })));
+await Promise.all([a, b].map((p) => p.waitForFunction(() => window.__aow.snapshot().phase === 'gameover', null, { timeout: 400000, polling: 1000 })));
 await a.waitForTimeout(3500);
 await a.screenshot({ path: `${OUT}/edge-desync.png` });
 check('a desync is caught and ends the match for both', (await Promise.all([a, b].map((p) => p.evaluate(() => window.__aow.lockstep().desynced)))).every(Boolean));
@@ -163,6 +172,64 @@ console.log('long match:', JSON.stringify(long));
 check('long match: lots of game time and commands', long[0].tick > 2000 && long[0].commands > 40, JSON.stringify(long[0]));
 check('long match: units fought (kills on the lane)', long[0].kills[0] + long[0].kills[1] > 0, JSON.stringify(long[0].kills));
 check('long match: every hash compared matched', long.every((x) => !x.desynced) && long[0].compared >= 3, `${long[0].compared} compared`);
+
+// 7. A Mech Arena round online (headless pages): both farm, both pick a Mech through the lockstep, the fight.
+await toMenu(ha);
+await toMenu(hb);
+await openLobby(ha);
+await ha.keyboard.press('KeyM');
+await ha.keyboard.press('KeyH');
+await waitLobby(ha, 'hosting');
+const code4 = (await lobby(ha)).code;
+await openLobby(hb);
+await typeCode(hb, code4);
+await Promise.all([inMatch(ha), inMatch(hb)]);
+// Both farm like players (a turret, then units whenever affordable) until the hangar opens.
+const farmUntilHangar = (page, side) =>
+  page.evaluate(
+    (side) =>
+      new Promise((resolve) => {
+        const a = window.__aow;
+        a.request('buy-turret-requested', { side, slotIndex: 0, turretId: 'stone-spear-thrower' });
+        let i = 0;
+        const timer = setInterval(() => {
+          if (a.state.arena?.phase !== 'farm') {
+            clearInterval(timer);
+            resolve(a.snapshot().sides[side].gold);
+            return;
+          }
+          a.request('buy-unit-requested', { side, unitId: i++ % 3 === 0 ? 'stone-clubber' : 'stone-slinger' });
+        }, 600);
+      }),
+    side,
+  );
+const farmed = await Promise.all([farmUntilHangar(ha, 'player'), farmUntilHangar(hb, 'enemy')]);
+console.log('arena online: gold at the hangar', JSON.stringify(farmed));
+await ha.waitForFunction(() => window.__aow.state.arena?.phase === 'hangar', null, { timeout: 150000, polling: 500 });
+const pickMech = (page, side) =>
+  page.evaluate(async (side) => {
+    const mech = await import('/src/config/mech.config.ts');
+    window.__aow.request('build-mech-requested', { side, design: { ...mech.DEFAULT_MECH_DESIGN } });
+  }, side);
+await pickMech(ha, 'player');
+await pickMech(hb, 'enemy');
+// Both picks run through the lockstep; the fight starts as soon as both are in.
+await Promise.all([ha, hb].map((p) => p.waitForFunction(() => window.__aow.state.arena?.phase === 'fight', null, { timeout: 120000, polling: 250 }).catch(() => null)));
+const arenaFight = await Promise.all([ha, hb].map((p) => p.evaluate(() => {
+  const st = window.__aow.state.arena;
+  const ls = window.__aow.lockstep();
+  return {
+    phase: st.phase,
+    picks: [!!st.picks.player, !!st.picks.enemy],
+    mechs: window.__aow.snapshot().units.filter((u) => u.unitId.startsWith('mech')).map((u) => u.side).sort().join(),
+    desynced: ls.desynced,
+    compared: ls.hashesCompared,
+  };
+})));
+console.log('arena online:', JSON.stringify(arenaFight));
+check('arena online: both picked a Mech (the guest too)', arenaFight.every((x) => x.picks[0] && x.picks[1]), JSON.stringify(arenaFight));
+check('arena online: both Mechs fight in both games', arenaFight.every((x) => x.phase === 'fight' && x.mechs === 'enemy,player'), JSON.stringify(arenaFight));
+check('arena online: no desync through farm, hangar and fight', arenaFight.every((x) => !x.desynced) && arenaFight[0].compared >= 10, `${arenaFight[0].compared} compared`);
 
 for (const context of contexts) await context.close().catch(() => {});
 await finish(browser, errors);

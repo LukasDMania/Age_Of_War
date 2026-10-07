@@ -72,6 +72,7 @@ import { createGameState, type MatchState } from '@state/GameState';
 import { otherSide, SIDES, type Side } from '@state/types';
 import type { HudSceneData } from '@ui/HUDScene';
 import type { MatchSummary, OverlaySceneData } from '@ui/OverlayScene';
+import type { HangarSceneData } from '@ui/HangarScene';
 import { KeyboardControls } from '@ui/keymap';
 import {
   installDebugHandle,
@@ -84,14 +85,14 @@ import { HEADLESS_SIM } from '@utils/runtimeFlags';
 import { AccountTracker } from '@systems/AccountTracker';
 import { MechDuelAI } from '@systems/MechDuelAI';
 import { hashMatch } from '@systems/stateHash';
+import { ArenaSystem, createArenaState } from '@systems/ArenaSystem';
+import { ArenaAI } from '@systems/ArenaAI';
 import { LockstepSystem } from '@systems/LockstepSystem';
 import { OnlineMatchSystem, type OnlineLink } from '@systems/OnlineMatchSystem';
 import type { MatchSetup, TurnRecord } from '@net/protocol';
 import type { Transport } from '@net/transport';
 import { setMatchFeatures } from '@config/features.config';
 import { MAX_CATCH_UP_MS } from '@config/multiplayer.config';
-import { isMechUnitId, mechDefinition } from '@entities/mechDesign';
-import type { MechDesign } from '@config/mech.config';
 import { loadAccount, lockedPartKeys, saveAccount } from '@state/accountProgress';
 
 /** Options for starting (or restarting) a match. */
@@ -132,13 +133,14 @@ export interface GameSceneData {
     maxAge?: number;
   };
   /**
-   * Mech vs Mech (Mech expansion): only these two Mechs fight, in this age.
-   * No AI, no buying; the side whose Mech falls loses (its base falls with it).
+   * Mech Arena (GAME_DESIGN 15): best of 3 rounds of farm -> hangar -> fight
+   * in this age. Offline the enemy AI farms and picks a Mech; online the
+   * lockstep setup carries it instead.
    */
-  duel?: { player: MechDesign; enemy: MechDesign; age: number };
+  arena?: { age: number };
   /**
    * Lockstep multiplayer (Phase 22): the shared setup (its seed, switches,
-   * Mech locks and duel win over the fields above), the side this browser
+   * Mech locks and arena win over the fields above), the side this browser
    * plays and the link to the other player; or, with `localSide` null and
    * `replay`, a replay of a match's command log. Nobody plays the enemy
    * unless `ai` asks for it (loopback checks).
@@ -218,6 +220,9 @@ export class GameScene extends Phaser.Scene {
   private aiIncome: AiIncomeSystem[] = [];
   /** Dev builds, human player only: records the match to playtest-logs/. */
   private logger: MatchLogger | null = null;
+  /** Mech Arena (GAME_DESIGN 15); null outside it. Its AI helpers (hangar picks, the fight's module use). */
+  private arena: ArenaSystem | null = null;
+  private arenaAis: { update(nowMs: number): void }[] = [];
   /** Lockstep multiplayer (or a replay); null in a normal match. */
   private lockstep: LockstepSystem | null = null;
   /** Online: the connection rules; and whether the last frame waited on the opponent's turn. */
@@ -260,17 +265,18 @@ export class GameScene extends Phaser.Scene {
     // Both browsers play with the host's switches.
     setMatchFeatures(net?.setup.features ?? null);
     this.state = createGameState(net?.setup.seed ?? this.sceneData.seed);
-    const duel = net ? net.setup.duel : this.sceneData.duel;
-    if (duel) {
-      this.aiSetting = 'off';
+    const arena = net ? net.setup.arena : this.sceneData.arena;
+    if (arena) {
       for (const side of SIDES) {
         const me = this.state[side];
-        me.age = duel.age;
-        me.maxAge = duel.age;
-        me.baseHp = baseMaxHp(duel.age);
-        me.gold = 0;
+        me.age = arena.age;
+        me.maxAge = arena.age;
+        me.baseHp = baseMaxHp(arena.age);
       }
+      this.state.arena = createArenaState(arena.age);
     }
+    // Online both sides are people: both may build a Mech.
+    if (net) this.state.mechSides = [...SIDES];
     const maxAge = this.sceneData.conquest?.maxAge;
     if (maxAge !== undefined) {
       this.state.player.maxAge = maxAge;
@@ -290,7 +296,7 @@ export class GameScene extends Phaser.Scene {
     this.combat = new CombatSystem(this.state, this.units, this.bases, this.projectiles);
     this.projectileSystem = new ProjectileSystem(this.state, this.projectiles, this.units, this.bases);
     this.casualties = new CasualtySystem(this.units);
-    this.lane = new LaneSystem(this.units, this.bases);
+    this.lane = new LaneSystem(this.units, this.bases, (unit) => this.arena?.holdLine(unit) ?? null);
     this.economy = new EconomySystem(this.state, this.units, conquestKillGoldMult(this.sceneData.conquest?.effects ?? []));
     this.spawn = new SpawnSystem(this.state, this.units, (unitId, side) =>
       this.lane.isSpawnPointClear(side, this.units.spriteWidth(unitId, side)),
@@ -312,17 +318,18 @@ export class GameScene extends Phaser.Scene {
     this.utility = new UtilitySystem(this.units, this.projectiles);
     this.stats = new StatsSystem();
     // The account (Mech parts opened across games): only for matches a person plays.
-    const personPlays = !HEADLESS_SIM && this.playerAiSetting === null && !duel && !net;
+    const personPlays = !HEADLESS_SIM && this.playerAiSetting === null && !net && !arena;
     this.account = personPlays ? new AccountTracker(this.units) : null;
     if (personPlays) this.state.player.mechLocked = lockedPartKeys(loadAccount());
     if (net) for (const side of SIDES) this.state[side].mechLocked = [...net.setup.mechLocked[side]];
     this.buildingSystem = new BuildingSystem(this.state, this.units);
     this.aiIncome = [];
-    if (this.aiSetting !== 'off') {
+    // The arena AI farms on the same footing as a player: no income of its own.
+    if (this.aiSetting !== 'off' && !arena) {
       const bonus = conquestAiIncomeMult(this.sceneData.conquest?.effects ?? []);
       this.aiIncome.push(new AiIncomeSystem(this.state, 'enemy', this.difficultyFor(this.aiSetting), bonus));
     }
-    if (this.playerAiSetting && this.sceneData.playerAiIncome !== false) this.aiIncome.push(new AiIncomeSystem(this.state, 'player', this.difficultyFor(this.playerAiSetting)));
+    if (this.playerAiSetting && this.sceneData.playerAiIncome !== false && !arena) this.aiIncome.push(new AiIncomeSystem(this.state, 'player', this.difficultyFor(this.playerAiSetting)));
     this.scaffolds = { player: new MechScaffold(this, 'player', LANE_Y), enemy: new MechScaffold(this, 'enemy', LANE_Y) };
     this.buildingViews = {
       player: this.createBuildingViews('player'),
@@ -342,6 +349,36 @@ export class GameScene extends Phaser.Scene {
       this.playerAiSetting === null
         ? null
         : this.makeBrain('player', this.difficultyFor(this.playerAiSetting), this.sceneData.playerProfile, this.sceneData.playerGenome);
+    this.arena = arena
+      ? new ArenaSystem(this.state, this.units, {
+          bases: this.bases,
+          clearQueue: (side) => this.spawn.clearQueue(side),
+          prepareMech: (unitId, side) => ensureRigArt(this, unitId, side),
+        })
+      : null;
+    // Offline arena: each AI side also picks a Mech in the hangar and uses its module in the fight.
+    this.arenaAis = [];
+    if (arena) {
+      const aiSides: Side[] = [];
+      if (this.aiSetting !== 'off') aiSides.push('enemy');
+      if (this.playerAiSetting) aiSides.push('player');
+      for (const side of aiSides) this.arenaAis.push(new ArenaAI(this.state, side), new MechDuelAI(this.state, this.units, side));
+      this.arena?.start();
+      // The hangar opens by itself for the hangar phase (for a person) and closes for the fight.
+      const personSide = aiSides.includes(this.localSide) ? null : this.localSide;
+      let openedRound = 0;
+      this.cleanups.push(
+        on(Events.ArenaChanged, ({ phase, round }) => {
+          if (HEADLESS_SIM || !personSide) return;
+          if (phase === 'hangar' && openedRound !== round) {
+            openedRound = round;
+            this.scene.launch(SCENE_KEYS.hangar, { state: this.state, side: personSide } satisfies HangarSceneData);
+          } else if (phase !== 'hangar' && this.scene.isActive(SCENE_KEYS.hangar)) {
+            this.scene.stop(SCENE_KEYS.hangar);
+          }
+        }),
+      );
+    }
 
     this.cleanups.push(
       on(Events.BaseDestroyed, ({ side }) => this.onBaseDestroyed(side)),
@@ -445,35 +482,11 @@ export class GameScene extends Phaser.Scene {
         this.sceneData.conquest?.label ??
         (this.aiSetting === 'off' ? '' : (findAiProfile(this.sceneData.profile ?? DEFAULT_AI_PROFILE)?.label ?? '')),
       backgroundName: this.background.name,
-      ...(duel ? { duel: true } : {}),
+      ...(arena ? { arena: true } : {}),
       side: this.localSide,
       ...(net?.transport ? { online: { opponent: net.opponent ?? 'Online' } } : {}),
     } satisfies HudSceneData);
     this.match.start();
-    if (duel) this.startDuel(duel);
-  }
-
-  /** Mech vs Mech: both Mechs walk out of their gates; the enemy's module gets a small AI. */
-  private startDuel(duel: NonNullable<GameSceneData['duel']>): void {
-    for (const side of SIDES) {
-      const definition = mechDefinition(side === 'player' ? duel.player : duel.enemy, duel.age);
-      ensureRigArt(this, definition.id, side);
-      const unit = this.units.create(definition.id, side);
-      const mech = this.state[side].mech;
-      mech.alive = true;
-      mech.abilityReadyAt = this.match.elapsedMs;
-      emit(Events.UnitSpawned, { side, unitId: definition.id, instanceId: unit.instanceId });
-    }
-    if (!this.sceneData.lockstep) {
-      const brain = new MechDuelAI(this.state, this.units);
-      this.experiments.push({ update: (now) => brain.update(now), destroy: () => undefined });
-    }
-    // The side whose Mech falls loses: its base goes with it.
-    this.cleanups.push(
-      on(Events.UnitDied, ({ side, unitId, retired }) => {
-        if (isMechUnitId(unitId) && !retired && this.match.phase === 'playing') dealBaseDamage(this.bases[side], this.bases[side].maxHp * 10);
-      }),
-    );
   }
 
   update(time: number, delta: number): void {
@@ -503,8 +516,14 @@ export class GameScene extends Phaser.Scene {
     this.match.update(dt);
     const now = this.match.elapsedMs;
     this.conquest?.update(now);
-    this.ai?.update(now);
-    this.playerAi?.update(now);
+    this.arena?.update(now);
+    // In the arena the normal AIs only farm; the arena's own AI helpers do the rest.
+    const farming = !this.state.arena || this.state.arena.phase === 'farm';
+    if (farming) {
+      this.ai?.update(now);
+      this.playerAi?.update(now);
+    }
+    for (const helper of this.arenaAis) helper.update(now);
     this.spawn.update(dt);
     this.mech.update(dt, this.match.elapsedMs);
     this.status.update(now);
@@ -865,6 +884,7 @@ export class GameScene extends Phaser.Scene {
           damage: u.getStat('damage'),
           modifiers: u.modifiers.map((m) => m.id),
           state: u.unitState,
+          raider: u.raider,
         })),
       }),
       spawn: (unitId, side) => this.spawn.spawnNow(unitId, side),
@@ -882,6 +902,8 @@ export class GameScene extends Phaser.Scene {
       restart: (data = {}) => this.scene.restart(data),
       projectileCount: () => this.projectiles.activeProjectiles.size,
       projectilePoolSize: () => this.projectiles.createdCount,
+      // Dev and checks: any event, through the typed emit (the lockstep gate sees it like a click).
+      request: (event, payload) => emit(event, payload as never),
       buy: (unitId, side = 'player') => emit(Events.BuyUnitRequested, { side, unitId }),
       buySlot: (side = 'player') => emit(Events.BuySlotRequested, { side }),
       buyTurret: (slotIndex, turretId, side = 'player') =>
@@ -966,6 +988,9 @@ export class GameScene extends Phaser.Scene {
     this.cleanups = [];
     this.online?.destroy();
     this.online = null;
+    this.arena?.destroy();
+    this.arena = null;
+    this.arenaAis = [];
     this.lockstep?.destroy();
     this.lockstep = null;
     setMatchFeatures(null);

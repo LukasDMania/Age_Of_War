@@ -144,7 +144,8 @@ These come from the locked design, so the code must not contradict them:
   server shares the module instance) to try tuning variants without editing
   files.
 - Browser checks live in `tools/checks/` (Playwright against the dev
-  server): `mech.mjs`, `paths.mjs`, `effects.mjs` (slow-motion effect
+  server): `mech.mjs`, `paths.mjs`, `arena.mjs` (the Mech Arena: farm,
+  hangar, fight, best of 3), `effects.mjs` (slow-motion effect
   screenshots), `muzzles.mjs` (re-measure shot origins after changing
   ranged art), `determinism.mjs` (lockstep: a seeded match replays to the
   same state hashes; run it after touching game rules, and keep anything
@@ -152,8 +153,9 @@ These come from the locked design, so the code must not contradict them:
   `lockstep.mjs` (the multiplayer command queue against a loopback
   opponent; `?loopback=80` tries it by hand), `online.mjs` (two browsers
   through its own relay: lobby, sides, a dropped connection, a forfeit, an
-  online duel), `online-edge.mjs` (wrong code, full room, real keys, a
-  long match with fighting, a desync, a player whose network dies; both
+  online Mech Arena start), `online-edge.mjs` (wrong code, full room, real
+  keys, a long match with fighting, a desync, a player whose network dies,
+  an online arena round; both
   online checks take `RELAY_URL=ws://127.0.0.1:8788/relay` to test the
   Cloudflare Worker under `npx wrangler dev --port 8788`). `npm run relay`
   runs the local relay (`tools/relay/`). `__aow.fxTimeScale(k)` slows the effects for review.
