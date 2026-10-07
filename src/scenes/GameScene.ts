@@ -1,6 +1,6 @@
 import Phaser from 'phaser';
 import { AGE_COUNT, getAge, isFinalAge } from '@config/ages.config';
-import { BACKGROUND_STORAGE_KEY, BACKGROUNDS, type BackgroundDef } from '@config/backgrounds.config';
+import { BACKGROUND_STORAGE_KEY, BACKGROUNDS, DEFAULT_BACKGROUND_ID, type BackgroundDef } from '@config/backgrounds.config';
 import { activeBuildingIds, buildingX, perksPending, scrollMargin, type BuildingId } from '@config/buildings.config';
 import {
   AI_DIFFICULTIES,
@@ -615,13 +615,15 @@ export class GameScene extends Phaser.Scene {
     this.applyBackground();
   }
 
+  /** The player's last pick (Y), else the default background. */
   private loadBackgroundChoice(): number {
+    const fallback = Math.max(0, BACKGROUNDS.findIndex((b) => b.id === DEFAULT_BACKGROUND_ID));
     try {
       const id = window.localStorage.getItem(BACKGROUND_STORAGE_KEY);
       const index = BACKGROUNDS.findIndex((b) => b.id === id);
-      return index >= 0 ? index : 0;
+      return index >= 0 ? index : fallback;
     } catch {
-      return 0;
+      return fallback;
     }
   }
 

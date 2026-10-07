@@ -2350,3 +2350,11 @@ decisions made, anything the owner needs to confirm.
   - Still untested: the real Cloudflare deploy, two real machines and
     real-browser frame rates (these headless pages draw ~6 fps, so the
     "Waiting for your opponent..." banner shows often here).
+- 2026-10-07 (deployed; default background): the owner deployed to
+  Cloudflare (`https://age-of-war.war-of-age.workers.dev`; the new
+  workers.dev certificate took a few minutes, `ERR_SSL_VERSION_OR_CIPHER_
+  MISMATCH` until then) and it works. Owner: "make the background BG:
+  Forest path": `DEFAULT_BACKGROUND_ID` in `config/backgrounds.config.ts`
+  is the battle background until a player picks another with Y (a saved
+  pick still wins). Checked with a screenshot in a fresh browser;
+  typecheck and build pass.

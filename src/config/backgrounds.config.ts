@@ -44,6 +44,9 @@ const FOREST_LAYERS: readonly BackgroundLayer[] = [
   L('10-01_ground.png', 1),
 ];
 
+/** The battle background until a player picks another (Y): owner, 2026-10-07: "make the background BG: Forest path". */
+export const DEFAULT_BACKGROUND_ID = 'forest-path';
+
 export const BACKGROUNDS: readonly BackgroundDef[] = [
   { id: 'plain', name: 'Plain (age colors)', layers: [], ground: 'strip' },
   { id: 'forest-path', name: 'Forest path', layers: FOREST_LAYERS, ground: 'art' },
