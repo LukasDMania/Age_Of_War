@@ -92,8 +92,12 @@ export class LobbyScene extends Phaser.Scene {
     applyUiTheme(0);
     this.cameras.main.setBackgroundColor(0x1d1a26);
     this.view = this.add.container(0, 0);
-    this.input.keyboard?.on('keydown', (event: KeyboardEvent) => this.onKey(event));
+    // The browser's own key events: Phaser's per-frame key queue garbled a
+    // room code typed quickly (two keys in one frame).
+    const onKey = (event: KeyboardEvent): void => this.onKey(event);
+    window.addEventListener('keydown', onKey);
     this.events.once(Phaser.Scenes.Events.SHUTDOWN, () => {
+      window.removeEventListener('keydown', onKey);
       for (const off of this.cleanups) off();
       this.cleanups = [];
     });
@@ -330,7 +334,7 @@ export class LobbyScene extends Phaser.Scene {
     switch (this.step) {
       case 'choose':
         if (key === 'h' || key === 'H') void this.host();
-        else if (key === 'j' || key === 'J') this.go('entering');
+        else if (key === 'j' || key === 'J') this.enterCode();
         else if (key === 'm' || key === 'M') this.toggleMode();
         else if (key === 'ArrowLeft') this.shiftAge(-1);
         else if (key === 'ArrowRight') this.shiftAge(1);
@@ -347,6 +351,12 @@ export class LobbyScene extends Phaser.Scene {
       default:
         return;
     }
+  }
+
+  /** Join: a fresh, empty code box (not the last code tried). */
+  private enterCode(): void {
+    this.code = '';
+    this.go('entering');
   }
 
   private toggleMode(): void {
@@ -379,7 +389,7 @@ export class LobbyScene extends Phaser.Scene {
       case 'choose':
         this.line(cy - 110, 'Host a room and send the code to a friend, or join theirs.');
         this.button(cx - 150, cy - 30, 240, 'HOST (H)', () => void this.host(), true);
-        this.button(cx + 150, cy - 30, 240, 'JOIN (J)', () => this.go('entering'));
+        this.button(cx + 150, cy - 30, 240, 'JOIN (J)', () => this.enterCode());
         this.button(cx, cy + 60, 360, `Mode: ${modeLabel} (M)`, () => this.toggleMode());
         if (this.mode === 'duel') {
           this.button(cx - 230, cy + 60, 50, '<', () => this.shiftAge(-1));

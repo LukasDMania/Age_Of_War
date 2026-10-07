@@ -21,13 +21,20 @@ export type LinkStatus =
 /** Messages kept for a resend after a reconnect (about 2 minutes of turns). */
 const KEEP_SENT = 4000;
 const RETRY_MS = 1000;
+/** Heartbeat to the relay (it drops a player silent for 10 s). */
+const PING_MS = 2000;
+/**
+ * Nothing from the relay for this long (not even a heartbeat answer): our
+ * network is gone even if the socket looks open, so reconnect.
+ */
+const SILENT_MS = 6000;
 /** Tries at hosting when the hosted relay's random code is already a room. */
 const HOST_ATTEMPTS = 5;
 
 type RelayReply =
   | { relay: 'room' | 'joined'; code: string; side: Side; token: string }
   | { relay: 'rejoined'; side: Side; lastFrom: number }
-  | { relay: 'peer-joined' | 'peer-left' | 'peer-back' | 'peer-quit' }
+  | { relay: 'peer-joined' | 'peer-left' | 'peer-back' | 'peer-quit' | 'pong' }
   | { relay: 'msg'; seq: number; data: NetMessage }
   | { relay: 'error'; reason: string };
 
@@ -57,6 +64,9 @@ export class RelayClient implements Transport {
   private closed = false;
   private lostAt = 0;
   private retry: ReturnType<typeof setTimeout> | null = null;
+  /** When the relay last said anything (or a new connection was tried), and the heartbeat timer. */
+  private heardAt = 0;
+  private heartbeat: ReturnType<typeof setInterval> | null = null;
 
   constructor(url: string) {
     this.url = url;
@@ -110,6 +120,7 @@ export class RelayClient implements Transport {
     if (this.closed) return;
     this.write({ relay: 'leave' });
     this.closed = true;
+    this.stopHeartbeat();
     if (this.retry) clearTimeout(this.retry);
     this.socket?.close();
     this.socket = null;
@@ -153,6 +164,7 @@ export class RelayClient implements Transport {
             this.code = reply.code;
             this.side = reply.side;
             this.token = reply.token;
+            this.startHeartbeat();
             resolve();
           } else if (reply.relay === 'error') {
             reject(new Error(reply.reason));
@@ -160,9 +172,30 @@ export class RelayClient implements Transport {
           }
           return;
         }
+        this.heardAt = Date.now();
         this.handle(reply);
       };
     });
+  }
+
+  /** Pings the relay, and treats a silent relay as a dropped connection (a dead network can leave the socket open). */
+  private startHeartbeat(): void {
+    this.heardAt = Date.now();
+    this.heartbeat = setInterval(() => {
+      if (this.closed) return;
+      this.write({ relay: 'ping' });
+      const socket = this.socket;
+      if (socket && Date.now() - this.heardAt > SILENT_MS) {
+        socket.onclose = null;
+        socket.close();
+        this.dropped(socket);
+      }
+    }, PING_MS);
+  }
+
+  private stopHeartbeat(): void {
+    if (this.heartbeat) clearInterval(this.heartbeat);
+    this.heartbeat = null;
   }
 
   private handle(reply: RelayReply): void {
@@ -196,6 +229,8 @@ export class RelayClient implements Transport {
   private dropped(socket: WebSocket): void {
     if (this.closed || socket !== this.socket) return;
     this.socket = null;
+    // Clean up a rejoin attempt that hung (the watchdog's case too).
+    if (this.retry) clearTimeout(this.retry);
     if (this.lostAt === 0) {
       this.lostAt = Date.now();
       this.status('reconnecting');
@@ -223,11 +258,14 @@ export class RelayClient implements Transport {
       return;
     }
     this.socket = socket;
+    // A fresh try gets the full silence allowance before the watchdog gives up on it.
+    this.heardAt = Date.now();
     socket.onopen = () => {
       socket.send(JSON.stringify({ relay: 'rejoin', code: this.code, token: this.token, lastSeen: this.lastSeen }));
     };
     socket.onmessage = (event) => {
       const reply = JSON.parse(String(event.data)) as RelayReply;
+      this.heardAt = Date.now();
       if (reply.relay === 'rejoined') this.lostAt = 0;
       this.handle(reply);
     };
@@ -242,6 +280,7 @@ export class RelayClient implements Transport {
     if (this.closed) return;
     this.status('lost');
     this.closed = true;
+    this.stopHeartbeat();
     this.socket?.close();
     this.socket = null;
   }

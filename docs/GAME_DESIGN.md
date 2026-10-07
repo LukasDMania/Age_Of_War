@@ -931,7 +931,10 @@ Owner (2026-10-05): "lets get started on multiplayer". Decisions, LOCKED:
   Worker serves the game and the relay (`npm run deploy`, free plan; the
   owner makes the account and deploys).
 - **Disconnect:** the match pauses for both players for up to about 30 s
-  (PROPOSED) for a reconnect; after that the missing player forfeits.
+  (PROPOSED) for a reconnect; after that the missing player forfeits. A
+  network that dies without closing the connection counts too: the relay
+  drops a player silent for 10 s and a client that hears nothing for 6 s
+  reconnects (heartbeat every 2 s).
 - **Experiment switches:** the host's switches apply to the match (owner,
   2026-10-05: "host's switches").
 - **Mech parts:** Mech vs Mech has every part open; in a normal battle each

@@ -2316,3 +2316,37 @@ decisions made, anything the owner needs to confirm.
     pass; typecheck and build pass.
   - Not checked: a real deploy (needs the owner's account) and play
     between two real machines.
+- 2026-10-07 (Phase 22, a full multiplayer test before the owner deploys):
+  owner: "Can you test all the multi-player functionality again make sure
+  it works. Then after I will deploy and test."
+  - New check `tools/checks/online-edge.mjs`: a wrong room code, a full
+    room (third player), real key presses on both sides (buy, the guest's
+    special), a desync (a dev cheat in one game -> no result on both), a
+    guest whose network dies (`setOffline`: the socket never closes), and a
+    long match in `?headless` pages (both sides buying for 60 s: ~7,500
+    ticks, 170 command turns, 17 kills, 13 hash pairs compared, no desync).
+  - Three bugs found and fixed:
+    1. Lobby: after a failed join the old code stayed in the box, so the
+       next code typed was ignored and the old room tried again. Join now
+       starts from an empty box (`enterCode`).
+    2. Lobby: a code typed quickly could come out garbled ("WWVV" for
+       "WVSY"): Phaser's per-frame key queue. The lobby now listens to the
+       browser's own key events.
+    3. A dead network that leaves the socket half open was never noticed:
+       the opponent waited "for your opponent" forever. Now a heartbeat:
+       the client pings the relay every 2 s and treats 6 s of silence as a
+       drop (reconnects, loses after the 30 s window); the relay drops a
+       player silent for 10 s (`SILENT_MS`, checked whenever someone in
+       the room speaks, and in the Node relay's sweep), which starts the
+       other player's 30 s window. Checked: the host gets "Victory: your
+       opponent lost their connection", the guest "Defeat: your connection
+       was lost" (screenshots).
+  - Run against both relays: Node relay and the Worker under `wrangler
+    dev` (online.mjs 10/10 each, online-edge.mjs 11/11 on each);
+    lockstep 13/13, determinism 7/7; the production build served by the
+    Worker played by key presses only (code read from the Worker's log;
+    both sides' units on the lane, no page errors); mech, duel, paths,
+    utility, account, mechparts pass; typecheck and build pass.
+  - Still untested: the real Cloudflare deploy, two real machines and
+    real-browser frame rates (these headless pages draw ~6 fps, so the
+    "Waiting for your opponent..." banner shows often here).

@@ -15,6 +15,7 @@
  *   { relay: 'rejoin', code, token, lastSeen } back after a dropped connection
  *   { relay: 'msg', seq, data }                forward `data` to the other player
  *   { relay: 'leave' }                         quit (the other player is told)
+ *   { relay: 'ping' }                          heartbeat (every 2 s); answered with { relay: 'pong' }
  * Relay -> client:
  *   { relay: 'room', code, side, token }       hosted
  *   { relay: 'joined', code, side, token }     joined
@@ -22,6 +23,11 @@
  *   { relay: 'peer-joined' | 'peer-left' | 'peer-back' | 'peer-quit' }
  *   { relay: 'msg', seq, data }                from the other player
  *   { relay: 'error', reason }                 'no-room' | 'full' | 'taken' | 'bad-token' | 'bad-message'
+ *
+ * A player the relay hasn't heard from for `SILENT_MS` counts as dropped,
+ * even if the socket still looks open: a dead network can leave it half
+ * open for minutes. (Checked whenever anyone in the room speaks, and in
+ * `sweep`.)
  *
  * No message is lost to a dropped connection: each direction is numbered,
  * the relay keeps the recent ones, and a rejoin replays what the player
@@ -31,6 +37,8 @@
 const CODE_LETTERS = 'ABCDEFGHJKLMNPQRSTUVWXYZ';
 /** Messages kept per direction for replays after a reconnect (30 a second: about 2 minutes). */
 const KEEP_MESSAGES = 4000;
+/** A seated player silent this long (no turn, no heartbeat) is dropped (ms). */
+export const SILENT_MS = 10_000;
 /** A room with nobody connected is dropped after this long (ms). */
 export const ROOM_HOLD_MS = 60_000;
 
@@ -58,12 +66,16 @@ export class Rooms {
     this.rooms = new Map();
     /** socket -> { code, side } */
     this.seats = new Map();
+    /** socket -> when the relay last heard from it (ms) */
+    this.heard = new Map();
     this.now = now;
     this.log = log;
   }
 
   /** A text frame from `socket`. */
   receive(socket, text) {
+    this.heard.set(socket, this.now());
+    this.dropSilent(this.seats.get(socket)?.code);
     let message;
     try {
       message = JSON.parse(text);
@@ -81,6 +93,8 @@ export class Rooms {
         return this.forward(socket, Number(message.seq) || 0, message.data);
       case 'leave':
         return this.leave(socket);
+      case 'ping':
+        return this.send(socket, { relay: 'pong' });
       default:
         return this.send(socket, { relay: 'error', reason: 'bad-message' });
     }
@@ -90,6 +104,7 @@ export class Rooms {
   closed(socket) {
     const seat = this.seats.get(socket);
     this.seats.delete(socket);
+    this.heard.delete(socket);
     if (!seat) return;
     const room = this.rooms.get(seat.code);
     const slot = room?.slots[seat.side];
@@ -103,6 +118,7 @@ export class Rooms {
   sweep() {
     const now = this.now();
     for (const [code, room] of this.rooms) {
+      this.dropSilent(code);
       const connected = SIDES.some((side) => room.slots[side].socket);
       if (connected) room.emptySince = null;
       else if (room.emptySince === null) room.emptySince = now;
@@ -183,15 +199,38 @@ export class Rooms {
     this.rooms.delete(seat.code);
     for (const side of SIDES) {
       const s = room.slots[side].socket;
-      if (s) this.seats.delete(s);
+      if (s) {
+        this.seats.delete(s);
+        this.heard.delete(s);
+      }
     }
+    this.heard.delete(socket);
     this.log(`room ${seat.code}: ${seat.side} left, closed`);
+  }
+
+  /** Drops the players of room `code` who have gone silent (their network died). */
+  dropSilent(code) {
+    const room = code && this.rooms.get(code);
+    if (!room) return;
+    const now = this.now();
+    for (const side of SIDES) {
+      const socket = room.slots[side].socket;
+      if (!socket || now - (this.heard.get(socket) ?? now) <= SILENT_MS) continue;
+      this.log(`room ${code}: ${side} silent`);
+      try {
+        socket.close();
+      } catch {
+        // already gone
+      }
+      this.closed(socket);
+    }
   }
 
   seat(socket, room, side) {
     const slot = room.slots[side];
     slot.socket = socket;
     slot.used = true;
+    this.heard.set(socket, this.now());
     this.seats.set(socket, { code: room.code, side });
   }
 
